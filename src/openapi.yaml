@@ -31,15 +31,17 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/ContactReference'
-              required:
-                - entity
+              $ref: '#/components/schemas/ContactReference'
     post:
       operationId: contacts_Create
-      parameters: []
+      parameters:
+        - name: expect
+          in: header
+          required: false
+          schema:
+            type: string
+            enum:
+              - 100-continue
       responses:
         '200':
           description: The request has succeeded.
@@ -52,12 +54,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/ContactReference'
-              required:
-                - entity
+              $ref: '#/components/schemas/ContactReference'
   /contacts/{id}:
     delete:
       operationId: contacts_Delete
@@ -189,15 +186,17 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/Domain'
-              required:
-                - entity
+              $ref: '#/components/schemas/Domain'
     post:
       operationId: domains_Create
-      parameters: []
+      parameters:
+        - name: expect
+          in: header
+          required: false
+          schema:
+            type: string
+            enum:
+              - 100-continue
       responses:
         '200':
           description: The request has succeeded.
@@ -210,12 +209,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/Domain'
-              required:
-                - entity
+              $ref: '#/components/schemas/Domain'
   /domains/{id}:
     delete:
       operationId: domains_Delete
@@ -427,15 +421,17 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/Host'
-              required:
-                - entity
+              $ref: '#/components/schemas/Host'
     post:
       operationId: hosts_Create
-      parameters: []
+      parameters:
+        - name: expect
+          in: header
+          required: false
+          schema:
+            type: string
+            enum:
+              - 100-continue
       responses:
         '200':
           description: The request has succeeded.
@@ -448,12 +444,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/Host'
-              required:
-                - entity
+              $ref: '#/components/schemas/Host'
   /hosts/{id}:
     delete:
       operationId: hosts_Delete
@@ -616,7 +607,7 @@ components:
         - type
       properties:
         value:
-          $ref: '#/components/schemas/Contact'
+          type: string
         type:
           type: array
           items:
@@ -625,7 +616,7 @@ components:
       type: object
       properties:
         value:
-          $ref: '#/components/schemas/ContactUpdate'
+          type: string
         type:
           type: array
           items:
@@ -637,15 +628,6 @@ components:
         - admin
         - tech
         - billing
-    ContactUpdate:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        address:
-          type: string
     DnsSec:
       type: object
       required:
@@ -666,11 +648,6 @@ components:
       type: object
       required:
         - name
-        - registrant
-        - authInfo
-        - ns
-        - contacts
-        - dnsSEC
       properties:
         name:
           type: string
@@ -680,7 +657,7 @@ components:
         registrant:
           type: array
           items:
-            $ref: '#/components/schemas/Registrant'
+            type: string
         authInfo:
           type: object
           properties:
@@ -724,7 +701,7 @@ components:
         registrant:
           type: array
           items:
-            $ref: '#/components/schemas/Registrant'
+            type: string
         authInfo:
           type: object
           properties:
