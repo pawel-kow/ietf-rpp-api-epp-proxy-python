@@ -6,9 +6,20 @@ class Registrant:
     id: str
 
 @dataclass
-class HostInfo:
-    # Add host info properties here if needed
+class HostObj:
+    id: str
     pass
+
+@dataclass
+class HostAttr:
+    id: str
+    ipv4: str
+    ipv6: str
+
+@dataclass
+class NS:
+    host_objs: Optional[List[HostObj]]
+    host_attrs: Optional[List[HostAttr]]
 
 @dataclass
 class ContactReference:
@@ -28,8 +39,20 @@ class AuthInfo:
 class Domain:
     name: str
     duration: Optional[str] = None
+    status: Optional[List[str]] = None
     registrant: List[Registrant] = field(default_factory=list)
     authInfo: Optional[AuthInfo] = None
-    ns: Optional[dict] = None # ns will contain hostObj and hostAttr lists
+    ns: NS = None
     contacts: List[ContactReference] = field(default_factory=list)
     dnsSEC: List[DnsSec] = field(default_factory=list)
+    crDate: Optional[str] = None
+    exDate: Optional[str] = None
+    upDate: Optional[str] = None
+    trDate: Optional[str] = None
+    clID: Optional[str] = None # element that contains the identifier of the sponsoring client.
+    crID: Optional[str] = None #element that contains the identifier of the client that created the domain object.
+    
+@dataclass
+class DomainCreateResponse:
+    domain: Domain
+    server_transaction_id: str
