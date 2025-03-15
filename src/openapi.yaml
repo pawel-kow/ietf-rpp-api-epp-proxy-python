@@ -1,0 +1,361 @@
+openapi: 3.0.0
+info:
+  title: (title)
+  version: 0.0.0
+tags: []
+paths:
+  /domains:
+    head:
+      operationId: domains_Check
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/Domain'
+              required:
+                - entity
+    post:
+      operationId: domains_Create
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/Domain'
+              required:
+                - entity
+  /domains/{id}:
+    delete:
+      operationId: domains_Delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+    get:
+      operationId: domains_Get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+    patch:
+      operationId: domains_Update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/DomainUpdate'
+components:
+  schemas:
+    Contact:
+      type: object
+      required:
+        - id
+        - name
+        - address
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+    ContactReference:
+      type: object
+      required:
+        - value
+        - type
+      properties:
+        value:
+          $ref: '#/components/schemas/Contact'
+        type:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactType'
+    ContactType:
+      type: string
+      enum:
+        - registrant
+        - admin
+        - tech
+        - billing
+    DnsSec:
+      type: object
+      required:
+        - keyTag
+        - algorithm
+        - digestType
+        - digest
+      properties:
+        keyTag:
+          type: string
+        algorithm:
+          type: string
+        digestType:
+          type: string
+        digest:
+          type: string
+    Domain:
+      type: object
+      required:
+        - name
+        - registrant
+        - authInfo
+        - ns
+        - contacts
+        - dnsSEC
+      properties:
+        name:
+          type: string
+        duration:
+          type: string
+          format: duration
+        registrant:
+          type: array
+          items:
+            $ref: '#/components/schemas/Registrant'
+        authInfo:
+          type: object
+          properties:
+            pw:
+              type: string
+            hash:
+              type: string
+          required:
+            - pw
+            - hash
+        ns:
+          type: object
+          properties:
+            hostObj:
+              type: array
+              items:
+                $ref: '#/components/schemas/HostInfo'
+            hostAttr:
+              type: array
+              items:
+                $ref: '#/components/schemas/HostInfo'
+          required:
+            - hostObj
+            - hostAttr
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactReference'
+        dnsSEC:
+          type: array
+          items:
+            $ref: '#/components/schemas/DnsSec'
+    DomainUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        duration:
+          type: string
+          format: duration
+        registrant:
+          type: array
+          items:
+            $ref: '#/components/schemas/Registrant'
+        authInfo:
+          type: object
+          properties:
+            pw:
+              type: string
+            hash:
+              type: string
+        ns:
+          type: object
+          properties:
+            hostObj:
+              type: array
+              items:
+                $ref: '#/components/schemas/HostInfo'
+            hostAttr:
+              type: array
+              items:
+                $ref: '#/components/schemas/HostInfo'
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactReference'
+        dnsSEC:
+          type: array
+          items:
+            $ref: '#/components/schemas/DnsSec'
+    HelloResponse:
+      type: object
+      required:
+        - svID
+        - svDate
+        - svcMenu
+        - dcp
+      properties:
+        svID:
+          type: string
+        svDate:
+          type: string
+        svcMenu:
+          type: object
+          properties:
+            version:
+              type: string
+            lang:
+              type: array
+              items:
+                type: string
+          required:
+            - version
+            - lang
+        dcp:
+          type: object
+          properties:
+            access:
+              type: object
+              properties:
+                all:
+                  type: string
+              required:
+                - all
+            statement:
+              type: object
+              properties:
+                purpose:
+                  type: object
+                  properties:
+                    admin:
+                      type: string
+                    prov:
+                      type: string
+                  required:
+                    - admin
+                    - prov
+                recipient:
+                  type: object
+                  properties:
+                    ours:
+                      type: string
+                    public:
+                      type: string
+                  required:
+                    - ours
+                    - public
+                retention:
+                  type: object
+                  properties:
+                    stated:
+                      type: string
+                  required:
+                    - stated
+              required:
+                - purpose
+                - recipient
+                - retention
+          required:
+            - access
+            - statement
+    Host:
+      type: object
+      required:
+        - id
+        - name
+        - domain
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        domain:
+          $ref: '#/components/schemas/Domain'
+    HostInfo:
+      type: object
+      required:
+        - name
+        - addr
+      properties:
+        name:
+          type: string
+        addr:
+          type: object
+          properties:
+            ipv4:
+              type: array
+              items:
+                type: string
+            ipv6:
+              type: array
+              items:
+                type: string
+          required:
+            - ipv4
+            - ipv6
+    Message:
+      type: object
+    Registrant:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
