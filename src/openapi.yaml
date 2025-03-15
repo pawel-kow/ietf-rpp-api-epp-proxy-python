@@ -4,6 +4,175 @@ info:
   version: 0.0.0
 tags: []
 paths:
+  /:
+    get:
+      operationId: Hello
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelloResponse'
+  /contacts:
+    head:
+      operationId: contacts_Check
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactReference'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/ContactReference'
+              required:
+                - entity
+    post:
+      operationId: contacts_Create
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactReference'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/ContactReference'
+              required:
+                - entity
+  /contacts/{id}:
+    delete:
+      operationId: contacts_Delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactReference'
+    get:
+      operationId: contacts_Get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactReference'
+    patch:
+      operationId: contacts_Update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactReference'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/ContactReferenceUpdate'
+  /contacts/{id}/extension/{value}:
+    get:
+      operationId: contacts_GetExtension
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+    patch:
+      operationId: contacts_UpdateExtension
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  type: object
+  /contacts/{id}/renewals:
+    post:
+      operationId: contacts_Renew
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContactReference'
   /domains:
     head:
       operationId: domains_Check
@@ -102,6 +271,329 @@ paths:
               properties:
                 entity:
                   $ref: '#/components/schemas/DomainUpdate'
+  /domains/{id}/extension/{value}:
+    get:
+      operationId: domains_GetExtension
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+    patch:
+      operationId: domains_UpdateExtension
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  type: object
+  /domains/{id}/renewals:
+    post:
+      operationId: domains_Renew
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Domain'
+  /domains/{id}/transfer:
+    put:
+      operationId: domains_TransferRequest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Domain'
+    get:
+      operationId: domains_TransferQuery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+    delete:
+      operationId: domains_TransferCancel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+  /domains/{id}/transfer/approval:
+    put:
+      operationId: domains_TransferApprove
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+  /domains/{id}/transfer/rejection:
+    put:
+      operationId: domains_TransferReject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+  /hosts:
+    head:
+      operationId: hosts_Check
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/Host'
+              required:
+                - entity
+    post:
+      operationId: hosts_Create
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/Host'
+              required:
+                - entity
+  /hosts/{id}:
+    delete:
+      operationId: hosts_Delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+    get:
+      operationId: hosts_Get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+    patch:
+      operationId: hosts_Update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  $ref: '#/components/schemas/HostUpdate'
+  /hosts/{id}/extension/{value}:
+    get:
+      operationId: hosts_GetExtension
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+    patch:
+      operationId: hosts_UpdateExtension
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity:
+                  type: object
+  /hosts/{id}/renewals:
+    post:
+      operationId: hosts_Renew
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Host'
+  /messages:
+    get:
+      operationId: Messages_PollRequest
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+  /messages/{id}:
+    delete:
+      operationId: Messages_AckPoll
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
 components:
   schemas:
     Contact:
@@ -129,6 +621,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ContactType'
+    ContactReferenceUpdate:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/ContactUpdate'
+        type:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactType'
     ContactType:
       type: string
       enum:
@@ -136,6 +637,15 @@ components:
         - admin
         - tech
         - billing
+    ContactUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
     DnsSec:
       type: object
       required:
@@ -347,6 +857,15 @@ components:
           required:
             - ipv4
             - ipv6
+    HostUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        domain:
+          $ref: '#/components/schemas/DomainUpdate'
     Message:
       type: object
     Registrant:
