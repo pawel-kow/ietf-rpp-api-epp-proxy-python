@@ -1,4 +1,5 @@
 from models import *
+from rpp_schema_validator import validate_schema
 
 def rpp_to_domain(rpp: dict) -> Domain:
     """Converts a JSON string to a Domain object according to the provided schema."""
@@ -15,7 +16,7 @@ def rpp_to_domain(rpp: dict) -> Domain:
                 for x in rpp["ns"]["hostObj"]] \
                 if "hostObj" in rpp["ns"] else None, 
             host_attrs=[
-                HostAttr(id=x["id"], 
+                HostAttr(id=x["name"], 
                          ipv4=x.get("ipv4", None), 
                          ipv6=x.get("ipv6", None)) 
                 for x in rpp["ns"]["hostAttr"]] \
@@ -29,28 +30,44 @@ def rpp_to_domain(rpp: dict) -> Domain:
 def domain_to_rpp(domain: Domain) -> str:
     """Converts a Domain object to a JSON string according to the provided schema."""
 
-    domain_dict = {
-        "name": domain.name,
-        "duration": domain.duration,
-        "registrant": [registrant.id for registrant in domain.registrant] if domain.registrant else None,
-        "authInfo": {
-            "pw": domain.authInfo.pw,
-            "hash": domain.authInfo.hash,
-        } if domain.authInfo else None,
-        "ns": {
-            "host_objs": [host_obj.id for host_obj in domain.ns.host_objs] if domain.ns.host_objs else None,
-            "host_attrs": [{"id": host_attr.id, "ipv4": host_attr.ipv4, "ipv6": host_attr.ipv6} for host_attr in domain.ns.host_attrs] if domain.ns.host_attrs else None,
-        } if domain.ns else
-        None,
-        "contacts": [{"value": contact.id, "type": contact.types} for contact in domain.contacts] if domain.contacts else None,
-        "dnsSEC": domain.dnsSEC,
-        "status": [x for x in domain.status] if domain.status else None,
-        "crDate": domain.crDate,
-        "exDate": domain.exDate,
-        "upDate": domain.upDate,
-        "trDate": domain.trDate,
-        "clID": domain.clID,
-        "crID": domain.crID
-    }
+    domain_dict = {}
+    domain_dict["name"] = domain.name
+    if domain.duration:
+        domain_dict["duration"] = domain.duration
+    if domain.registrant:
+        domain_dict["registrant"] = [registrant.id for registrant in domain.registrant]
+    if domain.authInfo:
+        domain_dict["authInfo"] = {}
+        if domain.authInfo.pw:
+            domain_dict["authInfo"]["pw"] = domain.authInfo.pw
+        if domain.authInfo.hash:
+            domain_dict["authInfo"]["hash"] = domain.authInfo.hash
+    if domain.ns:
+        ns_dict = {}
+        if domain.ns.host_objs:
+            ns_dict["host_objs"] = [host_obj.id for host_obj in domain.ns.host_objs]
+        if domain.ns.host_attrs:
+            ns_dict["host_attrs"] = [{"id": host_attr.id, "ipv4": host_attr.ipv4, "ipv6": host_attr.ipv6} for host_attr in domain.ns.host_attrs]
+        if len(ns_dict) > 0:
+            domain_dict["ns"] = ns_dict
+    if domain.contacts:
+        domain_dict["contacts"] = [{"value": contact.id, "type": contact.types} for contact in domain.contacts]
+    if domain.dnsSEC:
+        domain_dict["dnsSEC"] = domain.dnsSEC
+    if domain.status:
+        domain_dict["status"] = [x for x in domain.status]
+    if domain.crDate:
+        domain_dict["crDate"] = domain.crDate
+    if domain.exDate:
+        domain_dict["exDate"] = domain.exDate
+    if domain.upDate:
+        domain_dict["upDate"] = domain.upDate
+    if domain.trDate:
+        domain_dict["trDate"] = domain.trDate
+    if domain.clID:
+        domain_dict["clID"] = domain.clID
+    if domain.crID:
+        domain_dict["crID"] = domain.crID
 
+    validate_schema("Domain", domain_dict)
     return domain_dict

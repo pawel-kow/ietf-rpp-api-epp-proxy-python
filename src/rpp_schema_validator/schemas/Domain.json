@@ -1,0 +1,147 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "Domain.json",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "duration": {
+            "type": "string",
+            "format": "duration"
+        },
+        "registrant": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "authInfo": {
+            "type": "object",
+            "properties": {
+                "pw": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                }
+            }
+        },
+        "ns": {
+            "type": "object",
+            "properties": {
+                "hostObj": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/HostInfo"
+                    }
+                },
+                "hostAttr": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/HostInfo"
+                    }
+                }
+            }
+        },
+        "contacts": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/ContactReference"
+            }
+        },
+        "dnsSEC": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/DnsSec"
+            }
+        }
+    },
+    "required": [
+        "name"
+    ],
+    "$defs": {
+        "HostInfo": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "addr": {
+                    "type": "object",
+                    "properties": {
+                        "ipv4": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "ipv6": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "ipv4",
+                        "ipv6"
+                    ]
+                }
+            },
+            "required": [
+                "name"
+            ]
+        },
+        "ContactReference": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/ContactType"
+                    }
+                }
+            },
+            "required": [
+                "value",
+                "type"
+            ]
+        },
+        "DnsSec": {
+            "type": "object",
+            "properties": {
+                "keyTag": {
+                    "type": "string"
+                },
+                "algorithm": {
+                    "type": "string"
+                },
+                "digestType": {
+                    "type": "string"
+                },
+                "digest": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "keyTag",
+                "algorithm",
+                "digestType",
+                "digest"
+            ]
+        },
+        "ContactType": {
+            "type": "string",
+            "enum": [
+                "registrant",
+                "admin",
+                "tech",
+                "billing"
+            ]
+        }
+    }
+}
