@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from lxml import etree
 from models import *
 
 def create_domain_xml(domain: Domain, client_request_id=None) -> str:
@@ -15,7 +16,7 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
 
     '''
     Needed output:
-    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <?xml version="1.0" standalone="no"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
     <command>
         <create>
@@ -57,13 +58,14 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
 
 
     if domain.ns:
+        domain_ns = ET.SubElement(domain_create, "domain:ns")
         if domain.ns.host_objs:
-            host_attr = ET.SubElement(domain_ns, "domain:hostObj")
-            host_name = ET.SubElement(host_attr, "domain:hostName")
-            host_name.text = host_attr_data.id
+            for host_obj_data in domain.ns.host_objs:
+                host_obj = ET.SubElement(domain_ns, "domain:hostObj")
+                host_obj.text = host_obj_data.id
         if domain.ns.host_attrs:
             for host_attr_data in domain.ns.host_attrs:
-                host_attr = ET.SubElement(domain_ns, "domain:hostObj")
+                host_attr = ET.SubElement(domain_ns, "domain:hostAttr")
                 host_name = ET.SubElement(host_attr, "domain:hostName")
                 host_name.text = host_attr_data.id
 
@@ -97,22 +99,23 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
         cl_trid.text = client_request_id
 
     xml_string = ET.tostring(epp, encoding="unicode", method="xml")
-    xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + xml_string
+    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
 
     return xml_string
 
 def parse_domain_create_response(xml_string: str) -> DomainCreateResponse:
     """Parses an EPP domain create response XML string."""
 
-    root = ET.fromstring(xml_string)
+    parser = etree.XMLParser(encoding='utf-8', recover=True)
+    root = etree.fromstring(xml_string, parser=parser)
     namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
 
     domain_name = root.find(".//domain:name", namespaces=namespace).text
-    registrant = root.find(".//domain:registrant", namespaces=namespace).text
-    cr_date = root.find(".//domain:crDate", namespaces=namespace).text
-    ex_date = root.find(".//domain:exDate", namespaces=namespace).text
-    up_date = root.find(".//domain:crDate", namespaces=namespace).text
-    tr_date = root.find(".//domain:exDate", namespaces=namespace).text
+    registrant = root.find(".//domain:registrant", namespaces=namespace).text if root.find(".//domain:registrant", namespaces=namespace) is not None else None
+    cr_date = root.find(".//domain:crDate", namespaces=namespace).text if root.find(".//domain:crDate", namespaces=namespace) is not None else None
+    ex_date = root.find(".//domain:exDate", namespaces=namespace).text if root.find(".//domain:exDate", namespaces=namespace) is not None else None
+    up_date = root.find(".//domain:crDate", namespaces=namespace).text if root.find(".//domain:crDate", namespaces=namespace) is not None else None
+    tr_date = root.find(".//domain:exDate", namespaces=namespace).text if root.find(".//domain:exDate", namespaces=namespace) is not None else None
     status = [x.attrib.get("s", None) for x in root.findall(".//domain:status", namespaces=namespace)]
     ns = root.find(".//domain:ns", namespaces=namespace)
     if ns:
@@ -121,13 +124,19 @@ def parse_domain_create_response(xml_string: str) -> DomainCreateResponse:
     else:
         host_objs = None
         host_attrs = None
-    clid = root.find(".//domain:clID", namespaces=namespace).text
-    crid = root.find(".//domain:crID", namespaces=namespace).text
-    server_transaction_id = root.find(".//epp:svTRID", namespaces=namespace).text
+        #TODO: parse host attributes
+    clid = root.find(".//domain:clID", namespaces=namespace).text if root.find(".//domain:clID", namespaces=namespace) is not None  else None
+    crid = root.find(".//domain:crID", namespaces=namespace).text if root.find(".//domain:crID", namespaces=namespace) is not None else None
+    server_transaction_id = root.find(".//epp:svTRID",
+    #TODO: parse authInfo
+    #TODO: parse contacts
+namespaces=namespace).text
 
     domain = Domain(name=domain_name, crDate=cr_date, exDate=ex_date, 
                     upDate=up_date, trDate=tr_date, status=status,
                     clID=clid, crID=crid,
-                    ns=NS(host_objs=host_objs, host_attrs=None) if host_objs else NS(host_attrs=host_attrs, host_objs=None) if host_attrs else None)
+                    ns=NS(host_objs=host_objs, host_attrs=None) if host_objs else NS(host_attrs=host_attrs, host_objs=None) if host_attrs else None,
+                    registrant=[Registrant(id=registrant)] if registrant else None,
+                    authInfo=None, contacts=None, dnsSEC=None)
     response = DomainCreateResponse(domain=domain, server_transaction_id=server_transaction_id)
     return response

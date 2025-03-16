@@ -665,9 +665,6 @@ components:
               type: string
             hash:
               type: string
-          required:
-            - pw
-            - hash
         ns:
           type: object
           properties:
@@ -679,9 +676,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/HostInfo'
-          required:
-            - hostObj
-            - hostAttr
         contacts:
           type: array
           items:
@@ -816,7 +810,6 @@ components:
       type: object
       required:
         - name
-        - addr
       properties:
         name:
           type: string
@@ -849,9 +842,6 @@ components:
       type: object
       required:
         - id
-        - name
       properties:
         id:
-          type: string
-        name:
           type: string

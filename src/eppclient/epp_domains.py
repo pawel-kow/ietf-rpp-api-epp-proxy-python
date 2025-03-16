@@ -1,16 +1,15 @@
 from models import *
 from epp_to_model_mapper import *
-from .tcpclient import TCPClient
+from .eppclient import EPPClient
 
-tcp_client = TCPClient("localhost", 700)
+epp_client = EPPClient("localhost", 7001, "foo", "barbarbar")
 
 def epp_domains_Create(domain: Domain) -> DomainCreateResponse:
     eppxml = create_domain_xml(domain)
-    if False:
-        tcp_client.send(eppxml)
-        response = tcp_client.receive()
+    if True:
+        response = epp_client.send_and_get_response(eppxml)
     else:
-        response = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        response = '''<?xml version="1.0" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <response>
     <result code="1000">

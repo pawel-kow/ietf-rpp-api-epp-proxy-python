@@ -23,6 +23,7 @@ class NS:
 
 @dataclass
 class ContactReference:
+    types: List[str]
     id: str
 
 @dataclass
@@ -40,18 +41,37 @@ class Domain:
     name: str
     duration: Optional[str] = None
     status: Optional[List[str]] = None
-    registrant: List[Registrant] = field(default_factory=list)
+    registrant: List[Registrant] = None
     authInfo: Optional[AuthInfo] = None
     ns: NS = None
-    contacts: List[ContactReference] = field(default_factory=list)
-    dnsSEC: List[DnsSec] = field(default_factory=list)
+    contacts: Optional[List[ContactReference]] = None
+    dnsSEC: Optional[List[DnsSec]] = None
     crDate: Optional[str] = None
     exDate: Optional[str] = None
     upDate: Optional[str] = None
     trDate: Optional[str] = None
-    clID: Optional[str] = None # element that contains the identifier of the sponsoring client.
-    crID: Optional[str] = None #element that contains the identifier of the client that created the domain object.
+    clID: Optional[str] = None
+    crID: Optional[str] = None
     
+    def update(self, domain):
+        self.name = domain.name if domain.name else self.name
+        self.duration = domain.duration if domain.duration else self.duration
+        self.status = domain.status if domain.status and len(domain.status) > 0 else self.status
+        self.registrant = domain.registrant if domain.registrant and len(domain.registrant) > 0 else self.registrant
+        self.authInfo = domain.authInfo if domain.authInfo else self.authInfo
+        # TODO: cascade update
+        self.ns = domain.ns if domain.ns and (domain.ns.host_objs and len(domain.ns.host_objs) > 0 or domain.ns.host_attrs and len(domain.ns.host_attrs) > 0) else self.ns
+        # TODO: cascade update
+        self.contacts = domain.contacts if domain.contacts else self.contacts
+        # TODO: cascade update
+        self.dnsSEC = domain.dnsSEC if domain.dnsSEC else self.dnsSEC
+        self.crDate = domain.crDate if domain.crDate else self.crDate
+        self.exDate = domain.exDate if domain.exDate else self.exDate
+        self.upDate = domain.upDate if domain.upDate else self.upDate
+        self.trDate = domain.trDate if domain.trDate else self.trDate
+        self.clID = domain.clID if domain.clID else self.clID
+        self.crID = domain.crID if domain.crID else self.crID
+
 @dataclass
 class DomainCreateResponse:
     domain: Domain

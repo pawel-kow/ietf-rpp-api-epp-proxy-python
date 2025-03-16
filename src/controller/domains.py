@@ -16,9 +16,11 @@ def domains_Create(body):
     
     # Call the eppclient function to create the domain
     domainresp = epp_domains_Create(domain)
+    #HACK: this should be rather done with domain information from the response
+    domain.update(domainresp.domain)
     
     # Convert the response to JSON
-    response = domain_to_rpp(domainresp.domain)
+    response = domain_to_rpp(domain)
     
     return response, 201
 

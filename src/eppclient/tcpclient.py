@@ -25,10 +25,11 @@ class TCPClient:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((self.server_address, self.server_port))
-            print(f"Connected to {self.server_address}:{self.server_port}")
+            print(f"TCPClient: Connected to {self.server_address}:{self.server_port}")
         except Exception as e:
             print(f"Error connecting to server: {e}")
             self.socket = None
+            raise
 
     def send(self, message):
         """
@@ -41,7 +42,7 @@ class TCPClient:
             self.connect()
 
         if self.socket is None:
-            print("Connection failed. Cannot send message.")
+            print("TCPClient: Connection failed. Cannot send message.")
             return
 
         try:
@@ -52,11 +53,12 @@ class TCPClient:
             self.socket.sendall(length_bytes)
             self.socket.sendall(payload)
 
-            print(f"Sent message: {message}")
+            print(f"TCPClient: Sent message: {message}")
 
         except Exception as e:
-            print(f"Error sending message: {e}")
+            print(f"TCPClient: Error sending message: {e}")
             self.disconnect()
+            raise
 
     def receive(self):
         """
@@ -66,7 +68,7 @@ class TCPClient:
             self.connect()
 
         if self.socket is None:
-            print("Connection failed. Cannot receive message.")
+            print("TCPClient: Connection failed. Cannot receive message.")
             return None
 
         try:
@@ -78,13 +80,13 @@ class TCPClient:
             payload = self.socket.recv(payload_length)
             message = payload.decode('utf-8')
 
-            print(f"Received message: {message}")
+            print(f"TCPClient: Received message: {message}")
             return message
 
         except Exception as e:
-            print(f"Error receiving message: {e}")
+            print(f"TCPClient: Error receiving message: {e}")
             self.disconnect()
-            return None
+            raise
 
     def disconnect(self):
         """
@@ -93,8 +95,8 @@ class TCPClient:
         if self.socket:
             try:
                 self.socket.close()
-                print("Disconnected from server.")
+                print("TCPClient: Disconnected from server.")
             except Exception as e:
-                print(f"Error disconnecting: {e}")
+                raise
             finally:
                 self.socket = None
