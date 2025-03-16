@@ -3,6 +3,8 @@ from rpp_schema_validator import validate_schema
 
 def rpp_to_domain(rpp: dict) -> Domain:
     """Converts a JSON string to a Domain object according to the provided schema."""
+    # First validate the schema
+    validate_schema("Domain", rpp)
     # Create a Domain object from the request body
     domain = Domain(
         name=rpp["name"],
