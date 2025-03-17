@@ -6,9 +6,16 @@
         "name": {
             "type": "string"
         },
-        "duration": {
-            "type": "string",
-            "format": "duration"
+        "processes": {
+            "type": "object",
+            "properties": {
+                "creation": {
+                    "$ref": "#/$defs/DomainCreation"
+                },
+                "renewal": {
+                    "$ref": "#/$defs/DomainRenewal"
+                }
+            }
         },
         "registrant": {
             "type": "array",
@@ -28,21 +35,7 @@
             }
         },
         "ns": {
-            "type": "object",
-            "properties": {
-                "hostObj": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/HostInfo"
-                    }
-                },
-                "hostAttr": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/HostInfo"
-                    }
-                }
-            }
+            "$ref": "#/$defs/NS"
         },
         "contacts": {
             "type": "array",
@@ -60,37 +53,106 @@
     "required": [
         "name"
     ],
-    "$defs": {
-        "HostInfo": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "addr": {
-                    "type": "object",
-                    "properties": {
-                        "ipv4": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "ipv6": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+    "examples": [
+        {
+            "name": "example.com",
+            "processes": {
+                "creation": {
+                    "period": "P2Y"
+                }
+            },
+            "registrant": [
+                "registrant-id"
+            ],
+            "authInfo": {
+                "pw": "password"
+            }
+        },
+        {
+            "name": "example.com",
+            "registrant": [
+                "registrant-id"
+            ],
+            "authInfo": {
+                "pw": "password"
+            },
+            "ns": {
+                "hostAttr": [
+                    {
+                        "name": "ns1.example.net",
+                        "addr": {
+                            "ipv4": [
+                                "1.1.1.1"
+                            ],
+                            "ipv6": [
+                                "2001:db8::1"
+                            ]
                         }
                     },
-                    "required": [
-                        "ipv4",
-                        "ipv6"
-                    ]
+                    {
+                        "name": "ns2.example.net",
+                        "addr": {
+                            "ipv4": [
+                                "1.1.1.1"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "example.com",
+            "registrant": [
+                "registrant-id"
+            ],
+            "authInfo": {
+                "pw": "password"
+            },
+            "ns": {
+                "hostObj": [
+                    {
+                        "name": "ns1.example.net"
+                    },
+                    {
+                        "name": "ns2.example.net"
+                    }
+                ]
+            }
+        }
+    ],
+    "$defs": {
+        "DomainCreation": {
+            "type": "object",
+            "properties": {
+                "period": {
+                    "type": "string",
+                    "format": "duration"
                 }
             },
             "required": [
-                "name"
+                "period"
+            ]
+        },
+        "DomainRenewal": {
+            "type": "object",
+            "properties": {
+                "period": {
+                    "type": "string",
+                    "format": "duration"
+                }
+            },
+            "required": [
+                "period"
+            ]
+        },
+        "NS": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/NSHostObj"
+                },
+                {
+                    "$ref": "#/$defs/NSHostAttr"
+                }
             ]
         },
         "ContactReference": {
@@ -134,6 +196,34 @@
                 "digest"
             ]
         },
+        "NSHostObj": {
+            "type": "object",
+            "properties": {
+                "hostObj": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/HostInfoObj"
+                    }
+                }
+            },
+            "required": [
+                "hostObj"
+            ]
+        },
+        "NSHostAttr": {
+            "type": "object",
+            "properties": {
+                "hostAttr": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/HostInfoAttr"
+                    }
+                }
+            },
+            "required": [
+                "hostAttr"
+            ]
+        },
         "ContactType": {
             "type": "string",
             "enum": [
@@ -141,6 +231,44 @@
                 "admin",
                 "tech",
                 "billing"
+            ]
+        },
+        "HostInfoObj": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
+            ]
+        },
+        "HostInfoAttr": {
+            "type": "object",
+            "properties": {
+                "addr": {
+                    "type": "object",
+                    "properties": {
+                        "ipv4": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "ipv6": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/$defs/HostInfoObj"
+                }
             ]
         }
     }
