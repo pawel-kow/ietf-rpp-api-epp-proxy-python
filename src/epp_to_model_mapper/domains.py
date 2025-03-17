@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 from lxml import etree
 from models import *
+import re
 
 def create_domain_xml(domain: Domain, client_request_id=None) -> str:
     """
@@ -52,10 +53,16 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
     domain_name_element = ET.SubElement(domain_create, "domain:name")
     domain_name_element.text = domain.name
 
-    if domain.duration:
-        domain_period = ET.SubElement(domain_create, "domain:period", {"unit": "y"})
-        domain_period.text = str(domain.duration)
-
+    if domain.processes and domain.processes.get("creation"):
+        duration = domain.processes["creation"].duration
+        match = re.match(r"P([0-9]+)([MY])", duration)
+        if match:
+            value, unit = match.groups()
+            unit = unit.lower()
+        else:
+            raise ValueError("Unsupported duration format. Only whole years (Y) or months (M) are allowed.")
+        domain_period = ET.SubElement(domain_create, "domain:period", {"unit": unit})
+        domain_period.text = value
 
     if domain.ns:
         domain_ns = ET.SubElement(domain_create, "domain:ns")
@@ -83,12 +90,11 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
         domain_registrant.text = domain.registrant[0].id
 
     if domain.contacts:
-        contact_types = ["admin", "billing", "tech"]
-        for contact_type in contact_types:
-            if contact_type in domain.contacts:
-                domain_contact = ET.SubElement(domain_create, "domain:contact", {"type": contact_type})
-                domain_contact.text = domain.contacts[contact_type]
-
+        for contact in domain.contacts:
+            for t in contact.types:
+                domain_contact = ET.SubElement(domain_create, "domain:contact", {"type": t})
+                domain_contact.text = contact.id
+                
     if domain.authInfo and domain.authInfo.pw:
         domain_auth_info = ET.SubElement(domain_create, "domain:authInfo")
         domain_pw = ET.SubElement(domain_auth_info, "domain:pw")
@@ -114,8 +120,8 @@ def parse_domain_create_response(xml_string: str) -> DomainCreateResponse:
     registrant = root.find(".//domain:registrant", namespaces=namespace).text if root.find(".//domain:registrant", namespaces=namespace) is not None else None
     cr_date = root.find(".//domain:crDate", namespaces=namespace).text if root.find(".//domain:crDate", namespaces=namespace) is not None else None
     ex_date = root.find(".//domain:exDate", namespaces=namespace).text if root.find(".//domain:exDate", namespaces=namespace) is not None else None
-    up_date = root.find(".//domain:crDate", namespaces=namespace).text if root.find(".//domain:crDate", namespaces=namespace) is not None else None
-    tr_date = root.find(".//domain:exDate", namespaces=namespace).text if root.find(".//domain:exDate", namespaces=namespace) is not None else None
+    up_date = root.find(".//domain:upDate", namespaces=namespace).text if root.find(".//domain:upDate", namespaces=namespace) is not None else None
+    tr_date = root.find(".//domain:trDate", namespaces=namespace).text if root.find(".//domain:trDate", namespaces=namespace) is not None else None
     status = [x.attrib.get("s", None) for x in root.findall(".//domain:status", namespaces=namespace)]
     ns = root.find(".//domain:ns", namespaces=namespace)
     if ns:

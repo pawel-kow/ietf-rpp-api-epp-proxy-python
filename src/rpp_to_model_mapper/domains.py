@@ -8,7 +8,6 @@ def rpp_to_domain(rpp: dict) -> Domain:
     # Create a Domain object from the request body
     domain = Domain(
         name=rpp["name"],
-        duration=rpp.get("duration", None),
         registrant=[Registrant(id=x) for x in rpp["registrant"]] if "registrant" in rpp else None,
         authInfo=AuthInfo(pw=rpp["authInfo"].get("pw", None), hash=rpp["authInfo"].get("hash", None)) if "authInfo" in
         rpp else None,
@@ -27,6 +26,14 @@ def rpp_to_domain(rpp: dict) -> Domain:
         contacts=[ContactReference(id=x["value"], types=x["type"]) for x in rpp["contacts"]] if "contacts" in rpp else None,
         dnsSEC=rpp.get("dnsSEC", None)
     )
+    if "processes" in rpp:
+        domain.processes = {}
+        for process_name, process in rpp["processes"].items():
+            if process_name == "creation":
+                domain.processes[process_name] = CreationProcess()
+                domain.processes[process_name].duration=process["period"]
+            else:
+                domain.processes[process_name] = Process()
     return domain
 
 def domain_to_rpp(domain: Domain) -> str:
@@ -34,8 +41,6 @@ def domain_to_rpp(domain: Domain) -> str:
 
     domain_dict = {}
     domain_dict["name"] = domain.name
-    if domain.duration:
-        domain_dict["duration"] = domain.duration
     if domain.registrant:
         domain_dict["registrant"] = [registrant.id for registrant in domain.registrant]
     if domain.authInfo:
@@ -47,9 +52,9 @@ def domain_to_rpp(domain: Domain) -> str:
     if domain.ns:
         ns_dict = {}
         if domain.ns.host_objs:
-            ns_dict["host_objs"] = [host_obj.id for host_obj in domain.ns.host_objs]
+            ns_dict["hostObj"] = [{"name": host_obj.id} for host_obj in domain.ns.host_objs]
         if domain.ns.host_attrs:
-            ns_dict["host_attrs"] = [{"id": host_attr.id, "ipv4": host_attr.ipv4, "ipv6": host_attr.ipv6} for host_attr in domain.ns.host_attrs]
+            ns_dict["hostAttr"] = [{"name": host_attr.id, "ipv4": host_attr.ipv4, "ipv6": host_attr.ipv6} for host_attr in domain.ns.host_attrs]
         if len(ns_dict) > 0:
             domain_dict["ns"] = ns_dict
     if domain.contacts:

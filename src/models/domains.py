@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 @dataclass
 class Registrant:
@@ -37,9 +37,15 @@ class AuthInfo:
     hash: str
 
 @dataclass
+class Process:
+    pass
+
+class CreationProcess(Process):
+    duration: str
+
+@dataclass
 class Domain:
     name: str
-    duration: Optional[str] = None
     status: Optional[List[str]] = None
     registrant: List[Registrant] = None
     authInfo: Optional[AuthInfo] = None
@@ -52,10 +58,11 @@ class Domain:
     trDate: Optional[str] = None
     clID: Optional[str] = None
     crID: Optional[str] = None
+    processes: Dict[str, Process] = None
     
     def update(self, domain):
         self.name = domain.name if domain.name else self.name
-        self.duration = domain.duration if domain.duration else self.duration
+        self.processes = domain.processes if domain.processes else self.processes
         self.status = domain.status if domain.status and len(domain.status) > 0 else self.status
         self.registrant = domain.registrant if domain.registrant and len(domain.registrant) > 0 else self.registrant
         self.authInfo = domain.authInfo if domain.authInfo else self.authInfo
