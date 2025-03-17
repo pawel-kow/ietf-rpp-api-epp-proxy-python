@@ -1,20 +1,12 @@
 openapi: 3.0.0
 info:
-  title: (title)
-  version: 0.0.0
-tags: []
+  title: RPP Testbed
+  version: 1.0.0
+  description: RPP Testbed server
+tags:
+  - name: Domains
+  - name: Contacts
 paths:
-  /:
-    get:
-      operationId: Hello
-      parameters: []
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HelloResponse'
   /contacts:
     head:
       operationId: contacts_Check
@@ -26,6 +18,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+      tags:
+        - Contacts
       requestBody:
         required: true
         content:
@@ -49,6 +43,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+      tags:
+        - Contacts
       requestBody:
         required: true
         content:
@@ -71,6 +67,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+      tags:
+        - Contacts
     get:
       operationId: contacts_Get
       parameters:
@@ -86,6 +84,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+      tags:
+        - Contacts
     patch:
       operationId: contacts_Update
       parameters:
@@ -101,57 +101,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+      tags:
+        - Contacts
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/ContactReferenceUpdate'
-  /contacts/{id}/extension/{value}:
-    get:
-      operationId: contacts_GetExtension
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: value
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-    patch:
-      operationId: contacts_UpdateExtension
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: value
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                entity:
-                  type: object
+              $ref: '#/components/schemas/ContactReferenceUpdate'
   /contacts/{id}/renewals:
     post:
       operationId: contacts_Renew
@@ -167,9 +124,9 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ContactReference'
+                $ref: '#/components/schemas/ContactReference'
+      tags:
+        - Contacts
   /domains:
     head:
       operationId: domains_Check
@@ -181,6 +138,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+      tags:
+        - Domains
       requestBody:
         required: true
         content:
@@ -204,6 +163,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+      tags:
+        - Domains
       requestBody:
         required: true
         content:
@@ -226,6 +187,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+      tags:
+        - Domains
     get:
       operationId: domains_Get
       parameters:
@@ -241,6 +204,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+      tags:
+        - Domains
     patch:
       operationId: domains_Update
       parameters:
@@ -256,57 +221,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+      tags:
+        - Domains
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/DomainUpdate'
-  /domains/{id}/extension/{value}:
-    get:
-      operationId: domains_GetExtension
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: value
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-    patch:
-      operationId: domains_UpdateExtension
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: value
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                entity:
-                  type: object
+              $ref: '#/components/schemas/DomainUpdate'
   /domains/{id}/renewals:
     post:
       operationId: domains_Renew
@@ -322,9 +244,9 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Domain'
+                $ref: '#/components/schemas/Domain'
+      tags:
+        - Domains
   /domains/{id}/transfer:
     put:
       operationId: domains_TransferRequest
@@ -340,9 +262,15 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Domain'
+                $ref: '#/components/schemas/DomainRenew'
+      tags:
+        - Domains
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainRenew'
     get:
       operationId: domains_TransferQuery
       parameters:
@@ -357,7 +285,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Domain'
+                $ref: '#/components/schemas/DomainRenew'
+      tags:
+        - Domains
     delete:
       operationId: domains_TransferCancel
       parameters:
@@ -372,7 +302,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Domain'
+                $ref: '#/components/schemas/DomainRenew'
+      tags:
+        - Domains
   /domains/{id}/transfer/approval:
     put:
       operationId: domains_TransferApprove
@@ -388,7 +320,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Domain'
+                $ref: '#/components/schemas/DomainRenew'
+      tags:
+        - Domains
   /domains/{id}/transfer/rejection:
     put:
       operationId: domains_TransferReject
@@ -404,7 +338,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Domain'
+                $ref: '#/components/schemas/DomainRenew'
+      tags:
+        - Domains
   /hosts:
     head:
       operationId: hosts_Check
@@ -421,7 +357,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Host'
+              $ref: '#/components/schemas/HostInfoAttr'
     post:
       operationId: hosts_Create
       parameters:
@@ -444,7 +380,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Host'
+              $ref: '#/components/schemas/HostInfoAttr'
   /hosts/{id}:
     delete:
       operationId: hosts_Delete
@@ -496,52 +432,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entity:
-                  $ref: '#/components/schemas/HostUpdate'
-  /hosts/{id}/extension/{value}:
-    get:
-      operationId: hosts_GetExtension
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: value
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-    patch:
-      operationId: hosts_UpdateExtension
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: value
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                entity:
-                  type: object
+              $ref: '#/components/schemas/HostInfoAttrUpdate'
   /hosts/{id}/renewals:
     post:
       operationId: hosts_Renew
@@ -557,9 +448,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Host'
+                $ref: '#/components/schemas/Host'
   /messages:
     get:
       operationId: Messages_PollRequest
@@ -651,9 +540,13 @@ components:
       properties:
         name:
           type: string
-        duration:
-          type: string
-          format: duration
+        processes:
+          type: object
+          properties:
+            creation:
+              $ref: '#/components/schemas/DomainCreation'
+            renewal:
+              $ref: '#/components/schemas/DomainRenewal'
         registrant:
           type: array
           items:
@@ -666,16 +559,7 @@ components:
             hash:
               type: string
         ns:
-          type: object
-          properties:
-            hostObj:
-              type: array
-              items:
-                $ref: '#/components/schemas/HostInfo'
-            hostAttr:
-              type: array
-              items:
-                $ref: '#/components/schemas/HostInfo'
+          $ref: '#/components/schemas/NS'
         contacts:
           type: array
           items:
@@ -684,14 +568,61 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DnsSec'
+      example:
+        name: example.com
+        processes:
+          creation:
+            period: P2Y
+        registrant:
+          - registrant-id
+        authInfo:
+          pw: password
+    DomainCreation:
+      type: object
+      required:
+        - period
+      properties:
+        period:
+          type: string
+          format: duration
+    DomainCreationUpdate:
+      type: object
+      properties:
+        period:
+          type: string
+          format: duration
+    DomainRenew:
+      type: object
+      properties:
+        duration:
+          type: string
+          format: duration
+    DomainRenewal:
+      type: object
+      required:
+        - period
+      properties:
+        period:
+          type: string
+          format: duration
+    DomainRenewalUpdate:
+      type: object
+      properties:
+        period:
+          type: string
+          format: duration
     DomainUpdate:
       type: object
       properties:
         name:
           type: string
-        duration:
-          type: string
-          format: duration
+        processes:
+          type: object
+          properties:
+            creation:
+              $ref: '#/components/schemas/DomainCreationUpdate'
+            renewal:
+              $ref: '#/components/schemas/DomainRenewalUpdate'
         registrant:
           type: array
           items:
@@ -704,16 +635,7 @@ components:
             hash:
               type: string
         ns:
-          type: object
-          properties:
-            hostObj:
-              type: array
-              items:
-                $ref: '#/components/schemas/HostInfo'
-            hostAttr:
-              type: array
-              items:
-                $ref: '#/components/schemas/HostInfo'
+          $ref: '#/components/schemas/NSUpdate'
         contacts:
           type: array
           items:
@@ -722,6 +644,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DnsSec'
+      example:
+        name: example.com
+        processes:
+          creation:
+            period: P2Y
+        registrant:
+          - registrant-id
+        authInfo:
+          pw: password
     HelloResponse:
       type: object
       required:
@@ -795,24 +726,11 @@ components:
             - statement
     Host:
       type: object
-      required:
-        - id
-        - name
-        - domain
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        domain:
-          $ref: '#/components/schemas/Domain'
-    HostInfo:
+      allOf:
+        - $ref: '#/components/schemas/HostInfoAttr'
+    HostInfoAttr:
       type: object
-      required:
-        - name
       properties:
-        name:
-          type: string
         addr:
           type: object
           properties:
@@ -824,20 +742,82 @@ components:
               type: array
               items:
                 type: string
-          required:
-            - ipv4
-            - ipv6
-    HostUpdate:
+      allOf:
+        - $ref: '#/components/schemas/HostInfoObj'
+    HostInfoAttrUpdate:
       type: object
       properties:
-        id:
-          type: string
+        addr:
+          type: object
+          properties:
+            ipv4:
+              type: array
+              items:
+                type: string
+            ipv6:
+              type: array
+              items:
+                type: string
+      allOf:
+        - $ref: '#/components/schemas/HostInfoObjUpdate'
+    HostInfoObj:
+      type: object
+      required:
+        - name
+      properties:
         name:
           type: string
-        domain:
-          $ref: '#/components/schemas/DomainUpdate'
+    HostInfoObjUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+    HostUpdate:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/HostInfoAttrUpdate'
     Message:
       type: object
+    NS:
+      oneOf:
+        - $ref: '#/components/schemas/NSHostObj'
+        - $ref: '#/components/schemas/NSHostAttr'
+    NSHostAttr:
+      type: object
+      required:
+        - hostAttr
+      properties:
+        hostAttr:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostInfoAttr'
+    NSHostAttrUpdate:
+      type: object
+      properties:
+        hostAttr:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostInfoAttr'
+    NSHostObj:
+      type: object
+      required:
+        - hostObj
+      properties:
+        hostObj:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostInfoObj'
+    NSHostObjUpdate:
+      type: object
+      properties:
+        hostObj:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostInfoObj'
+    NSUpdate:
+      oneOf:
+        - $ref: '#/components/schemas/NSHostObjUpdate'
+        - $ref: '#/components/schemas/NSHostAttrUpdate'
     Registrant:
       type: object
       required:
@@ -845,3 +825,7 @@ components:
       properties:
         id:
           type: string
+servers:
+  - url: https://localhost:8000
+    description: Local RPP Testbed server
+    variables: {}
