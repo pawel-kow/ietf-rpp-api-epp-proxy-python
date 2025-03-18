@@ -17,12 +17,6 @@
                 }
             }
         },
-        "registrant": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
         "authInfo": {
             "type": "object",
             "properties": {
@@ -61,17 +55,27 @@
                     "period": "P2Y"
                 }
             },
-            "registrant": [
-                "registrant-id"
-            ],
             "authInfo": {
                 "pw": "password"
-            }
+            },
+            "contacts": [
+                {
+                    "value": "registrant-id",
+                    "type": [
+                        "registrant"
+                    ]
+                }
+            ]
         },
         {
             "name": "example.com",
-            "registrant": [
-                "registrant-id"
+            "contacts": [
+                {
+                    "value": "registrant-id",
+                    "type": [
+                        "registrant"
+                    ]
+                }
             ],
             "authInfo": {
                 "pw": "password"
@@ -102,8 +106,14 @@
         },
         {
             "name": "example.com",
-            "registrant": [
-                "registrant-id"
+            "contacts": [
+                {
+                    "value": "registrant-id",
+                    "type": [
+                        "registrant",
+                        "admin"
+                    ]
+                }
             ],
             "authInfo": {
                 "pw": "password"

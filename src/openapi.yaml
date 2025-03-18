@@ -547,10 +547,6 @@ components:
               $ref: '#/components/schemas/DomainCreation'
             renewal:
               $ref: '#/components/schemas/DomainRenewal'
-        registrant:
-          type: array
-          items:
-            type: string
         authInfo:
           type: object
           properties:
@@ -573,10 +569,12 @@ components:
         processes:
           creation:
             period: P2Y
-        registrant:
-          - registrant-id
         authInfo:
           pw: password
+        contacts:
+          - value: registrant-id
+            type:
+              - registrant
     DomainCreation:
       type: object
       required:
@@ -623,10 +621,6 @@ components:
               $ref: '#/components/schemas/DomainCreationUpdate'
             renewal:
               $ref: '#/components/schemas/DomainRenewalUpdate'
-        registrant:
-          type: array
-          items:
-            type: string
         authInfo:
           type: object
           properties:
@@ -649,10 +643,12 @@ components:
         processes:
           creation:
             period: P2Y
-        registrant:
-          - registrant-id
         authInfo:
           pw: password
+        contacts:
+          - value: registrant-id
+            type:
+              - registrant
     HelloResponse:
       type: object
       required:

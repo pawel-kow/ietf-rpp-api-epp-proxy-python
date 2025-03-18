@@ -83,18 +83,23 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
                     host_addr_v6 = ET.SubElement(host_attr, "domain:hostAddr", {"ip": "v6"})
                     host_addr_v6.text = host_attr_data.ipv6
 
-    if domain.registrant:
-        if (len(domain.registrant) > 1):
-            raise ValueError("Only one registrant is allowed in EPP")
-        domain_registrant = ET.SubElement(domain_create, "domain:registrant")
-        domain_registrant.text = domain.registrant[0].id
-
     if domain.contacts:
+        registrant_generated = False
+        for contact in domain.contacts:
+            if "registrant" in contact.types:
+                if not registrant_generated:
+                    domain_registrant = ET.SubElement(domain_create, "domain:registrant")
+                    domain_registrant.text = contact.id
+                    registrant_generated = True
+                else:
+                    raise ValueError("Only one registrant is allowed in EPP")
+
         for contact in domain.contacts:
             for t in contact.types:
-                domain_contact = ET.SubElement(domain_create, "domain:contact", {"type": t})
-                domain_contact.text = contact.id
-                
+                if not t == "registrant":
+                    domain_contact = ET.SubElement(domain_create, "domain:contact", {"type": t})
+                    domain_contact.text = contact.id
+
     if domain.authInfo and domain.authInfo.pw:
         domain_auth_info = ET.SubElement(domain_create, "domain:authInfo")
         domain_pw = ET.SubElement(domain_auth_info, "domain:pw")
@@ -133,16 +138,15 @@ def parse_domain_create_response(xml_string: str) -> DomainCreateResponse:
         #TODO: parse host attributes
     clid = root.find(".//domain:clID", namespaces=namespace).text if root.find(".//domain:clID", namespaces=namespace) is not None  else None
     crid = root.find(".//domain:crID", namespaces=namespace).text if root.find(".//domain:crID", namespaces=namespace) is not None else None
-    server_transaction_id = root.find(".//epp:svTRID",
+    server_transaction_id = root.find(".//epp:svTRID", namespaces=namespace).text
     #TODO: parse authInfo
-    #TODO: parse contacts
-namespaces=namespace).text
-
+    #TODO: parse contacts and merge with registrant
+    if registrant:
+        contacts = [ContactReference(types=["registrant"], id=registrant)]
     domain = Domain(name=domain_name, crDate=cr_date, exDate=ex_date, 
                     upDate=up_date, trDate=tr_date, status=status,
                     clID=clid, crID=crid,
                     ns=NS(host_objs=host_objs, host_attrs=None) if host_objs else NS(host_attrs=host_attrs, host_objs=None) if host_attrs else None,
-                    registrant=[Registrant(id=registrant)] if registrant else None,
                     authInfo=None, contacts=None, dnsSEC=None)
     response = DomainCreateResponse(domain=domain, server_transaction_id=server_transaction_id)
     return response

@@ -2,10 +2,6 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict
 
 @dataclass
-class Registrant:
-    id: str
-
-@dataclass
 class HostObj:
     id: str
     pass
@@ -47,7 +43,6 @@ class CreationProcess(Process):
 class Domain:
     name: str
     status: Optional[List[str]] = None
-    registrant: List[Registrant] = None
     authInfo: Optional[AuthInfo] = None
     ns: NS = None
     contacts: Optional[List[ContactReference]] = None
@@ -64,7 +59,6 @@ class Domain:
         self.name = domain.name if domain.name else self.name
         self.processes = domain.processes if domain.processes else self.processes
         self.status = domain.status if domain.status and len(domain.status) > 0 else self.status
-        self.registrant = domain.registrant if domain.registrant and len(domain.registrant) > 0 else self.registrant
         self.authInfo = domain.authInfo if domain.authInfo else self.authInfo
         # TODO: cascade update
         self.ns = domain.ns if domain.ns and (domain.ns.host_objs and len(domain.ns.host_objs) > 0 or domain.ns.host_attrs and len(domain.ns.host_attrs) > 0) else self.ns

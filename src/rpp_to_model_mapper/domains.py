@@ -8,7 +8,6 @@ def rpp_to_domain(rpp: dict) -> Domain:
     # Create a Domain object from the request body
     domain = Domain(
         name=rpp["name"],
-        registrant=[Registrant(id=x) for x in rpp["registrant"]] if "registrant" in rpp else None,
         authInfo=AuthInfo(pw=rpp["authInfo"].get("pw", None), hash=rpp["authInfo"].get("hash", None)) if "authInfo" in
         rpp else None,
         ns=NS(
@@ -41,8 +40,6 @@ def domain_to_rpp(domain: Domain) -> str:
 
     domain_dict = {}
     domain_dict["name"] = domain.name
-    if domain.registrant:
-        domain_dict["registrant"] = [registrant.id for registrant in domain.registrant]
     if domain.authInfo:
         domain_dict["authInfo"] = {}
         if domain.authInfo.pw:
