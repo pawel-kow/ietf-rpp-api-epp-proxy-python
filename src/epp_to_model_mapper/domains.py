@@ -2,6 +2,8 @@ import xml.etree.ElementTree as ET
 from lxml import etree
 from models import *
 import re
+from helpers import decode_xml
+import uuid
 
 def create_domain_xml(domain: Domain, client_request_id=None) -> str:
     """
@@ -105,9 +107,10 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
         domain_pw = ET.SubElement(domain_auth_info, "domain:pw")
         domain_pw.text = domain.authInfo.pw
 
-    if client_request_id:
-        cl_trid = ET.SubElement(command, "clTRID")
-        cl_trid.text = client_request_id
+    if not client_request_id:
+        client_request_id = str(uuid.uuid4())
+    cl_trid = ET.SubElement(command, "clTRID")
+    cl_trid.text = client_request_id
 
     xml_string = ET.tostring(epp, encoding="unicode", method="xml")
     xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
@@ -116,9 +119,7 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
 
 def parse_domain_create_response(xml_string: str) -> DomainCreateResponse:
     """Parses an EPP domain create response XML string."""
-
-    parser = etree.XMLParser(encoding='utf-8', recover=True)
-    root = etree.fromstring(xml_string, parser=parser)
+    root = decode_xml(xml_string)
     namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
 
     domain_name = root.find(".//domain:name", namespaces=namespace).text

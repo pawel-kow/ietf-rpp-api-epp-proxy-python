@@ -2,7 +2,7 @@ from models import *
 from epp_to_model_mapper import *
 from .eppclient import EPPClient
 
-epp_client = EPPClient("localhost", 7001, "foo", "barbarbar")
+epp_client = EPPClient("localhost", 7001, "foo", "bar")
 
 def epp_domains_Create(domain: Domain) -> DomainCreateResponse:
     eppxml = create_domain_xml(domain)
