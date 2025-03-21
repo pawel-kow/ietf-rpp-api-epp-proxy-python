@@ -4,7 +4,7 @@ from .tcpclient import TCPClient
 import uuid
 import xml.etree.ElementTree as ET
 from lxml import etree
-
+from helpers import decode_xml
 
 class EPPClient:
     """
@@ -56,7 +56,8 @@ class EPPClient:
             self.client.send(message)
         except Exception as e:
             print(f"Error sending message: {e}")
-            return None
+            self.disconnect(send_logout=False)
+            raise
 
         try:
             response = self.client.receive()
@@ -67,17 +68,19 @@ class EPPClient:
             return response
         except Exception as e:
             print(f"Error receiving response: {e}")
+            self.disconnect(send_logout=False)
             raise
 
 
-    def disconnect(self):
+    def disconnect(self, send_logout=True):
         """
         Disconnects from the server.
         """
         try:
             try:
                 # Sending logout message
-                self._send_logout()
+                if send_logout:
+                    self._send_logout()
             finally:
                 #disconnect TCP connection
                 self.client.disconnect()
@@ -112,7 +115,7 @@ class EPPClient:
         </svcExtension>
       </svcs>
     </login>
-    <clTRID>ABC-12345</clTRID>
+    <clTRID>{uuid.uuid4()}</clTRID>
   </command>
 </epp>
 """
@@ -137,7 +140,6 @@ class EPPClient:
         if not success:
             raise Exception(f"Logout failed: {msg}")
 
-
     def _parse_epp_response(self, response):
         """
         Parses an EPP response.
@@ -145,8 +147,7 @@ class EPPClient:
         Args:
             response (str): The response to parse.
         """
-        parser = etree.XMLParser(encoding='utf-8', recover=True)
-        root = etree.fromstring(response, parser=parser)
+        root = decode_xml(response)
         namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0'}
 
         code = root.find("./epp:response/epp:result", namespaces=namespace).attrib.get("code")

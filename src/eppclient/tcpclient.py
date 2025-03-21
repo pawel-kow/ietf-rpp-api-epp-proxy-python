@@ -1,6 +1,9 @@
 import socket
 import struct
 
+class ConnectionException(Exception):
+    pass
+
 class TCPClient:
     """
     A simple TCP client class.
@@ -40,6 +43,13 @@ class TCPClient:
         """
         if self.socket is None:
             self.connect()
+        else:
+            try:
+                # Check if the socket is still alive by sending a zero-byte message
+                self.socket.send(b'')
+            except socket.error:
+                print("TCPClient: Socket is dead.")
+                raise
 
         if self.socket is None:
             print("TCPClient: Connection failed. Cannot send message.")
@@ -48,7 +58,7 @@ class TCPClient:
         try:
             payload = message.encode('utf-8')
             payload_length = len(payload)
-            length_bytes = struct.pack('!I', payload_length)  # Pack length as big-endian unsigned integer
+            length_bytes = struct.pack('>L', payload_length + 4)  # Pack length as big-endian unsigned integer
 
             self.socket.sendall(length_bytes)
             self.socket.sendall(payload)
@@ -69,15 +79,15 @@ class TCPClient:
 
         if self.socket is None:
             print("TCPClient: Connection failed. Cannot receive message.")
-            return None
+            raise ConnectionException("TCPClient: Connection failed. Cannot receive message.")
 
         try:
             length_bytes = self.socket.recv(4)
             if not length_bytes:
-                return None  # Connection closed by server
+                raise ConnectionException("TCPClient: Connection closed by server")
 
-            payload_length = struct.unpack('!I', length_bytes)[0]
-            payload = self.socket.recv(payload_length)
+            payload_length = struct.unpack('>L', length_bytes)[0]
+            payload = self.socket.recv(payload_length - 4)  # Subtract 4 bytes for the length field
             message = payload.decode('utf-8')
 
             print(f"TCPClient: Received message: {message}")
@@ -86,7 +96,7 @@ class TCPClient:
         except Exception as e:
             print(f"TCPClient: Error receiving message: {e}")
             self.disconnect()
-            raise
+            raise ConnectionException(f"TCPClient: Error receiving message: {e}")
 
     def disconnect(self):
         """
@@ -97,6 +107,6 @@ class TCPClient:
                 self.socket.close()
                 print("TCPClient: Disconnected from server.")
             except Exception as e:
-                raise
+                raise ConnectionException(f"TCPClient: error disconnecting {e}")
             finally:
                 self.socket = None
