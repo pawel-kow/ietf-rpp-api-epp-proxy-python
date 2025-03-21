@@ -117,7 +117,7 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
 
     return xml_string
 
-def parse_domain_create_response(xml_string: str) -> DomainCreateResponse:
+def parse_domain_response(xml_string: str) -> DomainCreateResponse:
     """Parses an EPP domain create response XML string."""
     root = decode_xml(xml_string)
     namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
@@ -130,7 +130,7 @@ def parse_domain_create_response(xml_string: str) -> DomainCreateResponse:
     tr_date = root.find(".//domain:trDate", namespaces=namespace).text if root.find(".//domain:trDate", namespaces=namespace) is not None else None
     status = [x.attrib.get("s", None) for x in root.findall(".//domain:status", namespaces=namespace)]
     ns = root.find(".//domain:ns", namespaces=namespace)
-    if ns:
+    if ns is not None:
         host_objs = [HostObj(x.text) for x in ns.findall(".//domain:hostObj", namespaces=namespace)]
         host_attrs = None
     else:
@@ -140,14 +140,78 @@ def parse_domain_create_response(xml_string: str) -> DomainCreateResponse:
     clid = root.find(".//domain:clID", namespaces=namespace).text if root.find(".//domain:clID", namespaces=namespace) is not None  else None
     crid = root.find(".//domain:crID", namespaces=namespace).text if root.find(".//domain:crID", namespaces=namespace) is not None else None
     server_transaction_id = root.find(".//epp:svTRID", namespaces=namespace).text
-    #TODO: parse authInfo
-    #TODO: parse contacts and merge with registrant
+    authInfo = root.find(".//domain:authInfo", namespaces=namespace)
+    pw = None
+    hash = None
+    if authInfo is not None:
+        pw = authInfo.find("./domain:pw", namespaces=namespace).text if authInfo.find("./domain:pw", namespaces=namespace) is not None else None
+        hash = authInfo.find("./domain:hash", namespaces=namespace).text if authInfo.find("./domain:hash", namespaces=namespace) is not None else None
+    contact_nodes = root.findall(".//domain:contact", namespaces=namespace)
+    contacts_dict = {}
+    contacts = None
+    for c in contact_nodes:
+        contact_id = c.text
+        contact_role = c.attrib["type"]
+        if contact_id in contacts_dict:
+            contacts_dict[contact_id] += [contact_role]
+        else:
+            contacts_dict[contact_id] = [contact_role]
+
     if registrant:
-        contacts = [ContactReference(types=["registrant"], id=registrant)]
+        if registrant in contacts_dict:
+            contacts_dict[registrant] += ["registrant"]
+        else:
+            contacts_dict[registrant] = ["registrant"]
+    
+    if len(contacts_dict) != 0:
+        contacts = [ContactReference(types=contacts_dict[x], id=x) for x in contacts_dict]
     domain = Domain(name=domain_name, crDate=cr_date, exDate=ex_date, 
                     upDate=up_date, trDate=tr_date, status=status,
                     clID=clid, crID=crid,
                     ns=NS(host_objs=host_objs, host_attrs=None) if host_objs else NS(host_attrs=host_attrs, host_objs=None) if host_attrs else None,
-                    authInfo=None, contacts=None, dnsSEC=None)
+                    authInfo=AuthInfo(pw, None) if pw is not None else AuthInfo(None, hast) if hash is not None else None, contacts=contacts, dnsSEC=None)
     response = DomainCreateResponse(domain=domain, server_transaction_id=server_transaction_id)
     return response
+
+def info_domain_xml(domain_name: str, client_request_id=None) -> str:
+    """
+    Creates an EPP XML payload for domain info with optional parameters.
+
+    Args:
+        domain (Domain): The domain object containing the domain data.
+        request_id (str, optional): The request ID.
+
+    Returns:
+        str: The XML payload as a string.
+    """
+
+    '''
+    Needed output:
+    <?xml version="1.0" standalone="no"?>
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+    <command>
+        <info>
+        <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+            <domain:name>example.com</domain:name>
+        </domain:info>
+        </info>
+        <clTRID>TEST-REQUEST-ID</clTRID>
+    </command>
+    </epp>'''
+    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
+    command = ET.SubElement(epp, "command")
+    info = ET.SubElement(command, "info")
+    domain_info = ET.SubElement(info, "domain:info", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
+
+    domain_name_element = ET.SubElement(domain_info, "domain:name")
+    domain_name_element.text = domain_name
+
+    if not client_request_id:
+        client_request_id = str(uuid.uuid4())
+    cl_trid = ET.SubElement(command, "clTRID")
+    cl_trid.text = client_request_id
+
+    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
+    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
+
+    return xml_string

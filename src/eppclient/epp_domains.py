@@ -49,5 +49,16 @@ def epp_domains_Create(domain: Domain) -> DomainCreateResponse:
   </response>
 </epp>
 '''
-    domainresp = parse_domain_create_response(response)
+    domainresp = parse_domain_response(response)
+    return domainresp
+
+def epp_domains_Info(domain_name: str) -> DomainInfoResponse:
+    eppxml = info_domain_xml(domain_name)
+    if True:
+        response = epp_client.send_and_get_response(eppxml)
+    else:
+        response = '''
+'''
+#TODO: implement here mock as well
+    domainresp = parse_domain_response(response)
     return domainresp

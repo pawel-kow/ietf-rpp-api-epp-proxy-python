@@ -34,8 +34,14 @@ def domains_Delete(id):
 
 
 def domains_Get(id):
-    return {}, 500
-
+    try:
+        # Call the eppclient function to create the domain
+        domainresp = epp_domains_Info(id)
+        # Convert the response to JSON
+        response = domain_to_rpp(domainresp.domain)
+    except Exception as e:
+        raise ProblemException(status=500, title="Internal Server Error", detail=str(e))
+    return response, 200
 
 def domains_Update(id, body):
     return {}, 500

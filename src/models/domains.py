@@ -77,3 +77,8 @@ class Domain:
 class DomainCreateResponse:
     domain: Domain
     server_transaction_id: str
+    
+@dataclass
+class DomainInfoResponse:
+    domain: Domain
+    server_transaction_id: str
