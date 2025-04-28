@@ -28,6 +28,7 @@ test_start = datetime.datetime.now(datetime.UTC)
 
 # Prepare test cases
 # Ensure that a contact handle FOO-TEST1, FOO-TEST2, FOO-TEST3, FOO-TEST4 exist in the database
+# Ensure that host objects ns1.bar.example and ns2.bar.example exist in the database
 
 test_cases = [
     { "test_id": "test1-simple_create",
@@ -239,6 +240,51 @@ test_cases = [
                         },
                         {
                             "name": f"ns1.test5-{random_name}.example".upper()
+                        }
+                    ]
+                }
+        },
+        "expected_fields": {
+            "clID": lambda x: x is not None,
+            "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
+            "crID": lambda x: x is not None,
+            "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
+        }
+    },
+    { "test_id": "test6-simple_create_with_host_obj",
+        "request_body": {
+            "name": f"test6-{random_name}.example",
+            "authInfo": {
+                "pw": "Password1!@"
+            },
+            "ns": {
+                "hostObj": [
+                    {
+                        "name": "ns1.bar.example"
+                    },
+                    {
+                        "name": "ns2.bar.example"
+                    }
+                ]
+            }
+        },
+        "request_headers": {"Content-Type": "application/json"},
+        "expected_status": 201,
+        "expected_response": {
+                "authInfo": {
+                    "pw": "Password1!@"
+                },
+                "name": f"test6-{random_name}.example".upper(),
+                "status": [
+                    "ok"
+                ],
+                "ns": {
+                    "hostObj": [
+                        {
+                            "name": "ns1.bar.example".upper()
+                        },
+                        {
+                            "name": f"ns2.bar.example".upper()
                         }
                     ]
                 }
