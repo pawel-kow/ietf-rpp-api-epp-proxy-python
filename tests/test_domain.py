@@ -27,7 +27,7 @@ test_start = datetime.datetime.now(datetime.UTC)
 # Error responses (400, 500) should match the structure defined by Connexion/Flask ProblemException.
 
 # Prepare test cases
-# Ensure that a contact handle FOO-TEST1 exists in the database
+# Ensure that a contact handle FOO-TEST1, FOO-TEST2, FOO-TEST3, FOO-TEST4 exist in the database
 
 test_cases = [
     {
@@ -127,6 +127,86 @@ test_cases = [
                     ]
                 }
             ]
+        },
+        "expected_fields": {
+            "clID": lambda x: x is not None,
+            "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
+            "crID": lambda x: x is not None,
+            "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
+        }
+    },
+    {
+        "test_id": "test4-simple_create_with_all_contacts_separated",
+        "request_body": {
+            "name": f"test4-{random_name}.example",
+            "authInfo": {
+                "pw": "Password1!@"
+            },
+            "contacts": [
+                {
+                    "value": "FOO-TEST1",
+                    "type": [
+                        "registrant"
+                    ]
+                },
+                {
+                    "value": "FOO-TEST2",
+                    "type": [
+                        "admin"
+                    ]
+                },
+                {
+                    "value": "FOO-TEST3",
+                    "type": [
+                        "tech"
+                    ]
+                },
+                {
+                    "value": "FOO-TEST4",
+                    "type": [
+                        "billing",
+                        "tech"
+                    ]
+                }
+            ]
+        },
+        "request_headers": {"Content-Type": "application/json"},
+        "expected_status": 201,
+        "expected_response": {
+                "authInfo": {
+                    "pw": "Password1!@"
+                },
+                "name": f"test4-{random_name}.example".upper(),
+                "status": [
+                    "ok"
+                ],
+                "contacts": [
+                    {
+                        "value": "FOO-TEST3",
+                        "type": [
+                            "tech"
+                        ]
+                    },
+                    {
+                        "value": "FOO-TEST2",
+                        "type": [
+                            "admin"
+                        ]
+                    },
+                    {
+                        "value": "FOO-TEST4",
+                        "type": [
+                            "billing",
+                            "tech"
+                        ]
+                    },
+                    {
+                        "value": "FOO-TEST1",
+                        "type": [
+                            "registrant"
+                        ]
+                    },
+                ]
         },
         "expected_fields": {
             "clID": lambda x: x is not None,

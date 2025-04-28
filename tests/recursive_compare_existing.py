@@ -11,8 +11,9 @@ def recusive_compare_existing(case, path, actual_data, expected_data):
             recusive_compare_existing(case, f"{path}.{key}", actual_data[key], value) # Recurse/process value
     elif isinstance(expected_data, list):
         assert len(actual_data) == len(expected_data), "Case {case}. Path: {path}. Length of actual_data and expected_data lists do not match."
-        ads = sorted(actual_data)
-        for i, element in enumerate(sorted(expected_data)):
+        ads = sorted(actual_data, key=lambda x: json.dumps(x, sort_keys=True))
+        exps = sorted(expected_data, key=lambda x: json.dumps(x, sort_keys=True))
+        for i, element in enumerate(exps):
             recusive_compare_existing(case, f"{path}[{i}]", ads[i], element)
     else:
         assert actual_data == expected_data, f"Case {case}. Path: {path}. Value '{actual_data}' does not match expected value '{expected_data}'."
