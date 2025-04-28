@@ -144,12 +144,6 @@ test_cases = [
             },
             "contacts": [
                 {
-                    "value": "FOO-TEST1",
-                    "type": [
-                        "registrant"
-                    ]
-                },
-                {
                     "value": "FOO-TEST2",
                     "type": [
                         "admin"
@@ -158,6 +152,7 @@ test_cases = [
                 {
                     "value": "FOO-TEST3",
                     "type": [
+                        "registrant",
                         "tech"
                     ]
                 },
@@ -184,7 +179,8 @@ test_cases = [
                     {
                         "value": "FOO-TEST3",
                         "type": [
-                            "tech"
+                            "tech",
+                            "registrant"
                         ]
                     },
                     {
@@ -199,13 +195,7 @@ test_cases = [
                             "billing",
                             "tech"
                         ]
-                    },
-                    {
-                        "value": "FOO-TEST1",
-                        "type": [
-                            "registrant"
-                        ]
-                    },
+                    }
                 ]
         },
         "expected_fields": {
