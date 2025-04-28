@@ -6,6 +6,8 @@ info:
 tags:
   - name: Domains
   - name: Contacts
+  - name: Hosts
+  - name: Poll messages
 paths:
   /contacts:
     head:
@@ -52,23 +54,6 @@ paths:
             schema:
               $ref: '#/components/schemas/ContactReference'
   /contacts/{id}:
-    delete:
-      operationId: contacts_Delete
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContactReference'
-      tags:
-        - Contacts
     get:
       operationId: contacts_Get
       parameters:
@@ -109,24 +94,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ContactReferenceUpdate'
-  /contacts/{id}/renewals:
-    post:
-      operationId: contacts_Renew
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContactReference'
-      tags:
-        - Contacts
   /domains:
     head:
       operationId: domains_Check
@@ -172,23 +139,6 @@ paths:
             schema:
               $ref: '#/components/schemas/Domain'
   /domains/{id}:
-    delete:
-      operationId: domains_Delete
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Domain'
-      tags:
-        - Domains
     get:
       operationId: domains_Get
       parameters:
@@ -229,9 +179,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/DomainUpdate'
-  /domains/{id}/renewals:
-    post:
-      operationId: domains_Renew
+    delete:
+      operationId: domains_Delete
       parameters:
         - name: id
           in: path
@@ -247,7 +196,83 @@ paths:
                 $ref: '#/components/schemas/Domain'
       tags:
         - Domains
-  /domains/{id}/transfer:
+  /domains/{id}/processes/deletion:
+    get:
+      operationId: domains_DeletionQuery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainDeletion'
+      tags:
+        - Domains
+  /domains/{id}/processes/renewal:
+    put:
+      operationId: domains_RenewalRequest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRenewal'
+      tags:
+        - Domains
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainRenewal'
+    get:
+      operationId: domains_RenewalQuery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRenewal'
+      tags:
+        - Domains
+    delete:
+      operationId: domains_RenewalCancel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRenewal'
+      tags:
+        - Domains
+  /domains/{id}/processes/transfer:
     put:
       operationId: domains_TransferRequest
       parameters:
@@ -262,7 +287,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainRenew'
+                $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
       requestBody:
@@ -270,7 +295,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DomainRenew'
+              $ref: '#/components/schemas/DomainTransfer'
     get:
       operationId: domains_TransferQuery
       parameters:
@@ -285,7 +310,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainRenew'
+                $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
     delete:
@@ -302,10 +327,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainRenew'
+                $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
-  /domains/{id}/transfer/approval:
+  /domains/{id}/processes/transfer/approval:
     put:
       operationId: domains_TransferApprove
       parameters:
@@ -320,10 +345,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainRenew'
+                $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
-  /domains/{id}/transfer/rejection:
+  /domains/{id}/processes/transfer/rejection:
     put:
       operationId: domains_TransferReject
       parameters:
@@ -338,7 +363,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainRenew'
+                $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
   /hosts:
@@ -352,6 +377,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Host'
+      tags:
+        - Hosts
       requestBody:
         required: true
         content:
@@ -375,6 +402,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Host'
+      tags:
+        - Hosts
       requestBody:
         required: true
         content:
@@ -382,21 +411,6 @@ paths:
             schema:
               $ref: '#/components/schemas/HostInfoAttr'
   /hosts/{id}:
-    delete:
-      operationId: hosts_Delete
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Host'
     get:
       operationId: hosts_Get
       parameters:
@@ -412,6 +426,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Host'
+      tags:
+        - Hosts
     patch:
       operationId: hosts_Update
       parameters:
@@ -427,28 +443,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Host'
+      tags:
+        - Hosts
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/HostInfoAttrUpdate'
-  /hosts/{id}/renewals:
-    post:
-      operationId: hosts_Renew
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Host'
   /messages:
     get:
       operationId: Messages_PollRequest
@@ -462,6 +464,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Message'
+      tags:
+        - Poll messages
   /messages/{id}:
     delete:
       operationId: Messages_AckPoll
@@ -474,6 +478,8 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+      tags:
+        - Poll messages
 components:
   schemas:
     Contact:
@@ -547,6 +553,8 @@ components:
               $ref: '#/components/schemas/DomainCreation'
             renewal:
               $ref: '#/components/schemas/DomainRenewal'
+            transfer:
+              $ref: '#/components/schemas/DomainTransfer'
         authInfo:
           type: object
           properties:
@@ -577,33 +585,23 @@ components:
               - registrant
     DomainCreation:
       type: object
-      required:
-        - period
       properties:
         period:
           type: string
           format: duration
-    DomainCreationUpdate:
+    DomainDeletion:
       type: object
       properties:
-        period:
+        purgeDate:
           type: string
-          format: duration
-    DomainRenew:
-      type: object
-      properties:
-        duration:
-          type: string
-          format: duration
+          format: date-time
     DomainRenewal:
       type: object
-      required:
-        - period
       properties:
         period:
           type: string
           format: duration
-    DomainRenewalUpdate:
+    DomainTransfer:
       type: object
       properties:
         period:
@@ -618,9 +616,11 @@ components:
           type: object
           properties:
             creation:
-              $ref: '#/components/schemas/DomainCreationUpdate'
+              $ref: '#/components/schemas/DomainCreation'
             renewal:
-              $ref: '#/components/schemas/DomainRenewalUpdate'
+              $ref: '#/components/schemas/DomainRenewal'
+            transfer:
+              $ref: '#/components/schemas/DomainTransfer'
         authInfo:
           type: object
           properties:

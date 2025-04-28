@@ -82,3 +82,8 @@ class DomainCreateResponse:
 class DomainInfoResponse:
     domain: Domain
     server_transaction_id: str
+    
+@dataclass
+class DomainDeleteResponse:
+    domain: Domain
+    server_transaction_id: str

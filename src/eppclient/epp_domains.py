@@ -62,3 +62,14 @@ def epp_domains_Info(domain_name: str) -> DomainInfoResponse:
 #TODO: implement here mock as well
     domainresp = parse_domain_response(response)
     return domainresp
+
+def epp_domains_Delete(domain_name: str) -> DomainDeleteResponse:
+    eppxml = delete_domain_xml(domain_name)
+    if True:
+        response = epp_client.send_and_get_response(eppxml)
+    else:
+        response = '''
+'''
+#TODO: implement here mock as well
+    domainresp = parse_domain_response(response)
+    return domainresp

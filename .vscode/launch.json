@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: rpp_server_python_connexion",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "run:app"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src"
+        },
+        {
+            "name": "Python: pytest",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/"
+        }
+    ]
+}

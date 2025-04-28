@@ -178,30 +178,47 @@ def info_domain_xml(domain_name: str, client_request_id=None) -> str:
     Creates an EPP XML payload for domain info with optional parameters.
 
     Args:
-        domain (Domain): The domain object containing the domain data.
+        domain_name (str): The domain name.
         request_id (str, optional): The request ID.
 
     Returns:
         str: The XML payload as a string.
     """
 
-    '''
-    Needed output:
-    <?xml version="1.0" standalone="no"?>
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-    <command>
-        <info>
-        <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-            <domain:name>example.com</domain:name>
-        </domain:info>
-        </info>
-        <clTRID>TEST-REQUEST-ID</clTRID>
-    </command>
-    </epp>'''
     epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
     command = ET.SubElement(epp, "command")
     info = ET.SubElement(command, "info")
     domain_info = ET.SubElement(info, "domain:info", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
+
+    domain_name_element = ET.SubElement(domain_info, "domain:name")
+    domain_name_element.text = domain_name
+
+    if not client_request_id:
+        client_request_id = str(uuid.uuid4())
+    cl_trid = ET.SubElement(command, "clTRID")
+    cl_trid.text = client_request_id
+
+    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
+    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
+
+    return xml_string
+
+def delete_domain_xml(domain_name: str, client_request_id=None) -> str:
+    """
+    Creates an EPP XML payload for domain delete with optional parameters.
+
+    Args:
+        domain_name (str): The domain name.
+        request_id (str, optional): The request ID.
+
+    Returns:
+        str: The XML payload as a string.
+    """
+
+    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
+    command = ET.SubElement(epp, "command")
+    info = ET.SubElement(command, "delete")
+    domain_info = ET.SubElement(info, "domain:delete", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
 
     domain_name_element = ET.SubElement(domain_info, "domain:name")
     domain_name_element.text = domain_name

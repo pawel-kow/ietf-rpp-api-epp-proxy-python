@@ -1,15 +1,16 @@
 from models import *
+from .rpp_models import *
 from rpp_schema_validator import validate_schema
 
 def rpp_to_domain(rpp: dict) -> Domain:
     """Converts a JSON string to a Domain object according to the provided schema."""
     # First validate the schema
     validate_schema("Domain", rpp)
+    domain_rpp = RPPDomain.from_dict(rpp)
     # Create a Domain object from the request body
     domain = Domain(
-        name=rpp["name"],
-        authInfo=AuthInfo(pw=rpp["authInfo"].get("pw", None), hash=rpp["authInfo"].get("hash", None)) if "authInfo" in
-        rpp else None,
+        name=domain_rpp.name,
+        authInfo=AuthInfo(pw=domain_rpp.authInfo.pw, hash=domain_rpp.authInfo.hash) if domain_rpp.authInfo is not None else None,
         ns=NS(
             host_objs=[
                 HostObj(id=x["name"]) 

@@ -17,21 +17,24 @@ def domains_Create(body):
         # Check if Expect header is set, if so return 100-continue
         if request.headers.get('Expect') == '100-continue':
             return None, 100
-        
-        # Call the eppclient function to create the domain
+        # Call the eppclient function to get the domain information
         domainresp = epp_domains_Create(domain)
-        #HACK: this should be rather done with domain info reponse
-        domain.update(domainresp.domain)
-        
+        inforesp = epp_domains_Info(domainresp.domain.name)
         # Convert the response to JSON
-        response = domain_to_rpp(domain)
+        response = domain_to_rpp(inforesp.domain)
     except Exception as e:
         raise ProblemException(status=500, title="Internal Server Error", detail=str(e))
     return response, 201
 
 def domains_Delete(id):
-    return {}, 500
-
+    try:
+        # Call the eppclient function to delete  the domain
+        domainresp = epp_domains_Delete(id)
+        # Convert the response to JSON
+        response = domain_to_rpp(domainresp.domain)
+    except Exception as e:
+        raise ProblemException(status=500, title="Internal Server Error", detail=str(e))
+    return response, 200
 
 def domains_Get(id):
     try:

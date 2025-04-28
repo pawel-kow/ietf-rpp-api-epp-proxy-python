@@ -14,6 +14,9 @@
                 },
                 "renewal": {
                     "$ref": "#/$defs/DomainRenewal"
+                },
+                "transfer": {
+                    "$ref": "DomainTransfer.json"
                 }
             }
         },
@@ -138,10 +141,7 @@
                     "type": "string",
                     "format": "duration"
                 }
-            },
-            "required": [
-                "period"
-            ]
+            }
         },
         "DomainRenewal": {
             "type": "object",
@@ -150,10 +150,7 @@
                     "type": "string",
                     "format": "duration"
                 }
-            },
-            "required": [
-                "period"
-            ]
+            }
         },
         "NS": {
             "oneOf": [
