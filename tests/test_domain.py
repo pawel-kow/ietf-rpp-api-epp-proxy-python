@@ -30,8 +30,7 @@ test_start = datetime.datetime.now(datetime.UTC)
 # Ensure that a contact handle FOO-TEST1, FOO-TEST2, FOO-TEST3, FOO-TEST4 exist in the database
 
 test_cases = [
-    {
-        "test_id": "test1-simple_create",
+    { "test_id": "test1-simple_create",
         "request_body": {
             "name": f"test1-{random_name}.example",
             "authInfo": {
@@ -56,8 +55,7 @@ test_cases = [
             "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
         }
     },
-    {
-        "test_id": "test2-simple_create_2year",
+    { "test_id": "test2-simple_create_2year",
         "request_body": {
             "name": f"test2-{random_name}.example",
             "processes": {
@@ -87,8 +85,7 @@ test_cases = [
             "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 2, 60 * 60 * 24 * 366 * 2),  # 2 years in seconds
         }
     },
-    {
-        "test_id": "test3-simple_create_with_all_contacts",
+    { "test_id": "test3-simple_create_with_all_contacts",
         "request_body": {
             "name": f"test3-{random_name}.example",
             "authInfo": {
@@ -135,8 +132,7 @@ test_cases = [
             "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
         }
     },
-    {
-        "test_id": "test4-simple_create_with_all_contacts_separated",
+    { "test_id": "test4-simple_create_with_all_contacts_separated",
         "request_body": {
             "name": f"test4-{random_name}.example",
             "authInfo": {
@@ -197,6 +193,55 @@ test_cases = [
                         ]
                     }
                 ]
+        },
+        "expected_fields": {
+            "clID": lambda x: x is not None,
+            "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
+            "crID": lambda x: x is not None,
+            "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
+        }
+    },
+    { "test_id": "test5-simple_create_with_host_attr",
+        "request_body": {
+            "name": f"test5-{random_name}.example",
+            "authInfo": {
+                "pw": "Password1!@"
+            },
+            "ns": {
+                "hostAttr": [
+                    {
+                        "name": "ns1.foo.net"
+                    },
+                    {
+                        "name": f"ns1.test5-{random_name}.example",
+                        "addr": {
+                            "ipv4": ["192.168.1.1", "192.168.1.2"],
+                            "ipv6": ["2001:0db8:85a3:0000:0000:8a2e:0370:7334"]
+                        }
+                    }
+                ]
+            }
+        },
+        "request_headers": {"Content-Type": "application/json"},
+        "expected_status": 201,
+        "expected_response": {
+                "authInfo": {
+                    "pw": "Password1!@"
+                },
+                "name": f"test5-{random_name}.example".upper(),
+                "status": [
+                    "ok"
+                ],
+                "ns": {
+                    "hostObj": [ #HACK: test EPP server responds with Host object even if creation was with host attributes - so we tweak the test to fit
+                        {
+                            "name": "ns1.foo.net".upper()
+                        },
+                        {
+                            "name": f"ns1.test5-{random_name}.example".upper()
+                        }
+                    ]
+                }
         },
         "expected_fields": {
             "clID": lambda x: x is not None,

@@ -18,8 +18,8 @@ def rpp_to_domain(rpp: dict) -> Domain:
                 if "hostObj" in rpp["ns"] else None, 
             host_attrs=[
                 HostAttr(id=x["name"], 
-                         ipv4=x.get("ipv4", None), 
-                         ipv6=x.get("ipv6", None)) 
+                         ipv4=x["addr"].get("ipv4", None) if "addr" in x else None, 
+                         ipv6=x["addr"].get("ipv6", None)  if "addr" in x else None) 
                 for x in rpp["ns"]["hostAttr"]] \
                 if "hostAttr" in rpp["ns"] else None) \
             if "ns" in rpp else None,

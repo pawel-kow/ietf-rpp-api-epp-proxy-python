@@ -79,11 +79,13 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
                 host_name.text = host_attr_data.id
 
                 if host_attr_data.ipv4:
-                    host_addr_v4 = ET.SubElement(host_attr, "domain:hostAddr", {"ip": "v4"})
-                    host_addr_v4.text = host_attr_data.ipv4
+                    for ip in host_attr_data.ipv4:
+                        host_addr_v4 = ET.SubElement(host_attr, "domain:hostAddr", {"ip": "v4"})
+                        host_addr_v4.text = ip
                 if host_attr_data.ipv6:
-                    host_addr_v6 = ET.SubElement(host_attr, "domain:hostAddr", {"ip": "v6"})
-                    host_addr_v6.text = host_attr_data.ipv6
+                    for ip in host_attr_data.ipv6:
+                        host_addr_v6 = ET.SubElement(host_attr, "domain:hostAddr", {"ip": "v6"})
+                        host_addr_v6.text = ip
 
     if domain.contacts:
         registrant_generated = False
