@@ -2,6 +2,7 @@ import socket
 import struct
 from .tcpclient import TCPClient
 import uuid
+import re
 import xml.etree.ElementTree as ET
 from lxml import etree
 from helpers import decode_xml
@@ -40,17 +41,37 @@ class EPPClient:
             print(f"Error connecting to server: {e}")
             self._connected = False
 
-    def send_and_get_response(self, message):
+    def send_and_get_response(self, message: str) -> tuple[bool, str, str]:
+        """
+        Sends a message to the server and receives a response.
+
+        Args:
+            message (str): The message to send.
+
+        Returns:
+            tuple[bool, str, str]: A tuple containing:
+                - success (bool): Whether the operation was successful.
+                - code (str): The EPP response code from the server.
+                - response (str): The full response message from the server.
+        """
         if not self._connected:
             self.connect()
         return self._send_and_get_response(message)
 
-    def _send_and_get_response(self, message):
+    def _send_and_get_response(self, message: str) -> tuple[bool, str, str]:
         """
-        Sends a message to the server.
+        Class internal method to send a message and receive a response.
+        This method is used internally by the class to handle the sending and receiving of messages.
+        It is not intended to be used directly by the user.
 
         Args:
             message (str): The message to send.
+
+        Returns:
+            tuple[bool, str, str]: A tuple containing:
+                - success (bool): Whether the operation was successful.
+                - code (str): The EPP response code from the server.
+                - response (str): The full response message from the server.
         """
         try:
             self.client.send(message)
@@ -64,8 +85,8 @@ class EPPClient:
             print(f"Received response: {response}")
             success, code, msg = self._parse_epp_response(response)
             if not success:
-                raise Exception(f"EPP Command failed: {code} - {msg}")
-            return response
+                print(f"EPP Command failed: {code} - {msg}")
+            return success, code, response
         except Exception as e:
             print(f"Error receiving response: {e}")
             self.disconnect(send_logout=False)
@@ -152,7 +173,7 @@ class EPPClient:
 
         code = root.find("./epp:response/epp:result", namespaces=namespace).attrib.get("code")
         msg = root.find("./epp:response/epp:result/epp:msg", namespaces=namespace).text
-        if code == "1000":
+        if re.match(r"1[0-9]{3}", code):
             return True, code, msg
         else:
             return False, code, msg

@@ -1,15 +1,26 @@
 from models import *
 from epp_to_model_mapper import *
 from .eppclient import EPPClient
+import os
+from typing import Union
 
 epp_client = EPPClient("localhost", 7001, "foo", "bar")
 
-def epp_domains_Create(domain: Domain) -> DomainCreateResponse:
+MOCK_REAL_EPP_SERVER=os.getenv('MOCK_REAL_EPP_SERVER', 'False').lower() == 'true'
+
+def epp_domains_Create(domain: Domain) -> Union[DomainCreateResponse, ErrorResponse]:
+    """
+    Creates a domain using EPP commands.
+    Args:
+        domain (Domain): The domain object to be created.
+    Returns:
+        DomainCreateResponse: The response from the EPP server.
+    """
     eppxml = create_domain_xml(domain)
-    if True:
-        response = epp_client.send_and_get_response(eppxml)
+    if MOCK_REAL_EPP_SERVER == False:
+        success, code, response = epp_client.send_and_get_response(eppxml)
     else:
-        response = '''<?xml version="1.0" standalone="no"?>
+        success, code, response = True, '1000', '''<?xml version="1.0" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <response>
     <result code="1000">
@@ -49,27 +60,88 @@ def epp_domains_Create(domain: Domain) -> DomainCreateResponse:
   </response>
 </epp>
 '''
-    domainresp = parse_domain_response(response)
-    return domainresp
+    if success == True:
+        domainresp = parse_domain_response(response)
+        return domainresp
+    else:
+        errorresp = get_epp_error_response(response)
+        return errorresp
 
-def epp_domains_Info(domain_name: str) -> DomainInfoResponse:
+def epp_domains_Info(domain_name: str) -> Union[DomainInfoResponse, ErrorResponse]:
+    """
+    Retrieves information about a domain using EPP commands.
+    Args:
+        domain_name (str): The name of the domain to be retrieved.
+    Returns:
+        DomainInfoResponse: The response from the EPP server.
+    """
     eppxml = info_domain_xml(domain_name)
-    if True:
-        response = epp_client.send_and_get_response(eppxml)
+    if MOCK_REAL_EPP_SERVER == False:
+        success, code, response = epp_client.send_and_get_response(eppxml)
     else:
-        response = '''
-'''
-#TODO: implement here mock as well
-    domainresp = parse_domain_response(response)
-    return domainresp
+        success, code, response = True, '1000', '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
-def epp_domains_Delete(domain_name: str) -> DomainDeleteResponse:
-    eppxml = delete_domain_xml(domain_name)
-    if True:
-        response = epp_client.send_and_get_response(eppxml)
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+    <response>
+        <result code="1000">
+            <msg>Command completed successfully</msg>
+        </result>
+        <resData>
+            <domain:infData xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
+                <domain:name>TEST5-BC4F8215-6118-47D6-B25B-CB12399AEEF4.EXAMPLE</domain:name>
+                <domain:roid>D_155-EXAMPLESRV</domain:roid>
+                <domain:status s="ok" lang="en-US">ok</domain:status>
+                <domain:ns>
+                    <domain:hostObj>NS1.FOO.NET</domain:hostObj>
+                    <domain:hostObj>NS1.TEST5-BC4F8215-6118-47D6-B25B-CB12399AEEF4.EXAMPLE</domain:hostObj>
+                </domain:ns>
+                <domain:host>NS1.TEST5-BC4F8215-6118-47D6-B25B-CB12399AEEF4.EXAMPLE</domain:host>
+                <domain:clID>foo</domain:clID>
+                <domain:crID>foo</domain:crID>
+                <domain:crDate>2025-04-28T21:48:25.0Z</domain:crDate>
+                <domain:exDate>2026-04-28T21:48:25.0Z</domain:exDate>
+                <domain:authInfo>
+                    <domain:pw>Password1!@</domain:pw>
+                </domain:authInfo>
+            </domain:infData>
+        </resData>
+        <extension>
+            <rgp:infData xmlns:rgp="urn:ietf:params:xml:ns:rgp-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:rgp-1.0 rgp-1.0.xsd">
+                <rgp:rgpStatus s="addPeriod" />
+            </rgp:infData>
+        </extension>
+        <trID>
+            <clTRID>3c7e2a3e-5e3c-4fea-aeb3-ac84e72f9ede</clTRID>
+            <svTRID>2025042821482547422-clID:4-domain:info</svTRID>
+        </trID>
+    </response>
+</epp>
+'''
+    if success == True:
+        domainresp = parse_domain_response(response)
+        return domainresp
     else:
-        response = '''
+        errorresp = get_epp_error_response(response)
+        return errorresp
+
+def epp_domains_Delete(domain_name: str) -> Union[DomainDeleteResponse, ErrorResponse]:
+    """
+    Deletes a domain using EPP commands.
+    Args:
+        domain_name (str): The name of the domain to be deleted.
+    Returns:
+        DomainDeleteResponse: The response from the EPP server.
+    """
+    eppxml = delete_domain_xml(domain_name)
+    if MOCK_REAL_EPP_SERVER == False:
+        success, code, response = epp_client.send_and_get_response(eppxml)
+    else:
+        success, code, response = True, '1000','''
 '''
 #TODO: implement here mock as well
-    domainresp = parse_domain_response(response)
-    return domainresp
+    if success == True:
+        domainresp = parse_domain_response(response)
+        return domainresp
+    else:
+        errorresp = get_epp_error_response(response)
+        return errorresp

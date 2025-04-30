@@ -4,6 +4,8 @@ from models import *
 import re
 from helpers import decode_xml
 import uuid
+from .epp_core import *
+from typing import Union
 
 def create_domain_xml(domain: Domain, client_request_id=None) -> str:
     """
@@ -119,7 +121,7 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
 
     return xml_string
 
-def parse_domain_response(xml_string: str) -> DomainCreateResponse:
+def parse_domain_response(xml_string: str) -> Union[DomainCreateResponse, ErrorResponse]:
     """Parses an EPP domain create response XML string."""
     root = decode_xml(xml_string)
     namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
@@ -141,7 +143,6 @@ def parse_domain_response(xml_string: str) -> DomainCreateResponse:
         #TODO: parse host attributes
     clid = root.find(".//domain:clID", namespaces=namespace).text if root.find(".//domain:clID", namespaces=namespace) is not None  else None
     crid = root.find(".//domain:crID", namespaces=namespace).text if root.find(".//domain:crID", namespaces=namespace) is not None else None
-    server_transaction_id = root.find(".//epp:svTRID", namespaces=namespace).text
     authInfo = root.find(".//domain:authInfo", namespaces=namespace)
     pw = None
     hash = None
@@ -172,7 +173,7 @@ def parse_domain_response(xml_string: str) -> DomainCreateResponse:
                     clID=clid, crID=crid,
                     ns=NS(host_objs=host_objs, host_attrs=None) if host_objs else NS(host_attrs=host_attrs, host_objs=None) if host_attrs else None,
                     authInfo=AuthInfo(pw, None) if pw is not None else AuthInfo(None, hast) if hash is not None else None, contacts=contacts, dnsSEC=None)
-    response = DomainCreateResponse(domain=domain, server_transaction_id=server_transaction_id)
+    response = DomainCreateResponse(domain=domain, server_transaction_id=get_epp_svTRID(root), client_transaction_id=get_epp_clTRID(root), code=get_epp_code(root), msg=get_epp_msg(root))
     return response
 
 def info_domain_xml(domain_name: str, client_request_id=None) -> str:
