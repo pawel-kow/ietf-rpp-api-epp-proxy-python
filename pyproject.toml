@@ -6,3 +6,10 @@ filterwarnings = [
     'ignore:jsonschema.RefResolver is deprecated:DeprecationWarning',
     'ignore:jsonschema.exceptions.RefResolutionError is deprecated:DeprecationWarning',
 ]
+testpaths = [
+    "tests",
+    "integration",
+]
+pythonpath = [
+    "src",
+]

@@ -296,6 +296,18 @@ test_cases = [
             "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
         }
     },
+    { "test_id": "test7-simple_create_domain_taken",
+        "request_body": {
+            "name": f"NOT-FREE.EXAMPLE",
+            "authInfo": {
+                "pw": "Password1!@"
+            }
+        },
+        "request_headers": {"Content-Type": "application/json"},
+        "expected_status": 409,
+        "expected_response": {},
+        "expected_fields": {}
+    },
 ]
 
 # --- Test Function ---
