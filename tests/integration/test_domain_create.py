@@ -65,7 +65,7 @@ test_cases = [
             "headers": {
                 "RPP-clTRID": None,
                 "RPP-svTRID": lambda x: x is not None and len(x) > 0
-            }
+            },
         }
     },
     { "test_id": "test2-simple_create_2year",
@@ -102,7 +102,11 @@ test_cases = [
                 "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
                 "crID": lambda x: x is not None,
                 "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 2, 60 * 60 * 24 * 366 * 2),
-            }
+            },
+            "headers": {
+                "RPP-clTRID": None,
+                "RPP-svTRID": lambda x: x is not None and len(x) > 0
+            },
         }
     },
     { "test_id": "test3-simple_create_with_all_contacts",
@@ -156,7 +160,11 @@ test_cases = [
                 "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
                 "crID": lambda x: x is not None,
                 "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),
-            }
+            },
+            "headers": {
+                "RPP-clTRID": None,
+                "RPP-svTRID": lambda x: x is not None and len(x) > 0
+            },
         }
     },
     { "test_id": "test4-simple_create_with_all_contacts_separated",
@@ -232,7 +240,11 @@ test_cases = [
                 "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
                 "crID": lambda x: x is not None,
                 "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),
-            }
+            },
+            "headers": {
+                "RPP-clTRID": None,
+                "RPP-svTRID": lambda x: x is not None and len(x) > 0
+            },
         }
     },
     { "test_id": "test5-simple_create_with_host_attr",
@@ -288,7 +300,11 @@ test_cases = [
                 "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
                 "crID": lambda x: x is not None,
                 "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
-            }
+            },
+            "headers": {
+                "RPP-clTRID": None,
+                "RPP-svTRID": lambda x: x is not None and len(x) > 0
+            },
         }
     },
     { "test_id": "test6-simple_create_with_host_obj",
@@ -340,7 +356,11 @@ test_cases = [
                 "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
                 "crID": lambda x: x is not None,
                 "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
-            }
+            },
+            "headers": {
+                "RPP-clTRID": None,
+                "RPP-svTRID": lambda x: x is not None and len(x) > 0
+            },
         }
     },
     { "test_id": "test7-simple_create_domain_taken",
@@ -353,13 +373,19 @@ test_cases = [
                     "pw": "Password1!@"
                 }
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test7-{random_name}-clTRID"
+            }
         },
         "response": {
             "status": 409,
             "content_type": "application/problem+json",
             "body": {},
-            "fields": {}
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": f"test7-{random_name}-clTRID"
+            },
         }
     },
     { "test_id": "test8-malformed_json",
@@ -374,13 +400,19 @@ test_cases = [
     }
 }
             """,
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test8-{random_name}-clTRID"
+            },
         },
         "response": {
             "status": 400,
             "content_type": "application/problem+json",
             "body": {},
-            "fields": {}
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": f"test8-{random_name}-clTRID"
+            },
         }
     },
     { "test_id": "test9-invalid_schema",
@@ -393,29 +425,41 @@ test_cases = [
                     "pw": "Password1!@"
                 }
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test9-{random_name}-clTRID"
+            }
         },
         "response": {
             "status": 400,
             "content_type": "application/problem+json",
             "body": {},
-            "fields": {}
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": f"test9-{random_name}-clTRID"
+            },
         }
     },
     { "test_id": "test10-no_body",
         "request": {
             "method": "POST",
             "url": "/domains",
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test10-{random_name}-clTRID"
+            }
         },
         "response": {
             "status": 400,
             "content_type": "application/problem+json",
             "body": {},
-            "fields": {}
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": f"test10-{random_name}-clTRID"
+            },
         }
     },
-    { "test_id": "test11-invalid_content_type",
+    { "test_id": "test11-invalid_content_type_no_clTRID",
         "request": {
             "method": "POST",
             "url": "/domains",
@@ -425,13 +469,18 @@ test_cases = [
                     "pw": "Password1!@"
                 }
             },
-            "headers": {"Content-Type": "application/epp+xml"}
+            "headers": {
+                "Content-Type": "application/epp+xml"
+            }
         },
         "response": {
             "status": 415,
             "content_type": "application/problem+json",
             "body": {},
-            "fields": {}
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": None
+            },
         }
     },
     { "test_id": "test12-simple_create-clTRID",
