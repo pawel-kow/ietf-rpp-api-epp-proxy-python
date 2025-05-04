@@ -36,7 +36,7 @@ test_cases = [
         "request": {
             "method": "POST",
             "url": "/domains",
-            "body": {
+            "body_json": {
                 "name": f"test1-{random_name}.example",
                 "authInfo": {
                     "pw": "Password1!@"
@@ -46,6 +46,7 @@ test_cases = [
         },
         "response": {
             "status": 201,
+            "content_type": "application/json",
             "body": {
                 "authInfo": {
                     "pw": "Password1!@"
@@ -67,7 +68,7 @@ test_cases = [
         "request": {
             "method": "POST",
             "url": "/domains",
-            "body": {
+            "body_json": {
                 "name": f"test2-{random_name}.example",
                 "processes": {
                     "creation": {
@@ -82,6 +83,7 @@ test_cases = [
         },
         "response": {
             "status": 201,
+            "content_type": "application/json",
             "body": {
                 "authInfo": {
                     "pw": "Password1!@"
@@ -103,7 +105,7 @@ test_cases = [
         "request": {
             "method": "POST",
             "url": "/domains",
-            "body": {
+            "body_json": {
                 "name": f"test3-{random_name}.example",
                 "authInfo": {
                     "pw": "Password1!@"
@@ -124,6 +126,7 @@ test_cases = [
         },
         "response": {
             "status": 201,
+            "content_type": "application/json",
             "body": {
                 "authInfo": {
                     "pw": "Password1!@"
@@ -156,7 +159,7 @@ test_cases = [
         "request": {
             "method": "POST",
             "url": "/domains",
-            "body": {
+            "body_json": {
                 "name": f"test4-{random_name}.example",
                 "authInfo": {
                     "pw": "Password1!@"
@@ -188,6 +191,7 @@ test_cases = [
         },
         "response": {
             "status": 201,
+            "content_type": "application/json",
             "body": {
                 "authInfo": {
                     "pw": "Password1!@"
@@ -231,7 +235,7 @@ test_cases = [
         "request": {
             "method": "POST",
             "url": "/domains",
-            "body": {
+            "body_json": {
                 "name": f"test5-{random_name}.example",
                 "authInfo": {
                     "pw": "Password1!@"
@@ -255,6 +259,7 @@ test_cases = [
         },
         "response": {
             "status": 201,
+            "content_type": "application/json",
             "body": {
                     "authInfo": {
                         "pw": "Password1!@"
@@ -286,7 +291,7 @@ test_cases = [
         "request": {
             "method": "POST",
             "url": "/domains",
-            "body": {
+            "body_json": {
                 "name": f"test6-{random_name}.example",
                 "authInfo": {
                     "pw": "Password1!@"
@@ -306,6 +311,7 @@ test_cases = [
         },
         "response": {
             "status": 201,
+            "content_type": "application/json",
             "body": {
                 "authInfo": {
                     "pw": "Password1!@"
@@ -337,7 +343,7 @@ test_cases = [
         "request": {
             "method": "POST",
             "url": "/domains",
-            "body": {
+            "body_json": {
                 "name": f"NOT-FREE.EXAMPLE",
                 "authInfo": {
                     "pw": "Password1!@"
@@ -347,6 +353,79 @@ test_cases = [
         },
         "response": {
             "status": 409,
+            "content_type": "application/problem+json",
+            "body": {},
+            "fields": {}
+        }
+    },
+    { "test_id": "test8-malformed_json",
+        "request": {
+            "method": "POST",
+            "url": "/domains",
+            "body_raw": """
+{
+    "name: "FREE.EXAMPLE",
+    "authInfo": {
+        "pw": "Password1!@"
+    }
+}
+            """,
+            "headers": {"Content-Type": "application/json"}
+        },
+        "response": {
+            "status": 400,
+            "content_type": "application/problem+json",
+            "body": {},
+            "fields": {}
+        }
+    },
+    { "test_id": "test9-invalid_schema",
+        "request": {
+            "method": "POST",
+            "url": "/domains",
+            "body_json": {
+                "domain_name": "FREE.EXAMPLE",
+                "authInfo": {
+                    "pw": "Password1!@"
+                }
+            },
+            "headers": {"Content-Type": "application/json"}
+        },
+        "response": {
+            "status": 400,
+            "content_type": "application/problem+json",
+            "body": {},
+            "fields": {}
+        }
+    },
+    { "test_id": "test10-no_body",
+        "request": {
+            "method": "POST",
+            "url": "/domains",
+            "headers": {"Content-Type": "application/json"}
+        },
+        "response": {
+            "status": 400,
+            "content_type": "application/problem+json",
+            "body": {},
+            "fields": {}
+        }
+    },
+    { "test_id": "test11-invalid_content_type",
+        "request": {
+            "method": "POST",
+            "url": "/domains",
+            "body_json": {
+                "name": f"test11-{random_name}.example",
+                "authInfo": {
+                    "pw": "Password1!@"
+                }
+            },
+            "headers": {"Content-Type": "application/epp+xml"}
+        },
+        "response": {
+            "status": 415,
+            "content_type": "application/problem+json",
             "body": {},
             "fields": {}
         }

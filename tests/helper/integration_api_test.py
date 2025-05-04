@@ -10,22 +10,29 @@ def endpoint_test(client, case):
         case: The parameterized test case dictionary.
     """
     # --- Make HTTP Request ---
-    if case["request"]["headers"].get("Content-Type") == "application/json":
+    if "body_json" in case["request"]:
         response = client.request(case["request"]["method"],
                                   case["request"]["url"],
-                                  json=case["request"]["body"],
+                                  json=case["request"]["body_json"],
+                                  headers=case["request"]["headers"])
+    elif "body_raw" in case["request"]:
+        response = client.request(case["request"]["method"],
+                                  case["request"]["url"],
+                                  content=case["request"]["body_raw"],
                                   headers=case["request"]["headers"])
     else:
-        # For testing non-JSON content types or specific header issues
         response = client.request(case["request"]["method"],
                                   case["request"]["url"],
-                                  data=case["request"]["body"],
                                   headers=case["request"]["headers"])
-
+    print(f"Test case: {case['test_id']}: {response.status_code} - {response.headers} - {response.text}")
 
     # --- Assertions ---
     # 1. Check the HTTP status code
     assert response.status_code == case["response"]["status"]
+    
+    if "content_type" in case["response"]:
+        # Check the Content-Type header
+        assert response.headers["Content-Type"].lower() == case["response"]["content_type"].lower(), f"Content-Type mismatch for test case: {case['test_id']}"
 
     # 2. Check the response body (if one is expected)
     if "body" in case["response"]:
