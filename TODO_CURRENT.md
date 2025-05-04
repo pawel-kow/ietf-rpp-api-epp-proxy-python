@@ -5,3 +5,5 @@
     [x] post
     [ ] delete
 [ ] finish domain delete
+[x] Implement header in/out handling
+[ ] Implement time-out on EPP call (clTRID duplicate case)
