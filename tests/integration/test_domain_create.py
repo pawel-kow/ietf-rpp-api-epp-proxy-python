@@ -61,6 +61,10 @@ test_cases = [
                 "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
                 "crID": lambda x: x is not None,
                 "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),
+            },
+            "headers": {
+                "RPP-clTRID": None,
+                "RPP-svTRID": lambda x: x is not None and len(x) > 0
             }
         }
     },
@@ -428,6 +432,44 @@ test_cases = [
             "content_type": "application/problem+json",
             "body": {},
             "fields": {}
+        }
+    },
+    { "test_id": "test12-simple_create-clTRID",
+        "request": {
+            "method": "POST",
+            "url": "/domains",
+            "body_json": {
+                "name": f"test12-{random_name}.example",
+                "authInfo": {
+                    "pw": "Password1!@"
+                }
+            },
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test1-{random_name}-clTRID"
+            }
+        },
+        "response": {
+            "status": 201,
+            "content_type": "application/json",
+            "body": {
+                "authInfo": {
+                    "pw": "Password1!@"
+                },
+                "name": f"test12-{random_name}.example".upper(),
+                "status": [
+                    "ok"
+                ]
+            },
+            "fields": {
+                "clID": lambda x: x is not None,
+                "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
+                "crID": lambda x: x is not None,
+                "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),
+            },
+            "headers": {
+                "RPP-clTRID": f"test1-{random_name}-clTRID"
+            }
         }
     },
 ]

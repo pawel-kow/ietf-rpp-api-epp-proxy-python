@@ -8,7 +8,7 @@ epp_client = EPPClient("localhost", 7001, "foo", "bar")
 
 MOCK_REAL_EPP_SERVER=os.getenv('MOCK_REAL_EPP_SERVER', 'False').lower() == 'true'
 
-def epp_domains_Create(domain: Domain) -> Union[DomainCreateResponse, ErrorResponse]:
+def epp_domains_Create(domain: Domain, client_transaction_id=None) -> Union[DomainCreateResponse, ErrorResponse]:
     """
     Creates a domain using EPP commands.
     Args:
@@ -16,7 +16,7 @@ def epp_domains_Create(domain: Domain) -> Union[DomainCreateResponse, ErrorRespo
     Returns:
         DomainCreateResponse: The response from the EPP server.
     """
-    eppxml = create_domain_xml(domain)
+    eppxml = create_domain_xml(domain, client_request_id=client_transaction_id)
     if MOCK_REAL_EPP_SERVER == False:
         success, code, response = epp_client.send_and_get_response(eppxml)
     else:
@@ -61,13 +61,13 @@ def epp_domains_Create(domain: Domain) -> Union[DomainCreateResponse, ErrorRespo
 </epp>
 '''
     if success == True:
-        domainresp = parse_domain_response(response)
+        domainresp = parse_domain_response(response, client_transaction_id=client_transaction_id)
         return domainresp
     else:
-        errorresp = get_epp_error_response(response)
+        errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Info(domain_name: str) -> Union[DomainInfoResponse, ErrorResponse]:
+def epp_domains_Info(domain_name: str, client_transaction_id=None) -> Union[DomainInfoResponse, ErrorResponse]:
     """
     Retrieves information about a domain using EPP commands.
     Args:
@@ -75,7 +75,7 @@ def epp_domains_Info(domain_name: str) -> Union[DomainInfoResponse, ErrorRespons
     Returns:
         DomainInfoResponse: The response from the EPP server.
     """
-    eppxml = info_domain_xml(domain_name)
+    eppxml = info_domain_xml(domain_name, client_request_id=client_transaction_id)
     if MOCK_REAL_EPP_SERVER == False:
         success, code, response = epp_client.send_and_get_response(eppxml)
     else:
@@ -118,13 +118,13 @@ def epp_domains_Info(domain_name: str) -> Union[DomainInfoResponse, ErrorRespons
 </epp>
 '''
     if success == True:
-        domainresp = parse_domain_response(response)
+        domainresp = parse_domain_response(response, client_transaction_id=client_transaction_id)
         return domainresp
     else:
-        errorresp = get_epp_error_response(response)
+        errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Delete(domain_name: str) -> Union[DomainDeleteResponse, ErrorResponse]:
+def epp_domains_Delete(domain_name: str, client_transaction_id=None) -> Union[DomainDeleteResponse, ErrorResponse]:
     """
     Deletes a domain using EPP commands.
     Args:
@@ -132,7 +132,7 @@ def epp_domains_Delete(domain_name: str) -> Union[DomainDeleteResponse, ErrorRes
     Returns:
         DomainDeleteResponse: The response from the EPP server.
     """
-    eppxml = delete_domain_xml(domain_name)
+    eppxml = delete_domain_xml(domain_name, client_request_id=client_transaction_id)
     if MOCK_REAL_EPP_SERVER == False:
         success, code, response = epp_client.send_and_get_response(eppxml)
     else:
@@ -140,8 +140,8 @@ def epp_domains_Delete(domain_name: str) -> Union[DomainDeleteResponse, ErrorRes
 '''
 #TODO: implement here mock as well
     if success == True:
-        domainresp = parse_domain_response(response)
+        domainresp = parse_domain_response(response, client_transaction_id=client_transaction_id)
         return domainresp
     else:
-        errorresp = get_epp_error_response(response)
+        errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp

@@ -51,6 +51,19 @@ def endpoint_test(client, case):
             for field, fun in case["response"]["fields"].items():
                 assert field in response_json, f"Field '{field}' not found in response for test case: {case['test_id']}"
                 assert fun(response_json[field]), f"Field '{field}' is not valid for test case: {case['test_id']}"
+
+        # Check for expected headers in the response
+        if "headers" in case["response"]:
+            # Check for expected headers in the response
+            for header, value in case["response"]["headers"].items():
+                if value is not None:
+                    assert header in response.headers, f"Header '{header}' not found in response for test case: {case['test_id']}"
+                else:
+                    assert header not in response.headers, f"Header '{header}' should not be present in response for test case: {case['test_id']}"
+                if isinstance(value, str):
+                    assert response.headers[header] == value, f"Header '{header}' has unexpected value for test case: {case['test_id']}"
+                elif callable(value):
+                    assert value(response.headers[header]), f"Header '{header}' is not valid for test case: {case['test_id']}"
     else:
         # For responses expected to have no body (like 100, 204)
         assert not response.data # Check if data attribute is empty

@@ -2,6 +2,7 @@ from connexion import request, ProblemException
 from eppclient.epp_domains import *
 from models import *
 from rpp_to_model_mapper import *
+from .helper.rpp_response import *
 import json
 
 def domains_Check(body):
@@ -16,25 +17,26 @@ def domains_Create(body):
     try:
         # Check if Expect header is set, if so return 100-continue
         if request.headers.get('Expect') == '100-continue':
+            #TODO: implement EPP check call
             return None, 100
         # Call the eppclient function to get the domain information
-        domainresp = epp_domains_Create(domain)
+        domainresp = epp_domains_Create(domain, client_transaction_id=request.headers.get('RPP-clTRID'))
         if isinstance(domainresp, DomainCreateResponse):
             inforesp = epp_domains_Info(domainresp.domain.name)
             # Convert the response to JSON
             response = domain_to_rpp(inforesp.domain)
-            return response, 201
+            return response, 201, generate_rpp_response_headers(domainresp)
         elif isinstance(domainresp, ErrorResponse):
             if domainresp.code == OperationResponse.ResultCode.OBJECT_EXISTS:
-                raise ProblemException(status=409, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
+                raise ProblemException(status=409, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
             else:
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
+                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
         else:
             raise ValueError("Unexpected response type from EPP client")
     except ProblemException:
         raise
     except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e))
+        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID')))
 
 def domains_Delete(id):
     try:

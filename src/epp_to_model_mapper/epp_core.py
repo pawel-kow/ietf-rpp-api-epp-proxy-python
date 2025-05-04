@@ -1,13 +1,13 @@
 from models import OperationResponse, ErrorResponse
 from helpers import decode_xml
 
-def get_epp_error_response(xml_string: str) -> ErrorResponse:
+def get_epp_error_response(xml_string: str, client_transaction_id: str) -> ErrorResponse:
     root = decode_xml(xml_string)
     return ErrorResponse(
         code=get_epp_code(root),
         msg=get_epp_msg(root),
         server_transaction_id=get_epp_svTRID(root),
-        client_transaction_id=get_epp_clTRID(root)
+        client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None,
     )
 
 def get_epp_code(root):
