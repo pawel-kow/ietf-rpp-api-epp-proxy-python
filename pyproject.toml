@@ -7,8 +7,8 @@ filterwarnings = [
     'ignore:jsonschema.exceptions.RefResolutionError is deprecated:DeprecationWarning',
 ]
 testpaths = [
-    "tests",
-    "integration",
+    "tests/unit",
+    "tests/integration",
 ]
 pythonpath = [
     "src",
