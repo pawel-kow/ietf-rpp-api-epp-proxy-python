@@ -10,6 +10,7 @@ def clear_empty_value_keys(d: dict) -> dict:
 def generate_rpp_response_headers(resp: OperationResponse) -> dict:
     """Generate the RPP response header."""
     return clear_empty_value_keys({
+        "Content-Type": "application/json",
         "RPP-clTRID": resp.client_transaction_id,
         "RPP-svTRID": resp.server_transaction_id
     })
@@ -18,6 +19,7 @@ def generate_rpp_response_headers_separate(
     client_transaction_id: str = None) -> dict:
     """Generate the RPP response header."""
     return clear_empty_value_keys({
+        "Content-Type": "application/json",
         "RPP-clTRID": client_transaction_id
     })
 

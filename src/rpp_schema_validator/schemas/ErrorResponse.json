@@ -1,0 +1,29 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "ErrorResponse.json",
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "string"
+        },
+        "detail": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "instance": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "title",
+        "detail",
+        "type",
+        "status",
+        "instance"
+    ]
+}

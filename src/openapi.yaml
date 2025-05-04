@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
   title: RPP Testbed
-  version: 1.0.0
   description: RPP Testbed server
+  version: 0.0.0
 tags:
   - name: Domains
   - name: Contacts
@@ -12,14 +12,69 @@ paths:
   /contacts:
     head:
       operationId: contacts_Check
-      parameters: []
+      parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Contacts
       requestBody:
@@ -31,6 +86,7 @@ paths:
     post:
       operationId: contacts_Create
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: expect
           in: header
           required: false
@@ -41,10 +97,64 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '409':
+          description: The request conflicts with the current state of the server.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse409'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Contacts
       requestBody:
@@ -57,6 +167,7 @@ paths:
     get:
       operationId: contacts_Get
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: id
           in: path
           required: true
@@ -65,15 +176,70 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Contacts
     patch:
       operationId: contacts_Update
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: id
           in: path
           required: true
@@ -82,10 +248,64 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactReference'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Contacts
       requestBody:
@@ -97,14 +317,69 @@ paths:
   /domains:
     head:
       operationId: domains_Check
-      parameters: []
+      parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Domains
       requestBody:
@@ -116,6 +391,7 @@ paths:
     post:
       operationId: domains_Create
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: expect
           in: header
           required: false
@@ -126,10 +402,64 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '409':
+          description: The request conflicts with the current state of the server.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse409'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Domains
       requestBody:
@@ -142,6 +472,7 @@ paths:
     get:
       operationId: domains_Get
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: id
           in: path
           required: true
@@ -150,15 +481,70 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Domains
     patch:
       operationId: domains_Update
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: id
           in: path
           required: true
@@ -167,10 +553,64 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Domain'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Domains
       requestBody:
@@ -369,14 +809,69 @@ paths:
   /hosts:
     head:
       operationId: hosts_Check
-      parameters: []
+      parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Host'
+                $ref: '#/components/schemas/HostInfoAttr'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Hosts
       requestBody:
@@ -388,6 +883,7 @@ paths:
     post:
       operationId: hosts_Create
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: expect
           in: header
           required: false
@@ -398,10 +894,64 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Host'
+                $ref: '#/components/schemas/HostInfoAttr'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '409':
+          description: The request conflicts with the current state of the server.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse409'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Hosts
       requestBody:
@@ -414,6 +964,7 @@ paths:
     get:
       operationId: hosts_Get
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: id
           in: path
           required: true
@@ -422,15 +973,70 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Host'
+                $ref: '#/components/schemas/HostInfoAttr'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Hosts
     patch:
       operationId: hosts_Update
       parameters:
+        - $ref: '#/components/parameters/RequestHeaders'
         - name: id
           in: path
           required: true
@@ -439,10 +1045,64 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Host'
+                $ref: '#/components/schemas/HostInfoAttr'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+          content:
+            application/problem-json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Hosts
       requestBody:
@@ -481,6 +1141,13 @@ paths:
       tags:
         - Poll messages
 components:
+  parameters:
+    RequestHeaders:
+      name: rpp-cltrid
+      in: header
+      required: false
+      schema:
+        type: string
   schemas:
     Contact:
       type: object
@@ -601,6 +1268,72 @@ components:
         period:
           type: string
           format: duration
+    DomainRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        processes:
+          type: object
+          properties:
+            creation:
+              $ref: '#/components/schemas/DomainCreation'
+            renewal:
+              $ref: '#/components/schemas/DomainRenewal'
+            transfer:
+              $ref: '#/components/schemas/DomainTransfer'
+        authInfo:
+          type: object
+          properties:
+            pw:
+              type: string
+            hash:
+              type: string
+        ns:
+          $ref: '#/components/schemas/NS'
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactReference'
+        dnsSEC:
+          type: array
+          items:
+            $ref: '#/components/schemas/DnsSec'
+    DomainResponse:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        processes:
+          type: object
+          properties:
+            creation:
+              $ref: '#/components/schemas/DomainCreation'
+            renewal:
+              $ref: '#/components/schemas/DomainRenewal'
+            transfer:
+              $ref: '#/components/schemas/DomainTransfer'
+        authInfo:
+          type: object
+          properties:
+            pw:
+              type: string
+            hash:
+              type: string
+        ns:
+          $ref: '#/components/schemas/NS'
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactReference'
+        dnsSEC:
+          type: array
+          items:
+            $ref: '#/components/schemas/DnsSec'
     DomainTransfer:
       type: object
       properties:
@@ -649,6 +1382,41 @@ components:
           - value: registrant-id
             type:
               - registrant
+    ErrorResponse:
+      type: object
+      required:
+        - title
+        - detail
+        - type
+        - status
+        - instance
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        instance:
+          type: string
+    ErrorResponse400:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    ErrorResponse404:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    ErrorResponse409:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    ErrorResponse500:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
     HelloResponse:
       type: object
       required:
@@ -821,6 +1589,8 @@ components:
       properties:
         id:
           type: string
+    ResponseHeaders:
+      type: object
 servers:
   - url: https://localhost:8000
     description: Local RPP Testbed server
