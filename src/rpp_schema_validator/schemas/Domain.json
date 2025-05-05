@@ -24,6 +24,9 @@
                 "transfer": {
                     "$ref": "DomainTransfer.json"
                 }
+            },
+            "unevaluatedProperties": {
+                "not": {}
             }
         },
         "authInfo": {
@@ -35,6 +38,9 @@
                 "hash": {
                     "type": "string"
                 }
+            },
+            "unevaluatedProperties": {
+                "not": {}
             }
         },
         "ns": {
@@ -75,6 +81,9 @@
         "name",
         "authInfo"
     ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
     "examples": [
         {
             "name": "example.com",
@@ -166,6 +175,9 @@
                     "type": "string",
                     "format": "duration"
                 }
+            },
+            "unevaluatedProperties": {
+                "not": {}
             }
         },
         "DomainRenewal": {
@@ -175,6 +187,9 @@
                     "type": "string",
                     "format": "duration"
                 }
+            },
+            "unevaluatedProperties": {
+                "not": {}
             }
         },
         "NS": {
@@ -203,7 +218,10 @@
             "required": [
                 "value",
                 "type"
-            ]
+            ],
+            "unevaluatedProperties": {
+                "not": {}
+            }
         },
         "DnsSec": {
             "type": "object",
@@ -226,7 +244,10 @@
                 "algorithm",
                 "digestType",
                 "digest"
-            ]
+            ],
+            "unevaluatedProperties": {
+                "not": {}
+            }
         },
         "NSHostObj": {
             "type": "object",
@@ -240,7 +261,10 @@
             },
             "required": [
                 "hostObj"
-            ]
+            ],
+            "unevaluatedProperties": {
+                "not": {}
+            }
         },
         "NSHostAttr": {
             "type": "object",
@@ -254,7 +278,10 @@
             },
             "required": [
                 "hostAttr"
-            ]
+            ],
+            "unevaluatedProperties": {
+                "not": {}
+            }
         },
         "ContactType": {
             "type": "string",
@@ -294,6 +321,9 @@
                                 "type": "string"
                             }
                         }
+                    },
+                    "unevaluatedProperties": {
+                        "not": {}
                     }
                 }
             },
