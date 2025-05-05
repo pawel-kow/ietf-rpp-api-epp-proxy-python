@@ -27,6 +27,7 @@ class TCPClient:
         """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.settimeout(5)  # Set a timeout for the connection
             self.socket.connect((self.server_address, self.server_port))
             print(f"TCPClient: Connected to {self.server_address}:{self.server_port}")
         except Exception as e:
