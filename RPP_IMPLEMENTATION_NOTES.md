@@ -7,6 +7,7 @@
 
 ## RPP design notes
 - client/server transaction ids with incomplete/invalid requests? yes/no?
+- take a look into Retry-After header (to indicate temp errors)
 
 ### Status codes
 [x] domain not free (EPP 2302): 409
