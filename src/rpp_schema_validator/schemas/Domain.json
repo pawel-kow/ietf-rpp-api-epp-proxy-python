@@ -6,6 +6,12 @@
         "name": {
             "type": "string"
         },
+        "status": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
         "processes": {
             "type": "object",
             "properties": {
@@ -45,10 +51,29 @@
             "items": {
                 "$ref": "#/$defs/DnsSec"
             }
+        },
+        "crDate": {
+            "type": "string"
+        },
+        "exDate": {
+            "type": "string"
+        },
+        "upDate": {
+            "type": "string"
+        },
+        "trDate": {
+            "type": "string"
+        },
+        "clID": {
+            "type": "string"
+        },
+        "crID": {
+            "type": "string"
         }
     },
     "required": [
-        "name"
+        "name",
+        "authInfo"
     ],
     "examples": [
         {

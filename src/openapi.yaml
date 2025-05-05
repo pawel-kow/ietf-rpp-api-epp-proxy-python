@@ -467,7 +467,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Domain'
+              $ref: '#/components/schemas/DomainCreate'
   /domains/{id}:
     get:
       operationId: domains_Get
@@ -1210,6 +1210,68 @@ components:
       type: object
       required:
         - name
+        - authInfo
+      properties:
+        name:
+          type: string
+        status:
+          type: array
+          items:
+            type: string
+        processes:
+          type: object
+          properties:
+            creation:
+              $ref: '#/components/schemas/DomainCreation'
+            renewal:
+              $ref: '#/components/schemas/DomainRenewal'
+            transfer:
+              $ref: '#/components/schemas/DomainTransfer'
+        authInfo:
+          type: object
+          properties:
+            pw:
+              type: string
+            hash:
+              type: string
+        ns:
+          $ref: '#/components/schemas/NS'
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactReference'
+        dnsSEC:
+          type: array
+          items:
+            $ref: '#/components/schemas/DnsSec'
+        crDate:
+          type: string
+        exDate:
+          type: string
+        upDate:
+          type: string
+        trDate:
+          type: string
+        clID:
+          type: string
+        crID:
+          type: string
+      example:
+        name: example.com
+        processes:
+          creation:
+            period: P2Y
+        authInfo:
+          pw: password
+        contacts:
+          - value: registrant-id
+            type:
+              - registrant
+    DomainCreate:
+      type: object
+      required:
+        - name
+        - authInfo
       properties:
         name:
           type: string
@@ -1272,9 +1334,14 @@ components:
       type: object
       required:
         - name
+        - authInfo
       properties:
         name:
           type: string
+        status:
+          type: array
+          items:
+            type: string
         processes:
           type: object
           properties:
@@ -1301,13 +1368,30 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DnsSec'
+        crDate:
+          type: string
+        exDate:
+          type: string
+        upDate:
+          type: string
+        trDate:
+          type: string
+        clID:
+          type: string
+        crID:
+          type: string
     DomainResponse:
       type: object
       required:
         - name
+        - authInfo
       properties:
         name:
           type: string
+        status:
+          type: array
+          items:
+            type: string
         processes:
           type: object
           properties:
@@ -1334,6 +1418,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DnsSec'
+        crDate:
+          type: string
+        exDate:
+          type: string
+        upDate:
+          type: string
+        trDate:
+          type: string
+        clID:
+          type: string
+        crID:
+          type: string
     DomainTransfer:
       type: object
       properties:
