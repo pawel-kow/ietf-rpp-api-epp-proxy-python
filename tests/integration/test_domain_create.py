@@ -33,7 +33,7 @@ test_start = datetime.datetime.now(datetime.UTC)
 # Ensure that the domain NOT-FREE.EXAMPLE is already taken in the database
 test_cases = [
     { "test_id": "test1-simple_create",
-        "request": {
+       "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -66,10 +66,10 @@ test_cases = [
                 "RPP-clTRID": None,
                 "RPP-svTRID": lambda x: x is not None and len(x) > 0
             },
-        }
+        }}]
     },
     { "test_id": "test2-simple_create_2year",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -107,10 +107,10 @@ test_cases = [
                 "RPP-clTRID": None,
                 "RPP-svTRID": lambda x: x is not None and len(x) > 0
             },
-        }
+        }}]
     },
     { "test_id": "test3-simple_create_with_all_contacts",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -165,10 +165,10 @@ test_cases = [
                 "RPP-clTRID": None,
                 "RPP-svTRID": lambda x: x is not None and len(x) > 0
             },
-        }
+        }}]
     },
     { "test_id": "test4-simple_create_with_all_contacts_separated",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -245,10 +245,10 @@ test_cases = [
                 "RPP-clTRID": None,
                 "RPP-svTRID": lambda x: x is not None and len(x) > 0
             },
-        }
+        }}]
     },
     { "test_id": "test5-simple_create_with_host_attr",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -305,10 +305,10 @@ test_cases = [
                 "RPP-clTRID": None,
                 "RPP-svTRID": lambda x: x is not None and len(x) > 0
             },
-        }
+        }}]
     },
     { "test_id": "test6-simple_create_with_host_obj",
-        "request": {
+       "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -361,10 +361,10 @@ test_cases = [
                 "RPP-clTRID": None,
                 "RPP-svTRID": lambda x: x is not None and len(x) > 0
             },
-        }
+        }}]
     },
     { "test_id": "test7-simple_create_domain_taken",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -386,10 +386,10 @@ test_cases = [
             "headers": {
                 "RPP-clTRID": f"test7-{random_name}-clTRID"
             },
-        }
+        }}]
     },
     { "test_id": "test8-malformed_json",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_raw": """
@@ -413,10 +413,10 @@ test_cases = [
             "headers": {
                 "RPP-clTRID": f"test8-{random_name}-clTRID"
             },
-        }
+        }}]
     },
     { "test_id": "test9-invalid_schema",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -438,10 +438,10 @@ test_cases = [
             "headers": {
                 "RPP-clTRID": f"test9-{random_name}-clTRID"
             },
-        }
+        }}]
     },
     { "test_id": "test10-no_body",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "headers": {
@@ -457,10 +457,10 @@ test_cases = [
             "headers": {
                 "RPP-clTRID": f"test10-{random_name}-clTRID"
             },
-        }
+        }}]
     },
     { "test_id": "test11-invalid_content_type_no_clTRID",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -481,10 +481,10 @@ test_cases = [
             "headers": {
                 "RPP-clTRID": None
             },
-        }
+        }}]
     },
     { "test_id": "test12-simple_create-clTRID",
-        "request": {
+      "steps": [{"request": {
             "method": "POST",
             "url": "/domains",
             "body_json": {
@@ -519,7 +519,7 @@ test_cases = [
             "headers": {
                 "RPP-clTRID": f"test1-{random_name}-clTRID"
             }
-        }
+        }}]
     },
 ]
 
