@@ -8,4 +8,5 @@
 [x] Implement header in/out handling
 [x] Implement time-out on EPP call (clTRID duplicate case)
 [ ] tests for domain get
-[ ] Basic Auth
+[x] Basic Auth
+[x] Client and connection cache

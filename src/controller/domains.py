@@ -6,6 +6,7 @@ from rpp_to_model_mapper import *
 from .helper.rpp_response import *
 import json
 import asyncio
+from .auth import get_epp_client
 
 def domains_Check(body):
     return {}, 500
@@ -22,9 +23,9 @@ def domains_Create(body):
             #TODO: implement EPP check call
             return None, 100
         # Call the eppclient function to get the domain information
-        domainresp = epp_domains_Create(domain, client_transaction_id=request.headers.get('RPP-clTRID'))
+        domainresp = epp_domains_Create(get_epp_client(), domain, client_transaction_id=request.headers.get('RPP-clTRID'))
         if isinstance(domainresp, DomainCreateResponse):
-            inforesp = epp_domains_Info(domainresp.domain.name)
+            inforesp = epp_domains_Info(get_epp_client(), domainresp.domain.name)
             # Convert the response to JSON
             response = domain_to_rpp(inforesp.domain)
             return response, 201, generate_rpp_response_headers(domainresp)
@@ -46,7 +47,7 @@ def domains_Delete(id):
         if x is not None and len(x) > 0:
             raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
         # Call the eppclient function to delete  the domain
-        domainresp = epp_domains_Delete(id)
+        domainresp = epp_domains_Delete(get_epp_client(), id)
         # Convert the response to JSON
         if isinstance(domainresp, DomainDeleteResponse):
             if domainresp.code == OperationResponse.ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
@@ -72,7 +73,7 @@ def domains_Delete(id):
 def domains_Get(id):
     try:
         # Call the eppclient function to create the domain
-        domainresp = epp_domains_Info(id)
+        domainresp = epp_domains_Info(get_epp_client(), id)
         if isinstance(domainresp, DomainCreateResponse):
             response = domain_to_rpp(domainresp.domain)
             return response, 200

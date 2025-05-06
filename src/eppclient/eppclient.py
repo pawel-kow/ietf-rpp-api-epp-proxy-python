@@ -92,6 +92,12 @@ class EPPClient:
             self.disconnect(send_logout=False)
             raise
 
+    def verify_credentials(self, user, password):
+        return self.username == user and self.password == password
+
+    @property
+    def connected(self):
+        return self._connected
 
     def disconnect(self, send_logout=True):
         """
@@ -141,7 +147,7 @@ class EPPClient:
 </epp>
 """
         response = self._send_and_get_response(login_message)
-        success, code, msg = self._parse_epp_response(response)
+        success, code, msg = self._parse_epp_response(response[2])
         if not success:
             raise Exception(f"Login failed: {msg}")
 
@@ -157,7 +163,7 @@ class EPPClient:
   </command>
 </epp>"""
         response = self._send_and_get_response(logout_message)
-        success, code, msg = self._parse_epp_response(response)
+        success, code, msg = self._parse_epp_response(response[2])
         if not success:
             raise Exception(f"Logout failed: {msg}")
 

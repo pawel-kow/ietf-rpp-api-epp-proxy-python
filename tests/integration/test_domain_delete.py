@@ -42,7 +42,10 @@ test_cases = [
                     "pw": "Password1!@"
                 }
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": 201,
@@ -59,7 +62,9 @@ test_cases = [
         {"request": { # delete the domain
             "method": "DELETE",
             "url": f"/domains/test1-{random_name}.example",
-            "headers": {}
+            "headers": {
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": [204, 202],
@@ -72,7 +77,8 @@ test_cases = [
             "url": f"/domains/test2-{random_name}.example",
             "headers": {
                 "Content-Type": "application/json",
-                "RPP-clTRID": f"test2-{random_name}-clTRID"
+                "RPP-clTRID": f"test2-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             }
         },
         "response": {
@@ -95,7 +101,10 @@ test_cases = [
                     "pw": "Password1!@"
                 }
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": 201,
@@ -114,7 +123,8 @@ test_cases = [
             "url": f"/domains/test3-{random_name}.example",
             "body_raw": "test",
             "headers": {
-                "RPP-clTRID": f"test3-{random_name}-clTRID"
+                "RPP-clTRID": f"test3-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             },
         },
         "response": {
@@ -139,7 +149,8 @@ test_cases = [
             },
             "headers": {
                 "Content-Type": "application/json",
-                "RPP-clTRID": f"test4-{random_name}-clTRID"
+                "RPP-clTRID": f"test4-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             }
         },
         "response": {
@@ -149,6 +160,45 @@ test_cases = [
             "fields": {},
             "headers": {
                 "RPP-clTRID": f"test4-{random_name}-clTRID"
+            },
+        }}]
+    },
+    { "test_id": "test5-simple_delete_no_auth",
+      "steps": [{"request": {
+            "method": "DELETE",
+            "url": f"/domains/test5-{random_name}.example",
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test5-{random_name}-clTRID"
+            }
+        },
+        "response": {
+            "status": 401,
+            "content_type": "application/problem+json",
+            "body": {},
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": f"test5-{random_name}-clTRID"
+            },
+        }}]
+    },
+    { "test_id": "test6-simple_delete_invalid_auth",
+      "steps": [{"request": {
+            "method": "DELETE",
+            "url": f"/domains/test6-{random_name}.example",
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test6-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmNhdA==" # foo:cat
+            }
+        },
+        "response": {
+            "status": 401,
+            "content_type": "application/problem+json",
+            "body": {},
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": f"test6-{random_name}-clTRID"
             },
         }}]
     },

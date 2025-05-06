@@ -4,15 +4,15 @@ from .eppclient import EPPClient
 import os
 from typing import Union
 
-epp_client = EPPClient("localhost", 7001, "foo", "bar")
-
 MOCK_REAL_EPP_SERVER=os.getenv('MOCK_REAL_EPP_SERVER', 'False').lower() == 'true'
 
-def epp_domains_Create(domain: Domain, client_transaction_id=None) -> Union[DomainCreateResponse, ErrorResponse]:
+def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction_id=None) -> Union[DomainCreateResponse, ErrorResponse]:
     """
     Creates a domain using EPP commands.
     Args:
+        epp_client (EPPClient): The EPP client instance.
         domain (Domain): The domain object to be created.
+        client_transaction_id (str): The client transaction ID for the request.
     Returns:
         DomainCreateResponse: The response from the EPP server.
     """
@@ -67,11 +67,13 @@ def epp_domains_Create(domain: Domain, client_transaction_id=None) -> Union[Doma
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Info(domain_name: str, client_transaction_id=None) -> Union[DomainInfoResponse, ErrorResponse]:
+def epp_domains_Info(epp_client: EPPClient, domain_name: str, client_transaction_id=None) -> Union[DomainInfoResponse, ErrorResponse]:
     """
     Retrieves information about a domain using EPP commands.
     Args:
+        epp_client (EPPClient): The EPP client instance.
         domain_name (str): The name of the domain to be retrieved.
+        client_transaction_id (str): The client transaction ID for the request.
     Returns:
         DomainInfoResponse: The response from the EPP server.
     """
@@ -124,11 +126,13 @@ def epp_domains_Info(domain_name: str, client_transaction_id=None) -> Union[Doma
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Delete(domain_name: str, client_transaction_id=None) -> Union[DomainDeleteResponse, ErrorResponse]:
+def epp_domains_Delete(epp_client: EPPClient, domain_name: str, client_transaction_id=None) -> Union[DomainDeleteResponse, ErrorResponse]:
     """
     Deletes a domain using EPP commands.
     Args:
+        epp_client (EPPClient): The EPP client instance.
         domain_name (str): The name of the domain to be deleted.
+        client_transaction_id (str): The client transaction ID for the request.
     Returns:
         DomainDeleteResponse: The response from the EPP server.
     """

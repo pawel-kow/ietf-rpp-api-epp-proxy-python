@@ -83,6 +83,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ContactReference'
+      security:
+        - BasicAuth: []
     post:
       operationId: contacts_Create
       parameters:
@@ -163,6 +165,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ContactReference'
+      security:
+        - BasicAuth: []
   /contacts/{id}:
     get:
       operationId: contacts_Get
@@ -236,6 +240,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Contacts
+      security:
+        - BasicAuth: []
     patch:
       operationId: contacts_Update
       parameters:
@@ -314,6 +320,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ContactReferenceUpdate'
+      security:
+        - BasicAuth: []
   /domains:
     head:
       operationId: domains_Check
@@ -388,6 +396,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Domain'
+      security:
+        - BasicAuth: []
     post:
       operationId: domains_Create
       parameters:
@@ -468,6 +478,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/DomainCreate'
+      security:
+        - BasicAuth: []
   /domains/{id}:
     get:
       operationId: domains_Get
@@ -541,6 +553,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
     patch:
       operationId: domains_Update
       parameters:
@@ -619,6 +633,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/DomainUpdate'
+      security:
+        - BasicAuth: []
     delete:
       operationId: domains_Delete
       parameters:
@@ -636,6 +652,8 @@ paths:
                 $ref: '#/components/schemas/Domain'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
   /domains/{id}/processes/deletion:
     get:
       operationId: domains_DeletionQuery
@@ -654,6 +672,8 @@ paths:
                 $ref: '#/components/schemas/DomainDeletion'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
   /domains/{id}/processes/renewal:
     put:
       operationId: domains_RenewalRequest
@@ -678,6 +698,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/DomainRenewal'
+      security:
+        - BasicAuth: []
     get:
       operationId: domains_RenewalQuery
       parameters:
@@ -695,6 +717,8 @@ paths:
                 $ref: '#/components/schemas/DomainRenewal'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
     delete:
       operationId: domains_RenewalCancel
       parameters:
@@ -712,6 +736,8 @@ paths:
                 $ref: '#/components/schemas/DomainRenewal'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
   /domains/{id}/processes/transfer:
     put:
       operationId: domains_TransferRequest
@@ -736,6 +762,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/DomainTransfer'
+      security:
+        - BasicAuth: []
     get:
       operationId: domains_TransferQuery
       parameters:
@@ -753,6 +781,8 @@ paths:
                 $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
     delete:
       operationId: domains_TransferCancel
       parameters:
@@ -770,6 +800,8 @@ paths:
                 $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
   /domains/{id}/processes/transfer/approval:
     put:
       operationId: domains_TransferApprove
@@ -788,6 +820,8 @@ paths:
                 $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
   /domains/{id}/processes/transfer/rejection:
     put:
       operationId: domains_TransferReject
@@ -806,6 +840,8 @@ paths:
                 $ref: '#/components/schemas/DomainTransfer'
       tags:
         - Domains
+      security:
+        - BasicAuth: []
   /hosts:
     head:
       operationId: hosts_Check
@@ -880,6 +916,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/HostInfoAttr'
+      security:
+        - BasicAuth: []
     post:
       operationId: hosts_Create
       parameters:
@@ -960,6 +998,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/HostInfoAttr'
+      security:
+        - BasicAuth: []
   /hosts/{id}:
     get:
       operationId: hosts_Get
@@ -1033,6 +1073,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse500'
       tags:
         - Hosts
+      security:
+        - BasicAuth: []
     patch:
       operationId: hosts_Update
       parameters:
@@ -1111,6 +1153,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/HostInfoAttrUpdate'
+      security:
+        - BasicAuth: []
   /messages:
     get:
       operationId: Messages_PollRequest
@@ -1126,6 +1170,8 @@ paths:
                   $ref: '#/components/schemas/Message'
       tags:
         - Poll messages
+      security:
+        - BasicAuth: []
   /messages/{id}:
     delete:
       operationId: Messages_AckPoll
@@ -1140,6 +1186,8 @@ paths:
           description: The request has succeeded.
       tags:
         - Poll messages
+      security:
+        - BasicAuth: []
 components:
   parameters:
     RequestHeaders:
@@ -1687,6 +1735,10 @@ components:
           type: string
     ResponseHeaders:
       type: object
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: Basic
 servers:
   - url: https://localhost:8000
     description: Local RPP Testbed server

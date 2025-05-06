@@ -42,7 +42,10 @@ test_cases = [
                     "pw": "Password1!@"
                 }
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": 201,
@@ -83,7 +86,10 @@ test_cases = [
                     "pw": "Password1!@"
                 }
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": 201,
@@ -130,7 +136,10 @@ test_cases = [
                     }
                 ]
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": 201,
@@ -199,7 +208,10 @@ test_cases = [
                     }
                 ]
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": 201,
@@ -271,7 +283,10 @@ test_cases = [
                     ]
                 }
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": 201,
@@ -327,7 +342,10 @@ test_cases = [
                     ]
                 }
             },
-            "headers": {"Content-Type": "application/json"}
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+            }
         },
         "response": {
             "status": 201,
@@ -375,7 +393,8 @@ test_cases = [
             },
             "headers": {
                 "Content-Type": "application/json",
-                "RPP-clTRID": f"test7-{random_name}-clTRID"
+                "RPP-clTRID": f"test7-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             }
         },
         "response": {
@@ -402,7 +421,8 @@ test_cases = [
             """,
             "headers": {
                 "Content-Type": "application/json",
-                "RPP-clTRID": f"test8-{random_name}-clTRID"
+                "RPP-clTRID": f"test8-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             },
         },
         "response": {
@@ -427,7 +447,8 @@ test_cases = [
             },
             "headers": {
                 "Content-Type": "application/json",
-                "RPP-clTRID": f"test9-{random_name}-clTRID"
+                "RPP-clTRID": f"test9-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             }
         },
         "response": {
@@ -446,7 +467,8 @@ test_cases = [
             "url": "/domains",
             "headers": {
                 "Content-Type": "application/json",
-                "RPP-clTRID": f"test10-{random_name}-clTRID"
+                "RPP-clTRID": f"test10-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             }
         },
         "response": {
@@ -470,7 +492,8 @@ test_cases = [
                 }
             },
             "headers": {
-                "Content-Type": "application/epp+xml"
+                "Content-Type": "application/epp+xml",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             }
         },
         "response": {
@@ -495,7 +518,8 @@ test_cases = [
             },
             "headers": {
                 "Content-Type": "application/json",
-                "RPP-clTRID": f"test1-{random_name}-clTRID"
+                "RPP-clTRID": f"test1-{random_name}-clTRID",
+                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             }
         },
         "response": {
@@ -519,6 +543,59 @@ test_cases = [
             "headers": {
                 "RPP-clTRID": f"test1-{random_name}-clTRID"
             }
+        }}]
+    },
+    { "test_id": "test13-no-Auth",
+      "steps": [{"request": {
+            "method": "POST",
+            "url": "/domains",
+            "body_json": {
+                "name": f"test13-{random_name}.example",
+                "authInfo": {
+                    "pw": "Password1!@"
+                }
+            },
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test13-{random_name}-clTRID"
+            }
+        },
+        "response": {
+            "status": 401,
+            "content_type": "application/problem+json",
+            "body": {},
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": f"test13-{random_name}-clTRID"
+            },
+        }}]
+    },
+    { "test_id": "test14-invalid-auth",
+      "steps": [{"request": {
+            "method": "POST",
+            "url": "/domains",
+            "body_json": {
+                "name": f"test14-{random_name}.example",
+                "authInfo": {
+                    "pw": "Password1!@"
+                }
+            },
+            "headers": {
+                "Content-Type": "application/json",
+                "RPP-clTRID": f"test14-{random_name}-clTRID",
+#                "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
+#                "Authorization": "Basic YWRtaW46YWRtaW4=" # admin:admin
+                "Authorization": "Basic Zm9vOmNhdA==" # foo:cat
+            }
+        },
+        "response": {
+            "status": 401,
+            "content_type": "application/problem+json",
+            "body": {},
+            "fields": {},
+            "headers": {
+                "RPP-clTRID": f"test14-{random_name}-clTRID"
+            },
         }}]
     },
 ]
