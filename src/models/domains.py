@@ -131,4 +131,4 @@ class DomainInfoResponse(OperationResponse):
 
 @dataclass
 class DomainDeleteResponse(OperationResponse):
-    domain: Domain
+    pass

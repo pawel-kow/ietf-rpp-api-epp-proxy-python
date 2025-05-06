@@ -1,5 +1,6 @@
 from .recursive_compare_existing import recusive_compare_existing
 import json
+import pytest
 
 def endpoint_test(client, case_sequence):
     """
@@ -9,6 +10,8 @@ def endpoint_test(client, case_sequence):
         client: The Flask test client fixture.
         cases: A sequence of test steps as parameterized test case dictionaries.
     """
+    if "skip" in case_sequence:
+        pytest.skip(reason=f"Skipping test case: {case_sequence['test_id']} - {case_sequence['skip']}")
     for i, case in enumerate(case_sequence["steps"]):
         # --- Make HTTP Request ---
         if "body_json" in case["request"]:
@@ -29,8 +32,12 @@ def endpoint_test(client, case_sequence):
 
         # --- Assertions ---
         # 1. Check the HTTP status code
-        assert response.status_code == case["response"]["status"]
-        
+        if isinstance(case["response"]["status"], list):
+            # Check if the response status code is in the list of expected status codes
+            assert response.status_code in case["response"]["status"], f"Unexpected status code for test case: {case_sequence['test_id']}[{i}]"
+        else:
+            assert response.status_code == case["response"]["status"]
+
         if "content_type" in case["response"]:
             # Check the Content-Type header
             assert response.headers["Content-Type"].lower() == case["response"]["content_type"].lower(), f"Content-Type mismatch for test case: {case_sequence['test_id']}[{i}]"
@@ -67,5 +74,5 @@ def endpoint_test(client, case_sequence):
                         assert value(response.headers[header]), f"Header '{header}' is not valid for test case: {case_sequence['test_id']}[{i}]"
         else:
             # For responses expected to have no body (like 100, 204)
-            assert not response.data # Check if data attribute is empty
+            assert not response.content, "Response data not expected" # Check if data attribute is empty
 

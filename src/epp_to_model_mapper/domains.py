@@ -121,6 +121,18 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
 
     return xml_string
 
+def parse_domain_delete_response(xml_string: str, client_transaction_id: str) -> Union[DomainDeleteResponse, ErrorResponse]:
+    """Parses an EPP domain delete response XML string."""
+    root = decode_xml(xml_string)
+    namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
+
+    response = DomainDeleteResponse(
+        server_transaction_id=get_epp_svTRID(root), 
+        client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, 
+        code=get_epp_code(root),
+        msg=get_epp_msg(root))
+    return response
+
 def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[DomainCreateResponse, ErrorResponse]:
     """Parses an EPP domain create response XML string."""
     root = decode_xml(xml_string)

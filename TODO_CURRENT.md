@@ -3,7 +3,9 @@
 - codes now mapped and returned
     [x] get
     [x] post
-    [ ] delete
-[ ] finish domain delete
+    [x] delete
+[x] finish domain delete
 [x] Implement header in/out handling
-[ ] Implement time-out on EPP call (clTRID duplicate case)
+[x] Implement time-out on EPP call (clTRID duplicate case)
+[ ] tests for domain get
+[ ] Basic Auth

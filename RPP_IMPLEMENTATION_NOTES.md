@@ -8,6 +8,9 @@
 ## RPP design notes
 - client/server transaction ids with incomplete/invalid requests? yes/no?
 - take a look into Retry-After header (to indicate temp errors)
+- BODY missing on GET/DELETE"
+    - https://github.com/swagger-api/swagger-ui/issues/2136#issuecomment-1055839700
+    - https://github.com/spec-first/connexion/issues/1689
 
 ### Status codes
 [x] domain not free (EPP 2302): 409

@@ -140,7 +140,7 @@ def epp_domains_Delete(domain_name: str, client_transaction_id=None) -> Union[Do
 '''
 #TODO: implement here mock as well
     if success == True:
-        domainresp = parse_domain_response(response, client_transaction_id=client_transaction_id)
+        domainresp = parse_domain_delete_response(response, client_transaction_id=client_transaction_id)
         return domainresp
     else:
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
