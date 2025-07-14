@@ -12,6 +12,10 @@
     - https://github.com/swagger-api/swagger-ui/issues/2136#issuecomment-1055839700
     - https://github.com/spec-first/connexion/issues/1689
 
+- see https://datatracker.ietf.org/doc/html/draft-gould-carney-regext-registry
+    - full object update with UPDATE (check host and domain)
+    - INFO with morphing answers (list or detail or even something else)
+
 ### Status codes
 [x] domain not free (EPP 2302): 409
 [x] domain not existing (EPP 2303): 404
