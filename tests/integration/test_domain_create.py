@@ -60,14 +60,24 @@ test_cases = [
                 ]
             },
             "fields": {
-                "clID": lambda x: x is not None,
-                "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
-                "crID": lambda x: x is not None,
-                "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),
+                "clID": { "type": "not_null" },
+                "crDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": -1,
+                    "max_delta": 60
+                },
+                "crID": { "type": "not_null" },
+                "exDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": 60 * 60 * 24 * 364 * 1,
+                    "max_delta": 60 * 60 * 24 * 366 * 1
+                }
             },
             "headers": {
                 "RPP-clTRID": None,
-                "RPP-svTRID": lambda x: x is not None and len(x) > 0
+                "RPP-svTRID": { "type": "not_empty_string" }
             },
         }}]
     },
