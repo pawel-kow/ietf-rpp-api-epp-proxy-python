@@ -1,0 +1,26 @@
+{
+  "test_id": "test8-malformed_json",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_raw": "\n{\n    \"name: \"FREE.EXAMPLE\",\n    \"authInfo\": {\n        \"pw\": \"Password1!@\"\n    }\n}\n            ",
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test8-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test8-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

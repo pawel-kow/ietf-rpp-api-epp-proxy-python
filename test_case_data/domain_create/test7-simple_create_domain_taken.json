@@ -1,0 +1,31 @@
+{
+  "test_id": "test7-simple_create_domain_taken",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "NOT-FREE.EXAMPLE",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test7-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test7-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

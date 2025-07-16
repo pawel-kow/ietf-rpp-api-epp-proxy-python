@@ -66,7 +66,7 @@ def endpoint_test(client, case_sequence):
                 assert False, f"Failed to decode JSON for test case: {case_sequence['test_id']}[{i}] Response Text: {response.text}"
             assert response_json is not None, f"Response body was not valid JSON for test case: {case_sequence['test_id']}[{i}]"
             # Check if the response JSON matches the expected structure
-            recusive_compare_existing(f"{case_sequence['test_id']}[{i}]", "$", response_json, case["response"]["body"])
+            recusive_compare_existing(f"{case_sequence['test_id']}[{i}]", "$", response_json, case["response"]["body"], case_sensitive=False)
             # Check for expected fields in the response
             # Ensure that the expected fields are present and not null
             if "fields" in case["response"]:

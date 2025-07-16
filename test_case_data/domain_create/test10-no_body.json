@@ -1,0 +1,25 @@
+{
+  "test_id": "test10-no_body",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test10-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test10-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

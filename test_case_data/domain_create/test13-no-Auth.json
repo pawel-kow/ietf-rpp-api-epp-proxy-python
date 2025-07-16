@@ -1,0 +1,30 @@
+{
+  "test_id": "test13-no-Auth",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "test13-{random_name}.example",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test13-{random_name}-clTRID"
+        }
+      },
+      "response": {
+        "status": 401,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test13-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}
