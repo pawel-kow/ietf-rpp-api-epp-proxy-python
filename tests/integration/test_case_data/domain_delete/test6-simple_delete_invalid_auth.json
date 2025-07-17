@@ -1,0 +1,25 @@
+{
+  "test_id": "test6-simple_delete_invalid_auth",
+  "steps": [
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domains/test6-{random_name}.example",
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test6-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmNhdA=="
+        }
+      },
+      "response": {
+        "status": 401,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test6-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

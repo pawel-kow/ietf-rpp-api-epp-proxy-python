@@ -1,0 +1,48 @@
+{
+  "test_id": "test1-simple_delete",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "test1-{random_name}.example",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "TEST1-{random_name}.EXAMPLE",
+          "status": [
+            "ok"
+          ]
+        },
+        "fields": {},
+        "headers": {}
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domains/test1-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": [
+          204,
+          202
+        ]
+      }
+    }
+  ]
+}

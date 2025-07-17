@@ -1,0 +1,53 @@
+{
+  "test_id": "test3-request_with_body",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "test3-{random_name}.example",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "TEST3-{random_name}.EXAMPLE",
+          "status": [
+            "ok"
+          ]
+        },
+        "fields": {},
+        "headers": {}
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domains/test3-{random_name}.example",
+        "body_raw": "test",
+        "headers": {
+          "RPP-clTRID": "test3-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test3-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

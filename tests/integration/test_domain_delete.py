@@ -6,6 +6,7 @@ from run import app
 import datetime
 from tests.helper.integration_api_test import endpoint_test
 from tests.helper.check_datetime import check_datetime_format_utc_and_delta
+from pathlib import Path
 
 
 app.app.config.update({
@@ -203,6 +204,26 @@ test_cases = [
         }}]
     },
 ]
+
+# this code is used to write test cases to separate JSON files
+if False:
+    # Write test_cases to separate JSON files if serializable
+    output_dir = Path("./tests/integration/test_case_data/domain_delete")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for case in test_cases:
+        try:
+            # Try to serialize to JSON (skip if fails)
+            json_str = json.dumps(case, indent=2)
+            # Write to file named by test_id
+            test_id = case.get("test_id", "unknown")
+            file_path = output_dir / f"{test_id}.json"
+            if not file_path.exists():
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(json_str)
+        except Exception:
+            # Skip cases that are not JSON serializable
+            continue
+
 
 # --- Test Function ---
 @pytest.mark.parametrize("case", test_cases, ids=[f"{__name__.replace("test_", "")}-{c["test_id"]}" for c in test_cases])

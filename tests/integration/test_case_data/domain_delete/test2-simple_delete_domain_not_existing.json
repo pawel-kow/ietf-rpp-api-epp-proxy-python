@@ -1,0 +1,25 @@
+{
+  "test_id": "test2-simple_delete_domain_not_existing",
+  "steps": [
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domains/test2-{random_name}.example",
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test2-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test2-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

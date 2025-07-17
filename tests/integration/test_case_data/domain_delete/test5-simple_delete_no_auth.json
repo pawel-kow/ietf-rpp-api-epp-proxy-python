@@ -1,0 +1,24 @@
+{
+  "test_id": "test5-simple_delete_no_auth",
+  "steps": [
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domains/test5-{random_name}.example",
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test5-{random_name}-clTRID"
+        }
+      },
+      "response": {
+        "status": 401,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test5-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

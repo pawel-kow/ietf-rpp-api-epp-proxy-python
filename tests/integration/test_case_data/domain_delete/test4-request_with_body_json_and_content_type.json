@@ -1,0 +1,31 @@
+{
+  "test_id": "test4-request_with_body_json_and_content_type",
+  "steps": [
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domains/test4-{random_name}.example",
+        "body_json": {
+          "name": "NOT-FREE.EXAMPLE",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test4-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test4-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}
