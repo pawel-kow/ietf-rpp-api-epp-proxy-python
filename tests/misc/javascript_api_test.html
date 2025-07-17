@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title>Test HTML</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script>
+            // This is a simple JavaScript snippet for testing purposes
+            function testFunctionXHR() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://localhost:8000/domains/foo.com', true);
+                xhr.setRequestHeader('X-Custom-Header', 'CustomValue');
+                xhr.setRequestHeader('Expect', '100-Continue');
+                xhr.setRequestHeader('Exxpect', '100-Continue');
+                xhr.send();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            document.getElementById('response').innerText = 'Response: ' + xhr.responseText;
+                        } else {
+                            document.getElementById('response').innerText = 'Error: ' + xhr.status;
+                        }
+                    }
+                };
+            }
+
+            // Second implementation using fetch API
+            function testFunctionFetch() {
+                fetch('http://localhost:8000/domains', {
+                    method: 'POST',
+                    headers: {
+                        'X-Custom-Header': 'CustomValue',
+                        'Expect': '100-Continue',
+                        'Exxpect': '100-Continue',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'foo.com',
+                        authInfo: {
+                            pw: 'Password1!@'
+                        }
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                            throw new Error('Error: ' + response.status);
+                        }
+                    return response.text();
+                })
+                .then(data => {
+                    document.getElementById('response').innerText = 'Response: ' + data;
+                })
+                .catch(error => {
+                    document.getElementById('response').innerText = error.toString();
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Test HTML Document</h1>
+        <p>This is a simple HTML document used for testing purposes.</p>
+        <p>Make sure to validate the structure and content of this document.</p>
+        <button onclick="testFunctionXHR()">Test API Call (XHR)</button>
+        <button onclick="testFunctionFetch()">Test API Call (Fetch)</button>
+        <div id="response"></div>
+        </body>
+</html>
