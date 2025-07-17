@@ -28,5 +28,6 @@ def handle_rpp_error(request: ConnexionRequest, exc: Exception) -> ConnexionResp
         } if request.headers.get("RPP-clTRID", "") else None,
     )
 
-app.add_api("openapi.yaml", resolver=RelativeResolver('controller'), resolver_error=501)
+app.add_api("openapi.yaml", resolver=RelativeResolver('controller'), resolver_error=501, 
+            options={"swagger_ui": True, "serve_spec": True, "validate_responses": True})
 app.add_error_handler(ProblemException, handle_rpp_error)
