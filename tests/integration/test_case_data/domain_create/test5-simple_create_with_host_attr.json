@@ -1,0 +1,89 @@
+{
+  "test_id": "test5-simple_create_with_host_attr",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "test5-{random_name}.example",
+          "authInfo": {
+            "pw": "Password1!@"
+          },
+          "ns": {
+            "hostAttr": [
+              {
+                "name": "ns1.foo.net"
+              },
+              {
+                "name": "ns1.test5-{random_name}.example",
+                "addr": {
+                  "ipv4": [
+                    "192.168.1.1",
+                    "192.168.1.2"
+                  ],
+                  "ipv6": [
+                    "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "authInfo": {
+            "pw": "Password1!@"
+          },
+          "name": "TEST5-{random_name}.EXAMPLE",
+          "status": [
+            "ok"
+          ],
+          "ns": {
+            "hostObj": [
+              {
+                "name": "NS1.FOO.NET"
+              },
+              {
+                "name": "ns1.test5-{random_name}.example"
+              }
+            ]
+          }
+        },
+        "fields": {
+          "clID": {
+            "type": "not_null"
+          },
+          "crDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": -1,
+            "max_delta": 60
+          },
+          "crID": {
+            "type": "not_null"
+          },
+          "exDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": 31449600,
+            "max_delta": 31622400
+          }
+        },
+        "headers": {
+          "RPP-clTRID": null,
+          "RPP-svTRID": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}

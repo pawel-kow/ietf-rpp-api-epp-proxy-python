@@ -27,7 +27,7 @@ test_start = datetime.datetime.now(datetime.UTC)
 
 test_cases = []
 
-test_case_data_dir = Path("./test_case_data")
+test_case_data_dir = Path("./tests/integration/test_case_data")
 if test_case_data_dir.exists() and test_case_data_dir.is_dir():
     for subdir in sorted(test_case_data_dir.iterdir()):
         if subdir.is_dir():
@@ -35,6 +35,7 @@ if test_case_data_dir.exists() and test_case_data_dir.is_dir():
                 try:
                     with open(json_file, "r", encoding="utf-8") as f:
                         data = json.load(f)
+                        data["test_group"] = subdir.name
                         test_cases.append(data)
                 except Exception:
                     pass  # Ignore invalid JSON files
@@ -56,6 +57,6 @@ def process_placeholders(json_data):
 
 
 # --- Test Function ---
-@pytest.mark.parametrize("case", process_placeholders(test_cases), ids=[f"{__name__.replace("test_", "")}-{c["test_id"]}" for c in test_cases])
+@pytest.mark.parametrize("case", process_placeholders(test_cases), ids=[f"{c["test_group"]}-{c["test_id"]}" for c in test_cases])
 def test_from_file_definition(client, case):
     return endpoint_test(client, case)

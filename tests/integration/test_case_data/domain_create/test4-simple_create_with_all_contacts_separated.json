@@ -1,0 +1,104 @@
+{
+  "test_id": "test4-simple_create_with_all_contacts_separated",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "test4-{random_name}.example",
+          "authInfo": {
+            "pw": "Password1!@"
+          },
+          "contacts": [
+            {
+              "value": "FOO-TEST2",
+              "type": [
+                "admin"
+              ]
+            },
+            {
+              "value": "FOO-TEST3",
+              "type": [
+                "registrant",
+                "tech"
+              ]
+            },
+            {
+              "value": "FOO-TEST4",
+              "type": [
+                "billing",
+                "tech"
+              ]
+            }
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "authInfo": {
+            "pw": "Password1!@"
+          },
+          "name": "TEST4-{random_name}.EXAMPLE",
+          "status": [
+            "ok"
+          ],
+          "contacts": [
+            {
+              "value": "FOO-TEST3",
+              "type": [
+                "tech",
+                "registrant"
+              ]
+            },
+            {
+              "value": "FOO-TEST2",
+              "type": [
+                "admin"
+              ]
+            },
+            {
+              "value": "FOO-TEST4",
+              "type": [
+                "billing",
+                "tech"
+              ]
+            }
+          ]
+        },
+        "fields": {
+          "clID": {
+            "type": "not_null"
+          },
+          "crDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": -1,
+            "max_delta": 60
+          },
+          "crID": {
+            "type": "not_null"
+          },
+          "exDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": 31449600,
+            "max_delta": 31622400
+          }
+        },
+        "headers": {
+          "RPP-clTRID": null,
+          "RPP-svTRID": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}

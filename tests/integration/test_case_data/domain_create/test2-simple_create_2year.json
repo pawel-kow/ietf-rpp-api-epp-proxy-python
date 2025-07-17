@@ -1,0 +1,65 @@
+{
+  "test_id": "test2-simple_create_2year",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "test2-{random_name}.example",
+          "processes": {
+            "creation": {
+              "period": "P2Y"
+            }
+          },
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "authInfo": {
+            "pw": "Password1!@"
+          },
+          "name": "TEST2-{random_name}.EXAMPLE",
+          "status": [
+            "ok"
+          ]
+        },
+        "fields": {
+          "clID": {
+            "type": "not_null"
+          },
+          "crDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": -1,
+            "max_delta": 60
+          },
+          "crID": {
+            "type": "not_null"
+          },
+          "exDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": 62899200,
+            "max_delta": 63244800
+          }
+        },
+        "headers": {
+          "RPP-clTRID": null,
+          "RPP-svTRID": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}

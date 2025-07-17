@@ -6,6 +6,8 @@ from run import app
 import datetime
 from tests.helper.integration_api_test import endpoint_test
 from tests.helper.check_datetime import check_datetime_format_utc_and_delta
+import os
+from pathlib import Path
 
 
 app.app.config.update({
@@ -114,14 +116,24 @@ test_cases = [
                 ]
             },
             "fields": {
-                "clID": lambda x: x is not None,
-                "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
-                "crID": lambda x: x is not None,
-                "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 2, 60 * 60 * 24 * 366 * 2),
+                "clID": { "type": "not_null" },
+                "crDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": -1,
+                    "max_delta": 60
+                },
+                "crID": { "type": "not_null" },
+                "exDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": 60 * 60 * 24 * 364 * 2,
+                    "max_delta": 60 * 60 * 24 * 366 * 2
+                }
             },
             "headers": {
                 "RPP-clTRID": None,
-                "RPP-svTRID": lambda x: x is not None and len(x) > 0
+                "RPP-svTRID": { "type": "not_empty_string" }
             },
         }}]
     },
@@ -174,16 +186,26 @@ test_cases = [
                     }
                 ]
             },
-            "fields": {
-                "clID": lambda x: x is not None,
-                "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
-                "crID": lambda x: x is not None,
-                "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),
+             "fields": {
+                "clID": { "type": "not_null" },
+                "crDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": -1,
+                    "max_delta": 60
+                },
+                "crID": { "type": "not_null" },
+                "exDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": 60 * 60 * 24 * 364 * 1,
+                    "max_delta": 60 * 60 * 24 * 366 * 1
+                }
             },
             "headers": {
                 "RPP-clTRID": None,
-                "RPP-svTRID": lambda x: x is not None and len(x) > 0
-            },
+                "RPP-svTRID": { "type": "not_empty_string" }
+            }
         }}]
     },
     { "test_id": "test4-simple_create_with_all_contacts_separated",
@@ -257,16 +279,26 @@ test_cases = [
                     }
                 ]
             },
-            "fields": {
-                "clID": lambda x: x is not None,
-                "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
-                "crID": lambda x: x is not None,
-                "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),
+             "fields": {
+                "clID": { "type": "not_null" },
+                "crDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": -1,
+                    "max_delta": 60
+                },
+                "crID": { "type": "not_null" },
+                "exDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": 60 * 60 * 24 * 364 * 1,
+                    "max_delta": 60 * 60 * 24 * 366 * 1
+                }
             },
             "headers": {
                 "RPP-clTRID": None,
-                "RPP-svTRID": lambda x: x is not None and len(x) > 0
-            },
+                "RPP-svTRID": { "type": "not_empty_string" }
+            }
         }}]
     },
     { "test_id": "test5-simple_create_with_host_attr",
@@ -320,16 +352,26 @@ test_cases = [
                         ]
                     }
             },
-            "fields": {
-                "clID": lambda x: x is not None,
-                "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
-                "crID": lambda x: x is not None,
-                "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
+             "fields": {
+                "clID": { "type": "not_null" },
+                "crDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": -1,
+                    "max_delta": 60
+                },
+                "crID": { "type": "not_null" },
+                "exDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": 60 * 60 * 24 * 364 * 1,
+                    "max_delta": 60 * 60 * 24 * 366 * 1
+                }
             },
             "headers": {
                 "RPP-clTRID": None,
-                "RPP-svTRID": lambda x: x is not None and len(x) > 0
-            },
+                "RPP-svTRID": { "type": "not_empty_string" }
+            }
         }}]
     },
     { "test_id": "test6-simple_create_with_host_obj",
@@ -379,16 +421,26 @@ test_cases = [
                     ]
                 }
             },
-            "fields": {
-                "clID": lambda x: x is not None,
-                "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
-                "crID": lambda x: x is not None,
-                "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),  # 1 year in seconds
+             "fields": {
+                "clID": { "type": "not_null" },
+                "crDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": -1,
+                    "max_delta": 60
+                },
+                "crID": { "type": "not_null" },
+                "exDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": 60 * 60 * 24 * 364 * 1,
+                    "max_delta": 60 * 60 * 24 * 366 * 1
+                }
             },
             "headers": {
                 "RPP-clTRID": None,
-                "RPP-svTRID": lambda x: x is not None and len(x) > 0
-            },
+                "RPP-svTRID": { "type": "not_empty_string" }
+            }
         }}]
     },
     { "test_id": "test7-simple_create_domain_taken",
@@ -528,7 +580,7 @@ test_cases = [
             },
             "headers": {
                 "Content-Type": "application/json",
-                "RPP-clTRID": f"test1-{random_name}-clTRID",
+                "RPP-clTRID": f"test12-{random_name}-clTRID",
                 "Authorization": "Basic Zm9vOmJhcg==" # foo:bar
             }
         },
@@ -544,14 +596,25 @@ test_cases = [
                     "ok"
                 ]
             },
-            "fields": {
-                "clID": lambda x: x is not None,
-                "crDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, -1, 60),
-                "crID": lambda x: x is not None,
-                "exDate": lambda x: check_datetime_format_utc_and_delta(test_start, x, 60 * 60 * 24 * 364 * 1, 60 * 60 * 24 * 366 * 1),
+             "fields": {
+                "clID": { "type": "not_null" },
+                "crDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": -1,
+                    "max_delta": 60
+                },
+                "crID": { "type": "not_null" },
+                "exDate": {
+                    "type": "datetime_format_utc_and_delta",
+                    "reference": test_start.isoformat(),
+                    "min_delta": 60 * 60 * 24 * 364 * 1,
+                    "max_delta": 60 * 60 * 24 * 366 * 1
+                }
             },
             "headers": {
-                "RPP-clTRID": f"test1-{random_name}-clTRID"
+                "RPP-clTRID": f"test12-{random_name}-clTRID",
+                "RPP-svTRID": { "type": "not_empty_string" }
             }
         }}]
     },
@@ -609,6 +672,25 @@ test_cases = [
         }}]
     },
 ]
+
+
+if True:
+    # Write test_cases to separate JSON files if serializable
+    output_dir = Path("./tests/integration/test_case_data/domain_create")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for case in test_cases:
+        try:
+            # Try to serialize to JSON (skip if fails)
+            json_str = json.dumps(case, indent=2)
+            # Write to file named by test_id
+            test_id = case.get("test_id", "unknown")
+            file_path = output_dir / f"{test_id}.json"
+            if not file_path.exists():
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(json_str)
+        except Exception:
+            # Skip cases that are not JSON serializable
+            continue
 
 # --- Test Function ---
 @pytest.mark.parametrize("case", test_cases, ids=[f"{__name__.replace("test_", "")}-{c["test_id"]}" for c in test_cases])

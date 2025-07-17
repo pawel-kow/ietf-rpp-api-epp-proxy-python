@@ -14,7 +14,7 @@ def recusive_compare_existing(case, path, actual_data, expected_data, case_sensi
         ads = sorted(actual_data, key=lambda x: json.dumps(x, sort_keys=True))
         exps = sorted(expected_data, key=lambda x: json.dumps(x, sort_keys=True))
         for i, element in enumerate(exps):
-            recusive_compare_existing(case, f"{path}[{i}]", ads[i], element)
+            recusive_compare_existing(case, f"{path}[{i}]", ads[i], element, case_sensitive=case_sensitive)  # Recurse/process element
     else:
         if isinstance(actual_data, str) and isinstance(expected_data, str):
             if case_sensitive:
