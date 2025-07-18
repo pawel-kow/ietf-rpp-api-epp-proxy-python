@@ -1,0 +1,57 @@
+{
+  "test_id": "test5-simple_delete_no_auth",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "id": "FO-{random_id_10}D05",
+          "name": "John Doe",
+          "contact_type": "PERSON",
+          "email": ["foo@example.com"],
+          "address": {
+            "city": "Anytown",
+            "country": "US"
+          },
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "id": "FO-{random_id_10}D05",
+          "status": [
+            "ok"
+          ]
+        },
+        "fields": {
+        },
+        "headers": {
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/contacts/FO-{random_id_10}D05",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response": {
+        "status": [
+          401
+        ],
+        "body": {}
+      }
+    }
+  ]
+}

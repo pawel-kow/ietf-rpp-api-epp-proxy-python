@@ -1,0 +1,62 @@
+{
+  "test_id": "test6-simple_delete_invalid_auth",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "id": "FO-{random_id_10}D06",
+          "name": "John Doe",
+          "contact_type": "PERSON",
+          "email": ["foo@example.com"],
+          "address": {
+            "city": "Anytown",
+            "country": "US"
+          },
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "id": "FO-{random_id_10}D06",
+          "status": [
+            "ok"
+          ]
+        },
+        "fields": {
+        },
+        "headers": {
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/contacts/FO-{random_id_10}D06",
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test6-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmNhdA=="
+        }
+      },
+      "response": {
+        "status": 401,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test6-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

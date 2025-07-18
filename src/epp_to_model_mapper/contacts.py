@@ -63,7 +63,7 @@ def create_contact_xml(contact: Contact, client_request_id=None) -> str:
 
     if contact.id:
         contact_id_element = ET.SubElement(contact_create, "contact:id")
-        contact_id_element.text = contact.id
+        contact_id_element.text = contact.id.upper()
 
     if contact.name or contact.address or contact.organisation_name and contact.type == ContactType.ORG:
         postal_info = ET.SubElement(contact_create, "contact:postalInfo", {"type": "int"})

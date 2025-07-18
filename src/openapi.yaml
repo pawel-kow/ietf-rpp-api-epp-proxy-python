@@ -183,6 +183,41 @@ paths:
         - Contacts
       security:
         - BasicAuth: []
+    delete:
+      operationId: contacts_Delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/contact.Contact'
+      tags:
+        - Contacts
+      security:
+        - BasicAuth: []
+  /contacts/{id}/processes/deletion:
+    get:
+      operationId: contacts_DeletionQuery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Contacts
+      security:
+        - BasicAuth: []
   /domains:
     post:
       operationId: domains_Create
