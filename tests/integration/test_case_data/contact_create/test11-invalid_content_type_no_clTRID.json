@@ -1,0 +1,37 @@
+{
+  "test_id": "test11-invalid_content_type_no_clTRID",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "id": "FO-{random_id_10}-01",
+          "name": "John Doe",
+          "contact_type": "PERSON",
+          "email": ["foo@example.com"],
+          "address": {
+            "city": "Anytown",
+            "country": "US"
+          },
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/epp+xml",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 415,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": null
+        }
+      }
+    }
+  ]
+}
