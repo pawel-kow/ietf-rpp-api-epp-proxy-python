@@ -37,6 +37,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -50,6 +58,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -73,6 +89,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/problem+json:
               schema:
@@ -86,6 +110,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -124,6 +156,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -137,6 +177,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -160,6 +208,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/problem+json:
               schema:
@@ -173,6 +229,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -202,22 +266,6 @@ paths:
         - Contacts
       security:
         - BasicAuth: []
-  /contacts/{id}/processes/deletion:
-    get:
-      operationId: contacts_DeletionQuery
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-      tags:
-        - Contacts
-      security:
-        - BasicAuth: []
   /domains:
     post:
       operationId: domains_Create
@@ -242,6 +290,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -255,6 +311,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -278,6 +342,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/problem+json:
               schema:
@@ -291,6 +363,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -329,6 +409,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -342,6 +430,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -365,6 +461,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/problem+json:
               schema:
@@ -378,6 +482,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -407,26 +519,6 @@ paths:
         - Domains
       security:
         - BasicAuth: []
-  /domains/{id}/processes/deletion:
-    get:
-      operationId: domains_DeletionQuery
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/domain.DomainDeletion'
-      tags:
-        - Domains
-      security:
-        - BasicAuth: []
   /domains/{id}/processes/renewal:
     put:
       operationId: domains_RenewalRequest
@@ -451,44 +543,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/domain.DomainRenewal'
-      security:
-        - BasicAuth: []
-    get:
-      operationId: domains_RenewalQuery
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/domain.DomainRenewal'
-      tags:
-        - Domains
-      security:
-        - BasicAuth: []
-    delete:
-      operationId: domains_RenewalCancel
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/domain.DomainRenewal'
-      tags:
-        - Domains
       security:
         - BasicAuth: []
   /domains/{id}/processes/transfer:
@@ -612,6 +666,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -625,6 +687,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -646,6 +716,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -678,6 +756,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -691,6 +777,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -714,6 +808,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/problem+json:
               schema:
@@ -727,6 +829,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -765,6 +875,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -778,6 +896,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -801,6 +927,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/problem+json:
               schema:
@@ -814,6 +948,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -841,10 +983,26 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+            rpp-msgq-cnt:
+              required: true
+              schema:
+                type: string
+            rpp-msgq-date:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/message.Message'
+                $ref: '#/components/schemas/message.PollQueueMessage'
         '400':
           description: The server could not understand the request due to invalid syntax.
           headers:
@@ -854,6 +1012,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -877,6 +1043,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/problem+json:
               schema:
@@ -890,6 +1064,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -922,6 +1104,26 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+            rpp-msgq-cnt:
+              required: true
+              schema:
+                type: string
+            rpp-msgq-date:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/message.PollMessageAckResponse'
         '400':
           description: The server could not understand the request due to invalid syntax.
           headers:
@@ -931,6 +1133,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -954,6 +1164,14 @@ paths:
               required: false
               schema:
                 type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/problem+json:
               schema:
@@ -967,6 +1185,14 @@ paths:
                 type: string
             rpp-svtrid:
               required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
               schema:
                 type: string
           content:
@@ -1199,6 +1425,8 @@ components:
               type: string
             hash:
               type: string
+    contact.ContactDeletion:
+      type: object
     contact.ContactType:
       type: string
       enum:
@@ -1504,17 +1732,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/host.HostInfoObj'
-    message.Message:
+    message.PollHeaders:
+      type: object
+    message.PollMessageAckResponse:
       type: object
       required:
         - id
       properties:
         id:
           type: string
-        subject:
+    message.PollQueueMessage:
+      type: object
+      required:
+        - id
+        - msg
+        - trnData
+      properties:
+        id:
           type: string
-        body:
+        msg:
           type: string
+        trnData:
+          type: object
   securitySchemes:
     BasicAuth:
       type: http

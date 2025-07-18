@@ -62,7 +62,9 @@
           "RPP-clTRID": null,
           "RPP-svTRID": {
             "type": "not_empty_string"
-          }
+          },
+          "RPP-code": "1000",
+          "RPP-code-text": "Command completed successfully"
         }
       }
     }

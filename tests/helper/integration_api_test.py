@@ -82,8 +82,9 @@ def endpoint_test(client, case_sequence):
             if "headers" in case["response"]:
                 # Check for expected headers in the response
                 for header, test in case["response"]["headers"].items():
+                    header = header.lower()
                     if test is not None:
-                        assert header in response.headers, f"Header '{header}' not found in response for test case: {case_sequence['test_id']}[{i}]"
+                        assert header.lower() in response.headers, f"Header '{header}' not found in response for test case: {case_sequence['test_id']}[{i}]"
                         if isinstance(test, str):
                             assert response.headers[header] == test, f"Header '{header}' has unexpected value for test case: {case_sequence['test_id']}[{i}]"
                         elif callable(test):

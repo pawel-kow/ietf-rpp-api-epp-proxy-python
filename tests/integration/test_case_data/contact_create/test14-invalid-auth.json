@@ -30,7 +30,9 @@
         "body": {},
         "fields": {},
         "headers": {
-          "RPP-clTRID": "test14-{random_name}-clTRID"
+          "RPP-clTRID": "test14-{random_name}-clTRID",
+          "RPP-code": "2201",
+          "RPP-code-text": "Authorization error"
         }
       }
     }

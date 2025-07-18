@@ -1,0 +1,36 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "PollQueueMessage.json",
+    "type": "object",
+    "properties": {
+        "RPP-msgq-cnt": {
+            "type": "string"
+        },
+        "RPP-msgq-date": {
+            "type": "string"
+        },
+        "id": {
+            "type": "string"
+        },
+        "msg": {
+            "type": "string"
+        },
+        "trnData": {
+            "type": "object",
+            "properties": {},
+            "unevaluatedProperties": {
+                "not": {}
+            }
+        }
+    },
+    "required": [
+        "RPP-msgq-cnt",
+        "RPP-msgq-date",
+        "id",
+        "msg",
+        "trnData"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

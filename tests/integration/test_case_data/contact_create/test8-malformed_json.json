@@ -18,7 +18,9 @@
         "body": {},
         "fields": {},
         "headers": {
-          "RPP-clTRID": "test8-{random_name}-clTRID"
+          "RPP-clTRID": "test8-{random_name}-clTRID",
+          "RPP-code": "2001",
+          "RPP-code-text": "Command syntax error"
         }
       }
     }

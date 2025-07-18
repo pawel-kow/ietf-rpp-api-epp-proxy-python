@@ -31,7 +31,7 @@ def contacts_Create(body):
             response = contact_to_rpp(inforesp.contact)
             return response, 201, generate_rpp_response_headers(contactresp)
         elif isinstance(contactresp, ErrorResponse):
-            if contactresp.code == OperationResponse.ResultCode.OBJECT_EXISTS:
+            if contactresp.code == ResultCode.OBJECT_EXISTS:
                 raise ProblemException(status=409, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
             else:
                 raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
@@ -41,7 +41,7 @@ def contacts_Create(body):
     except ProblemException:
         raise
     except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID')))
+        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
 
 #TODO: implement contacts_Delete
 def contacts_Delete(id):
@@ -53,15 +53,15 @@ def contacts_Delete(id):
         contactresp = epp_contacts_Delete(get_epp_client(), id)
         # Convert the response to JSON
         if isinstance(contactresp, DomainDeleteResponse):
-            if contactresp.code == OperationResponse.ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
+            if contactresp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
                 return None, 204, generate_rpp_response_headers(contactresp)
-            elif contactresp.code == OperationResponse.ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
+            elif contactresp.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
                 return None, 202, generate_rpp_response_headers(contactresp)
             else:
                 # this code should not be ever reached
                 raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
         elif isinstance(contactresp, ErrorResponse):
-            if contactresp.code == OperationResponse.ResultCode.OBJECT_DOES_NOT_EXIST:
+            if contactresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
                 raise ProblemException(status=404, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
             else:
                 raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
@@ -70,7 +70,7 @@ def contacts_Delete(id):
     except ProblemException:
         raise
     except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID')))
+        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
     return response, 200
 
 #TODO: implement contacts_Get
@@ -82,7 +82,7 @@ def contacts_Get(id):
             response = domain_to_rpp(domainresp.domain)
             return response, 200
         elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == OperationResponse.ResultCode.OBJECT_DOES_NOT_EXIST:
+            if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
                 raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
             else:
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})

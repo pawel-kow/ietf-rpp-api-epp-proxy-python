@@ -30,7 +30,7 @@ def domains_Create(body):
             response = domain_to_rpp(inforesp.domain)
             return response, 201, generate_rpp_response_headers(domainresp)
         elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == OperationResponse.ResultCode.OBJECT_EXISTS:
+            if domainresp.code == ResultCode.OBJECT_EXISTS:
                 raise ProblemException(status=409, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
             else:
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
@@ -39,7 +39,7 @@ def domains_Create(body):
     except ProblemException:
         raise
     except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID')))
+        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
 
 def domains_Delete(id):
     try:
@@ -50,15 +50,15 @@ def domains_Delete(id):
         domainresp = epp_domains_Delete(get_epp_client(), id)
         # Convert the response to JSON
         if isinstance(domainresp, DomainDeleteResponse):
-            if domainresp.code == OperationResponse.ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
+            if domainresp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
                 return None, 204, generate_rpp_response_headers(domainresp)
-            elif domainresp.code == OperationResponse.ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
+            elif domainresp.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
                 return None, 202, generate_rpp_response_headers(domainresp)
             else:
                 # this code should not be ever reached
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
         elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == OperationResponse.ResultCode.OBJECT_DOES_NOT_EXIST:
+            if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
                 raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
             else:
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
@@ -67,7 +67,7 @@ def domains_Delete(id):
     except ProblemException:
         raise
     except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID')))
+        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
     return response, 200
 
 def domains_Get(id):
@@ -78,7 +78,7 @@ def domains_Get(id):
             response = domain_to_rpp(domainresp.domain)
             return response, 200
         elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == OperationResponse.ResultCode.OBJECT_DOES_NOT_EXIST:
+            if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
                 raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
             else:
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
