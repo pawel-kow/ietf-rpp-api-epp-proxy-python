@@ -1,0 +1,24 @@
+{
+  "test_id": "test3-delete_not_existing",
+  "steps": [
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/contacts/FO-{random_id_10}D03",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": [
+          404
+        ],
+        "body": {
+            "status": 404,
+            "code": "2303"
+        }
+      }
+    }
+  ]
+}

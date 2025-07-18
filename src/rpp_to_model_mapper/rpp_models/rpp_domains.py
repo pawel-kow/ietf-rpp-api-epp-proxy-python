@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from typing import List, Optional, Dict
+from .rpp_common import RPPProvisioningObject
 
 
 @dataclass_json
@@ -35,12 +36,6 @@ class RPPDnsSec:
 
 @dataclass_json
 @dataclass
-class RPPAuthInfo:
-    pw: Optional[str] = None
-    hash: Optional[str] = None
-
-@dataclass_json
-@dataclass
 class RPPProcess:
     pass
 
@@ -68,17 +63,9 @@ class RPPProcessMap:
     
 @dataclass_json
 @dataclass
-class RPPDomain:
+class RPPDomain(RPPProvisioningObject):
     name: str
-    status: Optional[List[str]] = None
-    authInfo: Optional[RPPAuthInfo] = None
     ns: RPPNS = None
     contacts: Optional[List[RPPContactReference]] = None
     dnsSEC: Optional[List[RPPDnsSec]] = None
-    crDate: Optional[str] = None
-    exDate: Optional[str] = None
-    upDate: Optional[str] = None
-    trDate: Optional[str] = None
-    clID: Optional[str] = None
-    crID: Optional[str] = None
     processes: RPPProcessMap = None

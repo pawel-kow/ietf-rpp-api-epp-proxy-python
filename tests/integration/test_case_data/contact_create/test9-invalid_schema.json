@@ -1,0 +1,31 @@
+{
+  "test_id": "test9-invalid_schema",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "domain_name": "FREE.EXAMPLE",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "RPP-clTRID": "test9-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "test9-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

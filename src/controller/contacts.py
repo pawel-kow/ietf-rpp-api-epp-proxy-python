@@ -1,6 +1,6 @@
 from connexion import request, ProblemException
 from connexion.context import operation
-from eppclient.epp_domains import *
+from eppclient.epp_contacts import *
 from models import *
 from rpp_to_model_mapper import *
 from .helper.rpp_response import *
@@ -8,12 +8,13 @@ import json
 import asyncio
 from .auth import get_epp_client
 
-def domains_Check(body):
+def contacts_Check(body):
     return {}, 500
 
-def domains_Create(body):
+#TODO: finish implementation contacts_Create
+def contacts_Create(body):
     try:
-        domain = rpp_to_domain(body)
+        contact = rpp_to_contact(body)
     except Exception as e:
         raise ProblemException(status=400, title="Bad Request", detail=str(e))
 
@@ -23,45 +24,47 @@ def domains_Create(body):
             #TODO: implement EPP check call
             return None, 100
         # Call the eppclient function to get the domain information
-        domainresp = epp_domains_Create(get_epp_client(), domain, client_transaction_id=request.headers.get('RPP-clTRID'))
-        if isinstance(domainresp, DomainCreateResponse):
-            inforesp = epp_domains_Info(get_epp_client(), domainresp.domain.name)
+        contactresp = epp_contacts_Create(get_epp_client(), contact, client_transaction_id=request.headers.get('RPP-clTRID'))
+        if isinstance(contactresp, ContactCreateResponse):
+            inforesp = epp_contacts_Info(get_epp_client(), contactresp.contact.id)
             # Convert the response to JSON
-            response = domain_to_rpp(inforesp.domain)
-            return response, 201, generate_rpp_response_headers(domainresp)
-        elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == ResultCode.OBJECT_EXISTS:
-                raise ProblemException(status=409, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
+            response = contact_to_rpp(inforesp.contact)
+            return response, 201, generate_rpp_response_headers(contactresp)
+        elif isinstance(contactresp, ErrorResponse):
+            if contactresp.code == ResultCode.OBJECT_EXISTS:
+                raise ProblemException(status=409, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
             else:
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
+                raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
         else:
             raise ValueError("Unexpected response type from EPP client")
+
     except ProblemException:
         raise
     except Exception as e:
         raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
 
-def domains_Delete(id):
+#TODO: implement contacts_Delete
+def contacts_Delete(id):
     try:
         x = asyncio.run(request.get_body())
         if x is not None and len(x) > 0:
             raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
-        # Call the eppclient function to delete  the domain
-        domainresp = epp_domains_Delete(get_epp_client(), id)
+        # Call the eppclient function to delete  the contact
+        contactresp = epp_contacts_Delete(get_epp_client(), id)
         # Convert the response to JSON
-        if isinstance(domainresp, DomainDeleteResponse):
-            if domainresp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
-                return None, 204, generate_rpp_response_headers(domainresp)
-            elif domainresp.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
-                return None, 202, generate_rpp_response_headers(domainresp)
+        if isinstance(contactresp, DomainDeleteResponse):
+            if contactresp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
+                return None, 204, generate_rpp_response_headers(contactresp)
+            elif contactresp.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
+                return None, 202, generate_rpp_response_headers(contactresp)
             else:
                 # this code should not be ever reached
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-        elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
-                raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
+                raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
+        elif isinstance(contactresp, ErrorResponse):
+            if contactresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
+                raise ProblemException(status=404, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
             else:
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
+                raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
         else:
             raise ValueError("Unexpected response type from EPP client")
     except ProblemException:
@@ -70,7 +73,8 @@ def domains_Delete(id):
         raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
     return response, 200
 
-def domains_Get(id):
+#TODO: implement contacts_Get
+def contacts_Get(id):
     try:
         # Call the eppclient function to create the domain
         domainresp = epp_domains_Info(get_epp_client(), id)
@@ -90,5 +94,6 @@ def domains_Get(id):
         raise ProblemException(status=500, title="Internal Server Error", detail=str(e))
     return response, 200
 
-def domains_Update(id, body):
+#TODO: implement contacts_Update
+def contacts_Update(id, body):
     return {}, 500

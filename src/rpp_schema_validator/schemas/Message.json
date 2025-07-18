@@ -1,0 +1,22 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "Message.json",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "subject": {
+            "type": "string"
+        },
+        "body": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "id"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

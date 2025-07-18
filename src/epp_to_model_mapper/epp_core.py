@@ -1,4 +1,4 @@
-from models import OperationResponse, ErrorResponse
+from models import ErrorResponse, ResultCode
 from helpers import decode_xml
 
 def get_epp_error_response(xml_string: str, client_transaction_id: str) -> ErrorResponse:
@@ -43,49 +43,49 @@ def get_epp_clTRID(root):
     else:
         return None
 
-def map_epp_code(code: str) -> OperationResponse.ResultCode:
+def map_epp_code(code: str) -> ResultCode:
     """
     Maps EPP result codes to OperationResponse.EPPResultCode.
     Args:
         code (str): The EPP result code.
     Returns:
-        OperationResponse.ResultCode: The mapped result code.
+        ResultCode: The mapped result code.
     """
     epp_code_map = {
-        "1000": OperationResponse.ResultCode.COMMAND_COMPLETED_SUCCESSFULLY,
-        "1001": OperationResponse.ResultCode.COMMAND_COMPLETED_ACTION_PENDING,
-        "1300": OperationResponse.ResultCode.COMMAND_COMPLETED_NO_MESSAGES,
-        "1301": OperationResponse.ResultCode.COMMAND_COMPLETED_ACK_TO_DEQUEUE,
-        "1500": OperationResponse.ResultCode.COMMAND_COMPLETED_ENDING_SESSION,
-        "2000": OperationResponse.ResultCode.UNKNOWN_COMMAND,
-        "2001": OperationResponse.ResultCode.COMMAND_SYNTAX_ERROR,
-        "2002": OperationResponse.ResultCode.COMMAND_USE_ERROR,
-        "2003": OperationResponse.ResultCode.REQUIRED_PARAMETER_MISSING,
-        "2004": OperationResponse.ResultCode.PARAMETER_VALUE_RANGE_ERROR,
-        "2005": OperationResponse.ResultCode.PARAMETER_VALUE_SYNTAX_ERROR,
-        "2100": OperationResponse.ResultCode.UNIMPLEMENTED_PROTOCOL_VERSION,
-        "2101": OperationResponse.ResultCode.UNIMPLEMENTED_COMMAND,
-        "2102": OperationResponse.ResultCode.UNIMPLEMENTED_OPTION,
-        "2103": OperationResponse.ResultCode.UNIMPLEMENTED_EXTENSION,
-        "2104": OperationResponse.ResultCode.BILLING_FAILURE,
-        "2105": OperationResponse.ResultCode.OBJECT_NOT_ELIGIBLE_FOR_RENEWAL,
-        "2106": OperationResponse.ResultCode.OBJECT_NOT_ELIGIBLE_FOR_TRANSFER,
-        "2200": OperationResponse.ResultCode.AUTHENTICATION_ERROR,
-        "2201": OperationResponse.ResultCode.AUTHORIZATION_ERROR,
-        "2202": OperationResponse.ResultCode.INVALID_AUTHORIZATION_INFORMATION,
-        "2300": OperationResponse.ResultCode.OBJECT_PENDING_TRANSFER,
-        "2301": OperationResponse.ResultCode.OBJECT_NOT_PENDING_TRANSFER,
-        "2302": OperationResponse.ResultCode.OBJECT_EXISTS,
-        "2303": OperationResponse.ResultCode.OBJECT_DOES_NOT_EXIST,
-        "2304": OperationResponse.ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION,
-        "2305": OperationResponse.ResultCode.OBJECT_ASSOCIATION_PROHIBITS_OPERATION,
-        "2306": OperationResponse.ResultCode.PARAMETER_VALUE_POLICY_ERROR,
-        "2307": OperationResponse.ResultCode.UNIMPLEMENTED_OBJECT_SERVICE,
-        "2308": OperationResponse.ResultCode.DATA_MANAGEMENT_POLICY_VIOLATION,
-        "2400": OperationResponse.ResultCode.COMMAND_FAILED,
-        "2500": OperationResponse.ResultCode.COMMAND_FAILED_SERVER_CLOSING_CONNECTION,
-        "2501": OperationResponse.ResultCode.AUTHENTICATION_ERROR_SERVER_CLOSING_CONNECTION,
-        "2502": OperationResponse.ResultCode.SESSION_LIMIT_EXCEEDED_SERVER_CLOSING_CONNECTION,
+        "1000": ResultCode.COMMAND_COMPLETED_SUCCESSFULLY,
+        "1001": ResultCode.COMMAND_COMPLETED_ACTION_PENDING,
+        "1300": ResultCode.COMMAND_COMPLETED_NO_MESSAGES,
+        "1301": ResultCode.COMMAND_COMPLETED_ACK_TO_DEQUEUE,
+        "1500": ResultCode.COMMAND_COMPLETED_ENDING_SESSION,
+        "2000": ResultCode.UNKNOWN_COMMAND,
+        "2001": ResultCode.COMMAND_SYNTAX_ERROR,
+        "2002": ResultCode.COMMAND_USE_ERROR,
+        "2003": ResultCode.REQUIRED_PARAMETER_MISSING,
+        "2004": ResultCode.PARAMETER_VALUE_RANGE_ERROR,
+        "2005": ResultCode.PARAMETER_VALUE_SYNTAX_ERROR,
+        "2100": ResultCode.UNIMPLEMENTED_PROTOCOL_VERSION,
+        "2101": ResultCode.UNIMPLEMENTED_COMMAND,
+        "2102": ResultCode.UNIMPLEMENTED_OPTION,
+        "2103": ResultCode.UNIMPLEMENTED_EXTENSION,
+        "2104": ResultCode.BILLING_FAILURE,
+        "2105": ResultCode.OBJECT_NOT_ELIGIBLE_FOR_RENEWAL,
+        "2106": ResultCode.OBJECT_NOT_ELIGIBLE_FOR_TRANSFER,
+        "2200": ResultCode.AUTHENTICATION_ERROR,
+        "2201": ResultCode.AUTHORIZATION_ERROR,
+        "2202": ResultCode.INVALID_AUTHORIZATION_INFORMATION,
+        "2300": ResultCode.OBJECT_PENDING_TRANSFER,
+        "2301": ResultCode.OBJECT_NOT_PENDING_TRANSFER,
+        "2302": ResultCode.OBJECT_EXISTS,
+        "2303": ResultCode.OBJECT_DOES_NOT_EXIST,
+        "2304": ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION,
+        "2305": ResultCode.OBJECT_ASSOCIATION_PROHIBITS_OPERATION,
+        "2306": ResultCode.PARAMETER_VALUE_POLICY_ERROR,
+        "2307": ResultCode.UNIMPLEMENTED_OBJECT_SERVICE,
+        "2308": ResultCode.DATA_MANAGEMENT_POLICY_VIOLATION,
+        "2400": ResultCode.COMMAND_FAILED,
+        "2500": ResultCode.COMMAND_FAILED_SERVER_CLOSING_CONNECTION,
+        "2501": ResultCode.AUTHENTICATION_ERROR_SERVER_CLOSING_CONNECTION,
+        "2502": ResultCode.SESSION_LIMIT_EXCEEDED_SERVER_CLOSING_CONNECTION,
     }
     
     try:

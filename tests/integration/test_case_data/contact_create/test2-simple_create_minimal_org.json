@@ -1,0 +1,72 @@
+{
+  "test_id": "test2-simple_create_minimal_org",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "id": "FO-{random_id_10}-02",
+          "name": "John Doe",
+          "organisation_name": "ACME Inc.",
+          "contact_type": "ORG",
+          "email": ["foo@example.com"],
+          "address": {
+            "city": "Anytown",
+            "country": "US"
+          },
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "id": "FO-{random_id_10}-02",
+          "name": "John Doe",
+          "organisation_name": "ACME Inc.",
+          "contact_type": "ORG",
+          "email": ["foo@example.com"],
+          "address": {
+            "city": "Anytown",
+            "country": "US"
+          },
+          "authInfo": {
+            "pw": "Password1!@"
+          },
+          "status": [
+            "ok"
+          ]
+        },
+        "fields": {
+          "clID": {
+            "type": "not_null"
+          },
+          "crDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": -1,
+            "max_delta": 60
+          },
+          "crID": {
+            "type": "not_null"
+          }
+        },
+        "headers": {
+          "RPP-clTRID": null,
+          "RPP-svTRID": {
+            "type": "not_empty_string"
+          },
+          "RPP-code": "1000",
+          "RPP-code-text": "Command completed successfully"
+        }
+      }
+    }
+  ]
+}

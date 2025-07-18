@@ -55,7 +55,7 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
     domain_create = ET.SubElement(create, "domain:create", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
 
     domain_name_element = ET.SubElement(domain_create, "domain:name")
-    domain_name_element.text = domain.name
+    domain_name_element.text = domain.name.upper()
 
     if domain.processes and domain.processes.get("creation"):
         duration = domain.processes["creation"].duration
@@ -95,7 +95,7 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
             if "registrant" in contact.types:
                 if not registrant_generated:
                     domain_registrant = ET.SubElement(domain_create, "domain:registrant")
-                    domain_registrant.text = contact.id
+                    domain_registrant.text = contact.id.upper()
                     registrant_generated = True
                 else:
                     raise ValueError("Only one registrant is allowed in EPP")
@@ -104,7 +104,7 @@ def create_domain_xml(domain: Domain, client_request_id=None) -> str:
             for t in contact.types:
                 if not t == "registrant":
                     domain_contact = ET.SubElement(domain_create, "domain:contact", {"type": t})
-                    domain_contact.text = contact.id
+                    domain_contact.text = contact.id.upper()
 
     if domain.authInfo and domain.authInfo.pw:
         domain_auth_info = ET.SubElement(domain_create, "domain:authInfo")
@@ -147,7 +147,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
     status = [x.attrib.get("s", None) for x in root.findall(".//domain:status", namespaces=namespace)]
     ns = root.find(".//domain:ns", namespaces=namespace)
     if ns is not None:
-        host_objs = [HostObj(x.text) for x in ns.findall(".//domain:hostObj", namespaces=namespace)]
+        host_objs = [HostObj(id=x.text) for x in ns.findall(".//domain:hostObj", namespaces=namespace)]
         host_attrs = None
     else:
         host_objs = None

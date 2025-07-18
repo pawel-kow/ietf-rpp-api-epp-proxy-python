@@ -1,6 +1,7 @@
 from models import *
 from .rpp_models import *
 from rpp_schema_validator import validate_schema
+from .common import provisioning_object_to_rpp
 
 def rpp_to_domain(rpp: dict) -> Domain:
     """Converts a JSON string to a Domain object according to the provided schema."""
@@ -41,12 +42,6 @@ def domain_to_rpp(domain: Domain) -> str:
 
     domain_dict = {}
     domain_dict["name"] = domain.name
-    if domain.authInfo:
-        domain_dict["authInfo"] = {}
-        if domain.authInfo.pw:
-            domain_dict["authInfo"]["pw"] = domain.authInfo.pw
-        if domain.authInfo.hash:
-            domain_dict["authInfo"]["hash"] = domain.authInfo.hash
     if domain.ns:
         ns_dict = {}
         if domain.ns.host_objs:
@@ -59,20 +54,8 @@ def domain_to_rpp(domain: Domain) -> str:
         domain_dict["contacts"] = [{"value": contact.id, "type": contact.types} for contact in domain.contacts]
     if domain.dnsSEC:
         domain_dict["dnsSEC"] = domain.dnsSEC
-    if domain.status:
-        domain_dict["status"] = [x for x in domain.status]
-    if domain.crDate:
-        domain_dict["crDate"] = domain.crDate
-    if domain.exDate:
-        domain_dict["exDate"] = domain.exDate
-    if domain.upDate:
-        domain_dict["upDate"] = domain.upDate
-    if domain.trDate:
-        domain_dict["trDate"] = domain.trDate
-    if domain.clID:
-        domain_dict["clID"] = domain.clID
-    if domain.crID:
-        domain_dict["crID"] = domain.crID
+
+    provisioning_object_to_rpp(domain, domain_dict)
 
     validate_schema("Domain", domain_dict)
     return domain_dict
