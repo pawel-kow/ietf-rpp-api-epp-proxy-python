@@ -6,12 +6,6 @@
         "name": {
             "type": "string"
         },
-        "status": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
         "processes": {
             "type": "object",
             "properties": {
@@ -23,20 +17,6 @@
                 },
                 "transfer": {
                     "$ref": "DomainTransfer.json"
-                }
-            },
-            "unevaluatedProperties": {
-                "not": {}
-            }
-        },
-        "authInfo": {
-            "type": "object",
-            "properties": {
-                "pw": {
-                    "type": "string"
-                },
-                "hash": {
-                    "type": "string"
                 }
             },
             "unevaluatedProperties": {
@@ -56,6 +36,26 @@
             "type": "array",
             "items": {
                 "$ref": "#/$defs/DnsSec"
+            }
+        },
+        "authInfo": {
+            "type": "object",
+            "properties": {
+                "pw": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                }
+            },
+            "unevaluatedProperties": {
+                "not": {}
+            }
+        },
+        "status": {
+            "type": "array",
+            "items": {
+                "type": "string"
             }
         },
         "crDate": {

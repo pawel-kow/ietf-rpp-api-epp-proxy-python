@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict
 from enum import Enum
 
-@dataclass
+@dataclass(kw_only=True)
 class OperationResponse:
     class ResultCode(Enum):
         COMMAND_COMPLETED_SUCCESSFULLY = ("1000", "Command completed successfully")
@@ -45,7 +45,7 @@ class OperationResponse:
     server_transaction_id: Optional[str]
     client_transaction_id: Optional[str]
 
-@dataclass
+@dataclass(kw_only=True)
 class ErrorResponse(OperationResponse):
     pass
 

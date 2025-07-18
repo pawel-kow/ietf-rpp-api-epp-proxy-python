@@ -36,12 +36,6 @@ class RPPDnsSec:
 
 @dataclass_json
 @dataclass
-class RPPAuthInfo:
-    pw: Optional[str] = None
-    hash: Optional[str] = None
-
-@dataclass_json
-@dataclass
 class RPPProcess:
     pass
 
@@ -71,8 +65,6 @@ class RPPProcessMap:
 @dataclass
 class RPPDomain(RPPProvisioningObject):
     name: str
-    status: Optional[List[str]] = None
-    authInfo: Optional[RPPAuthInfo] = None
     ns: RPPNS = None
     contacts: Optional[List[RPPContactReference]] = None
     dnsSEC: Optional[List[RPPDnsSec]] = None

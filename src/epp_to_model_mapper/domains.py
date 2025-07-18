@@ -147,7 +147,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
     status = [x.attrib.get("s", None) for x in root.findall(".//domain:status", namespaces=namespace)]
     ns = root.find(".//domain:ns", namespaces=namespace)
     if ns is not None:
-        host_objs = [HostObj(x.text) for x in ns.findall(".//domain:hostObj", namespaces=namespace)]
+        host_objs = [HostObj(id=x.text) for x in ns.findall(".//domain:hostObj", namespaces=namespace)]
         host_attrs = None
     else:
         host_objs = None

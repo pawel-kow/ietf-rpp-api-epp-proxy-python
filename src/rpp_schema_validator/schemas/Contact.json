@@ -1,0 +1,105 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "Contact.json",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "email": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "phone": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "fax": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "address": {
+            "type": "object",
+            "properties": {
+                "street": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "city": {
+                    "type": "string"
+                },
+                "stateProvince": {
+                    "type": "string"
+                },
+                "postalCode": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "country"
+            ],
+            "unevaluatedProperties": {
+                "not": {}
+            }
+        },
+        "authInfo": {
+            "type": "object",
+            "properties": {
+                "pw": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                }
+            },
+            "unevaluatedProperties": {
+                "not": {}
+            }
+        },
+        "status": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "crDate": {
+            "type": "string"
+        },
+        "exDate": {
+            "type": "string"
+        },
+        "upDate": {
+            "type": "string"
+        },
+        "trDate": {
+            "type": "string"
+        },
+        "clID": {
+            "type": "string"
+        },
+        "crID": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "id",
+        "authInfo"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}
