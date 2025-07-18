@@ -41,18 +41,18 @@ class Contact(ProvisioningObject):
             self.address.update(contact.address)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ErrorResponse(OperationResponse):
     pass
 
-@dataclass
+@dataclass(kw_only=True)
 class ContactCreateResponse(OperationResponse):
     contact: Contact
 
-@dataclass
+@dataclass(kw_only=True)
 class ContactInfoResponse(OperationResponse):
     contact: Contact
 
-@dataclass
+@dataclass(kw_only=True)
 class ContactDeleteResponse(OperationResponse):
     pass
