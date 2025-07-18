@@ -23,6 +23,7 @@ def client():
 
 
 random_name = str(uuid.uuid4()) # Generate a random name for testing
+random_id_10 = str(uuid.uuid4())[:10]
 test_start = datetime.datetime.now(datetime.UTC)
 
 test_cases = []
@@ -53,6 +54,7 @@ def process_placeholders(json_data, obj=None):
     elif isinstance(json_data, str):
         return json_data\
             .replace("{random_name}", f"{obj['test_group'].replace('_', '-')}-{random_name}" if "test_group" in obj else random_name)\
+            .replace("{random_id_10}", f"{random_id_10}")\
             .replace("{test_start}", test_start.isoformat())
     else:
         return json_data
