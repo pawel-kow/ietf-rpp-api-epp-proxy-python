@@ -12,6 +12,8 @@ def rpp_to_contact(rpp: dict) -> Contact:
     contact = Contact(
         id = contact_rpp.id if contact_rpp.id else None,
         name = contact_rpp.name if contact_rpp.name else None,
+        organisation_name = contact_rpp.organisation_name if contact_rpp.organisation_name else None,
+        type = ContactType(contact_rpp.contact_type.value),
         email = contact_rpp.email if contact_rpp.email else None,
         phone = contact_rpp.phone if contact_rpp.phone else None,
         fax = contact_rpp.fax if contact_rpp.fax else None,
@@ -36,6 +38,9 @@ def contact_to_rpp(contact: Contact) -> str:
     contact_dict["id"] = contact.id
     if contact.name is not None:
         contact_dict["name"] = contact.name
+    if contact.organisation_name is not None:
+        contact_dict["organisation_name"] = contact.organisation_name
+    contact_dict["contact_type"] = contact.type.value
     if contact.email is not None:
         contact_dict["email"] = contact.email
     if contact.phone is not None:

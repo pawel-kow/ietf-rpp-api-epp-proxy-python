@@ -9,6 +9,12 @@
         "name": {
             "type": "string"
         },
+        "organisation_name": {
+            "type": "string"
+        },
+        "contact_type": {
+            "$ref": "#/$defs/ContactType"
+        },
         "email": {
             "type": "array",
             "items": {
@@ -49,9 +55,6 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "country"
-            ],
             "unevaluatedProperties": {
                 "not": {}
             }
@@ -97,9 +100,19 @@
     },
     "required": [
         "id",
+        "contact_type",
         "authInfo"
     ],
     "unevaluatedProperties": {
         "not": {}
+    },
+    "$defs": {
+        "ContactType": {
+            "type": "string",
+            "enum": [
+                "PERSON",
+                "ORG"
+            ]
+        }
     }
 }

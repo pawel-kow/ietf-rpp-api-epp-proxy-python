@@ -1,20 +1,20 @@
 {
-  "test_id": "test1-simple_create",
+  "test_id": "test2-simple_create_minimal_org",
   "steps": [
     {
       "request": {
         "method": "POST",
         "url": "/contacts",
         "body_json": {
-          "id": "FO-{random_id_10}-01",
+          "id": "FO-{random_id_10}-02",
           "name": "John Doe",
+          "organisation_name": "ACME Inc.",
+          "contact_type": "ORG",
+          "email": ["foo@example.com"],
           "address": {
-            "street": ["123 Main St"],
             "city": "Anytown",
-            "postalCode": "12345",
             "country": "US"
           },
-          "email": ["foo@example.com"],
           "authInfo": {
             "pw": "Password1!@"
           }
@@ -28,15 +28,15 @@
         "status": 201,
         "content_type": "application/json",
         "body": {
-          "id": "FO-{random_id_10}-01",
+          "id": "FO-{random_id_10}-02",
           "name": "John Doe",
+          "organisation_name": "ACME Inc.",
+          "contact_type": "ORG",
+          "email": ["foo@example.com"],
           "address": {
-            "street": ["123 Main St"],
             "city": "Anytown",
-            "postalCode": "12345",
             "country": "US"
           },
-          "email": ["foo@example.com"],
           "authInfo": {
             "pw": "Password1!@"
           },

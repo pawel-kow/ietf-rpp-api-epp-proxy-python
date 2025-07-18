@@ -1054,12 +1054,17 @@ components:
       type: object
       required:
         - id
+        - contact_type
         - authInfo
       properties:
         id:
           type: string
         name:
           type: string
+        organisation_name:
+          type: string
+        contact_type:
+          $ref: '#/components/schemas/contact.ContactType'
         email:
           type: array
           items:
@@ -1087,8 +1092,6 @@ components:
               type: string
             country:
               type: string
-          required:
-            - country
         authInfo:
           type: object
           properties:
@@ -1116,12 +1119,17 @@ components:
       type: object
       required:
         - id
+        - contact_type
         - authInfo
       properties:
         id:
           type: string
         name:
           type: string
+        organisation_name:
+          type: string
+        contact_type:
+          $ref: '#/components/schemas/contact.ContactType'
         email:
           type: array
           items:
@@ -1149,8 +1157,6 @@ components:
               type: string
             country:
               type: string
-          required:
-            - country
         authInfo:
           type: object
           properties:
@@ -1158,6 +1164,11 @@ components:
               type: string
             hash:
               type: string
+    contact.ContactType:
+      type: string
+      enum:
+        - PERSON
+        - ORG
     domain.ContactReference:
       type: object
       required:

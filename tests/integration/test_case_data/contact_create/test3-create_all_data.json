@@ -1,0 +1,80 @@
+{
+  "test_id": "test3-create_all_data",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "id": "FO-{random_id_10}-03",
+          "name": "John Doe",
+          "organisation_name": "ACME Inc.",
+          "contact_type": "ORG",
+          "address": {
+            "street": ["123 Main St", "Line 2", "Line 3"],
+            "city": "Anytown",
+            "postalCode": "12345",
+            "stateProvince": "PA",
+            "country": "US"
+          },
+          "email": ["foo@example.com"],
+          "phone": ["+49.123123123x123"],
+          "fax": ["+49.123123123x123"],
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "id": "FO-{random_id_10}-03",
+          "name": "John Doe",
+          "organisation_name": "ACME Inc.",
+          "contact_type": "ORG",
+          "address": {
+            "street": ["123 Main St", "Line 2", "Line 3"],
+            "city": "Anytown",
+            "postalCode": "12345",
+            "stateProvince": "PA",
+            "country": "US"
+          },
+          "email": ["foo@example.com"],
+          "phone": ["+49.123123123x123"],
+          "fax": ["+49.123123123x123"],
+          "authInfo": {
+            "pw": "Password1!@"
+          },
+          "status": [
+            "ok"
+          ]
+        },
+        "fields": {
+          "clID": {
+            "type": "not_null"
+          },
+          "crDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": -1,
+            "max_delta": 60
+          },
+          "crID": {
+            "type": "not_null"
+          }
+        },
+        "headers": {
+          "RPP-clTRID": null,
+          "RPP-svTRID": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}

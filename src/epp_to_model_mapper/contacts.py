@@ -65,11 +65,15 @@ def create_contact_xml(contact: Contact, client_request_id=None) -> str:
         contact_id_element = ET.SubElement(contact_create, "contact:id")
         contact_id_element.text = contact.id
 
-    if contact.name or contact.address:
+    if contact.name or contact.address or contact.organisation_name and contact.type == ContactType.ORG:
         postal_info = ET.SubElement(contact_create, "contact:postalInfo", {"type": "int"})
         if contact.name:
             name_element = ET.SubElement(postal_info, "contact:name")
             name_element.text = contact.name
+        if contact.organisation_name and contact.type == ContactType.ORG:
+            org_element = ET.SubElement(postal_info, "contact:org")
+            org_element.text = contact.organisation_name
+                
         if contact.address:
             address_element = ET.SubElement(postal_info, "contact:addr")
             if contact.address.street:
@@ -159,6 +163,7 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
     postalInfo = root.find(".//contact:postalInfo", namespaces=namespace)
     if postalInfo is not None:
         name = postalInfo.find(".//contact:name", namespaces=namespace).text if postalInfo.find(".//contact:name", namespaces=namespace) is not None else None
+        org = postalInfo.find(".//contact:org", namespaces=namespace).text if postalInfo.find(".//contact:org", namespaces=namespace) is not None else None
         address = Address(
             street=[x.text for x in postalInfo.findall(".//contact:street", namespaces=namespace)] if postalInfo.findall(".//contact:street", namespaces=namespace) else None,
             city=postalInfo.find(".//contact:city", namespaces=namespace).text if postalInfo.find(".//contact:city", namespaces=namespace) is not None else None,
@@ -169,8 +174,9 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
     else:
         name = None
         address = None
+        org = None
 
-    email = [root.find(".//contact:email", namespaces=namespace).text if root.find(".//contact:name", namespaces=namespace) is not None else None]
+    email = [root.find(".//contact:email", namespaces=namespace).text if root.find(".//contact:email", namespaces=namespace) is not None else None]
     voice_elem = root.find(".//contact:voice", namespaces=namespace)
     if voice_elem is not None and voice_elem.text is not None:
         phone_number = voice_elem.text
@@ -213,6 +219,10 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
     contact = Contact(
         id = id,
         name = name,
+        organisation_name= org,
+        type = ContactType.ORG if org is not None
+            else ContactType.PERSON if name is not None
+            else ContactType.UNDEFINED,
         email = email,
         phone = phone,
         fax = fax,
