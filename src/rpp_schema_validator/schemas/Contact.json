@@ -9,10 +9,10 @@
         "name": {
             "type": "string"
         },
-        "organisation_name": {
+        "organisationName": {
             "type": "string"
         },
-        "contact_type": {
+        "contactType": {
             "$ref": "#/$defs/ContactType"
         },
         "email": {
@@ -100,7 +100,7 @@
     },
     "required": [
         "id",
-        "contact_type",
+        "contactType",
         "authInfo"
     ],
     "unevaluatedProperties": {

@@ -3,20 +3,6 @@
     "$id": "Host.json",
     "type": "object",
     "properties": {
-        "authInfo": {
-            "type": "object",
-            "properties": {
-                "pw": {
-                    "type": "string"
-                },
-                "hash": {
-                    "type": "string"
-                }
-            },
-            "unevaluatedProperties": {
-                "not": {}
-            }
-        },
         "status": {
             "type": "array",
             "items": {
@@ -42,9 +28,6 @@
             "type": "string"
         }
     },
-    "required": [
-        "authInfo"
-    ],
     "allOf": [
         {
             "$ref": "#/$defs/HostInfoAttr"

@@ -65,14 +65,14 @@ def create_contact_xml(contact: Contact, client_request_id=None) -> str:
         contact_id_element = ET.SubElement(contact_create, "contact:id")
         contact_id_element.text = contact.id.upper()
 
-    if contact.name or contact.address or contact.organisation_name and contact.type == ContactType.ORG:
+    if contact.name or contact.address or contact.organisationName and contact.type == ContactType.ORG:
         postal_info = ET.SubElement(contact_create, "contact:postalInfo", {"type": "int"})
         if contact.name:
             name_element = ET.SubElement(postal_info, "contact:name")
             name_element.text = contact.name
-        if contact.organisation_name and contact.type == ContactType.ORG:
+        if contact.organisationName and contact.type == ContactType.ORG:
             org_element = ET.SubElement(postal_info, "contact:org")
-            org_element.text = contact.organisation_name
+            org_element.text = contact.organisationName
                 
         if contact.address:
             address_element = ET.SubElement(postal_info, "contact:addr")
@@ -219,7 +219,7 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
     contact = Contact(
         id = id,
         name = name,
-        organisation_name= org,
+        organisationName= org,
         type = ContactType.ORG if org is not None
             else ContactType.PERSON if name is not None
             else ContactType.UNDEFINED,
