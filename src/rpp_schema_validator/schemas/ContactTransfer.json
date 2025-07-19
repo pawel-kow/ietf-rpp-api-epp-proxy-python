@@ -1,13 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "DomainTransfer.json",
+    "$id": "ContactTransfer.json",
     "type": "object",
     "properties": {
-        "period": {
-            "type": "string",
-            "format": "duration",
-            "description": "The registration period to be added to the domain upon a successful transfer. The allowed unit and range are defined by the registry policy."
-        },
         "auto_ack_date": {
             "type": "string",
             "format": "date-time",

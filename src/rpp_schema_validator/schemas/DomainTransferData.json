@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "DomainTransferData.json",
+    "type": "object",
+    "properties": {
+        "period": {
+            "type": "string",
+            "format": "duration",
+            "description": "The registration period to be added to the domain upon a successful transfer. The allowed unit and range are defined by the registry policy."
+        }
+    },
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "Parameters specific to the transfer of a domain."
+}

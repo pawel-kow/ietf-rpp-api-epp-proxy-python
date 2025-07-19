@@ -1,0 +1,29 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "PollMessageAckResponse.json",
+    "type": "object",
+    "properties": {
+        "_": {
+            "type": "number",
+            "const": 200
+        },
+        "id": {
+            "type": "string"
+        },
+        "RPP-msgq-cnt": {
+            "type": "string"
+        },
+        "RPP-msgq-date": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "_",
+        "id",
+        "RPP-msgq-cnt",
+        "RPP-msgq-date"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}
