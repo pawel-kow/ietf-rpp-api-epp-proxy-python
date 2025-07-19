@@ -258,12 +258,675 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/contact.Contact'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
       tags:
         - Contacts
+      security:
+        - BasicAuth: []
+  /contacts/{id}/processes/transfer:
+    post:
+      operationId: contacts_TransferRequest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/contact.ContactTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Contacts
+      security:
+        - BasicAuth: []
+  /contacts/{id}/processes/transfer/latest:
+    get:
+      operationId: contacts_TransferQuery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/contact.ContactTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Contacts
+      security:
+        - BasicAuth: []
+    delete:
+      operationId: contacts_TransferCancel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/contact.ContactTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Contacts
+      security:
+        - BasicAuth: []
+  /contacts/{id}/processes/transfer/latest/approval:
+    put:
+      operationId: contacts_TransferApprove
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/contact.ContactTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Contacts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.TransferAck'
+      security:
+        - BasicAuth: []
+  /contacts/{id}/processes/transfer/latest/rejection:
+    put:
+      operationId: contacts_TransferReject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/contact.ContactTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Contacts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.TransferAck'
       security:
         - BasicAuth: []
   /domains:
@@ -511,10 +1174,102 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/domain.Domain'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
       tags:
         - Domains
       security:
@@ -531,10 +1286,102 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/domain.DomainRenewal'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
       tags:
         - Domains
       requestBody:
@@ -546,7 +1393,7 @@ paths:
       security:
         - BasicAuth: []
   /domains/{id}/processes/transfer:
-    put:
+    post:
       operationId: domains_TransferRequest
       parameters:
         - name: id
@@ -557,10 +1404,102 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/domain.DomainTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
       tags:
         - Domains
       requestBody:
@@ -568,9 +1507,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/domain.DomainTransfer'
+              $ref: '#/components/schemas/domain.DomainTransferCreate'
       security:
         - BasicAuth: []
+  /domains/{id}/processes/transfer/latest:
     get:
       operationId: domains_TransferQuery
       parameters:
@@ -582,10 +1522,102 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/domain.DomainTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
       tags:
         - Domains
       security:
@@ -601,15 +1633,107 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/domain.DomainTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
       tags:
         - Domains
       security:
         - BasicAuth: []
-  /domains/{id}/processes/transfer/approval:
+  /domains/{id}/processes/transfer/latest/approval:
     put:
       operationId: domains_TransferApprove
       parameters:
@@ -621,15 +1745,113 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/domain.DomainTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
       tags:
         - Domains
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.TransferAck'
       security:
         - BasicAuth: []
-  /domains/{id}/processes/transfer/rejection:
+  /domains/{id}/processes/transfer/latest/rejection:
     put:
       operationId: domains_TransferReject
       parameters:
@@ -641,12 +1863,110 @@ paths:
       responses:
         '200':
           description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/domain.DomainTransfer'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+            rpp-code-text:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
       tags:
         - Domains
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.TransferAck'
       security:
         - BasicAuth: []
   /hello:
@@ -677,7 +1997,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HelloResponse'
+                $ref: '#/components/schemas/discovery.HelloResponse'
         '400':
           description: The server could not understand the request due to invalid syntax.
           headers:
@@ -1212,77 +2532,6 @@ components:
       schema:
         type: string
   schemas:
-    HelloResponse:
-      type: object
-      required:
-        - svID
-        - svDate
-        - svcMenu
-        - dcp
-      properties:
-        svID:
-          type: string
-        svDate:
-          type: string
-        svcMenu:
-          type: object
-          properties:
-            version:
-              type: string
-            lang:
-              type: array
-              items:
-                type: string
-          required:
-            - version
-            - lang
-        dcp:
-          type: object
-          properties:
-            access:
-              type: object
-              properties:
-                all:
-                  type: string
-              required:
-                - all
-            statement:
-              type: object
-              properties:
-                purpose:
-                  type: object
-                  properties:
-                    admin:
-                      type: string
-                    prov:
-                      type: string
-                  required:
-                    - admin
-                    - prov
-                recipient:
-                  type: object
-                  properties:
-                    ours:
-                      type: string
-                    public:
-                      type: string
-                  required:
-                    - ours
-                    - public
-                retention:
-                  type: object
-                  properties:
-                    stated:
-                      type: string
-                  required:
-                    - stated
-              required:
-                - purpose
-                - recipient
-                - retention
-          required:
-            - access
-            - statement
     common.ProvisioningObj:
       type: object
       required:
@@ -1311,6 +2560,32 @@ components:
           type: string
         crID:
           type: string
+    common.TransferAck:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          description: Reason for the transfer approval, if applicable.
+      description: Parameters specific to the transfer of a domain.
+    common.TransferNack:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          description: Reason for the transfer approval, if applicable.
+      description: Parameters specific to the transfer of a domain.
+    common.TransferStatus:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+        - cancelled
+        - completed
     contact.Contact:
       type: object
       required:
@@ -1427,11 +2702,98 @@ components:
               type: string
     contact.ContactDeletion:
       type: object
+    contact.ContactTransfer:
+      type: object
+      properties:
+        auto_ack_date:
+          type: string
+          format: date-time
+          description: The date on which the transfer will be automatically proceeding if not approved or rejected earlier.
+        auto_nack_date:
+          type: string
+          format: date-time
+          description: The date on which the transfer will be automatically cancelled if not approved or rejected earlier.
+        status:
+          allOf:
+            - $ref: '#/components/schemas/common.TransferStatus'
+          description: The current status of the transfer process, indicating its state.
+      description: Parameters specific to the transfer of a domain.
     contact.ContactType:
       type: string
       enum:
         - PERSON
         - ORG
+    discovery.HelloResponse:
+      type: object
+      required:
+        - svID
+        - svDate
+        - svcMenu
+        - dcp
+      properties:
+        svID:
+          type: string
+        svDate:
+          type: string
+        svcMenu:
+          type: object
+          properties:
+            version:
+              type: string
+            lang:
+              type: array
+              items:
+                type: string
+          required:
+            - version
+            - lang
+        dcp:
+          type: object
+          properties:
+            access:
+              type: object
+              properties:
+                all:
+                  type: string
+              required:
+                - all
+            statement:
+              type: object
+              properties:
+                purpose:
+                  type: object
+                  properties:
+                    admin:
+                      type: string
+                    prov:
+                      type: string
+                  required:
+                    - admin
+                    - prov
+                recipient:
+                  type: object
+                  properties:
+                    ours:
+                      type: string
+                    public:
+                      type: string
+                  required:
+                    - ours
+                    - public
+                retention:
+                  type: object
+                  properties:
+                    stated:
+                      type: string
+                  required:
+                    - stated
+              required:
+                - purpose
+                - recipient
+                - retention
+          required:
+            - access
+            - statement
     domain.ContactReference:
       type: object
       required:
@@ -1440,10 +2802,13 @@ components:
       properties:
         value:
           type: string
+          description: The unique identifier for the contact, typically a handle or ID.
         type:
           type: array
           items:
             $ref: '#/components/schemas/domain.ContactType'
+          description: An array of roles that the contact fulfills for the domain.
+      description: Represents a reference to a contact, specifying its identifier and roles.
     domain.ContactType:
       type: string
       enum:
@@ -1451,6 +2816,7 @@ components:
         - admin
         - tech
         - billing
+      description: Enumeration of contact types for a domain registration.
     domain.DnsSec:
       type: object
       required:
@@ -1461,12 +2827,17 @@ components:
       properties:
         keyTag:
           type: string
+          description: The key tag value of the DS record, as specified in RFC 4034.
         algorithm:
           type: string
+          description: The algorithm used to create the DS record, as specified in RFC 4034.
         digestType:
           type: string
+          description: The digest type of the DS record, as specified in RFC 4034.
         digest:
           type: string
+          description: The digest value of the DS record in hexadecimal format.
+      description: Represents the DNSSEC data for a domain, used to secure DNS lookups.
     domain.Domain:
       type: object
       required:
@@ -1475,25 +2846,37 @@ components:
       properties:
         name:
           type: string
+          description: The fully qualified name of the domain.
         processes:
           type: object
           properties:
             creation:
-              $ref: '#/components/schemas/domain.DomainCreation'
+              allOf:
+                - $ref: '#/components/schemas/domain.DomainCreation'
+              description: Parameters for the domain creation process.
             renewal:
-              $ref: '#/components/schemas/domain.DomainRenewal'
+              allOf:
+                - $ref: '#/components/schemas/domain.DomainRenewal'
+              description: Parameters for the domain renewal process.
             transfer:
-              $ref: '#/components/schemas/domain.DomainTransfer'
+              allOf:
+                - $ref: '#/components/schemas/domain.DomainTransfer'
+              description: Parameters for the domain transfer process.
+          description: A container for parameters related to specific domain life-cycle processes.
         ns:
-          $ref: '#/components/schemas/domain.NS'
+          allOf:
+            - $ref: '#/components/schemas/domain.NS'
+          description: Nameservers can be specified either as host objects or host attributes. Host objects are used for nameservers that are registered in the registry, while host attributes are used for nameservers that are not registered in the registry but are associated with the domain.
         contacts:
           type: array
           items:
             $ref: '#/components/schemas/domain.ContactReference'
+          description: An array of contacts associated with the domain, each with one or more roles.
         dnsSEC:
           type: array
           items:
             $ref: '#/components/schemas/domain.DnsSec'
+          description: An array of DNSSEC data associated with the domain. This is required to sign the domain in DNS.
         authInfo:
           type: object
           properties:
@@ -1517,6 +2900,7 @@ components:
           type: string
         crID:
           type: string
+      description: The core model representing a domain name and its associated properties and operations, as defined in RFC 5731.
       example:
         name: example.com
         processes:
@@ -1536,25 +2920,37 @@ components:
       properties:
         name:
           type: string
+          description: The fully qualified name of the domain.
         processes:
           type: object
           properties:
             creation:
-              $ref: '#/components/schemas/domain.DomainCreation'
+              allOf:
+                - $ref: '#/components/schemas/domain.DomainCreation'
+              description: Parameters for the domain creation process.
             renewal:
-              $ref: '#/components/schemas/domain.DomainRenewal'
+              allOf:
+                - $ref: '#/components/schemas/domain.DomainRenewal'
+              description: Parameters for the domain renewal process.
             transfer:
-              $ref: '#/components/schemas/domain.DomainTransfer'
+              allOf:
+                - $ref: '#/components/schemas/domain.DomainTransferCreate'
+              description: Parameters for the domain transfer process.
+          description: A container for parameters related to specific domain life-cycle processes.
         ns:
-          $ref: '#/components/schemas/domain.NS'
+          allOf:
+            - $ref: '#/components/schemas/domain.NS'
+          description: Nameservers can be specified either as host objects or host attributes. Host objects are used for nameservers that are registered in the registry, while host attributes are used for nameservers that are not registered in the registry but are associated with the domain.
         contacts:
           type: array
           items:
             $ref: '#/components/schemas/domain.ContactReference'
+          description: An array of contacts associated with the domain, each with one or more roles.
         dnsSEC:
           type: array
           items:
             $ref: '#/components/schemas/domain.DnsSec'
+          description: An array of DNSSEC data associated with the domain. This is required to sign the domain in DNS.
         authInfo:
           type: object
           properties:
@@ -1562,6 +2958,7 @@ components:
               type: string
             hash:
               type: string
+      description: The core model representing a domain name and its associated properties and operations, as defined in RFC 5731.
       example:
         name: example.com
         processes:
@@ -1579,28 +2976,57 @@ components:
         period:
           type: string
           format: duration
+          description: The initial registration period for the domain. The allowed unit (e.g., years, months) and range are defined by the registry policy.
+      description: Parameters specific to the creation of a domain.
     domain.DomainDeletion:
       type: object
       properties:
         purgeDate:
           type: string
           format: date-time
+          description: The date on which the domain is scheduled to be purged from the registry database following deletion.
+      description: Parameters specific to the deletion of a domain.
     domain.DomainRenewal:
       type: object
       properties:
         period:
           type: string
           format: duration
+          description: The period for which the domain registration should be extended. The allowed unit and range are defined by the registry policy.
+      description: Parameters specific to the renewal of a domain.
     domain.DomainTransfer:
       type: object
       properties:
         period:
           type: string
           format: duration
+          description: The registration period to be added to the domain upon a successful transfer. The allowed unit and range are defined by the registry policy.
+        auto_ack_date:
+          type: string
+          format: date-time
+          description: The date on which the transfer will be automatically proceeding if not approved or rejected earlier.
+        auto_nack_date:
+          type: string
+          format: date-time
+          description: The date on which the transfer will be automatically cancelled if not approved or rejected earlier.
+        status:
+          allOf:
+            - $ref: '#/components/schemas/common.TransferStatus'
+          description: The current status of the transfer process, indicating its state.
+      description: Parameters specific to the transfer of a domain.
+    domain.DomainTransferCreate:
+      type: object
+      properties:
+        period:
+          type: string
+          format: duration
+          description: The registration period to be added to the domain upon a successful transfer. The allowed unit and range are defined by the registry policy.
+      description: Parameters specific to the transfer of a domain.
     domain.NS:
       oneOf:
         - $ref: '#/components/schemas/host.NSHostObj'
         - $ref: '#/components/schemas/domain.NSHostAttr'
+      description: A union representing a nameserver, which can be specified either as a registered host object or by its attributes for external hosts.
     domain.NSHostAttr:
       type: object
       required:
@@ -1610,11 +3036,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/host.HostInfoAttr'
-    domain.foo:
-      type: object
-      properties:
-        bar:
-          type: string
+          description: An array of host attributes, including the hostname and optional IP addresses.
+      description: Represents a nameserver defined by its attributes, for hosts not managed within the registry.
     errors.ErrorResponse:
       type: object
       required:

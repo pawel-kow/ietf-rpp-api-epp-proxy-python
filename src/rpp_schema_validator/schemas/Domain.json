@@ -4,39 +4,47 @@
     "type": "object",
     "properties": {
         "name": {
-            "type": "string"
+            "type": "string",
+            "description": "The fully qualified name of the domain."
         },
         "processes": {
             "type": "object",
             "properties": {
                 "creation": {
-                    "$ref": "#/$defs/DomainCreation"
+                    "$ref": "#/$defs/DomainCreation",
+                    "description": "Parameters for the domain creation process."
                 },
                 "renewal": {
-                    "$ref": "#/$defs/DomainRenewal"
+                    "$ref": "#/$defs/DomainRenewal",
+                    "description": "Parameters for the domain renewal process."
                 },
                 "transfer": {
-                    "$ref": "DomainTransfer.json"
+                    "$ref": "DomainTransfer.json",
+                    "description": "Parameters for the domain transfer process."
                 }
             },
             "unevaluatedProperties": {
                 "not": {}
-            }
+            },
+            "description": "A container for parameters related to specific domain life-cycle processes."
         },
         "ns": {
-            "$ref": "#/$defs/NS"
+            "$ref": "#/$defs/NS",
+            "description": "Nameservers can be specified either as host objects or host attributes. Host objects are used for nameservers that are registered in the registry, while host attributes are used for nameservers that are not registered in the registry but are associated with the domain."
         },
         "contacts": {
             "type": "array",
             "items": {
                 "$ref": "#/$defs/ContactReference"
-            }
+            },
+            "description": "An array of contacts associated with the domain, each with one or more roles."
         },
         "dnsSEC": {
             "type": "array",
             "items": {
                 "$ref": "#/$defs/DnsSec"
-            }
+            },
+            "description": "An array of DNSSEC data associated with the domain. This is required to sign the domain in DNS."
         },
         "authInfo": {
             "type": "object",
@@ -167,52 +175,62 @@
             }
         }
     ],
+    "description": "The core model representing a domain name and its associated properties and operations, as defined in RFC 5731.",
     "$defs": {
         "DomainCreation": {
             "type": "object",
             "properties": {
                 "period": {
                     "type": "string",
-                    "format": "duration"
+                    "format": "duration",
+                    "description": "The initial registration period for the domain. The allowed unit (e.g., years, months) and range are defined by the registry policy."
                 }
             },
             "unevaluatedProperties": {
                 "not": {}
-            }
+            },
+            "description": "Parameters specific to the creation of a domain."
         },
         "DomainRenewal": {
             "type": "object",
             "properties": {
                 "period": {
                     "type": "string",
-                    "format": "duration"
+                    "format": "duration",
+                    "description": "The period for which the domain registration should be extended. The allowed unit and range are defined by the registry policy."
                 }
             },
             "unevaluatedProperties": {
                 "not": {}
-            }
+            },
+            "description": "Parameters specific to the renewal of a domain."
         },
         "NS": {
             "oneOf": [
                 {
-                    "$ref": "#/$defs/NSHostObj"
+                    "$ref": "#/$defs/NSHostObj",
+                    "description": "A reference to a host object already registered in the registry."
                 },
                 {
-                    "$ref": "#/$defs/NSHostAttr"
+                    "$ref": "#/$defs/NSHostAttr",
+                    "description": "A set of host attributes for a nameserver not registered in the registry."
                 }
-            ]
+            ],
+            "description": "A union representing a nameserver, which can be specified either as a registered host object or by its attributes for external hosts."
         },
         "ContactReference": {
             "type": "object",
             "properties": {
                 "value": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The unique identifier for the contact, typically a handle or ID."
                 },
                 "type": {
                     "type": "array",
                     "items": {
                         "$ref": "#/$defs/ContactType"
-                    }
+                    },
+                    "description": "An array of roles that the contact fulfills for the domain."
                 }
             },
             "required": [
@@ -221,22 +239,27 @@
             ],
             "unevaluatedProperties": {
                 "not": {}
-            }
+            },
+            "description": "Represents a reference to a contact, specifying its identifier and roles."
         },
         "DnsSec": {
             "type": "object",
             "properties": {
                 "keyTag": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The key tag value of the DS record, as specified in RFC 4034."
                 },
                 "algorithm": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The algorithm used to create the DS record, as specified in RFC 4034."
                 },
                 "digestType": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The digest type of the DS record, as specified in RFC 4034."
                 },
                 "digest": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The digest value of the DS record in hexadecimal format."
                 }
             },
             "required": [
@@ -247,7 +270,8 @@
             ],
             "unevaluatedProperties": {
                 "not": {}
-            }
+            },
+            "description": "Represents the DNSSEC data for a domain, used to secure DNS lookups."
         },
         "NSHostObj": {
             "type": "object",
@@ -273,7 +297,8 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/$defs/HostInfoAttr"
-                    }
+                    },
+                    "description": "An array of host attributes, including the hostname and optional IP addresses."
                 }
             },
             "required": [
@@ -281,7 +306,8 @@
             ],
             "unevaluatedProperties": {
                 "not": {}
-            }
+            },
+            "description": "Represents a nameserver defined by its attributes, for hosts not managed within the registry."
         },
         "ContactType": {
             "type": "string",
@@ -290,7 +316,8 @@
                 "admin",
                 "tech",
                 "billing"
-            ]
+            ],
+            "description": "Enumeration of contact types for a domain registration."
         },
         "HostInfoObj": {
             "type": "object",

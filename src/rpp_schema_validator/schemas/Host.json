@@ -1,0 +1,99 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "Host.json",
+    "type": "object",
+    "properties": {
+        "authInfo": {
+            "type": "object",
+            "properties": {
+                "pw": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                }
+            },
+            "unevaluatedProperties": {
+                "not": {}
+            }
+        },
+        "status": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "crDate": {
+            "type": "string"
+        },
+        "exDate": {
+            "type": "string"
+        },
+        "upDate": {
+            "type": "string"
+        },
+        "trDate": {
+            "type": "string"
+        },
+        "clID": {
+            "type": "string"
+        },
+        "crID": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "authInfo"
+    ],
+    "allOf": [
+        {
+            "$ref": "#/$defs/HostInfoAttr"
+        }
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "$defs": {
+        "HostInfoAttr": {
+            "type": "object",
+            "properties": {
+                "addr": {
+                    "type": "object",
+                    "properties": {
+                        "ipv4": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "ipv6": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "unevaluatedProperties": {
+                        "not": {}
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/$defs/HostInfoObj"
+                }
+            ]
+        },
+        "HostInfoObj": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
+            ]
+        }
+    }
+}
