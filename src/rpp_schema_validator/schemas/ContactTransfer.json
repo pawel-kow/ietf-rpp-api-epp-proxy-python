@@ -3,12 +3,12 @@
     "$id": "ContactTransfer.json",
     "type": "object",
     "properties": {
-        "auto_ack_date": {
+        "autoAckDate": {
             "type": "string",
             "format": "date-time",
             "description": "The date on which the transfer will be automatically proceeding if not approved or rejected earlier."
         },
-        "auto_nack_date": {
+        "autoNackDate": {
             "type": "string",
             "format": "date-time",
             "description": "The date on which the transfer will be automatically cancelled if not approved or rejected earlier."

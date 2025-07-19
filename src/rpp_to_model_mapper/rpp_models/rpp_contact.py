@@ -21,9 +21,9 @@ class RPPContactType(Enum):
 @dataclass(kw_only=True)
 class RPPContact(RPPProvisioningObject):
     id: str;
-    contact_type: RPPContactType
+    contactType: RPPContactType
     name: Optional[str] = None;
-    organisation_name: Optional[str] = None;
+    organisationName: Optional[str] = None;
     email: Optional[List[str]] = None;
     phone: Optional[List[str]] = None;
     fax: Optional[List[str]] = None;

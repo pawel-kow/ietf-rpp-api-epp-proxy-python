@@ -8,7 +8,7 @@
         "body_json": {
           "id": "FO-{random_id_10}D04",
           "name": "John Doe",
-          "contact_type": "PERSON",
+          "contactType": "PERSON",
           "email": ["foo@example.com"],
           "address": {
             "city": "Anytown",

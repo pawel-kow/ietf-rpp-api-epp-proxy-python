@@ -8,8 +8,8 @@
         "body_json": {
           "id": "FO-{random_id_10}-02",
           "name": "John Doe",
-          "organisation_name": "ACME Inc.",
-          "contact_type": "ORG",
+          "organisationName": "ACME Inc.",
+          "contactType": "ORG",
           "email": ["foo@example.com"],
           "address": {
             "city": "Anytown",
@@ -30,8 +30,8 @@
         "body": {
           "id": "FO-{random_id_10}-02",
           "name": "John Doe",
-          "organisation_name": "ACME Inc.",
-          "contact_type": "ORG",
+          "organisationName": "ACME Inc.",
+          "contactType": "ORG",
           "email": ["foo@example.com"],
           "address": {
             "city": "Anytown",

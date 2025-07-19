@@ -8,8 +8,8 @@
         "body_json": {
           "id": "FO-{random_id_10}-03",
           "name": "John Doe",
-          "organisation_name": "ACME Inc.",
-          "contact_type": "ORG",
+          "organisationName": "ACME Inc.",
+          "contactType": "ORG",
           "address": {
             "street": ["123 Main St", "Line 2", "Line 3"],
             "city": "Anytown",
@@ -35,8 +35,8 @@
         "body": {
           "id": "FO-{random_id_10}-03",
           "name": "John Doe",
-          "organisation_name": "ACME Inc.",
-          "contact_type": "ORG",
+          "organisationName": "ACME Inc.",
+          "contactType": "ORG",
           "address": {
             "street": ["123 Main St", "Line 2", "Line 3"],
             "city": "Anytown",

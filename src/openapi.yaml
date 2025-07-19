@@ -41,10 +41,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -61,10 +57,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -93,10 +85,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -113,10 +101,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -160,10 +144,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -180,10 +160,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -212,10 +188,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -232,10 +204,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -271,10 +239,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -291,10 +255,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -323,10 +283,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -343,10 +299,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -383,10 +335,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -403,10 +351,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -435,10 +379,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -455,10 +395,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -495,10 +431,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -515,10 +447,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -547,10 +475,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -567,10 +491,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -606,10 +526,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -626,10 +542,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -658,10 +570,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -678,10 +586,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -718,10 +622,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -738,10 +638,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -770,10 +666,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -790,10 +682,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -836,10 +724,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -856,10 +740,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -888,10 +768,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -908,10 +784,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -957,10 +829,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -977,10 +845,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1009,10 +873,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1029,10 +889,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1076,10 +932,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -1096,10 +948,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1128,10 +976,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1148,10 +992,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1187,10 +1027,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -1207,10 +1043,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1239,10 +1071,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1259,10 +1087,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1299,10 +1123,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -1319,10 +1139,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1351,10 +1167,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1371,10 +1183,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1417,10 +1225,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -1437,10 +1241,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1469,10 +1269,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1489,10 +1285,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1535,10 +1327,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -1555,10 +1343,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1587,10 +1371,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1607,10 +1387,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1646,10 +1422,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -1666,10 +1438,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1698,10 +1466,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1718,10 +1482,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1758,10 +1518,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -1778,10 +1534,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1810,10 +1562,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1830,10 +1578,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1876,10 +1620,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -1896,10 +1636,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1928,10 +1664,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -1948,10 +1680,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -1990,10 +1718,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -2010,10 +1734,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2039,10 +1759,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2080,10 +1796,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -2100,10 +1812,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2132,10 +1840,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -2152,10 +1856,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2199,10 +1899,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -2219,10 +1915,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2251,10 +1943,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -2271,10 +1959,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2307,10 +1991,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
             rpp-msgq-cnt:
               required: true
               schema:
@@ -2335,10 +2015,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2367,10 +2043,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -2387,10 +2059,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2428,10 +2096,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
             rpp-msgq-cnt:
               required: true
               schema:
@@ -2456,10 +2120,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2488,10 +2148,6 @@ paths:
               required: true
               schema:
                 type: string
-            rpp-code-text:
-              required: true
-              schema:
-                type: string
           content:
             application/problem+json:
               schema:
@@ -2508,10 +2164,6 @@ paths:
               schema:
                 type: string
             rpp-code:
-              required: true
-              schema:
-                type: string
-            rpp-code-text:
               required: true
               schema:
                 type: string
@@ -2595,16 +2247,16 @@ components:
       type: object
       required:
         - id
-        - contact_type
+        - contactType
         - authInfo
       properties:
         id:
           type: string
         name:
           type: string
-        organisation_name:
+        organisationName:
           type: string
-        contact_type:
+        contactType:
           $ref: '#/components/schemas/contact.ContactType'
         email:
           type: array
@@ -2660,16 +2312,16 @@ components:
       type: object
       required:
         - id
-        - contact_type
+        - contactType
         - authInfo
       properties:
         id:
           type: string
         name:
           type: string
-        organisation_name:
+        organisationName:
           type: string
-        contact_type:
+        contactType:
           $ref: '#/components/schemas/contact.ContactType'
         email:
           type: array
@@ -2710,11 +2362,11 @@ components:
     contact.ContactTransfer:
       type: object
       properties:
-        auto_ack_date:
+        autoAckDate:
           type: string
           format: date-time
           description: The date on which the transfer will be automatically proceeding if not approved or rejected earlier.
-        auto_nack_date:
+        autoNackDate:
           type: string
           format: date-time
           description: The date on which the transfer will be automatically cancelled if not approved or rejected earlier.
@@ -3006,11 +2658,11 @@ components:
           type: string
           format: duration
           description: The registration period to be added to the domain upon a successful transfer. The allowed unit and range are defined by the registry policy.
-        auto_ack_date:
+        autoAckDate:
           type: string
           format: date-time
           description: The date on which the transfer will be automatically proceeding if not approved or rejected earlier.
-        auto_nack_date:
+        autoNackDate:
           type: string
           format: date-time
           description: The date on which the transfer will be automatically cancelled if not approved or rejected earlier.
