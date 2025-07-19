@@ -21,6 +21,12 @@
         "status": {
             "$ref": "#/$defs/TransferStatus",
             "description": "The current status of the transfer process, indicating its state."
+        },
+        "approval": {
+            "$ref": "TransferAck.json"
+        },
+        "rejection": {
+            "$ref": "TransferNack.json"
         }
     },
     "unevaluatedProperties": {

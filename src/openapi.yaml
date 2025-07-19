@@ -2170,7 +2170,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/host.HostCreate'
+              $ref: '#/components/schemas/host.HostInfoAttr'
       security:
         - BasicAuth: []
   /hosts/{id}:
@@ -2534,16 +2534,7 @@ components:
   schemas:
     common.ProvisioningObj:
       type: object
-      required:
-        - authInfo
       properties:
-        authInfo:
-          type: object
-          properties:
-            pw:
-              type: string
-            hash:
-              type: string
         status:
           type: array
           items:
@@ -2586,6 +2577,20 @@ components:
         - rejected
         - cancelled
         - completed
+    common.TransferableProvisioninigObj:
+      type: object
+      required:
+        - authInfo
+      properties:
+        authInfo:
+          type: object
+          properties:
+            pw:
+              type: string
+            hash:
+              type: string
+      allOf:
+        - $ref: '#/components/schemas/common.ProvisioningObj'
     contact.Contact:
       type: object
       required:
@@ -3013,6 +3018,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/common.TransferStatus'
           description: The current status of the transfer process, indicating its state.
+        approval:
+          $ref: '#/components/schemas/common.TransferAck'
+        rejection:
+          $ref: '#/components/schemas/common.TransferNack'
       description: Parameters specific to the transfer of a domain.
     domain.DomainTransferCreate:
       type: object
@@ -3081,16 +3090,7 @@ components:
       type: object
     host.Host:
       type: object
-      required:
-        - authInfo
       properties:
-        authInfo:
-          type: object
-          properties:
-            pw:
-              type: string
-            hash:
-              type: string
         status:
           type: array
           items:
@@ -3107,20 +3107,6 @@ components:
           type: string
         crID:
           type: string
-      allOf:
-        - $ref: '#/components/schemas/host.HostInfoAttr'
-    host.HostCreate:
-      type: object
-      required:
-        - authInfo
-      properties:
-        authInfo:
-          type: object
-          properties:
-            pw:
-              type: string
-            hash:
-              type: string
       allOf:
         - $ref: '#/components/schemas/host.HostInfoAttr'
     host.HostInfoAttr:
