@@ -17,7 +17,9 @@ paths:
     post:
       operationId: contacts_Create
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
         - name: expect
           in: header
           required: false
@@ -44,7 +46,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/contact.Contact'
+                anyOf:
+                  - $ref: '#/components/schemas/contact.Contact'
+                  - $ref: '#/components/schemas/contact.Contact'
         '400':
           description: The server could not understand the request due to invalid syntax.
           headers:
@@ -122,7 +126,9 @@ paths:
     get:
       operationId: contacts_Get
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
         - name: id
           in: path
           required: true
@@ -805,7 +811,9 @@ paths:
     post:
       operationId: domains_Create
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
         - name: expect
           in: header
           required: false
@@ -832,7 +840,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/domain.Domain'
+                anyOf:
+                  - $ref: '#/components/schemas/domain.Domain'
+                  - $ref: '#/components/schemas/domain.DomainMinimal'
         '400':
           description: The server could not understand the request due to invalid syntax.
           headers:
@@ -910,7 +920,9 @@ paths:
     get:
       operationId: domains_Get
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
         - name: id
           in: path
           required: true
@@ -1701,7 +1713,9 @@ paths:
     get:
       operationId: Hello
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
       responses:
         '200':
           description: The request has succeeded.
@@ -1772,7 +1786,9 @@ paths:
     post:
       operationId: hosts_Create
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
         - name: expect
           in: header
           required: false
@@ -1799,7 +1815,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/host.Host'
+                anyOf:
+                  - $ref: '#/components/schemas/host.Host'
+                  - $ref: '#/components/schemas/host.Host'
         '400':
           description: The server could not understand the request due to invalid syntax.
           headers:
@@ -1877,7 +1895,9 @@ paths:
     get:
       operationId: hosts_Get
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
         - name: id
           in: path
           required: true
@@ -1974,7 +1994,9 @@ paths:
     get:
       operationId: Messages_PollRequest
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
       responses:
         '200':
           description: The request has succeeded.
@@ -2079,7 +2101,9 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/headers.RequestHeaders'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
+        - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
+        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
       responses:
         '200':
           description: The request has succeeded.
@@ -2177,7 +2201,23 @@ paths:
         - BasicAuth: []
 components:
   parameters:
-    headers.RequestHeaders:
+    headers.RequestHeaders.Prefer:
+      name: prefer
+      in: header
+      required: false
+      description: Prefer header to indicate the desired representation of the response.
+      schema:
+        $ref: '#/components/schemas/headers.PreferHeaderRepresentation'
+        default: return=minimal
+    headers.RequestHeaders.RPP-Authorization:
+      name: rpp-authorization
+      in: header
+      required: false
+      description: RPP-Authorization header must be in the format 'AuthInfo AuthInfo=[authinfo]; Roid=[roid]' (Roid optional) or just '[method] [authinfo]'
+      schema:
+        type: string
+        pattern: ^(AuthInfo AuthInfo=([a-zA-Z0-9=]+)(?:;\s*Roid=(\S+))?)$|(.+\s+.*)
+    headers.RequestHeaders.RPP-Cltrid:
       name: rpp-cltrid
       in: header
       required: false
@@ -2191,10 +2231,6 @@ components:
           type: array
           items:
             type: string
-        crDate:
-          type: string
-        exDate:
-          type: string
         upDate:
           type: string
         trDate:
@@ -2202,6 +2238,15 @@ components:
         clID:
           type: string
         crID:
+          type: string
+      allOf:
+        - $ref: '#/components/schemas/common.ProvisioningObjMinimal'
+    common.ProvisioningObjMinimal:
+      type: object
+      properties:
+        crDate:
+          type: string
+        exDate:
           type: string
     common.TransferAck:
       type: object
@@ -2296,10 +2341,6 @@ components:
           type: array
           items:
             type: string
-        crDate:
-          type: string
-        exDate:
-          type: string
         upDate:
           type: string
         trDate:
@@ -2307,6 +2348,10 @@ components:
         clID:
           type: string
         crID:
+          type: string
+        crDate:
+          type: string
+        exDate:
           type: string
     contact.ContactCreate:
       type: object
@@ -2545,10 +2590,6 @@ components:
           type: array
           items:
             type: string
-        crDate:
-          type: string
-        exDate:
-          type: string
         upDate:
           type: string
         trDate:
@@ -2556,6 +2597,10 @@ components:
         clID:
           type: string
         crID:
+          type: string
+        crDate:
+          type: string
+        exDate:
           type: string
       description: The core model representing a domain name and its associated properties and operations, as defined in RFC 5731.
       example:
@@ -2643,6 +2688,14 @@ components:
           format: date-time
           description: The date on which the domain is scheduled to be purged from the registry database following deletion.
       description: Parameters specific to the deletion of a domain.
+    domain.DomainMinimal:
+      type: object
+      properties:
+        crDate:
+          type: string
+        exDate:
+          type: string
+      description: A minimal representation of a domain, containing only essential provisioning information.
     domain.DomainRenewal:
       type: object
       properties:
@@ -2738,6 +2791,11 @@ components:
       type: object
       allOf:
         - $ref: '#/components/schemas/errors.ErrorResponse'
+    headers.PreferHeaderRepresentation:
+      type: string
+      enum:
+        - return=minimal
+        - return=representation
     headers.ResponseHeaders:
       type: object
     host.Host:
@@ -2747,10 +2805,6 @@ components:
           type: array
           items:
             type: string
-        crDate:
-          type: string
-        exDate:
-          type: string
         upDate:
           type: string
         trDate:
@@ -2758,6 +2812,10 @@ components:
         clID:
           type: string
         crID:
+          type: string
+        crDate:
+          type: string
+        exDate:
           type: string
       allOf:
         - $ref: '#/components/schemas/host.HostInfoAttr'

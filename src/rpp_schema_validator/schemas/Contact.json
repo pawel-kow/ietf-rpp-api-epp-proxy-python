@@ -79,12 +79,6 @@
                 "type": "string"
             }
         },
-        "crDate": {
-            "type": "string"
-        },
-        "exDate": {
-            "type": "string"
-        },
         "upDate": {
             "type": "string"
         },
@@ -95,6 +89,12 @@
             "type": "string"
         },
         "crID": {
+            "type": "string"
+        },
+        "crDate": {
+            "type": "string"
+        },
+        "exDate": {
             "type": "string"
         }
     },
