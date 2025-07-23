@@ -17,16 +17,9 @@ paths:
     post:
       operationId: contacts_Create
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
-        - name: expect
-          in: header
-          required: false
-          schema:
-            type: string
-            enum:
-              - 100-continue
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
       responses:
         '200':
           description: The request has succeeded.
@@ -126,9 +119,9 @@ paths:
     get:
       operationId: contacts_Get
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
         - name: id
           in: path
           required: true
@@ -249,6 +242,195 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/contact.Contact'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Contacts
+      security:
+        - BasicAuth: []
+  /contacts/{id}/availability:
+    head:
+      operationId: contacts_CheckFast
+      parameters:
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Contacts
+      security:
+        - BasicAuth: []
+    get:
+      operationId: contacts_Check
+      parameters:
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/common.CheckResponse'
         '400':
           description: The server could not understand the request due to invalid syntax.
           headers:
@@ -811,16 +993,9 @@ paths:
     post:
       operationId: domains_Create
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
-        - name: expect
-          in: header
-          required: false
-          schema:
-            type: string
-            enum:
-              - 100-continue
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
       responses:
         '200':
           description: The request has succeeded.
@@ -920,9 +1095,9 @@ paths:
     get:
       operationId: domains_Get
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
         - name: id
           in: path
           required: true
@@ -1043,6 +1218,195 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/domain.Domain'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Domains
+      security:
+        - BasicAuth: []
+  /domains/{id}/availability:
+    head:
+      operationId: domains_CheckFast
+      parameters:
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Domains
+      security:
+        - BasicAuth: []
+    get:
+      operationId: domains_Check
+      parameters:
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/common.CheckResponse'
         '400':
           description: The server could not understand the request due to invalid syntax.
           headers:
@@ -1713,9 +2077,9 @@ paths:
     get:
       operationId: Hello
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
       responses:
         '200':
           description: The request has succeeded.
@@ -1786,16 +2150,9 @@ paths:
     post:
       operationId: hosts_Create
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
-        - name: expect
-          in: header
-          required: false
-          schema:
-            type: string
-            enum:
-              - 100-continue
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
       responses:
         '200':
           description: The request has succeeded.
@@ -1888,16 +2245,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/host.HostInfoAttr'
+              $ref: '#/components/schemas/host.EPPHost'
       security:
         - BasicAuth: []
   /hosts/{id}:
     get:
       operationId: hosts_Get
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
         - name: id
           in: path
           required: true
@@ -1990,13 +2347,202 @@ paths:
         - Hosts
       security:
         - BasicAuth: []
+  /hosts/{id}/availability:
+    head:
+      operationId: hosts_CheckFast
+      parameters:
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Hosts
+      security:
+        - BasicAuth: []
+    get:
+      operationId: hosts_Check
+      parameters:
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/common.CheckResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse400'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse401'
+        '404':
+          description: The server cannot find the requested resource.
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse404'
+        '500':
+          description: Server error
+          headers:
+            rpp-cltrid:
+              required: false
+              schema:
+                type: string
+            rpp-svtrid:
+              required: false
+              schema:
+                type: string
+            rpp-code:
+              required: true
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/errors.ErrorResponse500'
+      tags:
+        - Hosts
+      security:
+        - BasicAuth: []
   /messages:
     get:
       operationId: Messages_PollRequest
       parameters:
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
       responses:
         '200':
           description: The request has succeeded.
@@ -2101,9 +2647,9 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Cltrid'
         - $ref: '#/components/parameters/headers.RequestHeaders.Prefer'
         - $ref: '#/components/parameters/headers.RequestHeaders.RPP-Authorization'
+        - $ref: '#/components/parameters/headers.RequestHeadersMinimal'
       responses:
         '200':
           description: The request has succeeded.
@@ -2217,13 +2763,22 @@ components:
       schema:
         type: string
         pattern: ^(AuthInfo AuthInfo=([a-zA-Z0-9=]+)(?:;\s*Roid=(\S+))?)$|(.+\s+.*)
-    headers.RequestHeaders.RPP-Cltrid:
+    headers.RequestHeadersMinimal:
       name: rpp-cltrid
       in: header
       required: false
+      description: RPP-Cltrid header is used to identify the client request. It MUST be a unique identifier for each request.
       schema:
         type: string
   schemas:
+    common.CheckResponse:
+      type: object
+      required:
+        - available
+      properties:
+        available:
+          type: boolean
+          description: The status of the check operation, indicating whether the entity is available or not.
     common.ProvisioningObj:
       type: object
       properties:
@@ -2566,9 +3121,9 @@ components:
               description: Parameters for the domain transfer process.
           description: A container for parameters related to specific domain life-cycle processes.
         ns:
-          allOf:
-            - $ref: '#/components/schemas/domain.NS'
-          description: Nameservers can be specified either as host objects or host attributes. Host objects are used for nameservers that are registered in the registry, while host attributes are used for nameservers that are not registered in the registry but are associated with the domain.
+          anyOf:
+            - $ref: '#/components/schemas/host.DomainEPPHostAttr'
+            - $ref: '#/components/schemas/host.DomainHostObj'
         contacts:
           type: array
           items:
@@ -2640,9 +3195,9 @@ components:
               description: Parameters for the domain transfer process.
           description: A container for parameters related to specific domain life-cycle processes.
         ns:
-          allOf:
-            - $ref: '#/components/schemas/domain.NS'
-          description: Nameservers can be specified either as host objects or host attributes. Host objects are used for nameservers that are registered in the registry, while host attributes are used for nameservers that are not registered in the registry but are associated with the domain.
+          anyOf:
+            - $ref: '#/components/schemas/host.DomainEPPHostAttr'
+            - $ref: '#/components/schemas/host.DomainHostObj'
         contacts:
           type: array
           items:
@@ -2736,22 +3291,6 @@ components:
           format: duration
           description: The registration period to be added to the domain upon a successful transfer. The allowed unit and range are defined by the registry policy.
       description: Parameters specific to the transfer of a domain.
-    domain.NS:
-      oneOf:
-        - $ref: '#/components/schemas/host.NSHostObj'
-        - $ref: '#/components/schemas/domain.NSHostAttr'
-      description: A union representing a nameserver, which can be specified either as a registered host object or by its attributes for external hosts.
-    domain.NSHostAttr:
-      type: object
-      required:
-        - hostAttr
-      properties:
-        hostAttr:
-          type: array
-          items:
-            $ref: '#/components/schemas/host.HostInfoAttr'
-          description: An array of host attributes, including the hostname and optional IP addresses.
-      description: Represents a nameserver defined by its attributes, for hosts not managed within the registry.
     errors.ErrorResponse:
       type: object
       required:
@@ -2798,9 +3337,71 @@ components:
         - return=representation
     headers.ResponseHeaders:
       type: object
+    host.DNSHost:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+      description: Host object described either EPP-style (rpp.host.EPPHost).
+    host.DomainEPPHostAttr:
+      type: object
+      required:
+        - hostAttr
+      properties:
+        hostAttr:
+          type: array
+          items:
+            $ref: '#/components/schemas/host.EPPHost'
+      description: EPP-stype hostAttr
+    host.DomainHostObj:
+      type: object
+      required:
+        - hostObj
+      properties:
+        hostObj:
+          type: array
+          items:
+            $ref: '#/components/schemas/host.HostName'
+          description: Host object described in EPP-style (rpp.host.EPPHost).
+    host.EPPHost:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        addr:
+          type: object
+          properties:
+            ipv4:
+              type: array
+              items:
+                type: string
+            ipv6:
+              type: array
+              items:
+                type: string
+      description: Host object described either EPP-style (rpp.host.EPPHost).
     host.Host:
       type: object
+      required:
+        - name
       properties:
+        name:
+          type: string
+        addr:
+          type: object
+          properties:
+            ipv4:
+              type: array
+              items:
+                type: string
+            ipv6:
+              type: array
+              items:
+                type: string
         status:
           type: array
           items:
@@ -2817,9 +3418,8 @@ components:
           type: string
         exDate:
           type: string
-      allOf:
-        - $ref: '#/components/schemas/host.HostInfoAttr'
-    host.HostInfoAttr:
+      description: Host object described either EPP-style (rpp.host.EPPHost).
+    host.HostAddress:
       type: object
       properties:
         addr:
@@ -2833,24 +3433,21 @@ components:
               type: array
               items:
                 type: string
-      allOf:
-        - $ref: '#/components/schemas/host.HostInfoObj'
-    host.HostInfoObj:
+    host.HostName:
       type: object
       required:
         - name
       properties:
         name:
           type: string
-    host.NSHostObj:
+    host.NS:
       type: object
-      required:
-        - hostObj
       properties:
-        hostObj:
-          type: array
-          items:
-            $ref: '#/components/schemas/host.HostInfoObj'
+        ns:
+          anyOf:
+            - $ref: '#/components/schemas/host.DomainEPPHostAttr'
+            - $ref: '#/components/schemas/host.DomainHostObj'
+      description: Nameserver of a domain, either a EPP-style hostAttr or a reference of a hostObj by name. Host objects are used for nameservers that are registered in the registry, while host attributes are used for nameservers that are not registered in the registry but are associated with the domain.
     message.PollHeaders:
       type: object
     message.PollMessageAckResponse:

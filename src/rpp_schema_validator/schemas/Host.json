@@ -3,6 +3,29 @@
     "$id": "Host.json",
     "type": "object",
     "properties": {
+        "name": {
+            "type": "string"
+        },
+        "addr": {
+            "type": "object",
+            "properties": {
+                "ipv4": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ipv6": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "unevaluatedProperties": {
+                "not": {}
+            }
+        },
         "status": {
             "type": "array",
             "items": {
@@ -28,55 +51,11 @@
             "type": "string"
         }
     },
-    "allOf": [
-        {
-            "$ref": "#/$defs/HostInfoAttr"
-        }
+    "required": [
+        "name"
     ],
     "unevaluatedProperties": {
         "not": {}
     },
-    "$defs": {
-        "HostInfoAttr": {
-            "type": "object",
-            "properties": {
-                "addr": {
-                    "type": "object",
-                    "properties": {
-                        "ipv4": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "ipv6": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "unevaluatedProperties": {
-                        "not": {}
-                    }
-                }
-            },
-            "allOf": [
-                {
-                    "$ref": "#/$defs/HostInfoObj"
-                }
-            ]
-        },
-        "HostInfoObj": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name"
-            ]
-        }
-    }
+    "description": "Host object described either EPP-style (rpp.host.EPPHost)."
 }

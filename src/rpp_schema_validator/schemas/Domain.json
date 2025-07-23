@@ -29,8 +29,14 @@
             "description": "A container for parameters related to specific domain life-cycle processes."
         },
         "ns": {
-            "$ref": "#/$defs/NS",
-            "description": "Nameservers can be specified either as host objects or host attributes. Host objects are used for nameservers that are registered in the registry, while host attributes are used for nameservers that are not registered in the registry but are associated with the domain."
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/DomainEPPHostAttr"
+                },
+                {
+                    "$ref": "#/$defs/DomainHostObj"
+                }
+            ]
         },
         "contacts": {
             "type": "array",
@@ -205,18 +211,41 @@
             },
             "description": "Parameters specific to the renewal of a domain."
         },
-        "NS": {
-            "oneOf": [
-                {
-                    "$ref": "#/$defs/NSHostObj",
-                    "description": "A reference to a host object already registered in the registry."
-                },
-                {
-                    "$ref": "#/$defs/NSHostAttr",
-                    "description": "A set of host attributes for a nameserver not registered in the registry."
+        "DomainEPPHostAttr": {
+            "type": "object",
+            "properties": {
+                "hostAttr": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/EPPHost"
+                    }
                 }
+            },
+            "required": [
+                "hostAttr"
             ],
-            "description": "A union representing a nameserver, which can be specified either as a registered host object or by its attributes for external hosts."
+            "unevaluatedProperties": {
+                "not": {}
+            },
+            "description": "EPP-stype hostAttr"
+        },
+        "DomainHostObj": {
+            "type": "object",
+            "properties": {
+                "hostObj": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/HostName"
+                    },
+                    "description": "Host object described in EPP-style (rpp.host.EPPHost)."
+                }
+            },
+            "required": [
+                "hostObj"
+            ],
+            "unevaluatedProperties": {
+                "not": {}
+            }
         },
         "ContactReference": {
             "type": "object",
@@ -273,66 +302,12 @@
             },
             "description": "Represents the DNSSEC data for a domain, used to secure DNS lookups."
         },
-        "NSHostObj": {
-            "type": "object",
-            "properties": {
-                "hostObj": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/HostInfoObj"
-                    }
-                }
-            },
-            "required": [
-                "hostObj"
-            ],
-            "unevaluatedProperties": {
-                "not": {}
-            }
-        },
-        "NSHostAttr": {
-            "type": "object",
-            "properties": {
-                "hostAttr": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/HostInfoAttr"
-                    },
-                    "description": "An array of host attributes, including the hostname and optional IP addresses."
-                }
-            },
-            "required": [
-                "hostAttr"
-            ],
-            "unevaluatedProperties": {
-                "not": {}
-            },
-            "description": "Represents a nameserver defined by its attributes, for hosts not managed within the registry."
-        },
-        "ContactType": {
-            "type": "string",
-            "enum": [
-                "registrant",
-                "admin",
-                "tech",
-                "billing"
-            ],
-            "description": "Enumeration of contact types for a domain registration."
-        },
-        "HostInfoObj": {
+        "EPPHost": {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string"
-                }
-            },
-            "required": [
-                "name"
-            ]
-        },
-        "HostInfoAttr": {
-            "type": "object",
-            "properties": {
+                },
                 "addr": {
                     "type": "object",
                     "properties": {
@@ -354,11 +329,37 @@
                     }
                 }
             },
-            "allOf": [
-                {
-                    "$ref": "#/$defs/HostInfoObj"
+            "required": [
+                "name"
+            ],
+            "unevaluatedProperties": {
+                "not": {}
+            },
+            "description": "Host object described either EPP-style (rpp.host.EPPHost)."
+        },
+        "HostName": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
                 }
-            ]
+            },
+            "required": [
+                "name"
+            ],
+            "unevaluatedProperties": {
+                "not": {}
+            }
+        },
+        "ContactType": {
+            "type": "string",
+            "enum": [
+                "registrant",
+                "admin",
+                "tech",
+                "billing"
+            ],
+            "description": "Enumeration of contact types for a domain registration."
         }
     }
 }
