@@ -18,10 +18,6 @@ def domains_Create(body):
         raise ProblemException(status=400, title="Bad Request", detail=str(e))
 
     try:
-        # Check if Expect header is set, if so return 100-continue
-        if request.headers.get('Expect') == '100-continue':
-            #TODO: implement EPP check call
-            return None, 100
         # Call the eppclient function to get the domain information
         domainresp = epp_domains_Create(get_epp_client(), domain, client_transaction_id=request.headers.get('RPP-clTRID'))
         if isinstance(domainresp, DomainCreateResponse):
