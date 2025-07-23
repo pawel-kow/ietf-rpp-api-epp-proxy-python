@@ -8,7 +8,7 @@ import json
 import asyncio
 from .auth import get_epp_client
 
-def domains_Check(body):
+def domains_CheckFast(id):
     return {}, 500
 
 def domains_Create(body):
