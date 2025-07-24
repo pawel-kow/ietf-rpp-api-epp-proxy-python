@@ -57,6 +57,16 @@ class DomainCreateResponse(OperationResponse):
     domain: Domain
 
 @dataclass(kw_only=True)
+class DomainCheckResponseSingle(OperationResponse):
+    domain_name: str
+    available: bool
+    reason: str
+
+@dataclass(kw_only=True)
+class DomainCheckResponseBulk(OperationResponse):
+    responses: dict[str, DomainCheckResponseSingle]
+
+@dataclass(kw_only=True)
 class DomainInfoResponse(OperationResponse):
     domain: Domain
 

@@ -4,6 +4,7 @@ from connexion.lifecycle import ConnexionResponse, ConnexionRequest
 from connexion.problem import problem
 from connexion.exceptions import ProblemException
 from models import ResultCode
+from config import config
 
 def handle_rpp_error(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
     if isinstance(exc, ProblemException):

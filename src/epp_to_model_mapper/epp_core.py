@@ -43,7 +43,7 @@ def get_epp_clTRID(root):
     else:
         return None
 
-def map_epp_code(code: str) -> ResultCode:
+def map_epp_code(code: str | int) -> ResultCode:
     """
     Maps EPP result codes to OperationResponse.EPPResultCode.
     Args:
@@ -89,6 +89,6 @@ def map_epp_code(code: str) -> ResultCode:
     }
     
     try:
-        return epp_code_map[code]
-    except ValueError:
-        raise ValueError(f"Unknown EPP result code: {code}")
+        return epp_code_map[str(code)]
+    except KeyError:
+        raise KeyError(f"Unknown EPP result code: {code}")

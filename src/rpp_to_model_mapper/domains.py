@@ -1,5 +1,4 @@
 from models import *
-from .rpp_models import *
 from rpp_schema_validator import validate_schema
 from .common import provisioning_object_to_rpp
 

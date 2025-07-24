@@ -32,7 +32,7 @@ def contacts_Create(body):
             else:
                 raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
         else:
-            raise ValueError("Unexpected response type from EPP client")
+            raise ValueError("Unexpected response type from .epp_model.client")
 
     except ProblemException:
         raise
@@ -62,7 +62,7 @@ def contacts_Delete(id):
             else:
                 raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
         else:
-            raise ValueError("Unexpected response type from EPP client")
+            raise ValueError("Unexpected response type from .epp_model.client")
     except ProblemException:
         raise
     except Exception as e:
@@ -83,7 +83,7 @@ def contacts_Get(id):
             else:
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
         else:
-            raise ValueError("Unexpected response type from EPP client")
+            raise ValueError("Unexpected response type from .epp_model.client")
     except ProblemException:
         raise
     except Exception as e:

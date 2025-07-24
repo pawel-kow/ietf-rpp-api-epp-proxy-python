@@ -6,6 +6,9 @@ from helpers import decode_xml
 import uuid
 from .epp_core import *
 from typing import Union
+from .commands.domains import *
+from .commands.helper import epp_to_str, str_to_epp
+from .epp_model.domain_1_0 import ChkData
 
 def create_domain_xml(domain: Domain, client_request_id=None) -> str:
     """
@@ -247,3 +250,55 @@ def delete_domain_xml(domain_name: str, client_request_id=None) -> str:
     xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
 
     return xml_string
+
+def domain_check_xml(domain_name: str, client_request_id=None):
+    epp = domain_check(domain_name, client_request_id)
+    return epp_to_str(epp)
+
+def parse_domain_check_response_single(xml_string: str, domain_name: str, client_transaction_id: str) -> Union[DomainCheckResponseSingle, ErrorResponse]:
+    response = parse_domain_check_response_bulk(xml_string, client_transaction_id)
+    if isinstance(response, DomainCheckResponseBulk):
+        if domain_name in response.responses:
+            return DomainCheckResponseSingle(
+                domain_name = domain_name,
+                available = response.responses[domain_name].available,
+                reason = response.responses[domain_name].reason,
+                code = response.code,
+                msg = response.msg,
+                server_transaction_id = response.server_transaction_id,
+                client_transaction_id = client_transaction_id
+            )
+        else:
+            return ErrorResponse(
+                code=map_epp_code(ResultCode.COMMAND_FAILED.value[0]),
+                msg=f"Requested domain name not in the reponse. Original code: {response.code}.",
+                server_transaction_id=get_epp_svTRID(root),
+                client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None
+            )
+    else:
+        return response
+
+def parse_epp_response_header(epp: Epp) -> dict:
+    return {
+        "code": map_epp_code(epp.response.result[0].code.value),
+        "msg": epp.response.result[0].msg.value,
+        "server_transaction_id": epp.response.tr_id.sv_trid,
+        "client_transaction_id": epp.response.tr_id.cl_trid
+    }
+
+def parse_domain_check_response_bulk(xml_string: str, client_transaction_id: str) -> Union[DomainCheckResponseBulk, ErrorResponse]:
+    epp_response = str_to_epp(xml_string)
+    res = DomainCheckResponseBulk(
+        **parse_epp_response_header(epp_response), 
+        responses = {}
+    )
+    for item in epp_response.response.res_data.other_element:
+        for check_res in item.cd:
+            res.responses[check_res.name.value.lower()] = DomainCheckResponseSingle(
+                domain_name=check_res.name.value.lower(), 
+                available=check_res.name.avail, 
+                reason=check_res.reason.value if check_res.reason else None,
+                **parse_epp_response_header(epp_response)
+            ) 
+    
+    return res

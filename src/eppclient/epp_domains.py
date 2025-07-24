@@ -63,3 +63,23 @@ def epp_domains_Delete(epp_client: EPPClient, domain_name: str, client_transacti
     else:
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
+
+def epp_domains_Check(epp_client: EPPClient, domain_name: str, client_transaction_id=None) -> Union[DomainCheckResponseSingle, ErrorResponse]:
+    """
+    Deletes a domain using EPP commands.
+    Args:
+        epp_client (EPPClient): The EPP client instance.
+        domain_name (str): The name of the domain to be deleted.
+        client_transaction_id (str): The client transaction ID for the request.
+    Returns:
+        DomainDeleteResponse: The response from the EPP server.
+    """
+    eppxml = domain_check_xml(domain_name, client_request_id=client_transaction_id)
+    success, code, response = epp_client.send_and_get_response(eppxml)
+    
+    if success == True:
+        domainresp = parse_domain_check_response_single(response, domain_name, client_transaction_id=client_transaction_id)
+        return domainresp
+    else:
+        errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
+        return errorresp

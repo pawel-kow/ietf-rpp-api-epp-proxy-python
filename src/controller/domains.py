@@ -6,10 +6,18 @@ from rpp_to_model_mapper import *
 from .helper.rpp_response import *
 import json
 import asyncio
+import uuid
 from .auth import get_epp_client
 
 def domains_CheckFast(id):
-    return {}, 500
+    return domains_Check(id)
+
+def domains_Check(id):
+    ret = epp_domains_Check(get_epp_client(), id, client_transaction_id=request.headers.get('RPP-clTRID', str(uuid.uuid4())))
+    return {
+        "available": ret.available,
+        "reason": ret.reason
+    }, 404 if ret.available else 200, generate_rpp_response_headers(ret)
 
 def domains_Create(body):
     try:
@@ -31,7 +39,7 @@ def domains_Create(body):
             else:
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
         else:
-            raise ValueError("Unexpected response type from EPP client")
+            raise ValueError("Unexpected response type from .epp_model.client")
     except ProblemException:
         raise
     except Exception as e:
@@ -59,7 +67,7 @@ def domains_Delete(id):
             else:
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
         else:
-            raise ValueError("Unexpected response type from EPP client")
+            raise ValueError("Unexpected response type from .epp_model.client")
     except ProblemException:
         raise
     except Exception as e:
@@ -79,7 +87,7 @@ def domains_Get(id):
             else:
                 raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
         else:
-            raise ValueError("Unexpected response type from EPP client")
+            raise ValueError("Unexpected response type from .epp_model.client")
     except ProblemException:
         raise
     except Exception as e:
