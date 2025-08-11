@@ -29,7 +29,7 @@ test_start = datetime.datetime.now(datetime.UTC)
 # Error responses (400, 500) should match the structure defined by Connexion/Flask ProblemException.
 
 # Prepare test cases
-# Ensure that a contact handle FOO-TEST1, FOO-TEST2, FOO-TEST3, FOO-TEST4 exist in the database
+# Ensure that a contact handle FO-TEST1, FO-TEST2, FO-TEST3, FO-TEST4 exist in the database
 # Ensure that host objects ns1.bar.example and ns2.bar.example exist in the database
 # Ensure that the domain NOT-FREE.EXAMPLE is already taken in the database
 test_cases = []
@@ -148,7 +148,7 @@ test_cases = []
                 },
                 "contacts": [
                     {
-                        "value": "FOO-TEST1",
+                        "value": "FO-TEST1",
                         "type": [
                             "registrant",
                             "admin",
@@ -176,7 +176,7 @@ test_cases = []
                 ],
                 "contacts": [
                     {
-                        "value": "FOO-TEST1",
+                        "value": "FO-TEST1",
                         "type": [
                             "registrant",
                             "admin",
@@ -219,20 +219,20 @@ test_cases = []
                 },
                 "contacts": [
                     {
-                        "value": "FOO-TEST2",
+                        "value": "FO-TEST2",
                         "type": [
                             "admin"
                         ]
                     },
                     {
-                        "value": "FOO-TEST3",
+                        "value": "FO-TEST3",
                         "type": [
                             "registrant",
                             "tech"
                         ]
                     },
                     {
-                        "value": "FOO-TEST4",
+                        "value": "FO-TEST4",
                         "type": [
                             "billing",
                             "tech"
@@ -258,20 +258,20 @@ test_cases = []
                 ],
                 "contacts": [
                     {
-                        "value": "FOO-TEST3",
+                        "value": "FO-TEST3",
                         "type": [
                             "tech",
                             "registrant"
                         ]
                     },
                     {
-                        "value": "FOO-TEST2",
+                        "value": "FO-TEST2",
                         "type": [
                             "admin"
                         ]
                     },
                     {
-                        "value": "FOO-TEST4",
+                        "value": "FO-TEST4",
                         "type": [
                             "billing",
                             "tech"

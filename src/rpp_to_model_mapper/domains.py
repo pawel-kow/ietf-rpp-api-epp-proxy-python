@@ -1,4 +1,5 @@
 from models import *
+from .rpp_models import *
 from rpp_schema_validator import validate_schema
 from .common import provisioning_object_to_rpp
 
@@ -6,7 +7,7 @@ def rpp_to_domain(rpp: dict) -> Domain:
     """Converts a JSON string to a Domain object according to the provided schema."""
     # First validate the schema
     validate_schema("Domain", rpp)
-    domain_rpp = RPPDomain.from_dict(rpp)
+    domain_rpp = RPPDomain.from_dict(rpp) # type: ignore
     # Create a Domain object from the request body
     domain = Domain(
         name=domain_rpp.name,
@@ -30,13 +31,12 @@ def rpp_to_domain(rpp: dict) -> Domain:
         domain.processes = {}
         for process_name, process in rpp["processes"].items():
             if process_name == "creation":
-                domain.processes[process_name] = CreationProcess()
-                domain.processes[process_name].duration=process["period"]
+                domain.processes[process_name] = CreationProcess(duration=process["period"])
             else:
                 domain.processes[process_name] = Process()
     return domain
 
-def domain_to_rpp(domain: Domain) -> str:
+def domain_to_rpp(domain: Domain) -> dict:
     """Converts a Domain object to a JSON string according to the provided schema."""
 
     domain_dict = {}

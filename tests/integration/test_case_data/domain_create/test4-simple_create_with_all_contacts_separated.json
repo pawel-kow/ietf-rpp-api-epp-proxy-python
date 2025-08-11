@@ -12,20 +12,20 @@
           },
           "contacts": [
             {
-              "value": "FOO-TEST2",
+              "value": "FO-TEST2",
               "type": [
                 "admin"
               ]
             },
             {
-              "value": "FOO-TEST3",
+              "value": "FO-TEST3",
               "type": [
                 "registrant",
                 "tech"
               ]
             },
             {
-              "value": "FOO-TEST4",
+              "value": "FO-TEST4",
               "type": [
                 "billing",
                 "tech"
@@ -51,20 +51,20 @@
           ],
           "contacts": [
             {
-              "value": "FOO-TEST3",
+              "value": "FO-TEST3",
               "type": [
                 "tech",
                 "registrant"
               ]
             },
             {
-              "value": "FOO-TEST2",
+              "value": "FO-TEST2",
               "type": [
                 "admin"
               ]
             },
             {
-              "value": "FOO-TEST4",
+              "value": "FO-TEST4",
               "type": [
                 "billing",
                 "tech"

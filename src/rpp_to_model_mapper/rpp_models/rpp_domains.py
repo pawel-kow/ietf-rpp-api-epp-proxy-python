@@ -65,7 +65,7 @@ class RPPProcessMap:
 @dataclass
 class RPPDomain(RPPProvisioningObject):
     name: str
-    ns: RPPNS = None
+    ns: Optional[RPPNS] = None
     contacts: Optional[List[RPPContactReference]] = None
     dnsSEC: Optional[List[RPPDnsSec]] = None
-    processes: RPPProcessMap = None
+    processes: Optional[RPPProcessMap] = None

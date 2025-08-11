@@ -12,7 +12,7 @@
           },
           "contacts": [
             {
-              "value": "FOO-TEST1",
+              "value": "FO-TEST1",
               "type": [
                 "registrant",
                 "admin",
@@ -40,7 +40,7 @@
           ],
           "contacts": [
             {
-              "value": "FOO-TEST1",
+              "value": "FO-TEST1",
               "type": [
                 "registrant",
                 "admin",

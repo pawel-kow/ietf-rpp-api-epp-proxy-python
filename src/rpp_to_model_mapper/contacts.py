@@ -1,4 +1,5 @@
 from models import *
+from .rpp_models import *
 from rpp_schema_validator import validate_schema
 from .common import provisioning_object_to_rpp
 
@@ -6,10 +7,10 @@ def rpp_to_contact(rpp: dict) -> Contact:
     """Converts a JSON string to a Contact object according to the provided schema."""
     # First validate the schema
     validate_schema("Contact", rpp)
-    contact_rpp = RPPContact.from_dict(rpp)
+    contact_rpp = RPPContact.from_dict(rpp) # type: ignore
     # Create a Domain object from the request body
     contact = Contact(
-        id = contact_rpp.id if contact_rpp.id else None,
+        id = contact_rpp.id,
         name = contact_rpp.name if contact_rpp.name else None,
         organisationName = contact_rpp.organisationName if contact_rpp.organisationName else None,
         type = ContactType(contact_rpp.contactType.value),
@@ -30,7 +31,7 @@ def rpp_to_contact(rpp: dict) -> Contact:
     )
     return contact
 
-def contact_to_rpp(contact: Contact) -> str:
+def contact_to_rpp(contact: Contact) -> dict:
     """Converts a Contact object to a JSON string according to the provided schema."""
 
     contact_dict = {}
