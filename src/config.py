@@ -24,7 +24,7 @@ class Config:
 
 
     def __init__(self):
-        config_path = os.getenv("RPP_CONFIG_FILE", "./../config.yaml")
+        config_path = os.getenv("RPP_CONFIG_FILE", "./config.yaml")
         with open(config_path) as f:
             data = yaml.safe_load(f)
         for f in fields(self):
