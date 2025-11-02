@@ -95,4 +95,27 @@ def domains_Get(id):
     return response, 200
 
 def domains_Update(id, body):
-    return {}, 500
+    try:
+        domain_update = rpp_to_domain_update(id, body)
+    except Exception as e:
+        raise ProblemException(status=400, title="Bad Request", detail=str(e))
+    
+    try:
+        # Call the eppclient function to get the domain information
+        domainresp = epp_domains_Update(get_epp_client(), domain_update, client_transaction_id=request.headers.get('RPP-clTRID'))
+        if isinstance(domainresp, DomainUpdateResponse):
+            inforesp = epp_domains_Info(get_epp_client(), id)
+            # Convert the response to JSON
+            response = domain_to_rpp(inforesp.domain)
+            return response, 201, generate_rpp_response_headers(domainresp)
+        elif isinstance(domainresp, ErrorResponse):
+            if domainresp.code == ResultCode.OBJECT_EXISTS:
+                raise ProblemException(status=409, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
+            else:
+                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
+        else:
+            raise ValueError("Unexpected response type from .epp_model.client")
+    except ProblemException:
+        raise
+    except Exception as e:
+        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))

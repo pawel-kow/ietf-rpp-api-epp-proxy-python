@@ -58,3 +58,53 @@ def domain_to_rpp(domain: Domain) -> dict:
 
     validate_schema("Domain", domain_dict)
     return domain_dict
+
+def rpp_to_domain_update(domain_name: str, rpp: dict) -> DomainUpdate:
+    """Converts a JSON string to a DomainUpdate object according to the provided schema."""
+    # First validate the schema
+    validate_schema("DomainUpdateModel", rpp)
+    domain_rpp_update = RPPDomainUpdate.from_dict(rpp) # type: ignore
+    
+    return DomainUpdate(
+        name=domain_name,
+        add=DomainUpdateAdd(
+            ns=rpp_hosts_to_hosts(domain_rpp_update.add.ns) if domain_rpp_update.add.ns is not None else None,
+            contacts=rpp_contacts_to_contact_references(domain_rpp_update.add.contacts) if domain_rpp_update.add.contacts is not None else None
+            # TODO: dnsSEC
+        ) if domain_rpp_update.add is not None else None,
+        remove=DomainUpdateRemove(
+            ns=rpp_hosts_to_hosts(domain_rpp_update.add.ns) if domain_rpp_update.add.ns is not None else None,
+            contacts=rpp_contacts_to_contact_references(domain_rpp_update.add.contacts) if domain_rpp_update.add.contacts is not None else None
+            # TODO: dnsSEC
+        ) if domain_rpp_update.remove is not None else None,
+        change=DomainUpdateChange(
+            authInfo=AuthInfo(
+                pw=domain_rpp_update.update.authInfo.pw,
+                hash=domain_rpp_update.update.authInfo.hash
+            ) if domain_rpp_update.update.authInfo is not None else None
+        ) if domain_rpp_update.update is not None else None
+    )
+    
+def rpp_hosts_to_hosts(rpp_hosts: RPPNS) -> NS:
+    return NS(
+        host_attrs = [
+            HostAttr(
+                id=host_attr.name,
+                ipv4=[ip for ip in host_attr.ipv4] if host_attr.ipv4 else None,
+                ipv6=[ip for ip in host_attr.ipv6] if host_attr.ipv6 else None
+            ) for host_attr in rpp_hosts.hostAttrs
+        ] if rpp_hosts.hostAttrs else None,
+        host_objs = [
+            HostObj(
+                id=host_obj.name
+            ) for host_obj in rpp_hosts.hostObj
+        ] if rpp_hosts.hostObj else None
+    )
+
+def rpp_contacts_to_contact_references(rpp_contacts: List[RPPContactReference]) -> List[ContactReference]:
+    return [
+        ContactReference(
+            id=contact.value,
+            types=contact.type
+        ) for contact in rpp_contacts
+    ]

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from typing import List, Optional, Dict
-from .rpp_common import RPPProvisioningObject
+from .rpp_common import RPPAuthInfo, RPPProvisioningObject
 
 
 @dataclass_json
@@ -13,8 +13,8 @@ class RPPHostObj:
 @dataclass
 class RPPHostAttr:
     name: str
-    ipv4: str
-    ipv6: str
+    ipv4: List[str]
+    ipv6: List[str]
 
 @dataclass_json
 @dataclass
@@ -69,3 +69,29 @@ class RPPDomain(RPPProvisioningObject):
     contacts: Optional[List[RPPContactReference]] = None
     dnsSEC: Optional[List[RPPDnsSec]] = None
     processes: Optional[RPPProcessMap] = None
+    
+@dataclass_json
+@dataclass
+class RPPDomainUpdateAdd:
+    ns: Optional[RPPNS] = None
+    contacts: Optional[List[RPPContactReference]] = None
+    dnsSEC: Optional[List[RPPDnsSec]] = None
+
+@dataclass_json
+@dataclass
+class RPPDomainUpdateRemove:
+    ns: Optional[RPPNS] = None
+    contacts: Optional[List[RPPContactReference]] = None
+    dnsSEC: Optional[List[RPPDnsSec]] = None
+
+@dataclass_json
+@dataclass
+class RPPDomainUpdateChange:
+    authInfo: Optional[RPPAuthInfo] = None
+    
+@dataclass_json
+@dataclass
+class RPPDomainUpdate:
+    add: Optional[RPPDomainUpdateAdd] = None
+    remove: Optional[RPPDomainUpdateRemove] = None
+    update: Optional[RPPDomainUpdateChange] = None

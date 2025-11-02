@@ -60,18 +60,7 @@
             }
         },
         "authInfo": {
-            "type": "object",
-            "properties": {
-                "pw": {
-                    "type": "string"
-                },
-                "hash": {
-                    "type": "string"
-                }
-            },
-            "unevaluatedProperties": {
-                "not": {}
-            }
+            "$ref": "#/$defs/AuthInfo"
         },
         "status": {
             "type": "array",
@@ -113,6 +102,17 @@
                 "PERSON",
                 "ORG"
             ]
+        },
+        "AuthInfo": {
+            "type": "object",
+            "properties": {
+                "pw": {
+                    "type": "string"
+                }
+            },
+            "unevaluatedProperties": {
+                "not": {}
+            }
         }
     }
 }

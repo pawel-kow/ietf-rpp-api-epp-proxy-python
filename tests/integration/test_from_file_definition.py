@@ -1,3 +1,4 @@
+from typing import List
 import pytest
 import connexion
 import json
@@ -41,26 +42,26 @@ if test_case_data_dir.exists() and test_case_data_dir.is_dir():
                 except Exception:
                     pass  # Ignore invalid JSON files
 
-def process_placeholders(json_data, obj=None):
+def process_placeholders(json_data=dict|list|str|None, obj=None):
     """
     Recursively replace placeholders in the JSON data with actual values.
     """
     if obj is None and isinstance(json_data, dict) and "test_id" in json_data:
         obj = json_data
     if isinstance(json_data, dict):
-        return {k: process_placeholders(v, obj) for k, v in json_data.items()}
+        return {k: process_placeholders(v, obj) for k, v in json_data.items()} # type: ignore
     elif isinstance(json_data, list):
-        return [process_placeholders(item, obj) for item in json_data]
+        return [process_placeholders(item, obj) for item in json_data] # type: ignore
     elif isinstance(json_data, str):
         return json_data\
             .replace("{random_name}", f"{obj['test_group'].replace('_', '-')}-{random_name}" if "test_group" in obj else random_name)\
             .replace("{random_id_10}", f"{random_id_10}")\
-            .replace("{test_start}", test_start.isoformat())
+            .replace("{test_start}", test_start.isoformat())# type: ignore
     else:
         return json_data
 
 
 # --- Test Function ---
-@pytest.mark.parametrize("case", process_placeholders(test_cases), ids=[f"{c["test_group"]}-{c["test_id"]}" for c in test_cases])
+@pytest.mark.parametrize("case", process_placeholders(test_cases), ids=[f'{c["test_group"]}-{c["test_id"]}' for c in test_cases]) # type: ignore
 def test_from_file_definition(client, case):
     return endpoint_test(client, case)

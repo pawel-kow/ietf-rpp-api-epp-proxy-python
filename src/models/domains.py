@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
-from .common import Process, ProvisioningObject
+from .common import AuthInfo, Process, ProvisioningObject
 from .response import OperationResponse
 
 @dataclass(kw_only=True)
@@ -10,8 +10,8 @@ class HostObj:
 @dataclass(kw_only=True)
 class HostAttr:
     id: str
-    ipv4: Optional[str] = None
-    ipv6: Optional[str] = None
+    ipv4: Optional[List[str]] = None
+    ipv6: Optional[List[str]] = None
 
 @dataclass(kw_only=True)
 class NS:
@@ -51,7 +51,29 @@ class Domain(ProvisioningObject):
         self.contacts = obj.contacts if obj.contacts else self.contacts
         # TODO: cascade update
         self.dnsSEC = obj.dnsSEC if obj.dnsSEC else self.dnsSEC
+    
+@dataclass(kw_only=True)
+class DomainUpdateAdd:
+    ns: Optional[NS] = None
+    contacts: Optional[List[ContactReference]] = None
+    dnsSEC: Optional[List[DnsSec]] = None
 
+@dataclass(kw_only=True)
+class DomainUpdateRemove:
+    ns: Optional[NS] = None
+    contacts: Optional[List[ContactReference]] = None
+    dnsSEC: Optional[List[DnsSec]] = None
+
+@dataclass(kw_only=True)
+class DomainUpdateChange:
+    authInfo: Optional[AuthInfo] = None
+    
+@dataclass(kw_only=True)
+class DomainUpdate:
+    name: str
+    add: Optional[DomainUpdateAdd] = None
+    remove: Optional[DomainUpdateRemove] = None
+    change: Optional[DomainUpdateChange] = None
 
 @dataclass(kw_only=True)
 class DomainCreateResponse(OperationResponse):
@@ -73,4 +95,8 @@ class DomainInfoResponse(OperationResponse):
 
 @dataclass(kw_only=True)
 class DomainDeleteResponse(OperationResponse):
+    pass
+
+@dataclass(kw_only=True)
+class DomainUpdateResponse(OperationResponse):
     pass

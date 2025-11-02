@@ -1,0 +1,64 @@
+{
+  "test_id": "test1-simple_update",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "test1-{random_name}.example",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "TEST1-{random_name}.EXAMPLE",
+          "status": [
+            "ok"
+          ]
+        },
+        "fields": {},
+        "headers": {}
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domains/test1-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg=="
+        },
+        "body_json": {
+          "update": {
+            "authInfo": {
+              "pw": "NewPassword1!@"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "TEST1-{random_name}.EXAMPLE",
+          "status": [
+            "ok"
+          ],
+          "authInfo": {
+            "pw": "NewPassword1!@"
+          }
+        },
+        "fields": {},
+        "headers": {}
+      }
+    }
+  ]
+}

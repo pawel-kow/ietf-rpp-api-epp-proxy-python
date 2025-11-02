@@ -674,6 +674,6 @@ test_cases = []
 ]
 
 # --- Test Function ---
-@pytest.mark.parametrize("case", test_cases, ids=[f"{__name__.replace("test_", "")}-{c["test_id"]}" for c in test_cases])
+@pytest.mark.parametrize("case", test_cases, ids=[f'{__name__.replace("test_", "")}-{c["test_id"]}' for c in test_cases])
 def test_domains_Create(client, case):
     return endpoint_test(client, case)

@@ -191,6 +191,18 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
     response = DomainCreateResponse(domain=domain, server_transaction_id=get_epp_svTRID(root), client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, code=get_epp_code(root), msg=get_epp_msg(root))
     return response
 
+def parse_domain_update_response(xml_string: str, client_transaction_id: str) -> Union[DomainUpdateResponse, ErrorResponse]:
+    """Parses an EPP domain delete response XML string."""
+    root = decode_xml(xml_string)
+    namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
+
+    response = DomainUpdateResponse(
+        server_transaction_id=get_epp_svTRID(root), 
+        client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, 
+        code=get_epp_code(root),
+        msg=get_epp_msg(root))
+    return response
+
 def info_domain_xml(domain_name: str, client_request_id=None) -> str:
     """
     Creates an EPP XML payload for domain info with optional parameters.
@@ -302,3 +314,32 @@ def parse_domain_check_response_bulk(xml_string: str, client_transaction_id: str
             ) 
     
     return res
+
+def create_domain_update_xml(domain_update: DomainUpdate, client_request_id=None) -> str:
+    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
+    command = ET.SubElement(epp, "command")
+    create = ET.SubElement(command, "update")
+    domain_create = ET.SubElement(create, "domain:update", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
+
+    domain_name_element = ET.SubElement(domain_create, "domain:name")
+    domain_name_element.text = domain_update.name.upper()
+    
+    if domain_update.change is not None:
+        change = ET.SubElement(domain_create, "domain:chg")
+#        if domain_update.change.registrant is not None:
+#            domain_registrant = ET.SubElement(change, "domain:registrant")
+#            domain_registrant.text = domain_update.change.registrant.upper()
+        if domain_update.change.authInfo is not None and domain_update.change.authInfo.pw is not None:
+            domain_auth_info = ET.SubElement(change, "domain:authInfo")
+            domain_pw = ET.SubElement(domain_auth_info, "domain:pw")
+            domain_pw.text = domain_update.change.authInfo.pw
+
+    if not client_request_id:
+        client_request_id = str(uuid.uuid4())
+    cl_trid = ET.SubElement(command, "clTRID")
+    cl_trid.text = client_request_id
+    
+    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
+    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
+
+    return xml_string

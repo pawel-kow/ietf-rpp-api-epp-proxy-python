@@ -83,3 +83,23 @@ def epp_domains_Check(epp_client: EPPClient, domain_name: str, client_transactio
     else:
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
+
+def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, client_transaction_id=None) -> Union[DomainCreateResponse, ErrorResponse]:
+    """
+    Updates a domain using EPP commands.
+    Args:
+        epp_client (EPPClient): The EPP client instance.
+        domain_update (DomainUpdate): The domain update object.
+        client_transaction_id (str): The client transaction ID for the request.
+    Returns:
+        DomainCreateResponse: The response from the EPP server.
+    """
+    eppxml = create_domain_update_xml(domain_update, client_request_id=client_transaction_id)
+    success, code, response = epp_client.send_and_get_response(eppxml)
+    
+    if success == True:
+        domainresp = parse_domain_update_response(response, client_transaction_id=client_transaction_id)
+        return domainresp
+    else:
+        errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
+        return errorresp

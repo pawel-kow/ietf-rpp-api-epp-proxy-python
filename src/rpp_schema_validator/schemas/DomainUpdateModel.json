@@ -1,204 +1,105 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "Domain.json",
+    "$id": "DomainUpdateModel.json",
     "type": "object",
-    "properties": {
-        "name": {
-            "type": "string",
-            "description": "The fully qualified name of the domain."
-        },
-        "processes": {
-            "type": "object",
-            "properties": {
-                "creation": {
-                    "$ref": "#/$defs/DomainCreation",
-                    "description": "Parameters for the domain creation process."
-                },
-                "renewal": {
-                    "$ref": "#/$defs/DomainRenewal",
-                    "description": "Parameters for the domain renewal process."
-                },
-                "transfer": {
-                    "$ref": "DomainTransfer.json",
-                    "description": "Parameters for the domain transfer process."
-                }
-            },
-            "unevaluatedProperties": {
-                "not": {}
-            },
-            "description": "A container for parameters related to specific domain life-cycle processes."
-        },
-        "ns": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/DomainEPPHostAttr"
-                },
-                {
-                    "$ref": "#/$defs/DomainHostObj"
-                }
-            ]
-        },
-        "contacts": {
-            "type": "array",
-            "items": {
-                "$ref": "#/$defs/ContactReference"
-            },
-            "description": "An array of contacts associated with the domain, each with one or more roles."
-        },
-        "dnsSEC": {
-            "type": "array",
-            "items": {
-                "$ref": "#/$defs/DnsSec"
-            },
-            "description": "An array of DNSSEC data associated with the domain. This is required to sign the domain in DNS."
-        },
-        "authInfo": {
-            "$ref": "#/$defs/AuthInfo"
-        },
-        "status": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "upDate": {
-            "type": "string"
-        },
-        "trDate": {
-            "type": "string"
-        },
-        "clID": {
-            "type": "string"
-        },
-        "crID": {
-            "type": "string"
-        },
-        "crDate": {
-            "type": "string"
-        },
-        "exDate": {
-            "type": "string"
+    "properties": {},
+    "allOf": [
+        {
+            "$ref": "#/$defs/UpdateModelDomainUpdateAddDomainUpdateRemoveDomainUpdateChange"
         }
-    },
-    "required": [
-        "name",
-        "authInfo"
     ],
     "unevaluatedProperties": {
         "not": {}
     },
-    "examples": [
-        {
-            "name": "example.com",
-            "processes": {
-                "creation": {
-                    "period": "P2Y"
-                }
-            },
-            "authInfo": {
-                "pw": "password"
-            },
-            "contacts": [
-                {
-                    "value": "registrant-id",
-                    "type": [
-                        "registrant"
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "example.com",
-            "contacts": [
-                {
-                    "value": "registrant-id",
-                    "type": [
-                        "registrant"
-                    ]
-                }
-            ],
-            "authInfo": {
-                "pw": "password"
-            },
-            "ns": {
-                "hostAttr": [
-                    {
-                        "name": "ns1.example.net",
-                        "addr": {
-                            "ipv4": [
-                                "1.1.1.1"
-                            ],
-                            "ipv6": [
-                                "2001:db8::1"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "ns2.example.net",
-                        "addr": {
-                            "ipv4": [
-                                "1.1.1.1"
-                            ]
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "name": "example.com",
-            "contacts": [
-                {
-                    "value": "registrant-id",
-                    "type": [
-                        "registrant",
-                        "admin"
-                    ]
-                }
-            ],
-            "authInfo": {
-                "pw": "password"
-            },
-            "ns": {
-                "hostObj": [
-                    {
-                        "name": "ns1.example.net"
-                    },
-                    {
-                        "name": "ns2.example.net"
-                    }
-                ]
-            }
-        }
-    ],
-    "description": "The core model representing a domain name and its associated properties and operations, as defined in RFC 5731.",
     "$defs": {
-        "DomainCreation": {
+        "UpdateModelDomainUpdateAddDomainUpdateRemoveDomainUpdateChange": {
             "type": "object",
             "properties": {
-                "period": {
-                    "type": "string",
-                    "format": "duration",
-                    "description": "The initial registration period for the domain. The allowed unit (e.g., years, months) and range are defined by the registry policy."
+                "add": {
+                    "$ref": "#/$defs/DomainUpdateAdd"
+                },
+                "remove": {
+                    "$ref": "#/$defs/DomainUpdateRemove"
+                },
+                "update": {
+                    "$ref": "#/$defs/DomainUpdateChange"
                 }
-            },
-            "unevaluatedProperties": {
-                "not": {}
-            },
-            "description": "Parameters specific to the creation of a domain."
+            }
         },
-        "DomainRenewal": {
+        "DomainUpdateAdd": {
             "type": "object",
             "properties": {
-                "period": {
-                    "type": "string",
-                    "format": "duration",
-                    "description": "The period for which the domain registration should be extended. The allowed unit and range are defined by the registry policy."
+                "ns": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DomainEPPHostAttr"
+                        },
+                        {
+                            "$ref": "#/$defs/DomainHostObj"
+                        }
+                    ]
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/ContactReference"
+                    },
+                    "description": "An array of contacts to be added to the domain."
+                },
+                "dnsSEC": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/DnsSec"
+                    },
+                    "description": "An array of DNSSEC data to be added to the domain."
                 }
             },
             "unevaluatedProperties": {
                 "not": {}
+            }
+        },
+        "DomainUpdateRemove": {
+            "type": "object",
+            "properties": {
+                "ns": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DomainEPPHostAttr"
+                        },
+                        {
+                            "$ref": "#/$defs/DomainHostObj"
+                        }
+                    ]
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/ContactReference"
+                    },
+                    "description": "An array of contacts to be removed from the domain."
+                },
+                "dnsSEC": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/DnsSec"
+                    },
+                    "description": "An array of DNSSEC data to be removed from the domain."
+                }
             },
-            "description": "Parameters specific to the renewal of a domain."
+            "unevaluatedProperties": {
+                "not": {}
+            }
+        },
+        "DomainUpdateChange": {
+            "type": "object",
+            "properties": {
+                "authInfo": {
+                    "$ref": "#/$defs/AuthInfo"
+                }
+            },
+            "unevaluatedProperties": {
+                "not": {}
+            }
         },
         "DomainEPPHostAttr": {
             "type": "object",
