@@ -80,7 +80,7 @@ def domains_Get(id):
         domainresp = epp_domains_Info(get_epp_client(), id)
         if isinstance(domainresp, DomainCreateResponse):
             response = domain_to_rpp(domainresp.domain)
-            return response, 200
+            return response, 200, generate_rpp_response_headers(domainresp)
         elif isinstance(domainresp, ErrorResponse):
             if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
                 raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
@@ -109,10 +109,7 @@ def domains_Update(id, body):
             response = domain_to_rpp(inforesp.domain)
             return response, 201, generate_rpp_response_headers(domainresp)
         elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == ResultCode.OBJECT_EXISTS:
-                raise ProblemException(status=409, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-            else:
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
+            raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
         else:
             raise ValueError("Unexpected response type from .epp_model.client")
     except ProblemException:

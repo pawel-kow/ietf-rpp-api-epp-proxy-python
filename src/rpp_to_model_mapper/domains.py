@@ -73,8 +73,8 @@ def rpp_to_domain_update(domain_name: str, rpp: dict) -> DomainUpdate:
             # TODO: dnsSEC
         ) if domain_rpp_update.add is not None else None,
         remove=DomainUpdateRemove(
-            ns=rpp_hosts_to_hosts(domain_rpp_update.add.ns) if domain_rpp_update.add.ns is not None else None,
-            contacts=rpp_contacts_to_contact_references(domain_rpp_update.add.contacts) if domain_rpp_update.add.contacts is not None else None
+            ns=rpp_hosts_to_hosts(domain_rpp_update.remove.ns) if domain_rpp_update.remove.ns is not None else None,
+            contacts=rpp_contacts_to_contact_references(domain_rpp_update.remove.contacts) if domain_rpp_update.remove.contacts is not None else None
             # TODO: dnsSEC
         ) if domain_rpp_update.remove is not None else None,
         change=DomainUpdateChange(
@@ -101,10 +101,10 @@ def rpp_hosts_to_hosts(rpp_hosts: RPPNS) -> NS:
         ] if rpp_hosts.hostObj else None
     )
 
-def rpp_contacts_to_contact_references(rpp_contacts: List[RPPContactReference]) -> List[ContactReference]:
+def rpp_contacts_to_contact_references(rpp_contacts: List[RPPContactReferenceNew]) -> List[ContactReferenceNew]:
     return [
-        ContactReference(
-            id=contact.value,
-            types=contact.type
+        ContactReferenceNew(
+            type=contact.type,
+            contact=ContactMinimal(id=contact.object.id)
         ) for contact in rpp_contacts
     ]

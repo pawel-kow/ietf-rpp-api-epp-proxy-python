@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
+
+from models.contacts import ContactMinimal
 from .common import AuthInfo, Process, ProvisioningObject
 from .response import OperationResponse
 
@@ -22,6 +24,11 @@ class NS:
 class ContactReference:
     types: List[str]
     id: str
+
+@dataclass(kw_only=True)
+class ContactReferenceNew:
+    type: str
+    contact: ContactMinimal
 
 @dataclass(kw_only=True)
 class DnsSec:
@@ -55,13 +62,13 @@ class Domain(ProvisioningObject):
 @dataclass(kw_only=True)
 class DomainUpdateAdd:
     ns: Optional[NS] = None
-    contacts: Optional[List[ContactReference]] = None
+    contacts: Optional[List[ContactReferenceNew]] = None
     dnsSEC: Optional[List[DnsSec]] = None
 
 @dataclass(kw_only=True)
 class DomainUpdateRemove:
     ns: Optional[NS] = None
-    contacts: Optional[List[ContactReference]] = None
+    contacts: Optional[List[ContactReferenceNew]] = None
     dnsSEC: Optional[List[DnsSec]] = None
 
 @dataclass(kw_only=True)

@@ -1,5 +1,16 @@
 import json
 
+def sort_nested_lists(data):
+    """
+    Recursively sorts lists within a nested dictionary or list.
+    """
+    if isinstance(data, dict):
+        return {key: sort_nested_lists(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return sorted((sort_nested_lists(item) for item in data), key=lambda x: json.dumps(x, sort_keys=True))
+    else:
+        return data
+
 def recusive_compare_existing(case, path, actual_data, expected_data, case_sensitive=True):
     """
     Recursively traverses a dictionary or list (representing JSON) and compares if values of existing_data are present and equal actual_data.
@@ -11,8 +22,8 @@ def recusive_compare_existing(case, path, actual_data, expected_data, case_sensi
             recusive_compare_existing(case, f"{path}.{key}", actual_data[key], value, case_sensitive=case_sensitive) # Recurse/process value
     elif isinstance(expected_data, list):
         assert len(actual_data) == len(expected_data), "Case {case}. Path: {path}. Length of actual_data and expected_data lists do not match."
-        ads = sorted(actual_data, key=lambda x: json.dumps(x, sort_keys=True))
-        exps = sorted(expected_data, key=lambda x: json.dumps(x, sort_keys=True))
+        ads = sorted(actual_data, key=lambda x: json.dumps(sort_nested_lists(x), sort_keys=True))
+        exps = sorted(expected_data, key=lambda x: json.dumps(sort_nested_lists(x), sort_keys=True))
         for i, element in enumerate(exps):
             recusive_compare_existing(case, f"{path}[{i}]", ads[i], element, case_sensitive=case_sensitive)  # Recurse/process element
     else:

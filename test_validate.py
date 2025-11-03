@@ -7,7 +7,7 @@ from jsonschema import Draft202012Validator
 
 registry = Registry()
 schemas = {}
-path = os.path.join(os.path.dirname(__file__), 'schemas')
+path = os.path.join(os.path.dirname(__file__), 'src/rpp_schema_validator/schemas')
 for schema in os.listdir(path):
     with open(os.path.join(path, f'{schema}')) as f:
         if schema.endswith('.json'):
@@ -23,3 +23,28 @@ validators = {
 
 def validate_schema(schema_name, data):
     validators[schema_name].validate(data)
+
+if __name__ == "__main__":
+    # Example usage
+    test_data = {
+        "add": {
+            "contacts": [
+                {
+                    "object" :{
+                        "id": "contact123"
+                    },
+                    "type": "admin"
+                }
+            ]
+        },
+        "update": {
+            "authInfo": {
+                "pw": "newpassword"
+            }
+        }
+    }
+    try:
+        validate_schema("DomainUpdateModel", test_data)
+        print("Validation successful.")
+    except Exception as e:
+        print(f"Validation failed: {e}")

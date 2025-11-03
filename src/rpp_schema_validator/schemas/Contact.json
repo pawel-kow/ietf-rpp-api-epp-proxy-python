@@ -3,9 +3,6 @@
     "$id": "Contact.json",
     "type": "object",
     "properties": {
-        "id": {
-            "type": "string"
-        },
         "name": {
             "type": "string"
         },
@@ -88,9 +85,13 @@
         }
     },
     "required": [
-        "id",
         "contactType",
         "authInfo"
+    ],
+    "allOf": [
+        {
+            "$ref": "ContactMinimal.json"
+        }
     ],
     "unevaluatedProperties": {
         "not": {}

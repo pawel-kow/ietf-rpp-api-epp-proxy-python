@@ -42,7 +42,7 @@
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/$defs/ContactReference"
+                        "$ref": "#/$defs/ContactReferenceNew"
                     },
                     "description": "An array of contacts to be added to the domain."
                 },
@@ -74,7 +74,7 @@
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/$defs/ContactReference"
+                        "$ref": "#/$defs/ContactReferenceNew"
                     },
                     "description": "An array of contacts to be removed from the domain."
                 },
@@ -137,23 +137,20 @@
                 "not": {}
             }
         },
-        "ContactReference": {
+        "ContactReferenceNew": {
             "type": "object",
             "properties": {
-                "value": {
-                    "type": "string",
+                "object": {
+                    "$ref": "ContactMinimal.json",
                     "description": "The unique identifier for the contact, typically a handle or ID."
                 },
                 "type": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/ContactType"
-                    },
+                    "$ref": "#/$defs/ContactType",
                     "description": "An array of roles that the contact fulfills for the domain."
                 }
             },
             "required": [
-                "value",
+                "object",
                 "type"
             ],
             "unevaluatedProperties": {

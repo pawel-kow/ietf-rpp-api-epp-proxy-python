@@ -1,0 +1,20 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "DomainHostObj.json",
+    "type": "object",
+    "properties": {
+        "hostObj": {
+            "type": "array",
+            "items": {
+                "$ref": "HostName.json"
+            },
+            "description": "Host object described in EPP-style (rpp.host.EPPHost)."
+        }
+    },
+    "required": [
+        "hostObj"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

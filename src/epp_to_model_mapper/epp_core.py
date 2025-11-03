@@ -1,7 +1,7 @@
 from models import ErrorResponse, ResultCode
 from helpers import decode_xml
 
-def get_epp_error_response(xml_string: str, client_transaction_id: str) -> ErrorResponse:
+def get_epp_error_response(xml_string: str, client_transaction_id: str | None) -> ErrorResponse:
     root = decode_xml(xml_string)
     return ErrorResponse(
         code=get_epp_code(root),

@@ -1,0 +1,33 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "DnsSec.json",
+    "type": "object",
+    "properties": {
+        "keyTag": {
+            "type": "string",
+            "description": "The key tag value of the DS record, as specified in RFC 4034."
+        },
+        "algorithm": {
+            "type": "string",
+            "description": "The algorithm used to create the DS record, as specified in RFC 4034."
+        },
+        "digestType": {
+            "type": "string",
+            "description": "The digest type of the DS record, as specified in RFC 4034."
+        },
+        "digest": {
+            "type": "string",
+            "description": "The digest value of the DS record in hexadecimal format."
+        }
+    },
+    "required": [
+        "keyTag",
+        "algorithm",
+        "digestType",
+        "digest"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "Represents the DNSSEC data for a domain, used to secure DNS lookups."
+}

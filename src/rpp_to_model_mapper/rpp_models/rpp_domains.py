@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from typing import List, Optional, Dict
 from .rpp_common import RPPAuthInfo, RPPProvisioningObject
+from .rpp_contact import RPPContactMinimal
 
 
 @dataclass_json
@@ -27,6 +28,12 @@ class RPPNS:
 class RPPContactReference:
     type: List[str]
     value: str
+
+@dataclass_json
+@dataclass
+class RPPContactReferenceNew:
+    type: str
+    object: RPPContactMinimal
 
 @dataclass_json
 @dataclass
@@ -74,14 +81,14 @@ class RPPDomain(RPPProvisioningObject):
 @dataclass
 class RPPDomainUpdateAdd:
     ns: Optional[RPPNS] = None
-    contacts: Optional[List[RPPContactReference]] = None
+    contacts: Optional[List[RPPContactReferenceNew]] = None
     dnsSEC: Optional[List[RPPDnsSec]] = None
 
 @dataclass_json
 @dataclass
 class RPPDomainUpdateRemove:
     ns: Optional[RPPNS] = None
-    contacts: Optional[List[RPPContactReference]] = None
+    contacts: Optional[List[RPPContactReferenceNew]] = None
     dnsSEC: Optional[List[RPPDnsSec]] = None
 
 @dataclass_json

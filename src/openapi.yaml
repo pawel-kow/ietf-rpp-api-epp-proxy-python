@@ -3149,12 +3149,9 @@ components:
     contact.Contact:
       type: object
       required:
-        - id
         - contactType
         - authInfo
       properties:
-        id:
-          type: string
         name:
           type: string
         organisationName:
@@ -3206,15 +3203,14 @@ components:
           type: string
         exDate:
           type: string
+      allOf:
+        - $ref: '#/components/schemas/contact.ContactMinimal'
     contact.ContactCreate:
       type: object
       required:
-        - id
         - contactType
         - authInfo
       properties:
-        id:
-          type: string
         name:
           type: string
         organisationName:
@@ -3250,8 +3246,17 @@ components:
               type: string
         authInfo:
           $ref: '#/components/schemas/common.AuthInfo'
+      allOf:
+        - $ref: '#/components/schemas/contact.ContactMinimal'
     contact.ContactDeletion:
       type: object
+    contact.ContactMinimal:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
     contact.ContactTransfer:
       type: object
       properties:
@@ -3357,6 +3362,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/domain.ContactType'
+          description: An array of roles that the contact fulfills for the domain.
+      description: Represents a reference to a contact, specifying its identifier and roles.
+    domain.ContactReferenceNew:
+      type: object
+      required:
+        - object
+        - type
+      properties:
+        object:
+          allOf:
+            - $ref: '#/components/schemas/contact.ContactMinimal'
+          description: The unique identifier for the contact, typically a handle or ID.
+        type:
+          allOf:
+            - $ref: '#/components/schemas/domain.ContactType'
           description: An array of roles that the contact fulfills for the domain.
       description: Represents a reference to a contact, specifying its identifier and roles.
     domain.ContactType:
@@ -3584,7 +3604,7 @@ components:
         contacts:
           type: array
           items:
-            $ref: '#/components/schemas/domain.ContactReference'
+            $ref: '#/components/schemas/domain.ContactReferenceNew'
           description: An array of contacts to be added to the domain.
         dnsSEC:
           type: array
@@ -3617,7 +3637,7 @@ components:
         contacts:
           type: array
           items:
-            $ref: '#/components/schemas/domain.ContactReference'
+            $ref: '#/components/schemas/domain.ContactReferenceNew'
           description: An array of contacts to be removed from the domain.
         dnsSEC:
           type: array

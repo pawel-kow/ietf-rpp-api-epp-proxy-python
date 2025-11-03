@@ -25,7 +25,11 @@ class ContactType(Enum):
     ORG = "ORG"
 
 @dataclass(kw_only=True)
-class Contact(ProvisioningObject):
+class ContactMinimal():
+    id: str;
+
+@dataclass(kw_only=True)
+class Contact(ProvisioningObject, ContactMinimal):
     id: str;
     type: ContactType = ContactType(ContactType.UNDEFINED);
     name: Optional[str] = None;

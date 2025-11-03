@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "DomainCreation.json",
+    "type": "object",
+    "properties": {
+        "period": {
+            "type": "string",
+            "format": "duration",
+            "description": "The initial registration period for the domain. The allowed unit (e.g., years, months) and range are defined by the registry policy."
+        }
+    },
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "Parameters specific to the creation of a domain."
+}

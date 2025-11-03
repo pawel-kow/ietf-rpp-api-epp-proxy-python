@@ -41,6 +41,34 @@
             "authInfo": {
               "pw": "NewPassword1!@"
             }
+          },
+          "add": {
+            "contacts": [
+              {
+                "type": "registrant",
+                "object": {
+                  "id": "FO-TEST2"
+                }
+              },
+              {
+                "type": "tech",
+                "object": {
+                  "id": "FO-TEST2"
+                }
+              },
+              {
+                "type": "admin",
+                "object": {
+                  "id": "FO-TEST2"
+                }
+              },
+              {
+                "type": "billing",
+                "object": {
+                  "id": "FO-TEST1"
+                }
+              }
+            ]
           }
         }
       },
@@ -54,7 +82,108 @@
           ],
           "authInfo": {
             "pw": "NewPassword1!@"
+          },
+          "contacts": [
+            {
+              "value": "FO-TEST2",
+              "type": [
+                "tech",
+                "admin",
+                "registrant"
+              ]
+            },
+            {
+              "value": "FO-TEST1",
+              "type": [
+                "billing"
+              ]
+            }
+          ]
+        },
+        "fields": {},
+        "headers": {}
+      }
+    },
+    {
+      "skip": true,
+      "request": {
+        "method": "PATCH",
+        "url": "/domains/test1-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg=="
+        },
+        "body_json": {
+          "update": {
+            "authInfo": {
+              "pw": "NewPassword2!@"
+            }
+          },
+          "remove": {
+            "contacts": [
+              {
+                "type": "registrant",
+                "object": {
+                  "id": "FO-TEST2"
+                }
+              },
+              {
+                "type": "tech",
+                "object": {
+                  "id": "FO-TEST2"
+                }
+              },
+              {
+                "type": "admin",
+                "object": {
+                  "id": "FO-TEST2"
+                }
+              },
+              {
+                "type": "billing",
+                "object": {
+                  "id": "FO-TEST1"
+                }
+              }
+            ]
+          },
+          "add": {
+            "contacts": [
+              {
+                "type": "tech",
+                "object": {
+                  "id": "FO-TEST3"
+                }
+              },
+              {
+                "type": "registrant",
+                "object": {
+                  "id": "FO-TEST3"
+                }
+              }
+            ]
           }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "TEST1-{random_name}.EXAMPLE",
+          "status": [
+            "ok"
+          ],
+          "authInfo": {
+            "pw": "NewPassword2!@"
+          },
+          "contacts": [
+            {
+              "value": "FO-TEST3",
+              "type": [
+                "tech",
+                "registrant"
+              ]
+            }
+          ]
         },
         "fields": {},
         "headers": {}

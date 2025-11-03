@@ -84,7 +84,7 @@ def epp_domains_Check(epp_client: EPPClient, domain_name: str, client_transactio
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, client_transaction_id=None) -> Union[DomainCreateResponse, ErrorResponse]:
+def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, client_transaction_id=None) -> Union[DomainUpdateResponse, ErrorResponse]:
     """
     Updates a domain using EPP commands.
     Args:

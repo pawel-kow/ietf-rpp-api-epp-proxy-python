@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "ContactReference.json",
+    "type": "object",
+    "properties": {
+        "value": {
+            "type": "string",
+            "description": "The unique identifier for the contact, typically a handle or ID."
+        },
+        "type": {
+            "type": "array",
+            "items": {
+                "$ref": "ContactType.json"
+            },
+            "description": "An array of roles that the contact fulfills for the domain."
+        }
+    },
+    "required": [
+        "value",
+        "type"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "Represents a reference to a contact, specifying its identifier and roles."
+}

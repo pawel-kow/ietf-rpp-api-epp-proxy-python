@@ -191,7 +191,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
     response = DomainCreateResponse(domain=domain, server_transaction_id=get_epp_svTRID(root), client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, code=get_epp_code(root), msg=get_epp_msg(root))
     return response
 
-def parse_domain_update_response(xml_string: str, client_transaction_id: str) -> Union[DomainUpdateResponse, ErrorResponse]:
+def parse_domain_update_response(xml_string: str, client_transaction_id: str | None) -> Union[DomainUpdateResponse, ErrorResponse]:
     """Parses an EPP domain delete response XML string."""
     root = decode_xml(xml_string)
     namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
@@ -318,21 +318,57 @@ def parse_domain_check_response_bulk(xml_string: str, client_transaction_id: str
 def create_domain_update_xml(domain_update: DomainUpdate, client_request_id=None) -> str:
     epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
     command = ET.SubElement(epp, "command")
-    create = ET.SubElement(command, "update")
-    domain_create = ET.SubElement(create, "domain:update", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
+    update = ET.SubElement(command, "update")
+    domain_upd = ET.SubElement(update, "domain:update", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
 
-    domain_name_element = ET.SubElement(domain_create, "domain:name")
+    domain_name_element = ET.SubElement(domain_upd, "domain:name")
     domain_name_element.text = domain_update.name.upper()
     
-    if domain_update.change is not None:
-        change = ET.SubElement(domain_create, "domain:chg")
-#        if domain_update.change.registrant is not None:
-#            domain_registrant = ET.SubElement(change, "domain:registrant")
-#            domain_registrant.text = domain_update.change.registrant.upper()
-        if domain_update.change.authInfo is not None and domain_update.change.authInfo.pw is not None:
-            domain_auth_info = ET.SubElement(change, "domain:authInfo")
-            domain_pw = ET.SubElement(domain_auth_info, "domain:pw")
-            domain_pw.text = domain_update.change.authInfo.pw
+    set_registrant = False
+    if domain_update.add is not None:
+        add = None
+        if domain_update.add.contacts is not None:
+            for contact in domain_update.add.contacts:
+                if contact.type != "registrant":
+                    if add is None:
+                        add = ET.SubElement(domain_upd, "domain:add")
+                    domain_contact = ET.SubElement(add, "domain:contact", {"type": contact.type})
+                    domain_contact.text = contact.contact.id
+                else:
+                    set_registrant = True
+
+    if domain_update.remove is not None:
+        remove = None
+        if domain_update.remove.contacts is not None:
+            for contact in domain_update.remove.contacts:
+                if contact.type != "registrant":
+                    if remove is None:
+                        remove = ET.SubElement(domain_upd, "domain:rem")
+                    domain_contact = ET.SubElement(remove, "domain:contact", {"type": contact.type})
+                    domain_contact.text = contact.contact.id
+                else:
+                    set_registrant = True
+
+    if domain_update.change is not None or set_registrant: 
+        change = ET.SubElement(domain_upd, "domain:chg")
+        if set_registrant:
+            domain_registrant = ET.SubElement(change, "domain:registrant")
+            if domain_update.remove is not None and domain_update.remove.contacts is not None:
+                for contact in domain_update.remove.contacts:
+                    if contact.type == "registrant":
+                        domain_registrant.text = None
+                        break
+            if domain_update.add is not None and domain_update.add.contacts is not None:
+                for contact in domain_update.add.contacts:
+                    if contact.type == "registrant":
+                        domain_registrant.text = contact.contact.id
+                        break
+        if domain_update.change is not None:
+            if domain_update.change.authInfo is not None and domain_update.change.authInfo.pw is not None:
+                domain_auth_info = ET.SubElement(change, "domain:authInfo")
+                domain_pw = ET.SubElement(domain_auth_info, "domain:pw")
+                domain_pw.text = domain_update.change.authInfo.pw
+
 
     if not client_request_id:
         client_request_id = str(uuid.uuid4())
