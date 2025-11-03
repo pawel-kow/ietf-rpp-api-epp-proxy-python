@@ -90,10 +90,10 @@ def rpp_hosts_to_hosts(rpp_hosts: RPPNS) -> NS:
         host_attrs = [
             HostAttr(
                 id=host_attr.name,
-                ipv4=[ip for ip in host_attr.ipv4] if host_attr.ipv4 else None,
-                ipv6=[ip for ip in host_attr.ipv6] if host_attr.ipv6 else None
-            ) for host_attr in rpp_hosts.hostAttrs
-        ] if rpp_hosts.hostAttrs else None,
+                ipv4=[ip for ip in host_attr.addr.ipv4] if host_attr.addr and host_attr.addr.ipv4 else None,
+                ipv6=[ip for ip in host_attr.addr.ipv6] if host_attr.addr and host_attr.addr.ipv6 else None
+            ) for host_attr in rpp_hosts.hostAttr
+        ] if rpp_hosts.hostAttr else None,
         host_objs = [
             HostObj(
                 id=host_obj.name

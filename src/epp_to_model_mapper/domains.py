@@ -336,9 +336,47 @@ def create_domain_update_xml(domain_update: DomainUpdate, client_request_id=None
                     domain_contact.text = contact.contact.id
                 else:
                     set_registrant = True
+    
+        if domain_update.add.ns is not None:
+            if domain_update.add.ns.host_objs is not None:
+                if add is None:
+                    add = ET.SubElement(domain_upd, "domain:add")
+                domain_ns = ET.SubElement(add, "domain:ns")
+                for host_obj in domain_update.add.ns.host_objs:
+                    domain_host_obj = ET.SubElement(domain_ns, "domain:hostObj")
+                    domain_host_obj.text = host_obj.id
+            elif domain_update.add.ns.host_attrs is not None:
+                if add is None:
+                    add = ET.SubElement(domain_upd, "domain:add")
+                domain_ns = ET.SubElement(add, "domain:ns")
+                for host_attr in domain_update.add.ns.host_attrs:
+                    domain_host_attr = ET.SubElement(domain_ns, "domain:hostAttr")
+                    domain_host_name = ET.SubElement(domain_host_attr, "domain:hostName")
+                    domain_host_name.text = host_attr.id
+                    if host_attr.ipv4 is not None:
+                        for ip in host_attr.ipv4:
+                            domain_host_addr_v4 = ET.SubElement(domain_host_attr, "domain:hostAddr", {"ip": "v4"})
+                            domain_host_addr_v4.text = ip
+                    if host_attr.ipv6 is not None:
+                        for ip in host_attr.ipv6:
+                            domain_host_addr_v6 = ET.SubElement(domain_host_attr, "domain:hostAddr", {"ip": "v6"})
+                            domain_host_addr_v6.text = ip
 
     if domain_update.remove is not None:
-        remove = None
+        remove = None                    
+        if domain_update.remove.ns is not None\
+            and (domain_update.remove.ns.host_objs is not None or domain_update.remove.ns.host_attrs is not None):
+            remove = ET.SubElement(domain_upd, "domain:rem")
+            domain_ns = ET.SubElement(remove, "domain:ns")
+            if domain_update.remove.ns.host_objs is not None:
+                for host_obj in domain_update.remove.ns.host_objs:
+                    domain_host_obj = ET.SubElement(domain_ns, "domain:hostObj")
+                    domain_host_obj.text = host_obj.id
+            elif domain_update.remove.ns.host_attrs is not None:
+                for host_attr in domain_update.remove.ns.host_attrs:
+                    domain_host_attr = ET.SubElement(domain_ns, "domain:hostAttr")
+                    domain_host_name = ET.SubElement(domain_host_attr, "domain:hostName")
+                    domain_host_name.text = host_attr.id
         if domain_update.remove.contacts is not None:
             for contact in domain_update.remove.contacts:
                 if contact.type != "registrant":

@@ -6,7 +6,7 @@
         "method": "POST",
         "url": "/domains",
         "body_json": {
-          "name": "test1-{random_name}.example",
+          "name": "up-test1-{random_name}.example",
           "authInfo": {
             "pw": "Password1!@"
           }
@@ -20,7 +20,7 @@
         "status": 201,
         "content_type": "application/json",
         "body": {
-          "name": "TEST1-{random_name}.EXAMPLE",
+          "name": "up-test1-{random_name}.example",
           "status": [
             "ok"
           ]
@@ -32,7 +32,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/test1-{random_name}.example",
+        "url": "/domains/up-test1-{random_name}.example",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg=="
         },
@@ -43,6 +43,16 @@
             }
           },
           "add": {
+            "ns": {
+              "hostObj": [
+                {
+                  "name": "ns1.bar.example"
+                },
+                {
+                  "name": "ns2.bar.example"
+                }
+              ]
+            },
             "contacts": [
               {
                 "type": "registrant",
@@ -63,6 +73,12 @@
                 }
               },
               {
+                "type": "admin",
+                "object": {
+                  "id": "FO-TEST1"
+                }
+              },
+              {
                 "type": "billing",
                 "object": {
                   "id": "FO-TEST1"
@@ -76,12 +92,22 @@
         "status": 201,
         "content_type": "application/json",
         "body": {
-          "name": "TEST1-{random_name}.EXAMPLE",
+          "name": "up-test1-{random_name}.example",
           "status": [
             "ok"
           ],
           "authInfo": {
             "pw": "NewPassword1!@"
+          },
+          "ns": {
+            "hostObj": [
+              {
+                "name": "NS1.BAR.EXAMPLE"
+              },
+              {
+                "name": "NS2.BAR.EXAMPLE"
+              }
+            ]
           },
           "contacts": [
             {
@@ -95,6 +121,7 @@
             {
               "value": "FO-TEST1",
               "type": [
+                "admin",
                 "billing"
               ]
             }
@@ -105,10 +132,9 @@
       }
     },
     {
-      "skip": true,
       "request": {
         "method": "PATCH",
-        "url": "/domains/test1-{random_name}.example",
+        "url": "/domains/up-test1-{random_name}.example",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg=="
         },
@@ -119,6 +145,13 @@
             }
           },
           "remove": {
+            "ns": {
+              "hostObj": [
+                {
+                  "name": "ns1.bar.example"
+                }
+              ]
+            },
             "contacts": [
               {
                 "type": "registrant",
@@ -147,6 +180,28 @@
             ]
           },
           "add": {
+            "ns": {
+              "hostAttr": [
+                {
+                  "name": "ns1.up-test1-{random_name}.example",
+                  "addr": {
+                    "ipv4": [
+                      "192.168.1.1",
+                      "192.168.1.2"
+                    ],
+                    "ipv6": [
+                      "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+                    ]
+                  }
+                },
+                {
+                  "name": "ns2.up-test1-{random_name}.example",
+                  "addr": {
+                    "ipv6": ["2001:0db8:85a3:0000:0000:8a2e:0370:7334"]
+                  }
+                }
+              ]
+            },
             "contacts": [
               {
                 "type": "tech",
@@ -168,12 +223,25 @@
         "status": 201,
         "content_type": "application/json",
         "body": {
-          "name": "TEST1-{random_name}.EXAMPLE",
+          "name": "UP-TEST1-{random_name}.EXAMPLE",
           "status": [
             "ok"
           ],
           "authInfo": {
             "pw": "NewPassword2!@"
+          },
+          "ns": {
+            "hostObj": [
+              {
+                "name": "NS2.BAR.EXAMPLE"
+              },
+              {
+                "name": "ns1.up-test1-{random_name}.example"
+              },
+              {
+                "name": "ns2.up-test1-{random_name}.example"
+              }
+            ]
           },
           "contacts": [
             {
@@ -181,6 +249,12 @@
               "type": [
                 "tech",
                 "registrant"
+              ]
+            },
+            {
+              "value": "FO-TEST1",
+              "type": [
+                "admin"
               ]
             }
           ]

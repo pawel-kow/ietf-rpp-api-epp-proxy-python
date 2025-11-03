@@ -10,18 +10,24 @@ from .rpp_contact import RPPContactMinimal
 class RPPHostObj:
     name: str
 
+
+@dataclass_json
+@dataclass
+class RPPAddr:
+    ipv4: Optional[List[str]] = None
+    ipv6: Optional[List[str]] = None
+
 @dataclass_json
 @dataclass
 class RPPHostAttr:
     name: str
-    ipv4: List[str]
-    ipv6: List[str]
+    addr: Optional[RPPAddr] = None
 
 @dataclass_json
 @dataclass
 class RPPNS:
     hostObj: Optional[List[RPPHostObj]] = None
-    hostAttrs: Optional[List[RPPHostAttr]] = None
+    hostAttr: Optional[List[RPPHostAttr]] = None
 
 @dataclass_json
 @dataclass
