@@ -1,0 +1,26 @@
+{
+  "test_id": "test2-get_not_existing",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}G02",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": [
+          404
+        ],
+        "body": {
+          "status": 404,
+          "code": "2303"
+        },
+        "headers": {
+          "RPP-code": "2303"
+        }
+      }
+    }
+  ]
+}
