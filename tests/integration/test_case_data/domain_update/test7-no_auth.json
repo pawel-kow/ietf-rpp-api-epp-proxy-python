@@ -1,0 +1,30 @@
+{
+  "test_id": "test7-no_auth",
+  "steps": [
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domains/up-test7-{random_name}.example",
+        "headers": {
+          "RPP-clTRID": "up-test7-{random_name}-clTRID"
+        },
+        "body_json": {
+          "update": {
+            "authInfo": {
+              "pw": "NewPassword1!@"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 401,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "up-test7-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

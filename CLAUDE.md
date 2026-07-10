@@ -65,6 +65,14 @@ The integration suite ([tests/integration/test_from_file_definition.py](tests/in
 
 To add a case, drop a new JSON file in the appropriate group dir; no Python changes needed. Add `"skip": "reason"` at the top level to skip one.
 
+### Writing integration tests — process notes
+
+- **The spec is the oracle for HTTP status codes, not the code.** When asserting statuses, derive them from the RPP draft in [.spec/draft-ietf-rpp-core.clean.txt](.spec/draft-ietf-rpp-core.clean.txt), §7 **Table 1** (the normative EPP-code→HTTP-status mapping) — do not just encode whatever the controller currently returns. A test written to the spec will legitimately *fail* against a buggy handler and point at the bug (this is how the `2303→404` gap in `domains_Update` was found — the handler hardcoded 400 for all EPP errors while `domains_Delete` already had the correct `OBJECT_DOES_NOT_EXIST→404` branch). Caveat: §7's prose (the sentence before the table) has 2302/2303 **swapped** relative to Table 1; trust the table (2303→404, 2302→409), which also matches the backend's `2303 = "Object does not exist"`.
+- **Known spec deviation:** auth failures return **401** here (enforced by Connexion's HTTP Basic scheme before the controller runs), whereas §7 maps auth to **403**. All existing tests assert 401; stay consistent unless deliberately changing the auth model.
+- **Pin the EPP result code, not just the status.** For error cases, assert the `RPP-code` response header (exact string, e.g. `"2303"`) in addition to the HTTP status — the status alone doesn't prove the right EPP condition was hit.
+- **Probe the live backend before asserting.** Statuses/codes depend on the real registry's behavior. To discover them quickly, drop a throwaway JSON in a temp group dir with a deliberately-wrong expected status, run `pytest -k <group>`, and read the captured `Received response` / `Test case:` line (the runner prints the actual status, headers incl. `rpp-code`, and body on failure). Delete the probe afterward.
+- Isolate one update facet per file (authInfo-only, hostObj add/remove, contacts+registrant, …) rather than only large multi-step scenarios — narrow cases localize regressions. Note the mutation controllers (`domains_Create`/`domains_Update`) build their success body from a follow-up EPP **Info** call, so a passing update test also transitively exercises Info + `domain_to_rpp`.
+
 ## Environment notes
 
 - Runtime `python --version` here is 3.9, but the code uses 3.10+ syntax (`str | None`, `tuple[...]`, `dict[str,str]`). Use the `.venv` interpreter, which is a newer Python.

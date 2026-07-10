@@ -1,0 +1,115 @@
+{
+  "test_id": "test3-add_remove_hostobj",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "up-test3-{random_name}.example",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "up-test3-{random_name}.example",
+          "status": [
+            "ok"
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domains/up-test3-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg=="
+        },
+        "body_json": {
+          "add": {
+            "ns": {
+              "hostObj": [
+                {
+                  "name": "ns1.bar.example"
+                },
+                {
+                  "name": "ns2.bar.example"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "up-test3-{random_name}.example",
+          "status": [
+            "ok"
+          ],
+          "ns": {
+            "hostObj": [
+              {
+                "name": "NS1.BAR.EXAMPLE"
+              },
+              {
+                "name": "NS2.BAR.EXAMPLE"
+              }
+            ]
+          }
+        },
+        "fields": {},
+        "headers": {}
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domains/up-test3-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg=="
+        },
+        "body_json": {
+          "remove": {
+            "ns": {
+              "hostObj": [
+                {
+                  "name": "ns1.bar.example"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "up-test3-{random_name}.example",
+          "status": [
+            "ok"
+          ],
+          "ns": {
+            "hostObj": [
+              {
+                "name": "NS2.BAR.EXAMPLE"
+              }
+            ]
+          }
+        },
+        "fields": {},
+        "headers": {}
+      }
+    }
+  ]
+}

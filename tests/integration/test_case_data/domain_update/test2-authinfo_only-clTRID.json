@@ -1,0 +1,68 @@
+{
+  "test_id": "test2-authinfo_only-clTRID",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domains",
+        "body_json": {
+          "name": "up-test2-{random_name}.example",
+          "authInfo": {
+            "pw": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic Zm9vOmJhcg=="
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "up-test2-{random_name}.example",
+          "status": [
+            "ok"
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domains/up-test2-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "RPP-clTRID": "up-test2-{random_name}-clTRID"
+        },
+        "body_json": {
+          "update": {
+            "authInfo": {
+              "pw": "NewPassword1!@"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/json",
+        "body": {
+          "name": "up-test2-{random_name}.example",
+          "status": [
+            "ok"
+          ],
+          "authInfo": {
+            "pw": "NewPassword1!@"
+          }
+        },
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "up-test2-{random_name}-clTRID",
+          "RPP-svTRID": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}
