@@ -1,309 +1,131 @@
-import xml.etree.ElementTree as ET
-from lxml import etree
-from models import *
-import re
-from helpers import decode_xml
 import uuid
-from .epp_core import *
+from datetime import timezone
+from models import *
 from typing import Union
+from .epp_core import map_epp_code
+from .commands.contacts import contact_create, contact_delete, contact_info
+from .commands.helper import epp_to_str, str_to_epp
+from .epp_model.contact_1_0 import CreData, InfData
+from .epp_model.epp_1_0 import Epp
 
-#TODO: not tested yet create_contact_xml
+
+def _parse_epp_response_header(epp: Epp) -> dict:
+    return {
+        "code": map_epp_code(epp.response.result[0].code.value),
+        "msg": epp.response.result[0].msg.value,
+        "server_transaction_id": epp.response.tr_id.sv_trid,
+        "client_transaction_id": epp.response.tr_id.cl_trid,
+    }
+
+
+def _find_res_data(epp: Epp, *types):
+    """Return the first res_data element matching one of the given xsdata types."""
+    if epp.response is None or epp.response.res_data is None:
+        return None
+    for item in epp.response.res_data.other_element:
+        if isinstance(item, types):
+            return item
+    return None
+
+
+def _cl_trid(client_request_id) -> str:
+    return client_request_id if client_request_id else str(uuid.uuid4())
+
+
+def _dt(value):
+    # UTC ISO form with fractional seconds and a trailing "Z", matching the EPP wire format.
+    if value is None:
+        return None
+    return value.to_datetime().astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def _phone(e164):
+    """Map an EPP e164Type back to the RPP phone string ('+1.703...x1234')."""
+    if e164 is None or not e164.value:
+        return None
+    return [f"{e164.value}x{e164.x}" if e164.x else e164.value]
+
+
 def create_contact_xml(contact: Contact, client_request_id=None) -> str:
+    return epp_to_str(contact_create(contact, _cl_trid(client_request_id)))
+
+
+def info_contact_xml(id: str, client_request_id=None) -> str:
+    return epp_to_str(contact_info(id, _cl_trid(client_request_id)))
+
+
+def delete_contact_xml(id: str, client_request_id=None) -> str:
+    return epp_to_str(contact_delete(id, _cl_trid(client_request_id)))
+
+
+def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[DomainDeleteResponse, ErrorResponse]:
+    """Parses an EPP contact delete response.
+
+    Returns a DomainDeleteResponse for compatibility with controller.contacts,
+    which type-checks against DomainDeleteResponse (both are empty
+    OperationResponse subclasses).
     """
-    Creates an EPP XML payload for domain creation with optional parameters.
-
-    Args:
-        contact (Contact): The contact object containing the contact data.
-        request_id (str, optional): The request ID.
-
-    Returns:
-        str: The XML payload as a string.
-    """
-
-    '''
-    Needed output:
-   <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-   <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-     <command>
-       <create>
-         <contact:create
-          xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
-           <contact:id>sh8013</contact:id>
-           <contact:postalInfo type="int">
-             <contact:name>John Doe</contact:name>
-             <contact:org>Example Inc.</contact:org>
-             <contact:addr>
-               <contact:street>123 Example Dr.</contact:street>
-               <contact:street>Suite 100</contact:street>
-               <contact:city>Dulles</contact:city>
-               <contact:sp>VA</contact:sp>
-               <contact:pc>20166-6503</contact:pc>
-               <contact:cc>US</contact:cc>
-             </contact:addr>
-           </contact:postalInfo>
-           <contact:voice x="1234">+1.7035555555</contact:voice>
-           <contact:fax>+1.7035555556</contact:fax>
-           <contact:email>jdoe@example.com</contact:email>
-           <contact:authInfo>
-             <contact:pw>2fooBAR</contact:pw>
-           </contact:authInfo>
-           <contact:disclose flag="0">
-             <contact:voice/>
-             <contact:email/>
-           </contact:disclose>
-         </contact:create>
-       </create>
-       <clTRID>ABC-12345</clTRID>
-     </command>
-   </epp>'''
-    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
-    command = ET.SubElement(epp, "command")
-    create = ET.SubElement(command, "create")
-    contact_create = ET.SubElement(create, "contact:create", {"xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0"})
-
-    if contact.id:
-        contact_id_element = ET.SubElement(contact_create, "contact:id")
-        contact_id_element.text = contact.id.upper()
-
-    if contact.name or contact.address or contact.organisationName and contact.type == ContactType.ORG:
-        postal_info = ET.SubElement(contact_create, "contact:postalInfo", {"type": "int"})
-        if contact.name:
-            name_element = ET.SubElement(postal_info, "contact:name")
-            name_element.text = contact.name
-        if contact.organisationName and contact.type == ContactType.ORG:
-            org_element = ET.SubElement(postal_info, "contact:org")
-            org_element.text = contact.organisationName
-                
-        if contact.address:
-            address_element = ET.SubElement(postal_info, "contact:addr")
-            if contact.address.street:
-                for street in contact.address.street:
-                    street_element = ET.SubElement(address_element, "contact:street")
-                    street_element.text = street
-            if contact.address.city:
-                city_element = ET.SubElement(address_element, "contact:city")
-                city_element.text = contact.address.city
-            if contact.address.stateProvince:
-                state_element = ET.SubElement(address_element, "contact:sp")
-                state_element.text = contact.address.stateProvince
-            if contact.address.postalCode:
-                postal_code_element = ET.SubElement(address_element, "contact:pc")
-                postal_code_element.text = contact.address.postalCode
-            if contact.address.country:
-                country_element = ET.SubElement(address_element, "contact:cc")
-                country_element.text = contact.address.country
-    if contact.email and len(contact.email) > 0:
-        email_element = ET.SubElement(contact_create, "contact:email")
-        email_element.text = contact.email[0]
-        
-    if contact.phone and len(contact.phone) > 0:
-        phone = contact.phone[0]
-        match = re.search(r"x(\d+)", phone)
-        if match:
-            extension = match.group(1)
-            # Remove 'x' and extension from phone number
-            phone_number = re.sub(r"x\d+", "", phone)
-            voice_element = ET.SubElement(contact_create, "contact:voice", {"x": extension})
-            voice_element.text = phone_number.strip()
-        else:
-            voice_element = ET.SubElement(contact_create, "contact:voice")
-            voice_element.text = phone
-
-    if contact.fax and len(contact.fax) > 0:
-        fax = contact.fax[0]
-        match = re.search(r"x(\d+)", fax)
-        if match:
-            extension = match.group(1)
-            # Remove 'x' and extension from fax number
-            phone_number = re.sub(r"x\d+", "", fax)
-            voice_element = ET.SubElement(contact_create, "contact:fax", {"x": extension})
-            voice_element.text = phone_number.strip()
-        else:
-            voice_element = ET.SubElement(contact_create, "contact:fax")
-            voice_element.text = fax
-
-    if contact.authInfo and contact.authInfo.pw:
-        contact_auth_info = ET.SubElement(contact_create, "contact:authInfo")
-        contact_pw = ET.SubElement(contact_auth_info, "contact:pw")
-        contact_pw.text = contact.authInfo.pw
-            
-    if not client_request_id:
-        client_request_id = str(uuid.uuid4())
-    cl_trid = ET.SubElement(command, "clTRID")
-    cl_trid.text = client_request_id
-
-    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
-    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
-
-    return xml_string
+    epp = str_to_epp(xml_string)
+    header = _parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    return DomainDeleteResponse(**header)
 
 
-#TODO: implement parse_contact_delete_response
-def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[ContactDeleteResponse, ErrorResponse]:
-    """Parses an EPP domain delete response XML string."""
-    root = decode_xml(xml_string)
-    namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:contact-1.0'}
-
-    response = DomainDeleteResponse(
-        server_transaction_id=get_epp_svTRID(root), 
-        client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, 
-        code=get_epp_code(root),
-        msg=get_epp_msg(root))
-    return response
-
-
-#TODO: test parse_contact_response
 def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union[ContactCreateResponse, ErrorResponse]:
-    """Parses an EPP domain create response XML string."""
-    root = decode_xml(xml_string)
-    namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'contact': 'urn:ietf:params:xml:ns:contact-1.0'}
+    """Parses an EPP contact create/info response into a ContactCreateResponse."""
+    epp = str_to_epp(xml_string)
+    header = _parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
 
-    id = root.find(".//contact:id", namespaces=namespace).text
+    data = _find_res_data(epp, InfData, CreData)
 
-    postalInfo = root.find(".//contact:postalInfo", namespaces=namespace)
-    if postalInfo is not None:
-        name = postalInfo.find(".//contact:name", namespaces=namespace).text if postalInfo.find(".//contact:name", namespaces=namespace) is not None else None
-        org = postalInfo.find(".//contact:org", namespaces=namespace).text if postalInfo.find(".//contact:org", namespaces=namespace) is not None else None
+    postal = None
+    postal_list = getattr(data, "postal_info", None) if data else None
+    if postal_list:
+        postal = postal_list[0]
+
+    # The backend may send empty elements (<contact:org></contact:org>), which
+    # xsdata parses as "" rather than None; treat empty as absent.
+    name = (postal.name or None) if postal else None
+    org = (postal.org or None) if postal else None
+    address = None
+    if postal is not None and postal.addr is not None:
+        a = postal.addr
         address = Address(
-            street=[x.text for x in postalInfo.findall(".//contact:street", namespaces=namespace)] if postalInfo.findall(".//contact:street", namespaces=namespace) else None,
-            city=postalInfo.find(".//contact:city", namespaces=namespace).text if postalInfo.find(".//contact:city", namespaces=namespace) is not None else None,
-            stateProvince=postalInfo.find(".//contact:sp", namespaces=namespace).text if postalInfo.find(".//contact:sp", namespaces=namespace) is not None else None,
-            postalCode=postalInfo.find(".//contact:pc", namespaces=namespace).text if postalInfo.find(".//contact:pc", namespaces=namespace) is not None else None,
-            country=postalInfo.find(".//contact:cc", namespaces=namespace).text if postalInfo.find(".//contact:cc", namespaces=namespace) is not None else None,
+            street=list(a.street) if a.street else None,
+            city=a.city,
+            stateProvince=a.sp,
+            postalCode=a.pc,
+            country=a.cc,
         )
-    else:
-        name = None
-        address = None
-        org = None
 
-    email = [root.find(".//contact:email", namespaces=namespace).text if root.find(".//contact:email", namespaces=namespace) is not None else None]
-    voice_elem = root.find(".//contact:voice", namespaces=namespace)
-    if voice_elem is not None and voice_elem.text is not None:
-        phone_number = voice_elem.text
-        extension = voice_elem.attrib.get("x")
-        if extension:
-            phone = [f"{phone_number}x{extension}"]
-        else:
-            phone = [phone_number]
-    else:
-        phone = None
-    
-    fax_elem = root.find(".//contact:fax", namespaces=namespace)
-    if fax_elem is not None and fax_elem.text is not None:
-        fax_number = fax_elem.text
-        extension = fax_elem.attrib.get("x")
-        if extension:
-            fax = [f"{fax_number}x{extension}"]
-        else:
-            fax = [fax_number]
-    else:
-        fax = None
-    
-    cr_date = root.find(".//contact:crDate", namespaces=namespace).text if root.find(".//contact:crDate", namespaces=namespace) is not None else None
-    ex_date = root.find(".//contact:exDate", namespaces=namespace).text if root.find(".//contact:exDate", namespaces=namespace) is not None else None
-    up_date = root.find(".//contact:upDate", namespaces=namespace).text if root.find(".//contact:upDate", namespaces=namespace) is not None else None
-    tr_date = root.find(".//contact:trDate", namespaces=namespace).text if root.find(".//contact:trDate", namespaces=namespace) is not None else None
-    clid = root.find(".//contact:clID", namespaces=namespace).text if root.find(".//contact:clID", namespaces=namespace) is not None  else None
-    crid = root.find(".//contact:crID", namespaces=namespace).text if root.find(".//contact:crID", namespaces=namespace) is not None else None
-    
-    status = [x.attrib.get("s", None) for x in root.findall(".//contact:status", namespaces=namespace)]
+    email = [(getattr(data, "email", None) or None)] if data else [None]
 
+    auth_info = getattr(data, "auth_info", None) if data else None
+    pw = auth_info.pw.value if auth_info is not None and auth_info.pw is not None else None
 
-    authInfo = root.find(".//contact:authInfo", namespaces=namespace)
-    pw = None
-    hash = None
-    if authInfo is not None:
-        pw = authInfo.find("./contact:pw", namespaces=namespace).text if authInfo.find("./contact:pw", namespaces=namespace) is not None else None
-        hash = authInfo.find("./contact:hash", namespaces=namespace).text if authInfo.find("./contact:hash", namespaces=namespace) is not None else None
-    
     contact = Contact(
-        id = id,
-        name = name,
-        organisationName= org,
-        type = ContactType.ORG if org is not None
+        id=data.id if data else None,
+        name=name,
+        organisationName=org,
+        type=ContactType.ORG if org is not None
             else ContactType.PERSON if name is not None
             else ContactType.UNDEFINED,
-        email = email,
-        phone = phone,
-        fax = fax,
-        address = address,
-        #common fields
-        status = status,
-        crDate = cr_date,
-        exDate = ex_date,
-        upDate = up_date,
-        trDate = tr_date,
-        clID = clid,
-        crID = crid,
-        authInfo = AuthInfo(
-            pw = pw,
-            hash = hash
-        ) if pw is not None or hash is not None else None
+        email=email,
+        phone=_phone(getattr(data, "voice", None)) if data else None,
+        fax=_phone(getattr(data, "fax", None)) if data else None,
+        address=address,
+        # common fields
+        status=[s.s.value for s in getattr(data, "status", [])] if data else None,
+        crDate=_dt(getattr(data, "cr_date", None)) if data else None,
+        exDate=None,
+        upDate=_dt(getattr(data, "up_date", None)) if data else None,
+        trDate=_dt(getattr(data, "tr_date", None)) if data else None,
+        clID=getattr(data, "cl_id", None) if data else None,
+        crID=getattr(data, "cr_id", None) if data else None,
+        authInfo=AuthInfo(pw=pw, hash=None) if pw is not None else None,
     )
-    
-    resp = ContactCreateResponse(contact=contact, server_transaction_id=get_epp_svTRID(root), client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, code=get_epp_code(root), msg=get_epp_msg(root))
-    return resp
 
-
-
-#TODO: test info_contact_xml
-def info_contact_xml(id: str, client_request_id=None) -> str:
-    """
-    Creates an EPP XML payload for domain info with optional parameters.
-
-    Args:
-        id (str): The contact id.
-        request_id (str, optional): The request ID.
-
-    Returns:
-        str: The XML payload as a string.
-    """
-
-    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
-    command = ET.SubElement(epp, "command")
-    info = ET.SubElement(command, "info")
-    contact_info = ET.SubElement(info, "contact:info", {"xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0"})
-
-    contact_id_element = ET.SubElement(contact_info, "contact:id")
-    contact_id_element.text = id
-
-    if not client_request_id:
-        client_request_id = str(uuid.uuid4())
-    cl_trid = ET.SubElement(command, "clTRID")
-    cl_trid.text = client_request_id
-
-    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
-    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
-
-    return xml_string
-
-#TODO: test delete_domain_xml
-def delete_contact_xml(id: str, client_request_id=None) -> str:
-    """
-    Creates an EPP XML payload for domain delete with optional parameters.
-
-    Args:
-        id (str): The contact id name.
-        request_id (str, optional): The request ID.
-
-    Returns:
-        str: The XML payload as a string.
-    """
-
-    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
-    command = ET.SubElement(epp, "command")
-    info = ET.SubElement(command, "delete")
-    contact_info = ET.SubElement(info, "contact:delete", {"xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0"})
-
-    contact_id_element = ET.SubElement(contact_info, "contact:id")
-    contact_id_element.text = id
-
-    if not client_request_id:
-        client_request_id = str(uuid.uuid4())
-    cl_trid = ET.SubElement(command, "clTRID")
-    cl_trid.text = client_request_id
-
-    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
-    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
-
-    return xml_string
+    return ContactCreateResponse(contact=contact, **header)

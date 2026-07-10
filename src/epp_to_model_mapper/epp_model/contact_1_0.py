@@ -4,8 +4,8 @@ from typing import Optional
 
 from xsdata.models.datatype import XmlDateTime
 
-from .epp.epp_1_0 import TrIdtype
-from .epp.eppcom_1_0 import (
+from .epp_1_0 import TrIdtype
+from .eppcom_1_0 import (
     ExtAuthInfoType,
     PwAuthInfoType,
     ReasonType,
