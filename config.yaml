@@ -1,8 +1,12 @@
 # hostname of the backend EPP server to use
-#rpp_epp_host: epp.example.org
+# points at the epp-server-docker-epp-server-1 container over the shared
+# epp-server-docker_epp_net docker network (see .devcontainer/devcontainer.json)
+rpp_epp_host: epp-server-docker-epp-server-1
 
 # optional settings
-#rpp_epp_port: 700
+# container-internal EPP port (published on the docker host as 7001, but we
+# reach the container directly on the shared network here)
+rpp_epp_port: 700
 #rpp_epp_use_tls: true
 # timeout (secs) for requests sent to EPP server
 #rpp_epp_timeout: 5

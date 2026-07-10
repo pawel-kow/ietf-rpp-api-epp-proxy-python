@@ -14,3 +14,4 @@ testpaths = [
 pythonpath = [
     "src",
 ]
+addopts = "--strict-markers --tb=short -p no:warnings"

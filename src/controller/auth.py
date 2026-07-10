@@ -1,6 +1,7 @@
 import os
 from eppclient.eppclient import EPPClient
 from connexion import request
+from config import config
 
 os.environ["BASICINFO_FUNC"] = 'controller.basic_auth'
 
@@ -9,7 +10,7 @@ CLIENTS = {
 
 def basic_auth(username, password):
     if CLIENTS.get(username) is None:
-        client = EPPClient("localhost", 7001, username, password)
+        client = EPPClient(config.rpp_epp_host, config.rpp_epp_port, username, password)
         client.connect()
         if not client.connected:
             return None
