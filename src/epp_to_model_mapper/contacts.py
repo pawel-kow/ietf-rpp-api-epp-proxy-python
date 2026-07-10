@@ -58,18 +58,13 @@ def delete_contact_xml(id: str, client_request_id=None) -> str:
     return epp_to_str(contact_delete(id, _cl_trid(client_request_id)))
 
 
-def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[DomainDeleteResponse, ErrorResponse]:
-    """Parses an EPP contact delete response.
-
-    Returns a DomainDeleteResponse for compatibility with controller.contacts,
-    which type-checks against DomainDeleteResponse (both are empty
-    OperationResponse subclasses).
-    """
+def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[ContactDeleteResponse, ErrorResponse]:
+    """Parses an EPP contact delete response."""
     epp = str_to_epp(xml_string)
     header = _parse_epp_response_header(epp)
     if client_transaction_id is None:
         header["client_transaction_id"] = None
-    return DomainDeleteResponse(**header)
+    return ContactDeleteResponse(**header)
 
 
 def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union[ContactCreateResponse, ErrorResponse]:

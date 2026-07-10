@@ -48,7 +48,7 @@ def contacts_Delete(id):
         # Call the eppclient function to delete  the contact
         contactresp = epp_contacts_Delete(get_epp_client(), id)
         # Convert the response to JSON
-        if isinstance(contactresp, DomainDeleteResponse):
+        if isinstance(contactresp, ContactDeleteResponse):
             if contactresp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
                 return None, 204, generate_rpp_response_headers(contactresp)
             elif contactresp.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
