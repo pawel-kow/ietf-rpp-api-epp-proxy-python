@@ -6,6 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 An RPP (Registration Protocol Proxy) server that exposes a REST/JSON API (the IETF RPP draft) and translates each request into classic EPP (RFC 5730/5731 etc.) commands sent over TCP to a backend EPP registry server. It is a stateless-by-default protocol bridge: RPP JSON in → EPP XML out → EPP XML back → RPP JSON out.
 
+## Working agreement
+
+- **Never assume — ask when in doubt.** If a requirement, expected behavior, EPP/RPP
+  mapping, or the intent behind a change is ambiguous, stop and ask the user rather
+  than guessing. A wrong assumption in a protocol bridge is expensive to unwind.
+- **Present the solution for acceptance before implementing.** For any non-trivial
+  change, describe the approach and wait for the user's go-ahead before editing code.
+
 ## Commands
 
 ```bash
