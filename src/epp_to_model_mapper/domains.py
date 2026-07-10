@@ -1,419 +1,192 @@
-import xml.etree.ElementTree as ET
-from lxml import etree
-from models import *
-import re
-from helpers import decode_xml
 import uuid
-from .epp_core import *
+from datetime import timezone
+from models import *
 from typing import Union
-from .commands.domains import *
+from .epp_core import map_epp_code
+from .commands.domains import (
+    domain_check,
+    domain_create,
+    domain_delete,
+    domain_info,
+    domain_update,
+)
 from .commands.helper import epp_to_str, str_to_epp
-from .epp_model.domain_1_0 import ChkData
+from .epp_model.domain_1_0 import CreData, InfData
+from .epp_model.epp_1_0 import Epp
 
-def create_domain_xml(domain: Domain, client_request_id=None) -> str:
-    """
-    Creates an EPP XML payload for domain creation with optional parameters.
-
-    Args:
-        domain (Domain): The domain object containing the domain data.
-        request_id (str, optional): The request ID.
-
-    Returns:
-        str: The XML payload as a string.
-    """
-
-    '''
-    Needed output:
-    <?xml version="1.0" standalone="no"?>
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-    <command>
-        <create>
-        <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-            <domain:name>example.com</domain:name>
-            <domain:period unit="y">1</domain:period>
-            <domain:ns>
-            <domain:hostObj>ns1.example.com</domain:hostObj>
-            <domain:hostObj>ns2.example.net</domain:hostObj>
-            <domain:hostAttr>
-                <domain:hostName>ns3.example.org</domain:hostName>
-                <domain:hostAddr ip="v4">127.0.0.1</domain:hostAddr>
-                <domain:hostAddr ip="v6">::1</domain:hostAddr>
-            </domain:hostAttr>
-            </domain:ns>
-            <domain:registrant>example-contact-id</domain:registrant>
-            <domain:contact type="admin">example-contact-id</domain:contact>
-            <domain:contact type="billing">example-contact-id</domain:contact>
-            <domain:contact type="tech">example-contact-id</domain:contact>
-            <domain:authInfo>
-            <domain:pw>password</domain:pw>
-            </domain:authInfo>
-        </domain:create>
-        </create>
-        <clTRID>TEST-REQUEST-ID</clTRID>
-    </command>
-    </epp>'''
-    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
-    command = ET.SubElement(epp, "command")
-    create = ET.SubElement(command, "create")
-    domain_create = ET.SubElement(create, "domain:create", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
-
-    domain_name_element = ET.SubElement(domain_create, "domain:name")
-    domain_name_element.text = domain.name.upper()
-
-    if domain.processes and domain.processes.get("creation"):
-        duration = domain.processes["creation"].duration
-        match = re.match(r"P([0-9]+)([MY])", duration)
-        if match:
-            value, unit = match.groups()
-            unit = unit.lower()
-        else:
-            raise ValueError("Unsupported duration format. Only whole years (Y) or months (M) are allowed.")
-        domain_period = ET.SubElement(domain_create, "domain:period", {"unit": unit})
-        domain_period.text = value
-
-    if domain.ns:
-        domain_ns = ET.SubElement(domain_create, "domain:ns")
-        if domain.ns.host_objs:
-            for host_obj_data in domain.ns.host_objs:
-                host_obj = ET.SubElement(domain_ns, "domain:hostObj")
-                host_obj.text = host_obj_data.id
-        if domain.ns.host_attrs:
-            for host_attr_data in domain.ns.host_attrs:
-                host_attr = ET.SubElement(domain_ns, "domain:hostAttr")
-                host_name = ET.SubElement(host_attr, "domain:hostName")
-                host_name.text = host_attr_data.id
-
-                if host_attr_data.ipv4:
-                    for ip in host_attr_data.ipv4:
-                        host_addr_v4 = ET.SubElement(host_attr, "domain:hostAddr", {"ip": "v4"})
-                        host_addr_v4.text = ip
-                if host_attr_data.ipv6:
-                    for ip in host_attr_data.ipv6:
-                        host_addr_v6 = ET.SubElement(host_attr, "domain:hostAddr", {"ip": "v6"})
-                        host_addr_v6.text = ip
-
-    if domain.contacts:
-        registrant_generated = False
-        for contact in domain.contacts:
-            if "registrant" in contact.types:
-                if not registrant_generated:
-                    domain_registrant = ET.SubElement(domain_create, "domain:registrant")
-                    domain_registrant.text = contact.id.upper()
-                    registrant_generated = True
-                else:
-                    raise ValueError("Only one registrant is allowed in EPP")
-
-        for contact in domain.contacts:
-            for t in contact.types:
-                if not t == "registrant":
-                    domain_contact = ET.SubElement(domain_create, "domain:contact", {"type": t})
-                    domain_contact.text = contact.id.upper()
-
-    if domain.authInfo and domain.authInfo.pw:
-        domain_auth_info = ET.SubElement(domain_create, "domain:authInfo")
-        domain_pw = ET.SubElement(domain_auth_info, "domain:pw")
-        domain_pw.text = domain.authInfo.pw
-
-    if not client_request_id:
-        client_request_id = str(uuid.uuid4())
-    cl_trid = ET.SubElement(command, "clTRID")
-    cl_trid.text = client_request_id
-
-    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
-    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
-
-    return xml_string
-
-def parse_domain_delete_response(xml_string: str, client_transaction_id: str) -> Union[DomainDeleteResponse, ErrorResponse]:
-    """Parses an EPP domain delete response XML string."""
-    root = decode_xml(xml_string)
-    namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
-
-    response = DomainDeleteResponse(
-        server_transaction_id=get_epp_svTRID(root), 
-        client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, 
-        code=get_epp_code(root),
-        msg=get_epp_msg(root))
-    return response
-
-def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[DomainCreateResponse, ErrorResponse]:
-    """Parses an EPP domain create response XML string."""
-    root = decode_xml(xml_string)
-    namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
-
-    domain_name = root.find(".//domain:name", namespaces=namespace).text
-    registrant = root.find(".//domain:registrant", namespaces=namespace).text if root.find(".//domain:registrant", namespaces=namespace) is not None else None
-    cr_date = root.find(".//domain:crDate", namespaces=namespace).text if root.find(".//domain:crDate", namespaces=namespace) is not None else None
-    ex_date = root.find(".//domain:exDate", namespaces=namespace).text if root.find(".//domain:exDate", namespaces=namespace) is not None else None
-    up_date = root.find(".//domain:upDate", namespaces=namespace).text if root.find(".//domain:upDate", namespaces=namespace) is not None else None
-    tr_date = root.find(".//domain:trDate", namespaces=namespace).text if root.find(".//domain:trDate", namespaces=namespace) is not None else None
-    status = [x.attrib.get("s", None) for x in root.findall(".//domain:status", namespaces=namespace)]
-    ns = root.find(".//domain:ns", namespaces=namespace)
-    if ns is not None:
-        host_objs = [HostObj(id=x.text) for x in ns.findall(".//domain:hostObj", namespaces=namespace)]
-        host_attrs = None
-    else:
-        host_objs = None
-        host_attrs = None
-        #TODO: parse host attributes
-    clid = root.find(".//domain:clID", namespaces=namespace).text if root.find(".//domain:clID", namespaces=namespace) is not None  else None
-    crid = root.find(".//domain:crID", namespaces=namespace).text if root.find(".//domain:crID", namespaces=namespace) is not None else None
-    authInfo = root.find(".//domain:authInfo", namespaces=namespace)
-    pw = None
-    hash = None
-    if authInfo is not None:
-        pw = authInfo.find("./domain:pw", namespaces=namespace).text if authInfo.find("./domain:pw", namespaces=namespace) is not None else None
-        hash = authInfo.find("./domain:hash", namespaces=namespace).text if authInfo.find("./domain:hash", namespaces=namespace) is not None else None
-    contact_nodes = root.findall(".//domain:contact", namespaces=namespace)
-    contacts_dict = {}
-    contacts = None
-    for c in contact_nodes:
-        contact_id = c.text
-        contact_role = c.attrib["type"]
-        if contact_id in contacts_dict:
-            contacts_dict[contact_id] += [contact_role]
-        else:
-            contacts_dict[contact_id] = [contact_role]
-
-    if registrant:
-        if registrant in contacts_dict:
-            contacts_dict[registrant] += ["registrant"]
-        else:
-            contacts_dict[registrant] = ["registrant"]
-    
-    if len(contacts_dict) != 0:
-        contacts = [ContactReference(types=contacts_dict[x], id=x) for x in contacts_dict]
-    domain = Domain(name=domain_name, crDate=cr_date, exDate=ex_date, 
-                    upDate=up_date, trDate=tr_date, status=status,
-                    clID=clid, crID=crid,
-                    ns=NS(host_objs=host_objs, host_attrs=None) if host_objs else NS(host_attrs=host_attrs, host_objs=None) if host_attrs else None,
-                    authInfo=AuthInfo(pw, None) if pw is not None else AuthInfo(None, hast) if hash is not None else None, contacts=contacts, dnsSEC=None)
-    response = DomainCreateResponse(domain=domain, server_transaction_id=get_epp_svTRID(root), client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, code=get_epp_code(root), msg=get_epp_msg(root))
-    return response
-
-def parse_domain_update_response(xml_string: str, client_transaction_id: str | None) -> Union[DomainUpdateResponse, ErrorResponse]:
-    """Parses an EPP domain delete response XML string."""
-    root = decode_xml(xml_string)
-    namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0', 'domain': 'urn:ietf:params:xml:ns:domain-1.0'}
-
-    response = DomainUpdateResponse(
-        server_transaction_id=get_epp_svTRID(root), 
-        client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None, 
-        code=get_epp_code(root),
-        msg=get_epp_msg(root))
-    return response
-
-def info_domain_xml(domain_name: str, client_request_id=None) -> str:
-    """
-    Creates an EPP XML payload for domain info with optional parameters.
-
-    Args:
-        domain_name (str): The domain name.
-        request_id (str, optional): The request ID.
-
-    Returns:
-        str: The XML payload as a string.
-    """
-
-    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
-    command = ET.SubElement(epp, "command")
-    info = ET.SubElement(command, "info")
-    domain_info = ET.SubElement(info, "domain:info", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
-
-    domain_name_element = ET.SubElement(domain_info, "domain:name")
-    domain_name_element.text = domain_name
-
-    if not client_request_id:
-        client_request_id = str(uuid.uuid4())
-    cl_trid = ET.SubElement(command, "clTRID")
-    cl_trid.text = client_request_id
-
-    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
-    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
-
-    return xml_string
-
-def delete_domain_xml(domain_name: str, client_request_id=None) -> str:
-    """
-    Creates an EPP XML payload for domain delete with optional parameters.
-
-    Args:
-        domain_name (str): The domain name.
-        request_id (str, optional): The request ID.
-
-    Returns:
-        str: The XML payload as a string.
-    """
-
-    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
-    command = ET.SubElement(epp, "command")
-    info = ET.SubElement(command, "delete")
-    domain_info = ET.SubElement(info, "domain:delete", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
-
-    domain_name_element = ET.SubElement(domain_info, "domain:name")
-    domain_name_element.text = domain_name
-
-    if not client_request_id:
-        client_request_id = str(uuid.uuid4())
-    cl_trid = ET.SubElement(command, "clTRID")
-    cl_trid.text = client_request_id
-
-    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
-    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
-
-    return xml_string
-
-def domain_check_xml(domain_name: str, client_request_id=None):
-    epp = domain_check(domain_name, client_request_id)
-    return epp_to_str(epp)
-
-def parse_domain_check_response_single(xml_string: str, domain_name: str, client_transaction_id: str) -> Union[DomainCheckResponseSingle, ErrorResponse]:
-    response = parse_domain_check_response_bulk(xml_string, client_transaction_id)
-    if isinstance(response, DomainCheckResponseBulk):
-        if domain_name in response.responses:
-            return DomainCheckResponseSingle(
-                domain_name = domain_name,
-                available = response.responses[domain_name].available,
-                reason = response.responses[domain_name].reason,
-                code = response.code,
-                msg = response.msg,
-                server_transaction_id = response.server_transaction_id,
-                client_transaction_id = client_transaction_id
-            )
-        else:
-            return ErrorResponse(
-                code=map_epp_code(ResultCode.COMMAND_FAILED.value[0]),
-                msg=f"Requested domain name not in the reponse. Original code: {response.code}.",
-                server_transaction_id=get_epp_svTRID(root),
-                client_transaction_id=get_epp_clTRID(root) if client_transaction_id is not None else None
-            )
-    else:
-        return response
 
 def parse_epp_response_header(epp: Epp) -> dict:
     return {
         "code": map_epp_code(epp.response.result[0].code.value),
         "msg": epp.response.result[0].msg.value,
         "server_transaction_id": epp.response.tr_id.sv_trid,
-        "client_transaction_id": epp.response.tr_id.cl_trid
+        "client_transaction_id": epp.response.tr_id.cl_trid,
     }
+
+
+def _find_res_data(epp: Epp, *types):
+    """Return the first res_data element matching one of the given xsdata types."""
+    if epp.response is None or epp.response.res_data is None:
+        return None
+    for item in epp.response.res_data.other_element:
+        if isinstance(item, types):
+            return item
+    return None
+
+
+def _cl_trid(client_request_id) -> str:
+    return client_request_id if client_request_id else str(uuid.uuid4())
+
+
+def create_domain_xml(domain: Domain, client_request_id=None) -> str:
+    return epp_to_str(domain_create(domain, _cl_trid(client_request_id)))
+
+
+def info_domain_xml(domain_name: str, client_request_id=None) -> str:
+    return epp_to_str(domain_info(domain_name, _cl_trid(client_request_id)))
+
+
+def delete_domain_xml(domain_name: str, client_request_id=None) -> str:
+    return epp_to_str(domain_delete(domain_name, _cl_trid(client_request_id)))
+
+
+def domain_check_xml(domain_name: str, client_request_id=None) -> str:
+    return epp_to_str(domain_check(domain_name, _cl_trid(client_request_id)))
+
+
+def create_domain_update_xml(domain_update_model: DomainUpdate, client_request_id=None) -> str:
+    return epp_to_str(domain_update(domain_update_model, _cl_trid(client_request_id)))
+
+
+def _ns_from_epp(ns) -> Union[NS, None]:
+    """Map an EPP domain nsType to the internal NS model."""
+    if ns is None:
+        return None
+    if ns.host_obj:
+        return NS(host_objs=[HostObj(id=h) for h in ns.host_obj], host_attrs=None)
+    if ns.host_attr:
+        host_attrs = [
+            HostAttr(
+                id=ha.host_name,
+                ipv4=[a.value for a in ha.host_addr if a.ip and a.ip.value == "v4"] or None,
+                ipv6=[a.value for a in ha.host_addr if a.ip and a.ip.value == "v6"] or None,
+            )
+            for ha in ns.host_attr
+        ]
+        return NS(host_objs=None, host_attrs=host_attrs)
+    return None
+
+
+def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[DomainCreateResponse, ErrorResponse]:
+    """Parses an EPP domain create/info response into a DomainCreateResponse."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+
+    data = _find_res_data(epp, InfData, CreData)
+
+    registrant = getattr(data, "registrant", None) if data else None
+
+    contacts_dict = {}
+    for c in getattr(data, "contact", []) or []:
+        role = c.type_value.value if c.type_value else None
+        contacts_dict.setdefault(c.value, []).append(role)
+    if registrant:
+        contacts_dict.setdefault(registrant, []).append("registrant")
+    contacts = (
+        [ContactReference(types=roles, id=cid) for cid, roles in contacts_dict.items()]
+        if contacts_dict
+        else None
+    )
+
+    auth_info = getattr(data, "auth_info", None) if data else None
+    authInfo = None
+    if auth_info is not None and auth_info.pw is not None:
+        authInfo = AuthInfo(auth_info.pw.value, None)
+
+    ns = _ns_from_epp(getattr(data, "ns", None)) if data else None
+
+    def _dt(value):
+        # Emit UTC ISO form with fractional seconds and a trailing "Z"
+        # (e.g. "2026-07-10T14:43:55.000000Z"), matching the EPP wire format.
+        if value is None:
+            return None
+        dt = value.to_datetime()
+        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+    domain = Domain(
+        name=data.name if data else None,
+        crDate=_dt(getattr(data, "cr_date", None)) if data else None,
+        exDate=_dt(getattr(data, "ex_date", None)) if data else None,
+        upDate=_dt(getattr(data, "up_date", None)) if data else None,
+        trDate=_dt(getattr(data, "tr_date", None)) if data else None,
+        status=[s.s.value for s in getattr(data, "status", [])] if data else None,
+        clID=getattr(data, "cl_id", None) if data else None,
+        crID=getattr(data, "cr_id", None) if data else None,
+        ns=ns,
+        authInfo=authInfo,
+        contacts=contacts,
+        dnsSEC=None,
+    )
+    return DomainCreateResponse(domain=domain, **header)
+
+
+def parse_domain_delete_response(xml_string: str, client_transaction_id: str) -> Union[DomainDeleteResponse, ErrorResponse]:
+    """Parses an EPP domain delete response."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    return DomainDeleteResponse(**header)
+
+
+def parse_domain_update_response(xml_string: str, client_transaction_id: str | None) -> Union[DomainUpdateResponse, ErrorResponse]:
+    """Parses an EPP domain update response."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    return DomainUpdateResponse(**header)
+
+
+def parse_domain_check_response_single(xml_string: str, domain_name: str, client_transaction_id: str) -> Union[DomainCheckResponseSingle, ErrorResponse]:
+    response = parse_domain_check_response_bulk(xml_string, client_transaction_id)
+    if isinstance(response, DomainCheckResponseBulk):
+        if domain_name in response.responses:
+            return DomainCheckResponseSingle(
+                domain_name=domain_name,
+                available=response.responses[domain_name].available,
+                reason=response.responses[domain_name].reason,
+                code=response.code,
+                msg=response.msg,
+                server_transaction_id=response.server_transaction_id,
+                client_transaction_id=client_transaction_id,
+            )
+        else:
+            return ErrorResponse(
+                code=map_epp_code(ResultCode.COMMAND_FAILED.value[0]),
+                msg=f"Requested domain name not in the reponse. Original code: {response.code}.",
+                server_transaction_id=response.server_transaction_id,
+                client_transaction_id=response.client_transaction_id,
+            )
+    else:
+        return response
+
 
 def parse_domain_check_response_bulk(xml_string: str, client_transaction_id: str) -> Union[DomainCheckResponseBulk, ErrorResponse]:
     epp_response = str_to_epp(xml_string)
     res = DomainCheckResponseBulk(
-        **parse_epp_response_header(epp_response), 
-        responses = {}
+        **parse_epp_response_header(epp_response),
+        responses={},
     )
     for item in epp_response.response.res_data.other_element:
         for check_res in item.cd:
             res.responses[check_res.name.value.lower()] = DomainCheckResponseSingle(
-                domain_name=check_res.name.value.lower(), 
-                available=check_res.name.avail, 
+                domain_name=check_res.name.value.lower(),
+                available=check_res.name.avail,
                 reason=check_res.reason.value if check_res.reason else None,
-                **parse_epp_response_header(epp_response)
-            ) 
-    
+                **parse_epp_response_header(epp_response),
+            )
+
     return res
-
-def create_domain_update_xml(domain_update: DomainUpdate, client_request_id=None) -> str:
-    epp = ET.Element("epp", {"xmlns": "urn:ietf:params:xml:ns:epp-1.0"})
-    command = ET.SubElement(epp, "command")
-    update = ET.SubElement(command, "update")
-    domain_upd = ET.SubElement(update, "domain:update", {"xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0"})
-
-    domain_name_element = ET.SubElement(domain_upd, "domain:name")
-    domain_name_element.text = domain_update.name.upper()
-    
-    set_registrant = False
-    if domain_update.add is not None:
-        add = None
-        if domain_update.add.contacts is not None:
-            for contact in domain_update.add.contacts:
-                if contact.type != "registrant":
-                    if add is None:
-                        add = ET.SubElement(domain_upd, "domain:add")
-                    domain_contact = ET.SubElement(add, "domain:contact", {"type": contact.type})
-                    domain_contact.text = contact.contact.id
-                else:
-                    set_registrant = True
-    
-        if domain_update.add.ns is not None:
-            if domain_update.add.ns.host_objs is not None:
-                if add is None:
-                    add = ET.SubElement(domain_upd, "domain:add")
-                domain_ns = ET.SubElement(add, "domain:ns")
-                for host_obj in domain_update.add.ns.host_objs:
-                    domain_host_obj = ET.SubElement(domain_ns, "domain:hostObj")
-                    domain_host_obj.text = host_obj.id
-            elif domain_update.add.ns.host_attrs is not None:
-                if add is None:
-                    add = ET.SubElement(domain_upd, "domain:add")
-                domain_ns = ET.SubElement(add, "domain:ns")
-                for host_attr in domain_update.add.ns.host_attrs:
-                    domain_host_attr = ET.SubElement(domain_ns, "domain:hostAttr")
-                    domain_host_name = ET.SubElement(domain_host_attr, "domain:hostName")
-                    domain_host_name.text = host_attr.id
-                    if host_attr.ipv4 is not None:
-                        for ip in host_attr.ipv4:
-                            domain_host_addr_v4 = ET.SubElement(domain_host_attr, "domain:hostAddr", {"ip": "v4"})
-                            domain_host_addr_v4.text = ip
-                    if host_attr.ipv6 is not None:
-                        for ip in host_attr.ipv6:
-                            domain_host_addr_v6 = ET.SubElement(domain_host_attr, "domain:hostAddr", {"ip": "v6"})
-                            domain_host_addr_v6.text = ip
-
-    if domain_update.remove is not None:
-        remove = None                    
-        if domain_update.remove.ns is not None\
-            and (domain_update.remove.ns.host_objs is not None or domain_update.remove.ns.host_attrs is not None):
-            remove = ET.SubElement(domain_upd, "domain:rem")
-            domain_ns = ET.SubElement(remove, "domain:ns")
-            if domain_update.remove.ns.host_objs is not None:
-                for host_obj in domain_update.remove.ns.host_objs:
-                    domain_host_obj = ET.SubElement(domain_ns, "domain:hostObj")
-                    domain_host_obj.text = host_obj.id
-            elif domain_update.remove.ns.host_attrs is not None:
-                for host_attr in domain_update.remove.ns.host_attrs:
-                    domain_host_attr = ET.SubElement(domain_ns, "domain:hostAttr")
-                    domain_host_name = ET.SubElement(domain_host_attr, "domain:hostName")
-                    domain_host_name.text = host_attr.id
-        if domain_update.remove.contacts is not None:
-            for contact in domain_update.remove.contacts:
-                if contact.type != "registrant":
-                    if remove is None:
-                        remove = ET.SubElement(domain_upd, "domain:rem")
-                    domain_contact = ET.SubElement(remove, "domain:contact", {"type": contact.type})
-                    domain_contact.text = contact.contact.id
-                else:
-                    set_registrant = True
-
-    if domain_update.change is not None or set_registrant: 
-        change = ET.SubElement(domain_upd, "domain:chg")
-        if set_registrant:
-            domain_registrant = ET.SubElement(change, "domain:registrant")
-            if domain_update.remove is not None and domain_update.remove.contacts is not None:
-                for contact in domain_update.remove.contacts:
-                    if contact.type == "registrant":
-                        domain_registrant.text = None
-                        break
-            if domain_update.add is not None and domain_update.add.contacts is not None:
-                for contact in domain_update.add.contacts:
-                    if contact.type == "registrant":
-                        domain_registrant.text = contact.contact.id
-                        break
-        if domain_update.change is not None:
-            if domain_update.change.authInfo is not None and domain_update.change.authInfo.pw is not None:
-                domain_auth_info = ET.SubElement(change, "domain:authInfo")
-                domain_pw = ET.SubElement(domain_auth_info, "domain:pw")
-                domain_pw.text = domain_update.change.authInfo.pw
-
-
-    if not client_request_id:
-        client_request_id = str(uuid.uuid4())
-    cl_trid = ET.SubElement(command, "clTRID")
-    cl_trid.text = client_request_id
-    
-    xml_string = ET.tostring(epp, encoding="unicode", method="xml")
-    xml_string = '<?xml version="1.0" standalone="no"?>\n' + xml_string
-
-    return xml_string
