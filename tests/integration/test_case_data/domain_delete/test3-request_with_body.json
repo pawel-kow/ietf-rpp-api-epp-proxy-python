@@ -4,48 +4,57 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domains",
+        "url": "/domainNames",
         "body_json": {
+          "@type": "domainName",
           "name": "test3-{random_name}.example",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "TEST3-{random_name}.EXAMPLE",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ]
-        },
-        "fields": {},
-        "headers": {}
+        }
       }
     },
     {
       "request": {
         "method": "DELETE",
-        "url": "/domains/test3-{random_name}.example",
+        "url": "/domainNames/test3-{random_name}.example",
         "body_raw": "test",
         "headers": {
-          "RPP-clTRID": "test3-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "RPP-Cltrid": "test3-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json"
         }
       },
       "response": {
         "status": 400,
         "content_type": "application/problem+json",
-        "body": {},
-        "fields": {},
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
         "headers": {
-          "RPP-clTRID": "test3-{random_name}-clTRID"
+          "RPP-Cltrid": "test3-{random_name}-clTRID"
         }
       }
     }

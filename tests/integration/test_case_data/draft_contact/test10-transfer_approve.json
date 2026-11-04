@@ -1,0 +1,28 @@
+{
+  "test_id": "test10-transfer_approve",
+  "skip": "#34",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts/JD-1234/processes/transferProcesses/latest/transferApprove",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "transferProcess"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "transferProcess"
+        }
+      }
+    }
+  ]
+}

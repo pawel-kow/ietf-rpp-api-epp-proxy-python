@@ -1,0 +1,29 @@
+{
+  "test_id": "test16-restore_request",
+  "skip": "#35",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ex10-{random_name}.example/processes/restoreProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "restoreProcess"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "restoreProcess",
+          "restoreStatus": "pendingRestore"
+        }
+      }
+    }
+  ]
+}

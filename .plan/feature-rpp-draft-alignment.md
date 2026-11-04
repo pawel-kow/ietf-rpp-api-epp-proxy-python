@@ -4,13 +4,13 @@ Align the proxy to the drafts in `.spec/`, keeping only already-implemented func
 Frozen: `src/models/`, `src/eppclient/`, `src/epp_to_model_mapper/`.
 
 ## Tasks
-- [~] Copy OpenAPI and normalized schema, repoint validator and copy_models.sh
-- [ ] Open GitHub issues for everything not kept
-- [ ] Update `rpp_models/` (one class per file) and rewrite the mappers
-- [ ] Controllers: new operationIds, headers, Problem Details, Table 9 status mapping
-- [ ] Migrate integration data, add draft examples, extend harness
-- [ ] Update unit tests and agent docs
-- [ ] Full pytest run, draft PR
+- [x] Copy OpenAPI and normalized schema, repoint validator and copy_models.sh
+- [x] Open GitHub issues for everything not kept
+- [x] Update `rpp_models/` (one class per file) and rewrite the mappers
+- [x] Controllers: new operationIds, headers, Problem Details, Table 9 status mapping
+- [x] Migrate integration data, add draft examples, extend harness
+- [x] Update unit tests and agent docs
+- [~] Full pytest run, draft PR
 
 ## Decisions (maintainer, 2026-11-04)
 - `.spec/` and the `.gitignore` change are committed on this branch.

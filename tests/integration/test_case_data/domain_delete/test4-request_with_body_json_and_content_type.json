@@ -4,26 +4,31 @@
     {
       "request": {
         "method": "DELETE",
-        "url": "/domains/test4-{random_name}.example",
+        "url": "/domainNames/test4-{random_name}.example",
         "body_json": {
+          "@type": "domainName",
           "name": "NOT-FREE.EXAMPLE",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "RPP-clTRID": "test4-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "test4-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json"
         }
       },
       "response": {
         "status": 400,
         "content_type": "application/problem+json",
-        "body": {},
-        "fields": {},
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
         "headers": {
-          "RPP-clTRID": "test4-{random_name}-clTRID"
+          "RPP-Cltrid": "test4-{random_name}-clTRID"
         }
       }
     }

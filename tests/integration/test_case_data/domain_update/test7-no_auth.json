@@ -4,25 +4,32 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test7-{random_name}.example",
+        "url": "/domainNames/up-test7-{random_name}.example",
         "headers": {
-          "RPP-clTRID": "up-test7-{random_name}-clTRID"
+          "RPP-Cltrid": "up-test7-{random_name}-clTRID",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "update": {
-            "authInfo": {
-              "pw": "NewPassword1!@"
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/authInfo",
+            "value": {
+              "@type": "authInfo",
+              "method": "authinfo",
+              "authdata": "NewPassword1!@"
             }
           }
-        }
+        ]
       },
       "response": {
         "status": 401,
         "content_type": "application/problem+json",
-        "body": {},
-        "fields": {},
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
         "headers": {
-          "RPP-clTRID": "up-test7-{random_name}-clTRID"
+          "RPP-Cltrid": "up-test7-{random_name}-clTRID"
         }
       }
     }

@@ -1,0 +1,37 @@
+{
+  "test_id": "test11-transfer_request",
+  "skip": "#33",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ex10-{random_name}.example/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=MmZvb0JBUg=="
+        },
+        "body_json": {
+          "@type": "domainTransferProcess",
+          "transferDir": "pull",
+          "transferPeriod": {
+            "@type": "period",
+            "value": 1,
+            "unit": "y"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainTransferProcess",
+          "trStatus": "pending",
+          "transferDir": "pull"
+        }
+      }
+    }
+  ]
+}

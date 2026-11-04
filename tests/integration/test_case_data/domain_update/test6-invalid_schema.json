@@ -4,31 +4,31 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test6-{random_name}.example",
+        "url": "/domainNames/up-test6-{random_name}.example",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
-          "RPP-clTRID": "up-test6-{random_name}-clTRID"
+          "RPP-Cltrid": "up-test6-{random_name}-clTRID",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "add": {
-            "contacts": [
-              {
-                "type": "not-a-valid-type",
-                "object": {
-                  "id": "FO-TEST1"
-                }
-              }
-            ]
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/contacts",
+            "value": {
+              "label": "tech"
+            }
           }
-        }
+        ]
       },
       "response": {
         "status": 400,
         "content_type": "application/problem+json",
-        "body": {},
-        "fields": {},
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
         "headers": {
-          "RPP-clTRID": "up-test6-{random_name}-clTRID"
+          "RPP-Cltrid": "up-test6-{random_name}-clTRID"
         }
       }
     }

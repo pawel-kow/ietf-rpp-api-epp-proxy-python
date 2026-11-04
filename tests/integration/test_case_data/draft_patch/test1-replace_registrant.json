@@ -1,0 +1,390 @@
+{
+  "test_id": "test1-replace_registrant",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}N01",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Example Dr., Suite 100"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Dulles"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "VA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20166-6503"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1-703-555-5555"
+              },
+              "fax": {
+                "features": {
+                  "fax": true
+                },
+                "number": "tel:+1-703-555-5556"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe@example.example"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2fooBAR"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {}
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}J1",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Example Dr., Suite 100"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Dulles"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "VA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20166-6503"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1-703-555-5555"
+              },
+              "fax": {
+                "features": {
+                  "fax": true
+                },
+                "number": "tel:+1-703-555-5556"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe@example.example"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2fooBAR"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {}
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}S1",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Example Dr., Suite 100"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Dulles"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "VA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20166-6503"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1-703-555-5555"
+              },
+              "fax": {
+                "features": {
+                  "fax": true
+                },
+                "number": "tel:+1-703-555-5556"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe@example.example"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2fooBAR"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {}
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "ex1-{random_name}.example",
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "ns1.bar.example"
+            },
+            {
+              "@type": "host",
+              "hostName": "ns2.bar.example"
+            }
+          ],
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-{random_id_10}J1"
+          },
+          "contacts": [
+            {
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-{random_id_10}S1"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-{random_id_10}S1"
+              }
+            }
+          ],
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2fooBAR"
+          },
+          "processes": {
+            "@type": "processes",
+            "createProcess": [
+              {
+                "@type": "domainCreateProcess",
+                "period": {
+                  "@type": "period",
+                  "value": 2,
+                  "unit": "y"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "name": "ex1-{random_name}.example",
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
+          ],
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-{random_id_10}J1"
+          },
+          "contacts": [
+            {
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-{random_id_10}S1"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-{random_id_10}S1"
+              }
+            }
+          ],
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS1.BAR.EXAMPLE"
+            },
+            {
+              "@type": "host",
+              "hostName": "NS2.BAR.EXAMPLE"
+            }
+          ],
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2fooBAR"
+          }
+        },
+        "fields": {
+          "provMetadata.spClientId": {
+            "type": "not_null"
+          },
+          "provMetadata.crClientId": {
+            "type": "not_null"
+          },
+          "provMetadata.crDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": -1,
+            "max_delta": 60
+          },
+          "expiryDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": 62899200,
+            "max_delta": 63244800
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/ex1-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/registrant",
+            "value": {
+              "@type": "contact",
+              "id": "FO-{random_id_10}N01"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-{random_id_10}N01"
+          }
+        }
+      }
+    }
+  ]
+}

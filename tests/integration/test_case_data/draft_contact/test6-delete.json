@@ -1,0 +1,92 @@
+{
+  "test_id": "test6-delete",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}J06",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Example Dr., Suite 100"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Dulles"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "VA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20166-6503"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1-703-555-5555"
+              },
+              "fax": {
+                "features": {
+                  "fax": true
+                },
+                "number": "tel:+1-703-555-5556"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe@example.example"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2fooBAR"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {}
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/contacts/FO-{random_id_10}J06",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    }
+  ]
+}

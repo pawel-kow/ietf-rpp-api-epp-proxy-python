@@ -7,7 +7,7 @@
             // This is a simple JavaScript snippet for testing purposes
             function testFunctionXHR() {
                 var xhr = new XMLHttpRequest();
-                xhr.open('GET', 'http://localhost:8000/domains/foo.com', true);
+                xhr.open('GET', 'http://localhost:8000/domainNames/foo.com', true);
                 xhr.setRequestHeader('X-Custom-Header', 'CustomValue');
                 xhr.setRequestHeader('Expect', '100-Continue');
                 xhr.setRequestHeader('Exxpect', '100-Continue');
@@ -25,7 +25,7 @@
 
             // Second implementation using fetch API
             function testFunctionFetch() {
-                fetch('http://localhost:8000/domains', {
+                fetch('http://localhost:8000/domainNames', {
                     method: 'POST',
                     headers: {
                         'X-Custom-Header': 'CustomValue',

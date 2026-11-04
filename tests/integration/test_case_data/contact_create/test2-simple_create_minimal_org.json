@@ -6,65 +6,119 @@
         "method": "POST",
         "url": "/contacts",
         "body_json": {
+          "@type": "contact",
           "id": "FO-{random_id_10}-02",
-          "name": "John Doe",
-          "organisationName": "ACME Inc.",
-          "contactType": "ORG",
-          "email": ["foo@example.com"],
-          "address": {
-            "city": "Anytown",
-            "country": "US"
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "org",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "ACME Inc."
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
           },
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "contact",
           "id": "FO-{random_id_10}-02",
-          "name": "John Doe",
-          "organisationName": "ACME Inc.",
-          "contactType": "ORG",
-          "email": ["foo@example.com"],
-          "address": {
-            "city": "Anytown",
-            "country": "US"
+          "status": [
+            {
+              "@type": "contactStatus",
+              "label": "ok"
+            }
+          ],
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "org",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "ACME Inc."
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
           },
           "authInfo": {
-            "pw": "Password1!@"
-          },
-          "status": [
-            "ok"
-          ]
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
         },
         "fields": {
-          "clID": {
+          "provMetadata.spClientId": {
             "type": "not_null"
           },
-          "crDate": {
+          "provMetadata.crDate": {
             "type": "datetime_format_utc_and_delta",
             "reference": "{test_start}",
             "min_delta": -1,
             "max_delta": 60
           },
-          "crID": {
+          "provMetadata.crClientId": {
             "type": "not_null"
           }
         },
         "headers": {
-          "RPP-clTRID": null,
-          "RPP-svTRID": {
+          "RPP-Cltrid": {
             "type": "not_empty_string"
           },
-          "RPP-code": "1000",
-          "RPP-code-text": "Command completed successfully"
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Code": "01000"
         }
       }
     }

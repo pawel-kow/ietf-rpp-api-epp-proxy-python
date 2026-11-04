@@ -4,88 +4,123 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domains",
+        "url": "/domainNames",
         "body_json": {
+          "@type": "domainName",
           "name": "test4-{random_name}.example",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST3"
           },
           "contacts": [
             {
-              "value": "FO-TEST2",
-              "type": [
-                "admin"
-              ]
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
             },
             {
-              "value": "FO-TEST3",
-              "type": [
-                "registrant",
-                "tech"
-              ]
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST3"
+              }
             },
             {
-              "value": "FO-TEST4",
-              "type": [
-                "billing",
-                "tech"
-              ]
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST4"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST4"
+              }
             }
           ]
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
-          "authInfo": {
-            "pw": "Password1!@"
-          },
+          "@type": "domainName",
           "name": "TEST4-{random_name}.EXAMPLE",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ],
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST3"
+          },
           "contacts": [
             {
-              "value": "FO-TEST3",
-              "type": [
-                "tech",
-                "registrant"
-              ]
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST3"
+              }
             },
             {
-              "value": "FO-TEST2",
-              "type": [
-                "admin"
-              ]
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
             },
             {
-              "value": "FO-TEST4",
-              "type": [
-                "billing",
-                "tech"
-              ]
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST4"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST4"
+              }
             }
           ]
         },
         "fields": {
-          "clID": {
+          "provMetadata.spClientId": {
             "type": "not_null"
           },
-          "crDate": {
+          "provMetadata.crDate": {
             "type": "datetime_format_utc_and_delta",
             "reference": "{test_start}",
             "min_delta": -1,
             "max_delta": 60
           },
-          "crID": {
+          "provMetadata.crClientId": {
             "type": "not_null"
           },
-          "exDate": {
+          "expiryDate": {
             "type": "datetime_format_utc_and_delta",
             "reference": "{test_start}",
             "min_delta": 31449600,
@@ -93,8 +128,10 @@
           }
         },
         "headers": {
-          "RPP-clTRID": null,
-          "RPP-svTRID": {
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Svtrid": {
             "type": "not_empty_string"
           }
         }

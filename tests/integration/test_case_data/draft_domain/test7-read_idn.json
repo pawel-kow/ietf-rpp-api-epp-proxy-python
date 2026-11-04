@@ -1,0 +1,27 @@
+{
+  "test_id": "test7-read_idn",
+  "skip": "#26",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/xn--bcher-kva.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "name": "xn--bcher-kva.example",
+          "uName": "bücher.example",
+          "lgr": "latn-1.0"
+        }
+      }
+    }
+  ]
+}

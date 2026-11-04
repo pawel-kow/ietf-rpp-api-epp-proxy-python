@@ -6,75 +6,181 @@
         "method": "POST",
         "url": "/contacts",
         "body_json": {
+          "@type": "contact",
           "id": "FO-{random_id_10}-03",
-          "name": "John Doe",
-          "organisationName": "ACME Inc.",
-          "contactType": "ORG",
-          "address": {
-            "street": ["123 Main St", "Line 2", "Line 3"],
-            "city": "Anytown",
-            "postalCode": "12345",
-            "stateProvince": "PA",
-            "country": "US"
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "org",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "ACME Inc."
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Line 2"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Line 3"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49-123123123;ext=123"
+              },
+              "fax": {
+                "number": "tel:+49-123123123;ext=123",
+                "features": {
+                  "fax": true
+                }
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
           },
-          "email": ["foo@example.com"],
-          "phone": ["+49.123123123x123"],
-          "fax": ["+49.123123123x123"],
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "contact",
           "id": "FO-{random_id_10}-03",
-          "name": "John Doe",
-          "organisationName": "ACME Inc.",
-          "contactType": "ORG",
-          "address": {
-            "street": ["123 Main St", "Line 2", "Line 3"],
-            "city": "Anytown",
-            "postalCode": "12345",
-            "stateProvince": "PA",
-            "country": "US"
-          },
-          "email": ["foo@example.com"],
-          "phone": ["+49.123123123x123"],
-          "fax": ["+49.123123123x123"],
-          "authInfo": {
-            "pw": "Password1!@"
-          },
           "status": [
-            "ok"
-          ]
+            {
+              "@type": "contactStatus",
+              "label": "ok"
+            }
+          ],
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "org",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "ACME Inc."
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Line 2"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Line 3"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49-123123123;ext=123"
+              },
+              "fax": {
+                "number": "tel:+49-123123123;ext=123",
+                "features": {
+                  "fax": true
+                }
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
         },
         "fields": {
-          "clID": {
+          "provMetadata.spClientId": {
             "type": "not_null"
           },
-          "crDate": {
+          "provMetadata.crDate": {
             "type": "datetime_format_utc_and_delta",
             "reference": "{test_start}",
             "min_delta": -1,
             "max_delta": 60
           },
-          "crID": {
+          "provMetadata.crClientId": {
             "type": "not_null"
           }
         },
         "headers": {
-          "RPP-clTRID": null,
-          "RPP-svTRID": {
+          "RPP-Cltrid": {
             "type": "not_empty_string"
           },
-          "RPP-code": "1000",
-          "RPP-code-text": "Command completed successfully"
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Code": "01000"
         }
       }
     }

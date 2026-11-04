@@ -6,7 +6,9 @@
         "method": "GET",
         "url": "/contacts/FO-{random_id_10}G02",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
@@ -14,11 +16,16 @@
           404
         ],
         "body": {
+          "type": "urn:ietf:params:rpp:error",
           "status": 404,
-          "code": "2303"
+          "errors": [
+            {
+              "result": "02303"
+            }
+          ]
         },
         "headers": {
-          "RPP-code": "2303"
+          "RPP-Code": "02303"
         }
       }
     }

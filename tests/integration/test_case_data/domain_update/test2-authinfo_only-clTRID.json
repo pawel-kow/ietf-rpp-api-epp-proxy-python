@@ -4,25 +4,34 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domains",
+        "url": "/domainNames",
         "body_json": {
+          "@type": "domainName",
           "name": "up-test2-{random_name}.example",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test2-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ]
         }
       }
@@ -30,35 +39,46 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test2-{random_name}.example",
+        "url": "/domainNames/up-test2-{random_name}.example",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
-          "RPP-clTRID": "up-test2-{random_name}-clTRID"
+          "RPP-Cltrid": "up-test2-{random_name}-clTRID",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "update": {
-            "authInfo": {
-              "pw": "NewPassword1!@"
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/authInfo",
+            "value": {
+              "@type": "authInfo",
+              "method": "authinfo",
+              "authdata": "NewPassword1!@"
             }
           }
-        }
+        ]
       },
       "response": {
         "status": 200,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test2-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ],
           "authInfo": {
-            "pw": "NewPassword1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "NewPassword1!@"
           }
         },
-        "fields": {},
         "headers": {
-          "RPP-clTRID": "up-test2-{random_name}-clTRID",
-          "RPP-svTRID": {
+          "RPP-Cltrid": "up-test2-{random_name}-clTRID",
+          "RPP-Svtrid": {
             "type": "not_empty_string"
           }
         }

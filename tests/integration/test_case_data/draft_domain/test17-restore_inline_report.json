@@ -1,0 +1,41 @@
+{
+  "test_id": "test17-restore_inline_report",
+  "skip": "#35",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ex10-{random_name}.example/processes/restoreProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "restoreProcess",
+          "restoreReport": {
+            "@type": "restoreReport",
+            "preData": "Domain ex.example was registered on 2024-01-15 with registrant JD-1234.",
+            "postData": "Domain ex.example is being restored with the same registration data.",
+            "deleteTime": "2025-01-10T12:00:00.0Z",
+            "restoreTime": "2025-01-20T15:30:00.0Z",
+            "restoreReason": "Domain deleted in error by client operator.",
+            "statements": [
+              "The information in this report is true to the best of my knowledge.",
+              "I have a valid reason for restoring this domain name."
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "restoreProcess",
+          "restoreStatus": "restored"
+        }
+      }
+    }
+  ]
+}

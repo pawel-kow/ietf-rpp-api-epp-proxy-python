@@ -1,0 +1,26 @@
+{
+  "test_id": "test8-transfer_query",
+  "skip": "#34",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/JD-1234/processes/transferProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "transferProcess",
+          "trStatus": "pending",
+          "transferDir": "pull"
+        }
+      }
+    }
+  ]
+}
