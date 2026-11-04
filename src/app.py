@@ -1,4 +1,5 @@
 from connexion import FlaskApp
+from connexion.datastructures import MediaTypeDict
 from connexion.exceptions import ProblemException
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware import MiddlewarePosition
@@ -6,54 +7,35 @@ from connexion.problem import problem
 from connexion.resolver import RelativeResolver
 from starlette.middleware.cors import CORSMiddleware
 from controller import *
+from controller.helper.rpp_response import RPP_ERROR_TYPE, problem_headers
+from controller.rpp_response_body_validator import RppResponseBodyValidator
 from controller.epp_basic_security_handler import EppBasicSecurityHandler
 from models import ResultCode
 
 
-def handle_rpp_error(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
-    if isinstance(exc, ProblemException):
-        exc.headers = exc.headers or {}
-        exc.headers\
-            .update({
-                "RPP-clTRID": request.headers.get("RPP-clTRID")
-            } if "RPP-clTRID" in request.headers else {})
-        if "RPP-code" not in exc.headers and exc.status >= 500:
-            exc.headers\
-                .update({
-                    "RPP-code": ResultCode.COMMAND_FAILED.value[0],
-                    "RPP-code-text": ResultCode.COMMAND_FAILED.value[1]
-                })
-        elif "RPP-code" not in exc.headers and exc.status == 401:
-            exc.headers\
-                .update({
-                    "RPP-code": ResultCode.AUTHORIZATION_ERROR.value[0],
-                    "RPP-code-text": ResultCode.AUTHORIZATION_ERROR.value[1]})
+def _default_result(status: int) -> ResultCode:
+    if status >= 500:
+        return ResultCode.UNIMPLEMENTED_COMMAND if status == 501 else ResultCode.COMMAND_FAILED
+    return ResultCode.AUTHENTICATION_ERROR if status == 401 else ResultCode.COMMAND_SYNTAX_ERROR
 
-        elif "RPP-code" not in exc.headers and exc.status >= 400 and exc.status < 500:
-            exc.headers\
-                .update({
-                    "RPP-code": ResultCode.COMMAND_SYNTAX_ERROR.value[0],
-                    "RPP-code-text": ResultCode.COMMAND_SYNTAX_ERROR.value[1]
-                })
-        return problem(
-            title=exc.title,
-            detail=exc.detail,
-            status=exc.status,
-            type=exc.type,
-            instance=exc.instance,
-            headers=exc.headers,
-            ext=exc.ext
-        )
+
+def handle_rpp_error(request: ConnexionRequest, exc: ProblemException) -> ConnexionResponse:
+    """Renders every error as a core §9 Problem Detail with the RPP response headers."""
+    headers = {**problem_headers(_default_result(exc.status)), **(exc.headers or {})}
+    if "RPP-Cltrid" in request.headers:
+        headers["RPP-Cltrid"] = request.headers["RPP-Cltrid"]
     return problem(
-        title="Internal Server Error",
-        detail=f"An unexpected error occurred: {str(exc)}",
-        status=500,
-        headers={
-            "RPP-code": ResultCode.COMMAND_FAILED[0],
-            "RPP-code-text": ResultCode.COMMAND_FAILED[1]
-        }.update({
-            "RPP-clTRID": request.headers.get("RPP-clTRID")
-        } if "RPP-clTRID" in request.headers else {})
+        title=exc.title,
+        detail=exc.detail,
+        status=exc.status,
+        type=RPP_ERROR_TYPE,
+        instance=exc.instance,
+        headers=headers,
+        ext={"errors": [{
+            "type": RPP_ERROR_TYPE,
+            "result": headers["RPP-Code"],
+            "reason": exc.detail or exc.title,
+        }]},
     )
 
 
@@ -78,6 +60,7 @@ def create_app(authenticator):
         allow_headers=["*"],
     )
     app.add_api("openapi.yaml", resolver=RelativeResolver('controller'), resolver_error=501,
-                options={"swagger_ui": True, "serve_spec": True, "validate_responses": True})
+                validate_responses=True, options={"swagger_ui": True, "serve_spec": True},
+                validator_map={"response": MediaTypeDict({"*/*json": RppResponseBodyValidator})})
     app.add_error_handler(ProblemException, handle_rpp_error)
     return app

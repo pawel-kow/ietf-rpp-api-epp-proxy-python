@@ -1,0 +1,25 @@
+{
+  "test_id": "test1-availability",
+  "skip": "#30",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/JD-1234/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contactAvailability",
+          "available": false
+        }
+      }
+    }
+  ]
+}

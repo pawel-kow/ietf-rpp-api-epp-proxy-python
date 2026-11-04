@@ -1,20 +1,17 @@
 from connexion import request, ProblemException
-from connexion.context import operation
 from eppclient.epp_domains import *
 from models import *
 from rpp_to_model_mapper import *
 from .helper.rpp_response import *
-import json
 import asyncio
-import uuid
 from .auth import get_epp_client
 
-def _domain_after_mutation(domain_name, mutation_resp, success_status):
+def _domain_after_mutation(domain_name, mutation_resp, success_status, extra_headers=None):
     """Reads the domain back after a mutation the registry has already applied.
 
     A failed readback must not look like a failed mutation, so it answers 202 with no body.
     """
-    headers = generate_rpp_response_headers(mutation_resp)
+    headers = {**generate_rpp_response_headers(mutation_resp), **(extra_headers or {})}
     try:
         inforesp = epp_domains_Info(get_epp_client(), domain_name)
         if isinstance(inforesp, ErrorResponse):
@@ -23,107 +20,53 @@ def _domain_after_mutation(domain_name, mutation_resp, success_status):
     except Exception:
         return None, 202, headers
 
-def domains_CheckFast(id):
-    return domains_Check(id)
+def _availability(name):
+    ret = epp_domains_Check(get_epp_client(), name, client_transaction_id=client_transaction_id())
+    if isinstance(ret, ErrorResponse):
+        raise_epp_error(ret)
+    return ret
 
-def domains_Check(id):
-    ret = epp_domains_Check(get_epp_client(), id, client_transaction_id=request.headers.get('RPP-clTRID', str(uuid.uuid4())))
-    return {
-        "available": ret.available,
-        "reason": ret.reason
-    }, 404 if ret.available else 200, generate_rpp_response_headers(ret)
+@rpp_operation
+def domainNames_availabilityHead(name):
+    ret = _availability(name)
+    headers = generate_rpp_response_headers(ret)
+    del headers["Content-Type"]  # the OpenAPI defines no content for HEAD
+    return None, 200 if ret.available else 404, headers
 
-def domains_Create(body):
-    try:
-        domain = rpp_to_domain(body)
-    except Exception as e:
-        raise ProblemException(status=400, title="Bad Request", detail=str(e))
+@rpp_operation
+def domainNames_availability(name):
+    ret = _availability(name)
+    return domain_availability_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)
 
-    try:
-        # Call the eppclient function to get the domain information
-        domainresp = epp_domains_Create(get_epp_client(), domain, client_transaction_id=request.headers.get('RPP-clTRID'))
-        if isinstance(domainresp, DomainCreateResponse):
-            return _domain_after_mutation(domainresp.domain.name, domainresp, 201)
-        elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == ResultCode.OBJECT_EXISTS:
-                raise ProblemException(status=409, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-            else:
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-        else:
-            raise ValueError("Unexpected response type from .epp_model.client")
-    except ProblemException:
-        raise
-    except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
+@rpp_operation
+def domainNames_create(body):
+    domain = map_request(rpp_to_domain, body)
+    domainresp = epp_domains_Create(get_epp_client(), domain, client_transaction_id=client_transaction_id())
+    if isinstance(domainresp, ErrorResponse):
+        raise_epp_error(domainresp)
+    location = f"{str(request.url).rstrip('/')}/{domain.name}"
+    return _domain_after_mutation(domainresp.domain.name, domainresp, 201, {"Location": location})
 
-def domains_Delete(id):
-    try:
-        x = asyncio.run(request.get_body())
-        if x is not None and len(x) > 0:
-            raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
-        # Call the eppclient function to delete  the domain
-        domainresp = epp_domains_Delete(get_epp_client(), id)
-        # Convert the response to JSON
-        if isinstance(domainresp, DomainDeleteResponse):
-            if domainresp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
-                return None, 204, generate_rpp_response_headers(domainresp)
-            elif domainresp.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
-                return None, 202, generate_rpp_response_headers(domainresp)
-            else:
-                # this code should not be ever reached
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-        elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
-                raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-            else:
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-        else:
-            raise ValueError("Unexpected response type from .epp_model.client")
-    except ProblemException:
-        raise
-    except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
-    return response, 200
+@rpp_operation
+def domainNames_delete(name):
+    if asyncio.run(request.get_body()):
+        raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
+    domainresp = epp_domains_Delete(get_epp_client(), name, client_transaction_id=client_transaction_id())
+    if isinstance(domainresp, ErrorResponse):
+        raise_epp_error(domainresp)
+    return None, 200, generate_rpp_response_headers(domainresp)
 
-def domains_Get(id):
-    try:
-        # Call the eppclient function to create the domain
-        domainresp = epp_domains_Info(get_epp_client(), id)
-        if isinstance(domainresp, DomainCreateResponse):
-            response = domain_to_rpp(domainresp.domain)
-            return response, 200, generate_rpp_response_headers(domainresp)
-        elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
-                raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
-            else:
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]})
-        else:
-            raise ValueError("Unexpected response type from .epp_model.client")
-    except ProblemException:
-        raise
-    except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e))
-    return response, 200
+@rpp_operation
+def domainNames_read(name):
+    domainresp = epp_domains_Info(get_epp_client(), name, client_transaction_id=client_transaction_id())
+    if isinstance(domainresp, ErrorResponse):
+        raise_epp_error(domainresp)
+    return domain_to_rpp(domainresp.domain), 200, generate_rpp_response_headers(domainresp)
 
-def domains_Update(id, body):
-    try:
-        domain_update = rpp_to_domain_update(id, body)
-    except Exception as e:
-        raise ProblemException(status=400, title="Bad Request", detail=str(e))
-    
-    try:
-        # Call the eppclient function to get the domain information
-        domainresp = epp_domains_Update(get_epp_client(), domain_update, client_transaction_id=request.headers.get('RPP-clTRID'))
-        if isinstance(domainresp, DomainUpdateResponse):
-            return _domain_after_mutation(id, domainresp, 200)
-        elif isinstance(domainresp, ErrorResponse):
-            if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
-                raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-            else:
-                raise ProblemException(status=400, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
-        else:
-            raise ValueError("Unexpected response type from .epp_model.client")
-    except ProblemException:
-        raise
-    except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
+@rpp_operation
+def domainNames_updatePartial(name, body):
+    domain_update = map_request(rpp_to_domain_update, name, body)
+    domainresp = epp_domains_Update(get_epp_client(), domain_update, client_transaction_id=client_transaction_id())
+    if isinstance(domainresp, ErrorResponse):
+        raise_epp_error(domainresp)
+    return _domain_after_mutation(name, domainresp, 200)

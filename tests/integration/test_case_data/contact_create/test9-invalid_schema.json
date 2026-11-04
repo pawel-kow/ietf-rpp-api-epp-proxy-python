@@ -12,18 +12,20 @@
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "RPP-clTRID": "test9-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "test9-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json"
         }
       },
       "response": {
         "status": 400,
         "content_type": "application/problem+json",
-        "body": {},
-        "fields": {},
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
         "headers": {
-          "RPP-clTRID": "test9-{random_name}-clTRID"
+          "RPP-Cltrid": "test9-{random_name}-clTRID"
         }
       }
     }

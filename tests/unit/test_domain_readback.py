@@ -36,9 +36,19 @@ INFO = (True, "1000", epp_reply(
 ))
 INFO_FAILED = (False, "2400", epp_reply(2400, "Command failed"))
 
-AUTH = {"Authorization": "Basic " + base64.b64encode(b"user:pw").decode()}
-UPDATE_BODY = {"update": {"authInfo": {"pw": "NewPassword1!@"}}}
-CREATE_BODY = {"name": "foo.example", "authInfo": {"pw": "Password1!@"}}
+AUTH = {
+    "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
+    "Accept": "application/rpp+json",
+    "Content-Type": "application/rpp+json",
+    "RPP-Cltrid": "cl-1",
+}
+NEW_AUTH_INFO = {"@type": "authInfo", "method": "authinfo", "authdata": "NewPassword1!@"}
+UPDATE_BODY = [{"op": "replace", "path": "/authInfo", "value": NEW_AUTH_INFO}]
+CREATE_BODY = {
+    "@type": "domainName",
+    "name": "foo.example",
+    "authInfo": {"@type": "authInfo", "method": "authinfo", "authdata": "Password1!@"},
+}
 
 
 def client_with(replies):
@@ -49,18 +59,18 @@ def client_with(replies):
 
 
 def patch(http):
-    return http.patch("/domains/foo.example", json=UPDATE_BODY, headers=AUTH)
+    return http.patch("/domainNames/foo.example", json=UPDATE_BODY, headers=AUTH)
 
 
 def post(http):
-    return http.post("/domains", json=CREATE_BODY, headers=AUTH)
+    return http.post("/domainNames", json=CREATE_BODY, headers=AUTH)
 
 
 def test_update_with_readback_is_a_200_with_the_domain():
     response = patch(client_with([UPDATED, INFO]))
 
     assert response.status_code == 200
-    assert response.headers["RPP-code"] == "1000"
+    assert response.headers["RPP-Code"] == "01000"
     assert response.json()["name"] == "FOO.EXAMPLE"
 
 
@@ -68,7 +78,7 @@ def test_create_with_readback_is_a_201_with_the_domain():
     response = post(client_with([CREATED, INFO]))
 
     assert response.status_code == 201
-    assert response.headers["RPP-code"] == "1000"
+    assert response.headers["RPP-Code"] == "01000"
     assert response.json()["name"] == "FOO.EXAMPLE"
 
 
@@ -78,8 +88,8 @@ def test_failed_readback_after_a_mutation_is_a_202(send, applied, readback):
     response = send(client_with([applied, readback]))
 
     assert response.status_code == 202
-    assert response.headers["RPP-code"] == "1000"
-    assert response.headers["RPP-svTRID"] == "sv-1"
+    assert response.headers["RPP-Code"] == "01000"
+    assert response.headers["RPP-Svtrid"] == "sv-1"
     assert response.text == ""
 
 
@@ -94,16 +104,14 @@ CREATED_DATA = (
 
 
 @pytest.mark.parametrize("method, url, body, res_data", [
-    ("patch", "/domains/foo.example", UPDATE_BODY, ""),
-    ("post", "/domains", CREATE_BODY, CREATED_DATA),
+    ("patch", "/domainNames/foo.example", UPDATE_BODY, ""),
+    ("post", "/domainNames", CREATE_BODY, CREATED_DATA),
 ])
 @pytest.mark.parametrize("readback", [INFO_FAILED, ConnectionError("backend gone")])
 def test_202_carries_the_same_rpp_headers_as_a_success(method, url, body, res_data, readback):
     applied = (True, "1000", epp_reply(1000, "Command completed successfully", res_data, cl_trid="cl-1"))
-    headers = {**AUTH, "RPP-clTRID": "cl-1"}
-
     def send(replies):
-        return getattr(client_with(replies), method)(url, json=body, headers=headers)
+        return getattr(client_with(replies), method)(url, json=body, headers=AUTH)
 
     regular = send([applied, INFO])
     accepted = send([applied, readback])
@@ -113,6 +121,5 @@ def test_202_carries_the_same_rpp_headers_as_a_success(method, url, body, res_da
     assert rpp_headers(accepted) == {
         "rpp-cltrid": "cl-1",
         "rpp-svtrid": "sv-1",
-        "rpp-code": "1000",
-        "rpp-code-text": "Command completed successfully",
+        "rpp-code": "01000",
     }

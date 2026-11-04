@@ -1,5 +1,6 @@
 #!/bin/sh
-TYPESPEC_FOLDER=ietf-rpp-api-typespec
+# Copies the generated contract from the draft set into the application.
+SPEC_FOLDER=.spec/auto
 
-cp -v ../$TYPESPEC_FOLDER/tsp-output/@typespec/openapi3/openapi.yaml ./src/openapi.yaml
-cp -v ../$TYPESPEC_FOLDER/tsp-output/@typespec/json-schema/*.json ./src/rpp_schema_validator/schemas
+cp -v $SPEC_FOLDER/openapi3/openapi.yaml ./src/openapi.yaml
+cp -v $SPEC_FOLDER/json-schema/rpp.schema.normalized.json ./src/rpp_schema_validator/schemas/

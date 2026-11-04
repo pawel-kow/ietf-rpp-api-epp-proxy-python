@@ -1,0 +1,66 @@
+{
+  "test_id": "test5-update",
+  "skip": "#29",
+  "steps": [
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/contacts/JD-1234",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "456 New Street, Suite 200"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Reston"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "VA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20190"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1-703-555-5556"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe-new@example.example"
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "JD-1234"
+        }
+      }
+    }
+  ]
+}

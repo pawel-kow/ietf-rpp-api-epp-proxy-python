@@ -18,5 +18,5 @@ Read in the code, not reproduced.
   XML with `<pw>`. Received EPP messages are printed too. (#14)
 - **Unescaped XML:** `_send_login` interpolates the username and password into the
   login XML ([eppclient.py:143](../../src/eppclient/eppclient.py#L143)). (#9)
-- **Raw exception text in 500 responses:** the handlers pass `detail=str(e)` in
-  `src/controller/domains.py` and `src/controller/contacts.py`. (#15)
+- **Raw exception text in 500 responses:** `rpp_operation` passes `detail=str(e)` in
+  [rpp_response.py](../../src/controller/helper/rpp_response.py). (#15)

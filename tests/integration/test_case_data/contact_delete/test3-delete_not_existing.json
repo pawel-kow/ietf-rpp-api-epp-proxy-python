@@ -6,8 +6,10 @@
         "method": "DELETE",
         "url": "/contacts/FO-{random_id_10}D03",
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
@@ -15,8 +17,13 @@
           404
         ],
         "body": {
-            "status": 404,
-            "code": "2303"
+          "type": "urn:ietf:params:rpp:error",
+          "status": 404,
+          "errors": [
+            {
+              "result": "02303"
+            }
+          ]
         }
       }
     }

@@ -1,34 +1,22 @@
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
-from typing import List, Optional, Dict
-from .rpp_common import RPPProvisioningObject
-from enum import Enum
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
-@dataclass_json
+from dataclasses_json import Undefined, dataclass_json
+
+from .rpp_object import RPPObject, type_field
+from .rpp_auth_info import RPPAuthInfo
+from .rpp_card import RPPCard
+from .rpp_prov_metadata import RPPProvMetadata
+from .rpp_status import RPPStatus
+
+
+@dataclass_json(undefined=Undefined.RAISE)
 @dataclass(kw_only=True)
-class RPPAddress:
-    street: Optional[List[str]] = None
-    city: Optional[str] = None
-    stateProvince: Optional[str] = None
-    postalCode: Optional[str] = None
-    country: Optional[str] = None
-
-class RPPContactType(Enum):
-    PERSON = "PERSON"
-    ORG = "ORG"
-
-@dataclass_json
-@dataclass(kw_only=True)
-class RPPContactMinimal:
-    id: str;
-
-@dataclass_json
-@dataclass(kw_only=True)
-class RPPContact(RPPProvisioningObject, RPPContactMinimal):
-    contactType: RPPContactType
-    name: Optional[str] = None;
-    organisationName: Optional[str] = None;
-    email: Optional[List[str]] = None;
-    phone: Optional[List[str]] = None;
-    fax: Optional[List[str]] = None;
-    address: Optional[RPPAddress] = None;
+class RPPContact(RPPObject):
+    at_type: str = type_field("contact")
+    id: str
+    contactInfo: RPPCard
+    provMetadata: Optional[RPPProvMetadata] = None
+    status: Optional[List[RPPStatus]] = None
+    authInfo: Optional[RPPAuthInfo] = None
+    disclose: Optional[Dict[str, Any]] = None

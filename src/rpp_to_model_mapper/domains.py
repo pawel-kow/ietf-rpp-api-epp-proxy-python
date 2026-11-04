@@ -1,110 +1,102 @@
-from models import *
-from .rpp_models import *
+from models import (
+    ContactReference, CreationProcess, Domain, DomainCheckResponseSingle, HostObj, NS,
+)
 from rpp_schema_validator import validate_schema
-from .common import provisioning_object_to_rpp
+from .common import (
+    auth_info_to_rpp, parse_rpp, prov_metadata_to_rpp, reject_set, rpp_to_auth_info, statuses_to_rpp,
+)
+from .rpp_models import (
+    RPPContactReference, RPPDomain, RPPDomainNameAvailability, RPPHostReference, RPPLabelledContact,
+)
+from .unsupported_rpp_feature import UnsupportedRppFeature
+
+REGISTRANT = "registrant"
+CONTACT_LABELS = ("admin", "billing", "tech")
+
+
+def check_contact_label(label: str) -> str:
+    """EPP knows three contact roles, the RPP label is open."""
+    if label not in CONTACT_LABELS:
+        raise UnsupportedRppFeature(f"Contact label '{label}' is not supported")
+    return label
+
+
+def _rpp_to_contacts(domain_rpp: RPPDomain) -> list[ContactReference] | None:
+    contacts = []
+    if domain_rpp.registrant is not None:
+        contacts.append(ContactReference(id=domain_rpp.registrant.id, types=[REGISTRANT]))
+    for contact in domain_rpp.contacts or []:
+        contacts.append(ContactReference(id=contact.object.id, types=[check_contact_label(contact.label)]))
+    return contacts or None
+
+
+def _rpp_to_processes(domain_rpp: RPPDomain) -> dict | None:
+    create_processes = domain_rpp.processes.createProcess if domain_rpp.processes else None
+    if not create_processes:
+        return None
+    if len(create_processes) > 1:
+        raise ValueError("Only one createProcess is allowed in a create request")
+    period = create_processes[0].period
+    if period is None:
+        return None
+    return {"creation": CreationProcess(duration=f"P{period.value}{period.unit.upper()}")}
+
 
 def rpp_to_domain(rpp: dict) -> Domain:
-    """Converts a JSON string to a Domain object according to the provided schema."""
-    # First validate the schema
-    validate_schema("Domain", rpp)
-    domain_rpp = RPPDomain.from_dict(rpp) # type: ignore
-    # Create a Domain object from the request body
-    domain = Domain(
+    """Converts a create request to a Domain."""
+    validate_schema("domainName.create", rpp)
+    domain_rpp = parse_rpp(RPPDomain, rpp)
+    reject_set(dns=domain_rpp.dns, status=domain_rpp.status, uName=domain_rpp.uName, lgr=domain_rpp.lgr)
+    return Domain(
         name=domain_rpp.name,
-        authInfo=AuthInfo(pw=domain_rpp.authInfo.pw, hash=domain_rpp.authInfo.hash) if domain_rpp.authInfo is not None else None,
-        ns=NS(
-            host_objs=[
-                HostObj(id=x["name"]) 
-                for x in rpp["ns"]["hostObj"]] \
-                if "hostObj" in rpp["ns"] else None, 
-            host_attrs=[
-                HostAttr(id=x["name"], 
-                         ipv4=x["addr"].get("ipv4", None) if "addr" in x else None, 
-                         ipv6=x["addr"].get("ipv6", None)  if "addr" in x else None) 
-                for x in rpp["ns"]["hostAttr"]] \
-                if "hostAttr" in rpp["ns"] else None) \
-            if "ns" in rpp else None,
-        contacts=[ContactReference(id=x["value"], types=x["type"]) for x in rpp["contacts"]] if "contacts" in rpp else None,
-        dnsSEC=rpp.get("dnsSEC", None)
+        authInfo=rpp_to_auth_info(domain_rpp.authInfo),
+        ns=NS(host_objs=[HostObj(id=h.hostName) for h in domain_rpp.nameservers], host_attrs=None)
+        if domain_rpp.nameservers else None,
+        contacts=_rpp_to_contacts(domain_rpp),
+        processes=_rpp_to_processes(domain_rpp),
     )
-    if "processes" in rpp:
-        domain.processes = {}
-        for process_name, process in rpp["processes"].items():
-            if process_name == "creation":
-                domain.processes[process_name] = CreationProcess(duration=process["period"])
-            else:
-                domain.processes[process_name] = Process()
-    return domain
+
+
+def _nameservers_to_rpp(domain: Domain) -> list[RPPHostReference] | None:
+    if domain.ns is None:
+        return None
+    hosts = (domain.ns.host_objs or []) + (domain.ns.host_attrs or [])
+    return [RPPHostReference(hostName=host.id) for host in hosts] or None
+
+
+def _registrant_to_rpp(domain: Domain) -> RPPContactReference | None:
+    for contact in domain.contacts or []:
+        if REGISTRANT in contact.types:
+            return RPPContactReference(id=contact.id)
+    return None
+
+
+def _contacts_to_rpp(domain: Domain) -> list[RPPLabelledContact] | None:
+    return [
+        RPPLabelledContact(label=label, object=RPPContactReference(id=contact.id))
+        for contact in domain.contacts or []
+        for label in contact.types
+        if label != REGISTRANT
+    ] or None
+
 
 def domain_to_rpp(domain: Domain) -> dict:
-    """Converts a Domain object to a JSON string according to the provided schema."""
-
-    domain_dict = {}
-    domain_dict["name"] = domain.name
-    if domain.ns:
-        ns_dict = {}
-        if domain.ns.host_objs:
-            ns_dict["hostObj"] = [{"name": host_obj.id} for host_obj in domain.ns.host_objs]
-        if domain.ns.host_attrs:
-            ns_dict["hostAttr"] = [{"name": host_attr.id, "ipv4": host_attr.ipv4, "ipv6": host_attr.ipv6} for host_attr in domain.ns.host_attrs]
-        if len(ns_dict) > 0:
-            domain_dict["ns"] = ns_dict
-    if domain.contacts:
-        domain_dict["contacts"] = [{"value": contact.id, "type": contact.types} for contact in domain.contacts]
-    if domain.dnsSEC:
-        domain_dict["dnsSEC"] = domain.dnsSEC
-
-    provisioning_object_to_rpp(domain, domain_dict)
-
-    validate_schema("Domain", domain_dict)
+    """Converts a Domain to its read representation."""
+    domain_dict = RPPDomain(
+        name=domain.name,
+        provMetadata=prov_metadata_to_rpp(domain),
+        status=statuses_to_rpp(domain, "domainStatus"),
+        registrant=_registrant_to_rpp(domain),
+        contacts=_contacts_to_rpp(domain),
+        nameservers=_nameservers_to_rpp(domain),
+        expiryDate=domain.exDate,
+        authInfo=auth_info_to_rpp(domain.authInfo),
+    ).to_rpp()
+    validate_schema("domainName.read", domain_dict)
     return domain_dict
 
-def rpp_to_domain_update(domain_name: str, rpp: dict) -> DomainUpdate:
-    """Converts a JSON string to a DomainUpdate object according to the provided schema."""
-    # First validate the schema
-    validate_schema("DomainUpdateModel", rpp)
-    domain_rpp_update = RPPDomainUpdate.from_dict(rpp) # type: ignore
-    
-    return DomainUpdate(
-        name=domain_name,
-        add=DomainUpdateAdd(
-            ns=rpp_hosts_to_hosts(domain_rpp_update.add.ns) if domain_rpp_update.add.ns is not None else None,
-            contacts=rpp_contacts_to_contact_references(domain_rpp_update.add.contacts) if domain_rpp_update.add.contacts is not None else None
-            # TODO: dnsSEC
-        ) if domain_rpp_update.add is not None else None,
-        remove=DomainUpdateRemove(
-            ns=rpp_hosts_to_hosts(domain_rpp_update.remove.ns) if domain_rpp_update.remove.ns is not None else None,
-            contacts=rpp_contacts_to_contact_references(domain_rpp_update.remove.contacts) if domain_rpp_update.remove.contacts is not None else None
-            # TODO: dnsSEC
-        ) if domain_rpp_update.remove is not None else None,
-        change=DomainUpdateChange(
-            authInfo=AuthInfo(
-                pw=domain_rpp_update.update.authInfo.pw,
-                hash=domain_rpp_update.update.authInfo.hash
-            ) if domain_rpp_update.update.authInfo is not None else None
-        ) if domain_rpp_update.update is not None else None
-    )
-    
-def rpp_hosts_to_hosts(rpp_hosts: RPPNS) -> NS:
-    return NS(
-        host_attrs = [
-            HostAttr(
-                id=host_attr.name,
-                ipv4=[ip for ip in host_attr.addr.ipv4] if host_attr.addr and host_attr.addr.ipv4 else None,
-                ipv6=[ip for ip in host_attr.addr.ipv6] if host_attr.addr and host_attr.addr.ipv6 else None
-            ) for host_attr in rpp_hosts.hostAttr
-        ] if rpp_hosts.hostAttr else None,
-        host_objs = [
-            HostObj(
-                id=host_obj.name
-            ) for host_obj in rpp_hosts.hostObj
-        ] if rpp_hosts.hostObj else None
-    )
 
-def rpp_contacts_to_contact_references(rpp_contacts: List[RPPContactReferenceNew]) -> List[ContactReferenceNew]:
-    return [
-        ContactReferenceNew(
-            type=contact.type,
-            contact=ContactMinimal(id=contact.object.id)
-        ) for contact in rpp_contacts
-    ]
+def domain_availability_to_rpp(check: DomainCheckResponseSingle) -> dict:
+    availability = RPPDomainNameAvailability(available=check.available, reason=check.reason).to_rpp()
+    validate_schema("domainNameAvailability.read", availability)
+    return availability

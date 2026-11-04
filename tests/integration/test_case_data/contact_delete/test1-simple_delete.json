@@ -6,35 +6,57 @@
         "method": "POST",
         "url": "/contacts",
         "body_json": {
+          "@type": "contact",
           "id": "FO-{random_id_10}D01",
-          "name": "John Doe",
-          "contactType": "PERSON",
-          "email": ["foo@example.com"],
-          "address": {
-            "city": "Anytown",
-            "country": "US"
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
           },
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "contact",
           "id": "FO-{random_id_10}D01",
           "status": [
-            "ok"
+            {
+              "@type": "contactStatus",
+              "label": "ok"
+            }
           ]
-        },
-        "fields": {
-        },
-        "headers": {
         }
       }
     },
@@ -43,15 +65,14 @@
         "method": "DELETE",
         "url": "/contacts/FO-{random_id_10}D01",
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
-        "status": [
-          204,
-          202
-        ]
+        "status": 200
       }
     }
   ]

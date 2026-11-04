@@ -1,0 +1,19 @@
+{
+  "test_id": "test3-availability_head_free",
+  "steps": [
+    {
+      "request": {
+        "method": "HEAD",
+        "url": "/domainNames/ex3-{random_name}.example/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    }
+  ]
+}

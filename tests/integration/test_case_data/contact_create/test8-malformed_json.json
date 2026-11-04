@@ -7,20 +7,21 @@
         "url": "/contacts",
         "body_raw": "\n{\n    \"name: \"FREE.EXAMPLE\",\n    \"authInfo\": {\n        \"pw\": \"Password1!@\"\n    }\n}\n            ",
         "headers": {
-          "Content-Type": "application/json",
-          "RPP-clTRID": "test8-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "test8-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json"
         }
       },
       "response": {
         "status": 400,
         "content_type": "application/problem+json",
-        "body": {},
-        "fields": {},
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
         "headers": {
-          "RPP-clTRID": "test8-{random_name}-clTRID",
-          "RPP-code": "2001",
-          "RPP-code-text": "Command syntax error"
+          "RPP-Cltrid": "test8-{random_name}-clTRID",
+          "RPP-Code": "02001"
         }
       }
     }

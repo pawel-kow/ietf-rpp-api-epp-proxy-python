@@ -4,27 +4,34 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test5-{random_name}.example",
+        "url": "/domainNames/up-test5-{random_name}.example",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
-          "RPP-clTRID": "up-test5-{random_name}-clTRID"
+          "RPP-Cltrid": "up-test5-{random_name}-clTRID",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "update": {
-            "authInfo": {
-              "pw": "NewPassword1!@"
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/authInfo",
+            "value": {
+              "@type": "authInfo",
+              "method": "authinfo",
+              "authdata": "NewPassword1!@"
             }
           }
-        }
+        ]
       },
       "response": {
         "status": 404,
         "content_type": "application/problem+json",
-        "body": {},
-        "fields": {},
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
         "headers": {
-          "RPP-clTRID": "up-test5-{random_name}-clTRID",
-          "RPP-code": "2303"
+          "RPP-Cltrid": "up-test5-{random_name}-clTRID",
+          "RPP-Code": "02303"
         }
       }
     }

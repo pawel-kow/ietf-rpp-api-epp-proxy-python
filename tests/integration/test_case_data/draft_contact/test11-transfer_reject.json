@@ -1,0 +1,29 @@
+{
+  "test_id": "test11-transfer_reject",
+  "skip": "#34",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts/JD-1234/processes/transferProcesses/latest/transferReject",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "transferProcess",
+          "reason": "Client rejected the transfer request."
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "transferProcess"
+        }
+      }
+    }
+  ]
+}

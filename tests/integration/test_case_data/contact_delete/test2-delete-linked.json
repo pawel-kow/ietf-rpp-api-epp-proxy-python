@@ -6,68 +6,95 @@
         "method": "POST",
         "url": "/contacts",
         "body_json": {
+          "@type": "contact",
           "id": "FO-{random_id_10}D02",
-          "name": "John Doe",
-          "contactType": "PERSON",
-          "email": ["foo@example.com"],
-          "address": {
-            "city": "Anytown",
-            "country": "US"
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
           },
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "contact",
           "id": "FO-{random_id_10}D02",
           "status": [
-            "ok"
+            {
+              "@type": "contactStatus",
+              "label": "ok"
+            }
           ]
-        },
-        "fields": {
-        },
-        "headers": {
         }
       }
     },
     {
       "request": {
         "method": "POST",
-        "url": "/domains",
+        "url": "/domainNames",
         "body_json": {
+          "@type": "domainName",
           "name": "test2-{random_name}.example",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           },
-          "contacts": [
-            {
-              "value": "FO-{random_id_10}D02",
-              "type": [
-                "registrant"
-              ]
-            }
-          ]
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-{random_id_10}D02"
+          }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "test2-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ]
         }
       }
@@ -77,14 +104,20 @@
         "method": "DELETE",
         "url": "/contacts/FO-{random_id_10}D02",
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
-        "status": 400,
+        "status": 409,
         "content_type": "application/problem+json",
         "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02305"
         }
       }
     }

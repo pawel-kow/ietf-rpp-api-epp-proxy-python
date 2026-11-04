@@ -6,50 +6,75 @@
         "method": "POST",
         "url": "/contacts",
         "body_json": {
+          "@type": "contact",
           "id": "FO-{random_id_10}-12",
-          "name": "John Doe",
-          "contactType": "PERSON",
-          "email": ["foo@example.com"],
-          "address": {
-            "city": "Anytown",
-            "country": "US"
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
           },
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "RPP-clTRID": "test12-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "test12-{random_name}-clTRID",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "contact",
           "id": "FO-{random_id_10}-12",
           "status": [
-            "ok"
+            {
+              "@type": "contactStatus",
+              "label": "ok"
+            }
           ]
         },
         "fields": {
-          "clID": {
+          "provMetadata.spClientId": {
             "type": "not_null"
           },
-          "crDate": {
+          "provMetadata.crDate": {
             "type": "datetime_format_utc_and_delta",
             "reference": "{test_start}",
             "min_delta": -1,
             "max_delta": 60
           },
-          "crID": {
+          "provMetadata.crClientId": {
             "type": "not_null"
           }
         },
         "headers": {
-          "RPP-clTRID": "test12-{random_name}-clTRID",
-          "RPP-svTRID": {
+          "RPP-Cltrid": "test12-{random_name}-clTRID",
+          "RPP-Svtrid": {
             "type": "not_empty_string"
           }
         }

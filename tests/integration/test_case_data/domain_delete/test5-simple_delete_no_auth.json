@@ -4,19 +4,21 @@
     {
       "request": {
         "method": "DELETE",
-        "url": "/domains/test5-{random_name}.example",
+        "url": "/domainNames/test5-{random_name}.example",
         "headers": {
-          "Content-Type": "application/json",
-          "RPP-clTRID": "test5-{random_name}-clTRID"
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "test5-{random_name}-clTRID",
+          "Accept": "application/rpp+json"
         }
       },
       "response": {
         "status": 401,
         "content_type": "application/problem+json",
-        "body": {},
-        "fields": {},
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
         "headers": {
-          "RPP-clTRID": "test5-{random_name}-clTRID"
+          "RPP-Cltrid": "test5-{random_name}-clTRID"
         }
       }
     }

@@ -4,64 +4,75 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domains",
+        "url": "/domainNames",
         "body_json": {
+          "@type": "domainName",
           "name": "test6-{random_name}.example",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           },
-          "ns": {
-            "hostObj": [
-              {
-                "name": "ns1.bar.example"
-              },
-              {
-                "name": "ns2.bar.example"
-              }
-            ]
-          }
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "ns1.bar.example"
+            },
+            {
+              "@type": "host",
+              "hostName": "ns2.bar.example"
+            }
+          ]
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
-          "authInfo": {
-            "pw": "Password1!@"
-          },
+          "@type": "domainName",
           "name": "TEST6-{random_name}.EXAMPLE",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ],
-          "ns": {
-            "hostObj": [
-              {
-                "name": "NS1.BAR.EXAMPLE"
-              },
-              {
-                "name": "NS2.BAR.EXAMPLE"
-              }
-            ]
-          }
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS1.BAR.EXAMPLE"
+            },
+            {
+              "@type": "host",
+              "hostName": "NS2.BAR.EXAMPLE"
+            }
+          ]
         },
         "fields": {
-          "clID": {
+          "provMetadata.spClientId": {
             "type": "not_null"
           },
-          "crDate": {
+          "provMetadata.crDate": {
             "type": "datetime_format_utc_and_delta",
             "reference": "{test_start}",
             "min_delta": -1,
             "max_delta": 60
           },
-          "crID": {
+          "provMetadata.crClientId": {
             "type": "not_null"
           },
-          "exDate": {
+          "expiryDate": {
             "type": "datetime_format_utc_and_delta",
             "reference": "{test_start}",
             "min_delta": 31449600,
@@ -69,8 +80,10 @@
           }
         },
         "headers": {
-          "RPP-clTRID": null,
-          "RPP-svTRID": {
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Svtrid": {
             "type": "not_empty_string"
           }
         }

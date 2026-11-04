@@ -15,7 +15,7 @@ OBJECT_DOES_NOT_EXIST = (
 
 def auth_header(username, password):
     token = base64.b64encode(f"{username}:{password}".encode()).decode()
-    return {"Authorization": f"Basic {token}"}
+    return {"Authorization": f"Basic {token}", "Accept": "application/rpp+json", "RPP-Cltrid": "cl-1"}
 
 
 def client_for(**fake_options):
@@ -32,17 +32,17 @@ def client_for(**fake_options):
 def test_request_is_served_by_the_injected_client():
     http, created = client_for(reply=(False, "2303", OBJECT_DOES_NOT_EXIST))
 
-    response = http.delete("/domains/missing.example", headers=auth_header("user", "pw"))
+    response = http.delete("/domainNames/missing.example", headers=auth_header("user", "pw"))
 
     assert response.status_code == 404
-    assert response.headers["RPP-code"] == "2303"
+    assert response.headers["RPP-Code"] == "02303"
     assert "missing.example" in created[0].sent[0]
 
 
 def test_unreachable_backend_is_a_401():
     http, _ = client_for(reachable=False)
 
-    response = http.delete("/domains/any.example", headers=auth_header("user", "pw"))
+    response = http.delete("/domainNames/any.example", headers=auth_header("user", "pw"))
 
     assert response.status_code == 401
 
@@ -50,7 +50,7 @@ def test_unreachable_backend_is_a_401():
 def test_missing_credentials_do_not_reach_the_factory():
     http, created = client_for()
 
-    response = http.delete("/domains/any.example")
+    response = http.delete("/domainNames/any.example")
 
     assert response.status_code == 401
     assert created == []

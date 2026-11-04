@@ -4,25 +4,34 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domains",
+        "url": "/domainNames",
         "body_json": {
+          "@type": "domainName",
           "name": "up-test3-{random_name}.example",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test3-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ]
         }
       }
@@ -30,85 +39,96 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test3-{random_name}.example",
+        "url": "/domainNames/up-test3-{random_name}.example",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "add": {
-            "ns": {
-              "hostObj": [
-                {
-                  "name": "ns1.bar.example"
-                },
-                {
-                  "name": "ns2.bar.example"
-                }
-              ]
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/nameservers",
+            "value": {
+              "@type": "host",
+              "hostName": "ns1.bar.example"
+            }
+          },
+          {
+            "op": "add",
+            "path": "/nameservers",
+            "value": {
+              "@type": "host",
+              "hostName": "ns2.bar.example"
             }
           }
-        }
+        ]
       },
       "response": {
         "status": 200,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test3-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ],
-          "ns": {
-            "hostObj": [
-              {
-                "name": "NS1.BAR.EXAMPLE"
-              },
-              {
-                "name": "NS2.BAR.EXAMPLE"
-              }
-            ]
-          }
-        },
-        "fields": {},
-        "headers": {}
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS1.BAR.EXAMPLE"
+            },
+            {
+              "@type": "host",
+              "hostName": "NS2.BAR.EXAMPLE"
+            }
+          ]
+        }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test3-{random_name}.example",
+        "url": "/domainNames/up-test3-{random_name}.example",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "remove": {
-            "ns": {
-              "hostObj": [
-                {
-                  "name": "ns1.bar.example"
-                }
-              ]
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/nameservers",
+            "match": {
+              "hostName": "ns1.bar.example"
             }
           }
-        }
+        ]
       },
       "response": {
         "status": 200,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test3-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ],
-          "ns": {
-            "hostObj": [
-              {
-                "name": "NS2.BAR.EXAMPLE"
-              }
-            ]
-          }
-        },
-        "fields": {},
-        "headers": {}
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS2.BAR.EXAMPLE"
+            }
+          ]
+        }
       }
     }
   ]

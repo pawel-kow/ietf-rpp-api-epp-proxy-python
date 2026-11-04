@@ -1,0 +1,26 @@
+{
+  "test_id": "test12-transfer_query",
+  "skip": "#33",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/ex10-{random_name}.example/processes/transferProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainTransferProcess",
+          "trStatus": "pending",
+          "transferDir": "pull"
+        }
+      }
+    }
+  ]
+}

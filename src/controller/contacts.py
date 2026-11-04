@@ -1,95 +1,34 @@
 from connexion import request, ProblemException
-from connexion.context import operation
 from eppclient.epp_contacts import *
 from models import *
 from rpp_to_model_mapper import *
 from .helper.rpp_response import *
-import json
 import asyncio
 from .auth import get_epp_client
 
-def contacts_Check(body):
-    return {}, 500
+@rpp_operation
+def contacts_create(body):
+    contact = map_request(rpp_to_contact, body)
+    contactresp = epp_contacts_Create(get_epp_client(), contact, client_transaction_id=client_transaction_id())
+    if isinstance(contactresp, ErrorResponse):
+        raise_epp_error(contactresp)
+    inforesp = epp_contacts_Info(get_epp_client(), contactresp.contact.id)
+    headers = generate_rpp_response_headers(contactresp)
+    headers["Location"] = f"{str(request.url).rstrip('/')}/{contact.id}"
+    return contact_to_rpp(inforesp.contact), 201, headers
 
-#TODO: finish implementation contacts_Create
-def contacts_Create(body):
-    try:
-        contact = rpp_to_contact(body)
-    except Exception as e:
-        raise ProblemException(status=400, title="Bad Request", detail=str(e))
+@rpp_operation
+def contacts_delete(id):
+    if asyncio.run(request.get_body()):
+        raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
+    contactresp = epp_contacts_Delete(get_epp_client(), id, client_transaction_id=client_transaction_id())
+    if isinstance(contactresp, ErrorResponse):
+        raise_epp_error(contactresp)
+    return None, 200, generate_rpp_response_headers(contactresp)
 
-    try:
-        # Call the eppclient function to get the domain information
-        contactresp = epp_contacts_Create(get_epp_client(), contact, client_transaction_id=request.headers.get('RPP-clTRID'))
-        if isinstance(contactresp, ContactCreateResponse):
-            inforesp = epp_contacts_Info(get_epp_client(), contactresp.contact.id)
-            # Convert the response to JSON
-            response = contact_to_rpp(inforesp.contact)
-            return response, 201, generate_rpp_response_headers(contactresp)
-        elif isinstance(contactresp, ErrorResponse):
-            if contactresp.code == ResultCode.OBJECT_EXISTS:
-                raise ProblemException(status=409, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
-            else:
-                raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
-        else:
-            raise ValueError("Unexpected response type from .epp_model.client")
-
-    except ProblemException:
-        raise
-    except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
-
-#TODO: implement contacts_Delete
-def contacts_Delete(id):
-    try:
-        x = asyncio.run(request.get_body())
-        if x is not None and len(x) > 0:
-            raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
-        # Call the eppclient function to delete  the contact
-        contactresp = epp_contacts_Delete(get_epp_client(), id)
-        # Convert the response to JSON
-        if isinstance(contactresp, ContactDeleteResponse):
-            if contactresp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY:
-                return None, 204, generate_rpp_response_headers(contactresp)
-            elif contactresp.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
-                return None, 202, generate_rpp_response_headers(contactresp)
-            else:
-                # this code should not be ever reached
-                raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
-        elif isinstance(contactresp, ErrorResponse):
-            if contactresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
-                raise ProblemException(status=404, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
-            else:
-                raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
-        else:
-            raise ValueError("Unexpected response type from .epp_model.client")
-    except ProblemException:
-        raise
-    except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
-    return response, 200
-
-def contacts_Get(id):
-    try:
-        # Call the eppclient function to retrieve the contact information
-        contactresp = epp_contacts_Info(get_epp_client(), id, client_transaction_id=request.headers.get('RPP-clTRID'))
-        # epp_contacts_Info shares parse_contact_response with the create path, so
-        # a successful info reply is a ContactCreateResponse (mirrors the domain side).
-        if isinstance(contactresp, ContactCreateResponse):
-            response = contact_to_rpp(contactresp.contact)
-            return response, 200, generate_rpp_response_headers(contactresp)
-        elif isinstance(contactresp, ErrorResponse):
-            if contactresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
-                raise ProblemException(status=404, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
-            else:
-                raise ProblemException(status=400, title=contactresp.code.value[1], detail=contactresp.msg, ext={"code": contactresp.code.value[0]}, headers=generate_rpp_response_headers(contactresp))
-        else:
-            raise ValueError("Unexpected response type from .epp_model.client")
-    except ProblemException:
-        raise
-    except Exception as e:
-        raise ProblemException(status=500, title="Internal Server Error", detail=str(e), headers=generate_rpp_response_headers_separate(request.headers.get('RPP-clTRID'), code=ResultCode.COMMAND_FAILED))
-
-#TODO: implement contacts_Update
-def contacts_Update(id, body):
-    return {}, 500
+@rpp_operation
+def contacts_read(id):
+    contactresp = epp_contacts_Info(get_epp_client(), id, client_transaction_id=client_transaction_id())
+    if isinstance(contactresp, ErrorResponse):
+        raise_epp_error(contactresp)
+    return contact_to_rpp(contactresp.contact), 200, generate_rpp_response_headers(contactresp)

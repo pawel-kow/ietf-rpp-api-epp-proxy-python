@@ -8,18 +8,24 @@ A request flows through distinct layers, each in its own package under `src/`. A
 single feature (e.g. "domain update") touches every layer:
 
 1. **`openapi.yaml`:** the API contract. Connexion routes operations to controller
-   functions by `operationId` (e.g. `domains_Update` →
-   `controller.domains.domains_Update`) via `RelativeResolver('controller')` in
-   [src/run.py](../../src/run.py). Generated, see below.
+   functions by `operationId` (e.g. `domainNames_updatePartial` →
+   `controller.domains.domainNames_updatePartial`) via
+   `RelativeResolver('controller')` in [src/app.py](../../src/app.py). An operation
+   without a controller function answers 501 (`02101`). Generated, see below.
 2. **`controller/`:** HTTP handlers. Parse the request, call the RPP→model mapper,
-   call the eppclient, map the result back to RPP, and translate EPP result codes
-   into HTTP status plus `ProblemException`. See
-   [RPP_IMPLEMENTATION_NOTES.md](../../RPP_IMPLEMENTATION_NOTES.md): 2302→409,
-   2303→404, other client errors→400, server errors→500.
+   call the eppclient and map the result back to RPP. EPP errors go through
+   `raise_epp_error` in
+   [rpp_response.py](../../src/controller/helper/rpp_response.py), which applies core
+   §18.1, and `handle_rpp_error` in [src/app.py](../../src/app.py) renders every error
+   as a core §9 Problem Detail.
 3. **`rpp_to_model_mapper/`:** converts inbound RPP JSON dicts ↔ internal `models`
-   dataclasses. Validates every payload against a JSON Schema via
-   `validate_schema(...)` before mapping. Also does the reverse (`*_to_rpp`) and
-   re-validates the outbound dict.
+   dataclasses, through the RPP dataclasses in `rpp_models/`. Validates every payload
+   against a JSON Schema via `validate_schema(...)` before mapping. Also does the
+   reverse (`*_to_rpp`) and re-validates the outbound dict. Valid input the model
+   cannot hold raises `UnsupportedRppFeature`, which answers 501 (`02102`), so nothing
+   is dropped silently. `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
+   without reading the object, so operations that need the current state are
+   unsupported (#27).
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
@@ -35,8 +41,8 @@ single feature (e.g. "domain update") touches every layer:
    the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
    is dead code: ignore it.
 
-`domains_Create` and `domains_Update` do not build their response from the
-create/update reply. They issue a **follow-up EPP Info** call and map that to RPP,
+`domainNames_create` and `domainNames_updatePartial` do not build their response from
+the create/update reply. They issue a **follow-up EPP Info** call and map that to RPP,
 because EPP mutation responses don't echo full object state. If that Info fails, the
 mutation has still been applied, so the handler answers **202** with no body and the
 mutation's `RPP-*` headers. `openapi.yaml` does not define this 202 (#23 tracks the
@@ -44,18 +50,20 @@ question for the spec).
 
 ## Generated artifacts: do not hand-edit
 
-`src/openapi.yaml` and `src/rpp_schema_validator/schemas/*.json` are copied in from
-a sibling **TypeSpec** project by [copy_models.sh](../../copy_models.sh) (expects
-`../ietf-rpp-api-typespec/tsp-output/`). The JSON schemas are the single source of
-truth for request/response validation. Schema names (e.g. `"Domain"`,
-`"DomainUpdateModel"`) are passed by string to `validate_schema`. If validation
-fails unexpectedly, check whether the schema and the mapper drifted: the fix
-usually belongs in the TypeSpec project, not here.
+`src/openapi.yaml` and `src/rpp_schema_validator/schemas/rpp.schema.normalized.json`
+are copied verbatim from `.spec/auto/` by [copy_models.sh](../../copy_models.sh). The
+JSON schema is the single source of truth for request/response validation. `$defs`
+names (e.g. `"domainName.read"`) are passed by string to `validate_schema`. If
+validation fails unexpectedly, check whether the schema and the mapper drifted.
+
+Points in the drafts that cannot be implemented or are unclear go to
+[.spec/spec-issues.md](../../.spec/spec-issues.md).
 
 ## Wire contract
 
-The frozen contract covers the OpenAPI paths and schemas, the EPP→HTTP status
-mapping, and the `RPP-*` headers.
+The frozen contract covers the OpenAPI paths and schemas, the core §18.1 result code
+to HTTP status mapping, and the `RPP-*` headers. RPP result codes are EPP codes with a
+leading `0`.
 
 ## Configuration
 
@@ -81,14 +89,7 @@ Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
 
 - **Several classes per file:** `src/models/domains.py` (18),
   `src/models/contacts.py` (8), `src/models/response.py` (3),
-  `src/models/common.py` (3), `src/eppclient/tcpclient.py` (2),
-  `src/rpp_to_model_mapper/rpp_models/rpp_domains.py` (17),
-  `src/rpp_to_model_mapper/rpp_models/rpp_contact.py` (4),
-  `src/rpp_to_model_mapper/rpp_models/rpp_common.py` (2). Generated `epp_model/`
-  is exempt. (#20)
+  `src/models/common.py` (3), `src/eppclient/tcpclient.py` (2).
+  Generated `epp_model/` is exempt. (#20)
 - **Flows in handlers:** the mutate-then-Info orchestration sits inside
-  `domains_Create` and `domains_Update`. (#17)
-- **Error mapping repeated per handler:** each function in `src/controller/`
-  hand-writes its own EPP-code→HTTP branches, which is how `domains_Update` once
-  missed 2303→404. Not all branches pass the RPP headers (e.g. `domains_Get`).
-  (#16)
+  `domainNames_create`, `domainNames_updatePartial` and `contacts_create`. (#17)

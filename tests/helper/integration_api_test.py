@@ -1,5 +1,6 @@
 from .recursive_compare_existing import recusive_compare_existing
 import json
+import re
 import pytest
 from datetime import datetime, timezone
 from tests.helper.check_datetime import check_datetime_format_utc_and_delta
@@ -15,6 +16,35 @@ def evaluate_condition(value, spec):
         )
     else:
         return False
+
+def field_value(document, path):
+    """Reads a dotted field path, for example 'provMetadata.crDate'."""
+    value = document
+    for part in path.split("."):
+        assert part in value, f"Field '{path}' not found"
+        value = value[part]
+    return value
+
+def assert_rpp_headers(request_headers, response, test_name):
+    """Core §6.2: the headers every response carries."""
+    assert response.headers.get("RPP-Svtrid"), f"RPP-Svtrid missing for test case: {test_name}"
+    assert re.fullmatch(r"[01]\d{4}", response.headers.get("RPP-Code", "")), f"Malformed RPP-Code for test case: {test_name}"
+    if "RPP-Cltrid" in request_headers:
+        assert response.headers.get("RPP-Cltrid") == request_headers["RPP-Cltrid"], f"RPP-Cltrid not echoed for test case: {test_name}"
+
+def assert_headers(expected_headers, response, test_name):
+    for header, test in expected_headers.items():
+        header = header.lower()
+        if test is None:
+            assert header not in response.headers, f"Header '{header}' should not be present in response for test case: {test_name}"
+            continue
+        assert header in response.headers, f"Header '{header}' not found in response for test case: {test_name}"
+        if isinstance(test, str):
+            assert response.headers[header] == test, f"Header '{header}' has unexpected value for test case: {test_name}"
+        elif isinstance(test, dict) and "type" in test:
+            assert evaluate_condition(response.headers[header], test), f"Header '{header}' does not meet the condition {test['type']} for test case: {test_name}"
+        else:
+            raise ValueError(f"Header '{header}' has unexpected type or value for test case: {test_name}")
 
 def endpoint_test(client, case_sequence):
     """
@@ -69,33 +99,12 @@ def endpoint_test(client, case_sequence):
             recusive_compare_existing(f"{case_sequence['test_id']}[{i}]", "$", response_json, case["response"]["body"], case_sensitive=False)
             # Check for expected fields in the response
             # Ensure that the expected fields are present and not null
-            if "fields" in case["response"]:
-                for field, test in case["response"]["fields"].items():
-                    assert field in response_json, f"Field '{field}' not found in response for test case: {case_sequence['test_id']}[{i}]"
-                    if callable(test):
-                        assert test(response_json[field]), f"Field '{field}' is not valid for test case: {case_sequence['test_id']}[{i}]"
-                    elif isinstance(test, dict) and "type" in test:
-                        assert evaluate_condition(response_json[field], test), f"Field '{field}' does not meet the condition {test[type]} for test case: {case_sequence['test_id']}[{i}]"
-                    else:
-                        raise ValueError(f"Field '{field}' has unexpected type or value for test case: {case_sequence['test_id']}[{i}]")
-            # Check for expected headers in the response
-            if "headers" in case["response"]:
-                # Check for expected headers in the response
-                for header, test in case["response"]["headers"].items():
-                    header = header.lower()
-                    if test is not None:
-                        assert header.lower() in response.headers, f"Header '{header}' not found in response for test case: {case_sequence['test_id']}[{i}]"
-                        if isinstance(test, str):
-                            assert response.headers[header] == test, f"Header '{header}' has unexpected value for test case: {case_sequence['test_id']}[{i}]"
-                        elif callable(test):
-                            assert test(response.headers[header]), f"Header '{header}' is not valid for test case: {case_sequence['test_id']}[{i}]"
-                        elif isinstance(test, dict) and "type" in test:
-                            assert evaluate_condition(response.headers[header], test), f"Header '{header}' does not meet the condition {test['type']} for test case: {case_sequence['test_id']}[{i}]"
-                        else:
-                            raise ValueError(f"Header '{header}' has unexpected type or value for test case: {case_sequence['test_id']}[{i}]")
-                    else:
-                        assert header not in response.headers, f"Header '{header}' should not be present in response for test case: {case_sequence['test_id']}[{i}]"
+            for field, test in case["response"].get("fields", {}).items():
+                assert evaluate_condition(field_value(response_json, field), test), f"Field '{field}' does not meet the condition {test['type']} for test case: {case_sequence['test_id']}[{i}]"
         else:
             # For responses expected to have no body (like 100, 204)
             assert not response.content, "Response data not expected" # Check if data attribute is empty
 
+        test_name = f"{case_sequence['test_id']}[{i}]"
+        assert_rpp_headers(case["request"]["headers"], response, test_name)
+        assert_headers(case["response"].get("headers", {}), response, test_name)

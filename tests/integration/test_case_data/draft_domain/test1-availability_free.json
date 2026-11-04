@@ -1,0 +1,24 @@
+{
+  "test_id": "test1-availability_free",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/ex1-{random_name}.example/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainNameAvailability",
+          "available": true
+        }
+      }
+    }
+  ]
+}

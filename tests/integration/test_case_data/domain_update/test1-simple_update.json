@@ -4,263 +4,341 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domains",
+        "url": "/domainNames",
         "body_json": {
+          "@type": "domainName",
           "name": "up-test1-{random_name}.example",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
           }
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test1-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ]
-        },
-        "fields": {},
-        "headers": {}
+        }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test1-{random_name}.example",
+        "url": "/domainNames/up-test1-{random_name}.example",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "update": {
-            "authInfo": {
-              "pw": "NewPassword1!@"
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/authInfo",
+            "value": {
+              "@type": "authInfo",
+              "method": "authinfo",
+              "authdata": "NewPassword1!@"
             }
           },
-          "add": {
-            "ns": {
-              "hostObj": [
-                {
-                  "name": "ns1.bar.example"
-                },
-                {
-                  "name": "ns2.bar.example"
-                }
-              ]
-            },
-            "contacts": [
-              {
-                "type": "registrant",
-                "object": {
-                  "id": "FO-TEST2"
-                }
-              },
-              {
-                "type": "tech",
-                "object": {
-                  "id": "FO-TEST2"
-                }
-              },
-              {
-                "type": "admin",
-                "object": {
-                  "id": "FO-TEST2"
-                }
-              },
-              {
-                "type": "admin",
-                "object": {
-                  "id": "FO-TEST1"
-                }
-              },
-              {
-                "type": "billing",
-                "object": {
-                  "id": "FO-TEST1"
-                }
+          {
+            "op": "add",
+            "path": "/nameservers",
+            "value": {
+              "@type": "host",
+              "hostName": "ns1.bar.example"
+            }
+          },
+          {
+            "op": "add",
+            "path": "/nameservers",
+            "value": {
+              "@type": "host",
+              "hostName": "ns2.bar.example"
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/registrant",
+            "value": {
+              "@type": "contact",
+              "id": "FO-TEST2"
+            }
+          },
+          {
+            "op": "add",
+            "path": "/contacts",
+            "value": {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
               }
-            ]
+            }
+          },
+          {
+            "op": "add",
+            "path": "/contacts",
+            "value": {
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
+            }
+          },
+          {
+            "op": "add",
+            "path": "/contacts",
+            "value": {
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            }
+          },
+          {
+            "op": "add",
+            "path": "/contacts",
+            "value": {
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            }
           }
-        }
+        ]
       },
       "response": {
         "status": 200,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test1-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ],
           "authInfo": {
-            "pw": "NewPassword1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "NewPassword1!@"
           },
-          "ns": {
-            "hostObj": [
-              {
-                "name": "NS1.BAR.EXAMPLE"
-              },
-              {
-                "name": "NS2.BAR.EXAMPLE"
-              }
-            ]
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS1.BAR.EXAMPLE"
+            },
+            {
+              "@type": "host",
+              "hostName": "NS2.BAR.EXAMPLE"
+            }
+          ],
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST2"
           },
           "contacts": [
             {
-              "value": "FO-TEST2",
-              "type": [
-                "tech",
-                "admin",
-                "registrant"
-              ]
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
             },
             {
-              "value": "FO-TEST1",
-              "type": [
-                "admin",
-                "billing"
-              ]
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
+            },
+            {
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            },
+            {
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
             }
           ]
-        },
-        "fields": {},
-        "headers": {}
+        }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test1-{random_name}.example",
+        "url": "/domainNames/up-test1-{random_name}.example",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "update": {
-            "authInfo": {
-              "pw": "NewPassword2!@"
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/authInfo",
+            "value": {
+              "@type": "authInfo",
+              "method": "authinfo",
+              "authdata": "NewPassword2!@"
             }
           },
-          "remove": {
-            "ns": {
-              "hostObj": [
-                {
-                  "name": "ns1.bar.example"
-                }
-              ]
-            },
-            "contacts": [
-              {
-                "type": "registrant",
-                "object": {
-                  "id": "FO-TEST2"
-                }
-              },
-              {
-                "type": "tech",
-                "object": {
-                  "id": "FO-TEST2"
-                }
-              },
-              {
-                "type": "admin",
-                "object": {
-                  "id": "FO-TEST2"
-                }
-              },
-              {
-                "type": "billing",
-                "object": {
-                  "id": "FO-TEST1"
-                }
-              }
-            ]
+          {
+            "op": "remove",
+            "path": "/nameservers",
+            "match": {
+              "hostName": "ns1.bar.example"
+            }
           },
-          "add": {
-            "ns": {
-              "hostAttr": [
-                {
-                  "name": "ns1.up-test1-{random_name}.example",
-                  "addr": {
-                    "ipv4": [
-                      "192.168.1.1",
-                      "192.168.1.2"
-                    ],
-                    "ipv6": [
-                      "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-                    ]
-                  }
-                },
-                {
-                  "name": "ns2.up-test1-{random_name}.example",
-                  "addr": {
-                    "ipv6": ["2001:0db8:85a3:0000:0000:8a2e:0370:7334"]
-                  }
-                }
-              ]
-            },
-            "contacts": [
-              {
-                "type": "tech",
-                "object": {
-                  "id": "FO-TEST3"
-                }
-              },
-              {
-                "type": "registrant",
-                "object": {
-                  "id": "FO-TEST3"
-                }
+          {
+            "op": "remove",
+            "path": "/contacts",
+            "match": {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
               }
-            ]
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/contacts",
+            "match": {
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/contacts",
+            "match": {
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            }
+          },
+          {
+            "op": "add",
+            "path": "/nameservers",
+            "value": {
+              "@type": "host",
+              "hostName": "ns1.up-test1-{random_name}.example"
+            }
+          },
+          {
+            "op": "add",
+            "path": "/nameservers",
+            "value": {
+              "@type": "host",
+              "hostName": "ns2.up-test1-{random_name}.example"
+            }
+          },
+          {
+            "op": "add",
+            "path": "/contacts",
+            "value": {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST3"
+              }
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/registrant",
+            "value": {
+              "@type": "contact",
+              "id": "FO-TEST3"
+            }
           }
-        }
+        ]
       },
       "response": {
         "status": 200,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "UP-TEST1-{random_name}.EXAMPLE",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ],
           "authInfo": {
-            "pw": "NewPassword2!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "NewPassword2!@"
           },
-          "ns": {
-            "hostObj": [
-              {
-                "name": "NS2.BAR.EXAMPLE"
-              },
-              {
-                "name": "ns1.up-test1-{random_name}.example"
-              },
-              {
-                "name": "ns2.up-test1-{random_name}.example"
-              }
-            ]
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS2.BAR.EXAMPLE"
+            },
+            {
+              "@type": "host",
+              "hostName": "ns1.up-test1-{random_name}.example"
+            },
+            {
+              "@type": "host",
+              "hostName": "ns2.up-test1-{random_name}.example"
+            }
+          ],
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST3"
           },
           "contacts": [
             {
-              "value": "FO-TEST3",
-              "type": [
-                "tech",
-                "registrant"
-              ]
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST3"
+              }
             },
             {
-              "value": "FO-TEST1",
-              "type": [
-                "admin"
-              ]
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
             }
           ]
-        },
-        "fields": {},
-        "headers": {}
+        }
       }
     }
   ]

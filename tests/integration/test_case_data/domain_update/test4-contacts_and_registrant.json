@@ -4,157 +4,230 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domains",
+        "url": "/domainNames",
         "body_json": {
+          "@type": "domainName",
           "name": "up-test4-{random_name}.example",
           "authInfo": {
-            "pw": "Password1!@"
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
           },
           "contacts": [
             {
-              "value": "FO-TEST1",
-              "type": [
-                "registrant",
-                "admin",
-                "tech",
-                "billing"
-              ]
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            },
+            {
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
             }
           ]
         },
         "headers": {
-          "Content-Type": "application/json",
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
         "status": 201,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test4-{random_name}.example",
           "status": [
-            "ok"
-          ],
-          "contacts": [
             {
-              "value": "FO-TEST1",
-              "type": [
-                "registrant",
-                "admin",
-                "tech",
-                "billing"
-              ]
+              "@type": "domainStatus",
+              "label": "ok"
             }
-          ]
-        }
-      }
-    },
-    {
-      "request": {
-        "method": "PATCH",
-        "url": "/domains/up-test4-{random_name}.example",
-        "headers": {
-          "Authorization": "Basic Zm9vOmJhcg=="
-        },
-        "body_json": {
-          "add": {
-            "contacts": [
-              {
-                "type": "tech",
-                "object": {
-                  "id": "FO-TEST2"
-                }
-              }
-            ]
+          ],
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
           },
-          "remove": {
-            "contacts": [
-              {
-                "type": "billing",
-                "object": {
-                  "id": "FO-TEST1"
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "content_type": "application/json",
-        "body": {
-          "name": "up-test4-{random_name}.example",
-          "status": [
-            "ok"
-          ],
           "contacts": [
             {
-              "value": "FO-TEST1",
-              "type": [
-                "registrant",
-                "admin",
-                "tech"
-              ]
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
             },
             {
-              "value": "FO-TEST2",
-              "type": [
-                "tech"
-              ]
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            },
+            {
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
             }
           ]
-        },
-        "fields": {},
-        "headers": {}
+        }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domains/up-test4-{random_name}.example",
+        "url": "/domainNames/up-test4-{random_name}.example",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg=="
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
         },
-        "body_json": {
-          "add": {
-            "contacts": [
-              {
-                "type": "registrant",
-                "object": {
-                  "id": "FO-TEST2"
-                }
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/contacts",
+            "match": {
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
               }
-            ]
+            }
+          },
+          {
+            "op": "add",
+            "path": "/contacts",
+            "value": {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
+            }
           }
-        }
+        ]
       },
       "response": {
         "status": 200,
-        "content_type": "application/json",
+        "content_type": "application/rpp+json",
         "body": {
+          "@type": "domainName",
           "name": "up-test4-{random_name}.example",
           "status": [
-            "ok"
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
           ],
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
+          },
           "contacts": [
             {
-              "value": "FO-TEST2",
-              "type": [
-                "registrant",
-                "tech"
-              ]
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
             },
             {
-              "value": "FO-TEST1",
-              "type": [
-                "admin",
-                "tech"
-              ]
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
             }
           ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/up-test4-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
         },
-        "fields": {},
-        "headers": {}
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/registrant",
+            "value": {
+              "@type": "contact",
+              "id": "FO-TEST2"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "name": "up-test4-{random_name}.example",
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
+          ],
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST2"
+          },
+          "contacts": [
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
+            },
+            {
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            }
+          ]
+        }
       }
     }
   ]

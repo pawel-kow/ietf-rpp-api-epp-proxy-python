@@ -1,0 +1,32 @@
+{
+  "test_id": "test7-transfer_request",
+  "skip": "#34",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts/JD-1234/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=MmZvb0JBUg=="
+        },
+        "body_json": {
+          "@type": "transferProcess",
+          "transferDir": "pull"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "transferProcess",
+          "trStatus": "pending",
+          "transferDir": "pull"
+        }
+      }
+    }
+  ]
+}
