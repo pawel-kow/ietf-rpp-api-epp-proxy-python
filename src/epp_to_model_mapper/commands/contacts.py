@@ -1,6 +1,6 @@
 import re
 
-from models import Contact, ContactType
+from models import Address, Contact, ContactType
 
 from ..epp_model.contact_1_0 import (
     AddrType,
@@ -24,6 +24,24 @@ def _e164(value: str) -> E164Type:
     return E164Type(value=value)
 
 
+def _postal_info(kind: PostalInfoEnumType, name: str | None, org: str | None, address: Address | None) -> PostalInfoType:
+    postal = PostalInfoType(type_value=kind)
+    if name:
+        postal.name = name
+    if org:
+        postal.org = org
+    if address:
+        addr = AddrType()
+        if address.street:
+            addr.street = list(address.street)
+        addr.city = address.city
+        addr.sp = address.stateProvince
+        addr.pc = address.postalCode
+        addr.cc = address.country
+        postal.addr = addr
+    return postal
+
+
 def contact_create(contact: Contact, rpp_cl_trid: str) -> Epp:
     create = Create()
 
@@ -32,21 +50,14 @@ def contact_create(contact: Contact, rpp_cl_trid: str) -> Epp:
 
     is_org = contact.organisationName and contact.type == ContactType.ORG
     if contact.name or contact.address or is_org:
-        postal = PostalInfoType(type_value=PostalInfoEnumType.INT)
-        if contact.name:
-            postal.name = contact.name
-        if is_org:
-            postal.org = contact.organisationName
-        if contact.address:
-            addr = AddrType()
-            if contact.address.street:
-                addr.street = list(contact.address.street)
-            addr.city = contact.address.city
-            addr.sp = contact.address.stateProvince
-            addr.pc = contact.address.postalCode
-            addr.cc = contact.address.country
-            postal.addr = addr
-        create.postal_info.append(postal)
+        create.postal_info.append(_postal_info(
+            PostalInfoEnumType.INT, contact.name, contact.organisationName if is_org else None, contact.address,
+        ))
+    localized = contact.localizedPostalInfo
+    if localized:
+        create.postal_info.append(_postal_info(
+            PostalInfoEnumType.LOC, localized.name, localized.organisationName, localized.address,
+        ))
 
     if contact.email and len(contact.email) > 0:
         create.email = contact.email[0]

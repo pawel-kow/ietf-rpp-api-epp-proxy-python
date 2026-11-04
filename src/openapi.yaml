@@ -28597,24 +28597,36 @@ components:
   schemas:
     external.jscontact.Address:
       type: object
+      required:
+        - components
+        - countryCode
+      additionalProperties: false
       properties:
-        full:
+        '@type':
           type: string
+          enum:
+            - Address
         countryCode:
           type: string
           pattern: ^[A-Z]{2}$
-          description: A two-character ISO 3166-1 alpha-2 country code, when present.
+          description: A two-character ISO 3166-1 alpha-2 country code.
         components:
           type: array
           items:
             $ref: '#/components/schemas/external.jscontact.AddressComponent'
+          description: Exactly one locality, at most one region and postcode. The order of the street lines (name) is significant.
       description: A postal address for the Card's entity.
     external.jscontact.AddressComponent:
       type: object
       required:
         - kind
         - value
+      additionalProperties: false
       properties:
+        '@type':
+          type: string
+          enum:
+            - AddressComponent
         kind:
           $ref: '#/components/schemas/external.jscontact.AddressComponentKind'
         value:
@@ -28627,13 +28639,13 @@ components:
         - locality
         - region
         - postcode
-        - country
       description: Kind of an address component.
     external.jscontact.Card:
       type: object
       required:
         - '@type'
         - version
+      additionalProperties: false
       properties:
         '@type':
           type: string
@@ -28647,34 +28659,37 @@ components:
           $ref: '#/components/schemas/external.jscontact.CardKind'
         language:
           type: string
+          pattern: ^[A-Za-z]{1,8}(-[A-Za-z0-9]{1,8})*$
         name:
           $ref: '#/components/schemas/external.jscontact.Name'
         organizations:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/external.jscontact.Organization'
+          $ref: '#/components/schemas/external.jscontact.RecordOrganization'
         addresses:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/external.jscontact.Address'
+          $ref: '#/components/schemas/external.jscontact.RecordAddress'
         phones:
           type: object
+          description: The keys voice and fax hold the preferred numbers, voice-1, fax-1 and so on the additional ones, without gaps.
           additionalProperties:
             $ref: '#/components/schemas/external.jscontact.Phone'
         emails:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/external.jscontact.EmailAddress'
+          $ref: '#/components/schemas/external.jscontact.RecordEmailAddress'
         links:
           type: object
-          additionalProperties:
-            $ref: '#/components/schemas/external.jscontact.Link'
+          additionalProperties: false
+          properties:
+            url:
+              $ref: '#/components/schemas/external.jscontact.Link'
+            contact-uri:
+              $ref: '#/components/schemas/external.jscontact.Link'
+          description: The key url holds a contact URL without kind, contact-uri a contact URI with kind contact.
         localizations:
           type: object
-          additionalProperties: {}
+          additionalProperties:
+            $ref: '#/components/schemas/external.jscontact.Localization'
+          description: Localized variants, keyed by a BCP 47 language tag.
       description: |-
         JSContact Card object (version 2.0), per the RPP JSContact Profile
-        (draft-wullink-rpp-json §5.2.8).
+        (draft-wullink-rpp-jscontact-profile-02).
     external.jscontact.CardKind:
       type: string
       enum:
@@ -28685,7 +28700,12 @@ components:
       type: object
       required:
         - address
+      additionalProperties: false
       properties:
+        '@type':
+          type: string
+          enum:
+            - EmailAddress
         address:
           type: string
           format: email
@@ -28694,7 +28714,12 @@ components:
       type: object
       required:
         - uri
+      additionalProperties: false
       properties:
+        '@type':
+          type: string
+          enum:
+            - Link
         uri:
           type: string
           format: uri
@@ -28703,36 +28728,42 @@ components:
           enum:
             - contact
       description: A link related to the Card's entity.
+    external.jscontact.Localization:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          $ref: '#/components/schemas/external.jscontact.Name'
+        organizations:
+          $ref: '#/components/schemas/external.jscontact.RecordOrganization'
+        addresses:
+          $ref: '#/components/schemas/external.jscontact.RecordAddress'
+        emails:
+          $ref: '#/components/schemas/external.jscontact.RecordEmailAddress'
+      description: A fully expanded localized variant of a Card. Keys of the form key1/key2 are not allowed.
     external.jscontact.Name:
       type: object
+      required:
+        - full
+      additionalProperties: false
       properties:
+        '@type':
+          type: string
+          enum:
+            - Name
         full:
           type: string
-        components:
-          type: array
-          items:
-            $ref: '#/components/schemas/external.jscontact.NameComponent'
       description: The name of the entity represented by the Card.
-    external.jscontact.NameComponent:
-      type: object
-      required:
-        - kind
-        - value
-      properties:
-        kind:
-          $ref: '#/components/schemas/external.jscontact.NameComponentKind'
-        value:
-          type: string
-      description: A single component of a Card's name, such as a given name or surname.
-    external.jscontact.NameComponentKind:
-      type: string
-      enum:
-        - given
-        - surname
-      description: Kind of a name component.
     external.jscontact.Organization:
       type: object
+      required:
+        - name
+      additionalProperties: false
       properties:
+        '@type':
+          type: string
+          enum:
+            - Organization
         name:
           type: string
       description: An organization the Card's entity is associated with.
@@ -28740,9 +28771,16 @@ components:
       type: object
       required:
         - number
+      additionalProperties: false
       properties:
+        '@type':
+          type: string
+          enum:
+            - Phone
         number:
           type: string
+          pattern: '^tel:\+(?=[0-9.]{3,16}(;|$))[0-9]{1,3}\.[0-9]{1,14}(;ext=[0-9]+)?$'
+          description: 'A tel URI of the rpp-telephone-uri rule: tel:+CC.number with an optional ;ext=digits, at most 15 digits in the country code and number.'
         features:
           allOf:
             - $ref: '#/components/schemas/external.jscontact.PhoneFeatures'
@@ -28750,9 +28788,36 @@ components:
       description: A phone number for the Card's entity.
     external.jscontact.PhoneFeatures:
       type: object
+      additionalProperties: false
+      properties:
+        voice:
+          type: boolean
+          enum:
+            - true
+        fax:
+          type: boolean
+          enum:
+            - true
+      description: Feature flags for a phone number.
+    external.jscontact.RecordAddress:
+      type: object
+      additionalProperties: false
+      properties:
+        addr:
+          $ref: '#/components/schemas/external.jscontact.Address'
+      description: The key addr holds the preferred postal address.
+    external.jscontact.RecordEmailAddress:
+      type: object
       additionalProperties:
-        type: boolean
-      description: Feature flags for a phone number, e.g. voice, fax, text.
+        $ref: '#/components/schemas/external.jscontact.EmailAddress'
+      description: The key email holds the preferred address, email-1 and so on the additional ones, without gaps.
+    external.jscontact.RecordOrganization:
+      type: object
+      additionalProperties: false
+      properties:
+        org:
+          $ref: '#/components/schemas/external.jscontact.Organization'
+      description: The key org holds the preferred organization.
     gen.authInfo.create:
       type: object
       required:

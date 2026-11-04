@@ -2282,7 +2282,8 @@
                     "$ref": "#/$defs/CardKind"
                 },
                 "language": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^[A-Za-z]{1,8}(-[A-Za-z0-9]{1,8})*$"
                 },
                 "name": {
                     "$ref": "#/$defs/Name"
@@ -2303,83 +2304,87 @@
                     "$ref": "#/$defs/RecordLink"
                 },
                 "localizations": {
-                    "$ref": "#/$defs/RecordUnknown"
+                    "$ref": "#/$defs/RecordLocalization"
                 }
             },
             "required": [
                 "@type",
                 "version"
             ],
-            "description": "JSContact Card object (version 2.0), per the RPP JSContact Profile\n(draft-wullink-rpp-json §5.2.8).",
+            "unevaluatedProperties": false,
+            "description": "JSContact Card object (version 2.0), per the RPP JSContact Profile\n(draft-wullink-rpp-jscontact-profile-02).",
             "$defs": {
-                "CardKind": {
-                    "type": "string",
-                    "enum": [
-                        "individual",
-                        "org"
-                    ],
-                    "description": "Kind of entity the Card represents."
-                },
-                "Name": {
+                "Address": {
                     "type": "object",
                     "properties": {
-                        "full": {
-                            "type": "string"
+                        "@type": {
+                            "type": "string",
+                            "const": "Address"
+                        },
+                        "countryCode": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{2}$",
+                            "description": "A two-character ISO 3166-1 alpha-2 country code."
                         },
                         "components": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/$defs/NameComponent"
-                            }
+                                "$ref": "#/$defs/AddressComponent"
+                            },
+                            "allOf": [
+                                {
+                                    "contains": {
+                                        "properties": {
+                                            "kind": {
+                                                "const": "locality"
+                                            }
+                                        }
+                                    },
+                                    "minContains": 1,
+                                    "maxContains": 1
+                                },
+                                {
+                                    "contains": {
+                                        "properties": {
+                                            "kind": {
+                                                "const": "region"
+                                            }
+                                        }
+                                    },
+                                    "minContains": 0,
+                                    "maxContains": 1
+                                },
+                                {
+                                    "contains": {
+                                        "properties": {
+                                            "kind": {
+                                                "const": "postcode"
+                                            }
+                                        }
+                                    },
+                                    "minContains": 0,
+                                    "maxContains": 1
+                                }
+                            ],
+                            "description": "Exactly one locality, at most one region and postcode. The order of the street lines (name) is significant."
                         }
                     },
-                    "description": "The name of the entity represented by the Card."
+                    "required": [
+                        "components",
+                        "countryCode"
+                    ],
+                    "unevaluatedProperties": false,
+                    "description": "A postal address for the Card's entity."
                 },
-                "RecordOrganization": {
-                    "type": "object",
-                    "properties": {},
-                    "unevaluatedProperties": {
-                        "$ref": "#/$defs/Organization"
-                    }
-                },
-                "RecordAddress": {
-                    "type": "object",
-                    "properties": {},
-                    "unevaluatedProperties": {
-                        "$ref": "#/$defs/Address"
-                    }
-                },
-                "RecordPhone": {
-                    "type": "object",
-                    "properties": {},
-                    "unevaluatedProperties": {
-                        "$ref": "#/$defs/Phone"
-                    }
-                },
-                "RecordEmailAddress": {
-                    "type": "object",
-                    "properties": {},
-                    "unevaluatedProperties": {
-                        "$ref": "#/$defs/EmailAddress"
-                    }
-                },
-                "RecordLink": {
-                    "type": "object",
-                    "properties": {},
-                    "unevaluatedProperties": {
-                        "$ref": "#/$defs/Link"
-                    }
-                },
-                "RecordUnknown": {
-                    "type": "object",
-                    "properties": {},
-                    "unevaluatedProperties": {}
-                },
-                "NameComponent": {
+                "AddressComponent": {
                     "type": "object",
                     "properties": {
+                        "@type": {
+                            "type": "string",
+                            "const": "AddressComponent"
+                        },
                         "kind": {
-                            "$ref": "#/$defs/NameComponentKind"
+                            "$ref": "#/$defs/AddressComponentKind"
                         },
                         "value": {
                             "type": "string"
@@ -2389,56 +2394,34 @@
                         "kind",
                         "value"
                     ],
-                    "description": "A single component of a Card's name, such as a given name or surname."
+                    "unevaluatedProperties": false,
+                    "description": "A single component of a Card's address, such as locality or postcode."
                 },
-                "Organization": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string"
-                        }
-                    },
-                    "description": "An organization the Card's entity is associated with."
-                },
-                "Address": {
-                    "type": "object",
-                    "properties": {
-                        "full": {
-                            "type": "string"
-                        },
-                        "countryCode": {
-                            "type": "string",
-                            "pattern": "^[A-Z]{2}$",
-                            "description": "A two-character ISO 3166-1 alpha-2 country code, when present."
-                        },
-                        "components": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/$defs/AddressComponent"
-                            }
-                        }
-                    },
-                    "description": "A postal address for the Card's entity."
-                },
-                "Phone": {
-                    "type": "object",
-                    "properties": {
-                        "number": {
-                            "type": "string"
-                        },
-                        "features": {
-                            "$ref": "#/$defs/PhoneFeatures",
-                            "description": "Absent means the number MUST be treated as a voice number."
-                        }
-                    },
-                    "required": [
-                        "number"
+                "AddressComponentKind": {
+                    "type": "string",
+                    "enum": [
+                        "name",
+                        "locality",
+                        "region",
+                        "postcode"
                     ],
-                    "description": "A phone number for the Card's entity."
+                    "description": "Kind of an address component."
+                },
+                "CardKind": {
+                    "type": "string",
+                    "enum": [
+                        "individual",
+                        "org"
+                    ],
+                    "description": "Kind of entity the Card represents."
                 },
                 "EmailAddress": {
                     "type": "object",
                     "properties": {
+                        "@type": {
+                            "type": "string",
+                            "const": "EmailAddress"
+                        },
                         "address": {
                             "type": "string",
                             "format": "email"
@@ -2447,11 +2430,16 @@
                     "required": [
                         "address"
                     ],
+                    "unevaluatedProperties": false,
                     "description": "An email address for the Card's entity."
                 },
                 "Link": {
                     "type": "object",
                     "properties": {
+                        "@type": {
+                            "type": "string",
+                            "const": "Link"
+                        },
                         "uri": {
                             "type": "string",
                             "format": "uri"
@@ -2464,50 +2452,170 @@
                     "required": [
                         "uri"
                     ],
+                    "unevaluatedProperties": false,
                     "description": "A link related to the Card's entity."
                 },
-                "NameComponentKind": {
-                    "type": "string",
-                    "enum": [
-                        "given",
-                        "surname"
-                    ],
-                    "description": "Kind of a name component."
-                },
-                "AddressComponent": {
+                "Localization": {
                     "type": "object",
                     "properties": {
-                        "kind": {
-                            "$ref": "#/$defs/AddressComponentKind"
+                        "name": {
+                            "$ref": "#/$defs/Name"
                         },
-                        "value": {
+                        "organizations": {
+                            "$ref": "#/$defs/RecordOrganization"
+                        },
+                        "addresses": {
+                            "$ref": "#/$defs/RecordAddress"
+                        },
+                        "emails": {
+                            "$ref": "#/$defs/RecordEmailAddress"
+                        }
+                    },
+                    "unevaluatedProperties": false,
+                    "description": "A fully expanded localized variant of a Card. Keys of the form key1/key2 are not allowed."
+                },
+                "Name": {
+                    "type": "object",
+                    "properties": {
+                        "@type": {
+                            "type": "string",
+                            "const": "Name"
+                        },
+                        "full": {
                             "type": "string"
                         }
                     },
                     "required": [
-                        "kind",
-                        "value"
+                        "full"
                     ],
-                    "description": "A single component of a Card's address, such as locality or postcode."
+                    "unevaluatedProperties": false,
+                    "description": "The name of the entity represented by the Card."
+                },
+                "Organization": {
+                    "type": "object",
+                    "properties": {
+                        "@type": {
+                            "type": "string",
+                            "const": "Organization"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "name"
+                    ],
+                    "unevaluatedProperties": false,
+                    "description": "An organization the Card's entity is associated with."
+                },
+                "Phone": {
+                    "type": "object",
+                    "properties": {
+                        "@type": {
+                            "type": "string",
+                            "const": "Phone"
+                        },
+                        "number": {
+                            "type": "string",
+                            "pattern": "^tel:\\+(?=[0-9.]{3,16}(;|$))[0-9]{1,3}\\.[0-9]{1,14}(;ext=[0-9]+)?$",
+                            "description": "A tel URI of the rpp-telephone-uri rule: tel:+CC.number with an optional ;ext=digits, at most 15 digits in the country code and number."
+                        },
+                        "features": {
+                            "$ref": "#/$defs/PhoneFeatures",
+                            "description": "Absent means the number MUST be treated as a voice number."
+                        }
+                    },
+                    "required": [
+                        "number"
+                    ],
+                    "unevaluatedProperties": false,
+                    "description": "A phone number for the Card's entity."
                 },
                 "PhoneFeatures": {
                     "type": "object",
-                    "properties": {},
-                    "unevaluatedProperties": {
-                        "type": "boolean"
+                    "properties": {
+                        "voice": {
+                            "type": "boolean",
+                            "const": true
+                        },
+                        "fax": {
+                            "type": "boolean",
+                            "const": true
+                        }
                     },
-                    "description": "Feature flags for a phone number, e.g. voice, fax, text."
+                    "unevaluatedProperties": false,
+                    "description": "Feature flags for a phone number."
                 },
-                "AddressComponentKind": {
-                    "type": "string",
-                    "enum": [
-                        "name",
-                        "locality",
-                        "region",
-                        "postcode",
-                        "country"
-                    ],
-                    "description": "Kind of an address component."
+                "RecordAddress": {
+                    "type": "object",
+                    "properties": {
+                        "addr": {
+                            "$ref": "#/$defs/Address"
+                        }
+                    },
+                    "unevaluatedProperties": false,
+                    "description": "The key addr holds the preferred postal address."
+                },
+                "RecordEmailAddress": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^email(-[1-9][0-9]*)?$": {
+                            "$ref": "#/$defs/EmailAddress"
+                        }
+                    },
+                    "unevaluatedProperties": false,
+                    "description": "The key email holds the preferred address, email-1 and so on the additional ones, without gaps."
+                },
+                "RecordLink": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "$ref": "#/$defs/Link",
+                            "not": {
+                                "required": [
+                                    "kind"
+                                ]
+                            }
+                        },
+                        "contact-uri": {
+                            "$ref": "#/$defs/Link",
+                            "required": [
+                                "kind"
+                            ]
+                        }
+                    },
+                    "unevaluatedProperties": false,
+                    "description": "The key url holds a contact URL without kind, contact-uri a contact URI with kind contact."
+                },
+                "RecordLocalization": {
+                    "type": "object",
+                    "propertyNames": {
+                        "pattern": "^[A-Za-z]{1,8}(-[A-Za-z0-9]{1,8})*$"
+                    },
+                    "unevaluatedProperties": {
+                        "$ref": "#/$defs/Localization"
+                    },
+                    "description": "Localized variants, keyed by a BCP 47 language tag."
+                },
+                "RecordOrganization": {
+                    "type": "object",
+                    "properties": {
+                        "org": {
+                            "$ref": "#/$defs/Organization"
+                        }
+                    },
+                    "unevaluatedProperties": false,
+                    "description": "The key org holds the preferred organization."
+                },
+                "RecordPhone": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^(voice|fax)(-[1-9][0-9]*)?$": {
+                            "$ref": "#/$defs/Phone"
+                        }
+                    },
+                    "unevaluatedProperties": false,
+                    "description": "The keys voice and fax hold the preferred numbers, voice-1, fax-1 and so on the additional ones, without gaps."
                 }
             }
         },

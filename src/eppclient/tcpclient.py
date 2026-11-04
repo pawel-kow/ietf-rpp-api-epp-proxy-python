@@ -91,7 +91,8 @@ class TCPClient:
 
             payload_length = struct.unpack('>L', length_bytes)[0]
             payload = self.socket.recv(payload_length - 4)  # Subtract 4 bytes for the length field
-            message = payload.decode('utf-8')
+            # A backend may echo rejected input in another encoding.
+            message = payload.decode('utf-8', errors='replace')
 
             print(f"TCPClient: Received message: {message}")
             return message

@@ -17,10 +17,11 @@ Align the proxy, the schemas and the tests to draft-wullink-rpp-jscontact-profil
 
 ## Tasks
 
-- [~] Schemas in `.spec/auto/`, copied to `src/`
-- [ ] Tests first (unit, integration data)
-- [ ] Mapper, RPP models, phones
-- [ ] Model and EPP mapping of `loc`
-- [ ] TCPClient decode
-- [ ] Docs, spec-issues
-- [ ] Full pytest, draft PR, issues
+- [x] Tests first (unit, integration data)
+- [x] Schemas in `.spec/auto/`, copied to `src/`
+- [x] Mapper, RPP models, phones
+- [x] Model and EPP mapping of `loc`
+- [x] TCPClient decode
+- [x] Docs, spec-issues
+- [x] Issues #55 and #56
+- [~] Full pytest, draft PR, maintainer acceptance

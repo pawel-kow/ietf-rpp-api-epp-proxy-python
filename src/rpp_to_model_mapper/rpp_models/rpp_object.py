@@ -8,6 +8,11 @@ def type_field(value: str):
     return field(default=value, metadata=config(field_name="@type"))
 
 
+def optional_type_field():
+    """The '@type' member of a JSContact object, which clients may send and responses leave out."""
+    return field(default=None, metadata=config(field_name="@type"))
+
+
 def _without_none(value):
     if isinstance(value, dict):
         return {k: _without_none(v) for k, v in value.items() if v is not None}

@@ -53,10 +53,10 @@
             },
             "phones": {
               "voice": {
-                "number": "tel:+49-123123123;ext=123"
+                "number": "tel:+49.123123123;ext=123"
               },
               "fax": {
-                "number": "tel:+49-123123123;ext=123",
+                "number": "tel:+49.123123123;ext=123",
                 "features": {
                   "fax": true
                 }
@@ -138,10 +138,10 @@
             },
             "phones": {
               "voice": {
-                "number": "tel:+49-123123123;ext=123"
+                "number": "tel:+49.123123123;ext=123"
               },
               "fax": {
-                "number": "tel:+49-123123123;ext=123",
+                "number": "tel:+49.123123123;ext=123",
                 "features": {
                   "fax": true
                 }

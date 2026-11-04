@@ -1,0 +1,153 @@
+{
+  "test_id": "test16-localized_address",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}-16",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            },
+            "language": "en",
+            "localizations": {
+              "de": {
+                "addresses": {
+                  "addr": {
+                    "components": [
+                      {
+                        "kind": "locality",
+                        "value": "Musterstadt"
+                      }
+                    ],
+                    "countryCode": "DE"
+                  }
+                }
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}-16",
+          "contactInfo": {
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "localizations": {
+              "und": {
+                "addresses": {
+                  "addr": {
+                    "components": [
+                      {
+                        "kind": "locality",
+                        "value": "Musterstadt"
+                      }
+                    ],
+                    "countryCode": "DE"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}-16",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}-16",
+          "contactInfo": {
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "localizations": {
+              "und": {
+                "addresses": {
+                  "addr": {
+                    "components": [
+                      {
+                        "kind": "locality",
+                        "value": "Musterstadt"
+                      }
+                    ],
+                    "countryCode": "DE"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
