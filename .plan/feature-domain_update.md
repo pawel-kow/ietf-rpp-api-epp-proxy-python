@@ -30,3 +30,30 @@ Maintainer asked to work on the current branch, no new branch for now.
 ## Open questions
 
 None.
+
+# Domain update fixes (#6, follow-ups from the feature check)
+
+Maintainer asked to continue on this branch. Previous lock (issues 18,19) was removed
+with the maintainer's approval.
+
+## Tasks
+
+- [~] Failing tests first
+- [ ] `domains_Update` returns 200 on success (#6), PATCH fixtures updated
+- [ ] Update or create applied but Info readback failed: 202, in both handlers
+- [ ] `domain_update` uppercases contact and registrant IDs
+- [ ] Issue for the -core spec clarification
+- [ ] Update `architecture.project.md`
+- [ ] Full `pytest` with the live backend
+
+## Findings
+
+- The backend rejects lowercase contact IDs on domain create (2005) and accepts them on
+  update, so uppercasing stays in `domain_create` and is added to `domain_update`.
+- `draft-ietf-rpp-core` says PATCH MUST answer 200 with the updated object, which cannot
+  be built when Info fails after a successful update.
+
+## Decisions
+
+- Readback failure after a successful mutation returns 202, for `domains_Update` and
+  `domains_Create`. Maintainer's decision, to be raised with the -core spec.
