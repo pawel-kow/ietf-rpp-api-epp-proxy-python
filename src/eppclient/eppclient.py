@@ -1,7 +1,6 @@
 import socket
 import struct
 import threading
-from .tcpclient import TCPClient
 import uuid
 import re
 import xml.etree.ElementTree as ET
@@ -19,15 +18,16 @@ class EPPClient:
     connect() and disconnect() send login/logout through the same path.
     """
 
-    def __init__(self, server_address, server_port, username, password):
+    def __init__(self, transport, username, password):
         """
-        Initializes the EPP client with server address and port.
+        Initializes the EPP client with its transport and credentials.
 
         Args:
-            server_address (str): The server's IP address or hostname.
-            server_port (int): The server's port number.
+            transport: Provides connect(), send(message), receive() and disconnect().
+            username (str): The EPP clID to log in with.
+            password (str): The EPP password to log in with.
         """
-        self.client = TCPClient(server_address, server_port)
+        self.client = transport
         self.username = username
         self.password = password
         self._connected = False 

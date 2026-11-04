@@ -29,8 +29,7 @@ class FakeTransport:
 
 
 def test_concurrent_commands_each_get_their_own_response():
-    client = EPPClient("unused", 0, "user", "pw")
-    client.client = FakeTransport()
+    client = EPPClient(FakeTransport(), "user", "pw")
     client._connected = True
 
     def command(i):

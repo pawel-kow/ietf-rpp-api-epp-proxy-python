@@ -60,9 +60,17 @@ mapping, and the `RPP-*` headers.
 (path overridable via `RPP_CONFIG_FILE`). `rpp_epp_connection_cache` (default
 `false`) toggles between stateless per-request EPP connections and a cached,
 stateful connection. The EPP backend host and port come from `rpp_epp_host` and
-`rpp_epp_port`, and `basic_auth` in
-[src/controller/auth.py](../../src/controller/auth.py) uses them to open the
-connection.
+`rpp_epp_port`, and `new_epp_client` in [src/run.py](../../src/run.py) uses them to
+open the connection.
+
+## Composition
+
+[src/run.py](../../src/run.py) is the composition root: it builds the default
+`EPPClient` factory and passes it to
+[`EppSessionAuthenticator`](../../src/controller/epp_session_authenticator.py), which
+goes to `create_app` in [src/app.py](../../src/app.py). `create_app` hands
+`authenticate` to Connexion through `security_map`, because Connexion would otherwise
+resolve the function by name and it could not receive dependencies.
 
 ## Known debt
 
@@ -81,7 +89,3 @@ Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
   hand-writes its own EPP-code→HTTP branches, which is how `domains_Update` once
   missed 2303→404. Not all branches pass the RPP headers (e.g. `domains_Get`).
   (#16)
-- **Dependencies constructed internally:** `basic_auth` builds its own `EPPClient`
-  ([auth.py:14](../../src/controller/auth.py#L14), #18), and `EPPClient` builds its
-  own `TCPClient` ([eppclient.py:30](../../src/eppclient/eppclient.py#L30), #19).
-  See [testing.md](testing.md#design-for-testability).

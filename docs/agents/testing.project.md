@@ -16,11 +16,11 @@ pytest "tests/integration/test_from_file_definition.py::test_from_file_definitio
 
 ## Backend
 
-Integration tests require a **backend EPP test server**. There is no mock: tests
-exercise the full RPP→EPP→RPP round trip against a live registry.
+Integration tests require a **backend EPP test server**. They do not use test
+doubles: they exercise the full RPP→EPP→RPP round trip against a live registry.
 
 Its host and port come from `config.yaml` (`rpp_epp_host`/`rpp_epp_port`) via
-`basic_auth` in [src/controller/auth.py](../../src/controller/auth.py). In the
+`new_epp_client` in [src/run.py](../../src/run.py). In the
 devcontainer that is the `epp-server-docker-epp-server-1` container on port `700`,
 reached over the shared `epp-server-docker_epp_net` docker network (attached via
 `postStartCommand` in
@@ -28,6 +28,17 @@ reached over the shared `epp-server-docker_epp_net` docker network (attached via
 
 Auth uses HTTP Basic, and the username and password are passed straight through as
 the EPP `clID`/`pw` login credentials.
+
+## Tests without the backend
+
+Unit tests in `tests/unit/` inject test doubles through constructors:
+
+- `EPPClient(transport, username, password)` takes a fake transport.
+- `EppSessionAuthenticator(client_factory)` takes a factory returning a fake client,
+  such as [FakeEppClient](../../tests/helper/fake_epp_client.py).
+- `create_app(authenticator)` builds a full app around that authenticator, so a
+  handler can be tested through `test_client()` without a registry. See
+  [test_app_injection.py](../../tests/unit/test_app_injection.py).
 
 ## Test data format
 

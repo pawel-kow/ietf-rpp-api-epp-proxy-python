@@ -4,13 +4,13 @@ Maintainer asked to work on the current branch, no new branch for now.
 
 ## Tasks
 
-- [~] Failing tests with stubs
-- [ ] `EPPClient(transport, username, password)` (#19)
-- [ ] `EppSessionAuthenticator(client_factory)` replaces `basic_auth` and `CLIENTS` (#18)
-- [ ] `EppBasicSecurityHandler(authenticate)` passed to Connexion through `security_map`
-- [ ] `create_app(authenticator)` in `app.py`, `run.py` becomes the composition root
-- [ ] Update `architecture.project.md` and `testing.project.md`
-- [ ] Full `pytest` with the live backend
+- [x] Failing tests with stubs
+- [x] `EPPClient(transport, username, password)` (#19)
+- [x] `EppSessionAuthenticator(client_factory)` replaces `basic_auth` and `CLIENTS` (#18)
+- [x] `EppBasicSecurityHandler(authenticate)` passed to Connexion through `security_map`
+- [x] `create_app(authenticator)` in `app.py`, `run.py` becomes the composition root
+- [x] Update `architecture.project.md` and `testing.project.md`
+- [x] Full `pytest` with the live backend: 61 passed, 2 skipped
 
 ## Findings
 
