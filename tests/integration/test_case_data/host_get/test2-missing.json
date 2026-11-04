@@ -1,0 +1,26 @@
+{
+  "test_id": "test2-missing",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/hosts/t2.{random_name}.net",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "RPP-Code": "02303"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
+      }
+    }
+  ]
+}

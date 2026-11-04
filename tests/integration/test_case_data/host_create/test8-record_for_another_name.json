@@ -1,0 +1,44 @@
+{
+  "test_id": "test8-record_for_another_name",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t8.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "www.t8.{random_name}.net.",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.1"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02102"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
+      }
+    }
+  ]
+}

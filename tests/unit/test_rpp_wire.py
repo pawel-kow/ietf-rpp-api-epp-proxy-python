@@ -93,7 +93,7 @@ def test_unsupported_input_is_a_501_unimplemented_option():
 
 
 @pytest.mark.parametrize("method, url", [
-    ("get", "/hosts/ns1.foo.example"),
+    ("get", "/hosts/ns1.foo.example/processes/transferProcesses/latest"),
     ("put", "/domainNames/foo.example"),
     ("get", "/contacts/JD-1234/availability"),
     ("get", "/.well-known/rpp"),

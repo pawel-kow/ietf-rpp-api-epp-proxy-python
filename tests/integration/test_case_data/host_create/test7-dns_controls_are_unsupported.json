@@ -1,0 +1,50 @@
+{
+  "test_id": "test7-dns_controls_are_unsupported",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t7.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "t7.{random_name}.net.",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.1"
+                }
+              }
+            ],
+            "controls": {
+              "@type": "dnsControls",
+              "ttl": {
+                "a": 3600
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02102"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "test_id": "test1-free",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/hosts/t1.{random_name}.net/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "@type": "hostAvailability",
+          "available": true
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    }
+  ]
+}

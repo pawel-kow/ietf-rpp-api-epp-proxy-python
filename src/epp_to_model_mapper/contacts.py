@@ -1,42 +1,10 @@
-import uuid
-from datetime import timezone
 from models import *
 from typing import Union
-from .epp_core import map_epp_code
+from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header
 from .commands.contacts import contact_create, contact_delete, contact_info
 from .commands.helper import epp_to_str, str_to_epp
 from .epp_model.contact_1_0 import CreData, InfData
 from .epp_model.epp_1_0 import Epp
-
-
-def _parse_epp_response_header(epp: Epp) -> dict:
-    return {
-        "code": map_epp_code(epp.response.result[0].code.value),
-        "msg": epp.response.result[0].msg.value,
-        "server_transaction_id": epp.response.tr_id.sv_trid,
-        "client_transaction_id": epp.response.tr_id.cl_trid,
-    }
-
-
-def _find_res_data(epp: Epp, *types):
-    """Return the first res_data element matching one of the given xsdata types."""
-    if epp.response is None or epp.response.res_data is None:
-        return None
-    for item in epp.response.res_data.other_element:
-        if isinstance(item, types):
-            return item
-    return None
-
-
-def _cl_trid(client_request_id) -> str:
-    return client_request_id if client_request_id else str(uuid.uuid4())
-
-
-def _dt(value):
-    # UTC ISO form with fractional seconds and a trailing "Z", matching the EPP wire format.
-    if value is None:
-        return None
-    return value.to_datetime().astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def _phone(e164):
@@ -47,21 +15,21 @@ def _phone(e164):
 
 
 def create_contact_xml(contact: Contact, client_request_id=None) -> str:
-    return epp_to_str(contact_create(contact, _cl_trid(client_request_id)))
+    return epp_to_str(contact_create(contact, cl_trid(client_request_id)))
 
 
 def info_contact_xml(id: str, client_request_id=None) -> str:
-    return epp_to_str(contact_info(id, _cl_trid(client_request_id)))
+    return epp_to_str(contact_info(id, cl_trid(client_request_id)))
 
 
 def delete_contact_xml(id: str, client_request_id=None) -> str:
-    return epp_to_str(contact_delete(id, _cl_trid(client_request_id)))
+    return epp_to_str(contact_delete(id, cl_trid(client_request_id)))
 
 
 def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[ContactDeleteResponse, ErrorResponse]:
     """Parses an EPP contact delete response."""
     epp = str_to_epp(xml_string)
-    header = _parse_epp_response_header(epp)
+    header = parse_epp_response_header(epp)
     if client_transaction_id is None:
         header["client_transaction_id"] = None
     return ContactDeleteResponse(**header)
@@ -70,11 +38,11 @@ def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -
 def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union[ContactCreateResponse, ErrorResponse]:
     """Parses an EPP contact create/info response into a ContactCreateResponse."""
     epp = str_to_epp(xml_string)
-    header = _parse_epp_response_header(epp)
+    header = parse_epp_response_header(epp)
     if client_transaction_id is None:
         header["client_transaction_id"] = None
 
-    data = _find_res_data(epp, InfData, CreData)
+    data = find_res_data(epp, InfData, CreData)
 
     postal = None
     postal_list = getattr(data, "postal_info", None) if data else None
@@ -114,10 +82,10 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
         address=address,
         # common fields
         status=[s.s.value for s in getattr(data, "status", [])] if data else None,
-        crDate=_dt(getattr(data, "cr_date", None)) if data else None,
+        crDate=epp_datetime(getattr(data, "cr_date", None)) if data else None,
         exDate=None,
-        upDate=_dt(getattr(data, "up_date", None)) if data else None,
-        trDate=_dt(getattr(data, "tr_date", None)) if data else None,
+        upDate=epp_datetime(getattr(data, "up_date", None)) if data else None,
+        trDate=epp_datetime(getattr(data, "tr_date", None)) if data else None,
         clID=getattr(data, "cl_id", None) if data else None,
         crID=getattr(data, "cr_id", None) if data else None,
         authInfo=AuthInfo(pw=pw, hash=None) if pw is not None else None,

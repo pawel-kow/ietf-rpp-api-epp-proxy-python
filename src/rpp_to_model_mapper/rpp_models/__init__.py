@@ -8,9 +8,13 @@ from .rpp_card_organization import RPPCardOrganization
 from .rpp_card_phone import RPPCardPhone
 from .rpp_contact import RPPContact
 from .rpp_contact_reference import RPPContactReference
+from .rpp_dns_data import RPPDnsData
+from .rpp_dns_record import RPPDnsRecord
 from .rpp_domain import RPPDomain
 from .rpp_domain_create_process import RPPDomainCreateProcess
 from .rpp_domain_name_availability import RPPDomainNameAvailability
+from .rpp_host import RPPHost
+from .rpp_host_availability import RPPHostAvailability
 from .rpp_host_reference import RPPHostReference
 from .rpp_labelled_contact import RPPLabelledContact
 from .rpp_patch_operation import RPPPatchOperation

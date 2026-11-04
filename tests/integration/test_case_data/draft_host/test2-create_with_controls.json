@@ -1,0 +1,97 @@
+{
+  "test_id": "test2-create_with_controls",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "d2-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "ns1.d2-{random_name}.example",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.d2-{random_name}.example."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "ns1.d2-{random_name}.example.",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.1"
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "ns1.d2-{random_name}.example.",
+                "type": "aaaa",
+                "rdata": {
+                  "address": "2001:db8::1"
+                }
+              }
+            ],
+            "controls": {
+              "@type": "dnsControls",
+              "ttl": {
+                "a": 3600,
+                "aaaa": 3600
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02102"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
+      }
+    }
+  ]
+}

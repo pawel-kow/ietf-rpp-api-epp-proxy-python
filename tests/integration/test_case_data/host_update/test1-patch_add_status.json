@@ -1,0 +1,68 @@
+{
+  "test_id": "test1-patch_add_status",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t1.{random_name}.net"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "host"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/hosts/t1.{random_name}.net",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/status",
+            "value": {
+              "@type": "hostStatus",
+              "label": "clientDeleteProhibited"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "@type": "host",
+          "hostName": "t1.{random_name}.net",
+          "status": [
+            {
+              "@type": "hostStatus",
+              "label": "clientDeleteProhibited"
+            }
+          ]
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    }
+  ]
+}

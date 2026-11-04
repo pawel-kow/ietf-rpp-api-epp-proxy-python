@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import uuid
 
@@ -78,6 +79,12 @@ def raise_epp_error(resp: ErrorResponse):
         detail=resp.msg,
         headers=problem_headers(resp.code, resp.server_transaction_id),
     )
+
+
+def require_empty_body():
+    """DELETE takes no request body."""
+    if asyncio.run(request.get_body()):
+        raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
 
 
 def map_request(mapper, *args):

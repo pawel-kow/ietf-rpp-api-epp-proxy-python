@@ -29,6 +29,11 @@ reached over the shared `epp-server-docker_epp_net` docker network (attached via
 Auth uses HTTP Basic, and the username and password are passed straight through as
 the EPP `clID`/`pw` login credentials.
 
+The backend hangs on a repeated clTRID, so every EPP command needs a new one. It drops
+addresses given when creating an external host, so tests of addresses at create use an
+internal host, which needs its domain to exist first. Its other host defects are
+#49, #50, #51, #52 and #54.
+
 ## Tests without the backend
 
 Unit tests in `tests/unit/` inject test doubles through constructors:
@@ -59,8 +64,8 @@ update → verify) run against a Flask test client.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.
-- `draft_domain/`, `draft_contact/` and `draft_patch/` hold the examples of the JSON
-  draft (§8.1, §8.2, §5.3.1). Examples for operations not implemented yet have the
+- `draft_domain/`, `draft_contact/`, `draft_host/` and `draft_patch/` hold the examples
+  of the JSON draft (§8.1, §8.2, §8.3, §5.3.1). Examples for operations not implemented yet have the
   expected result written down and `"skip": "#<issue>"`.
 
 To add a case, drop a new JSON file in the appropriate group dir. No Python changes

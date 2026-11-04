@@ -1,8 +1,7 @@
-import uuid
-from datetime import timezone
 from models import *
 from typing import Union
 from .epp_core import map_epp_code
+from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header
 from .commands.domains import (
     domain_check,
     domain_create,
@@ -15,47 +14,24 @@ from .epp_model.domain_1_0 import CreData, InfData
 from .epp_model.epp_1_0 import Epp
 
 
-def parse_epp_response_header(epp: Epp) -> dict:
-    return {
-        "code": map_epp_code(epp.response.result[0].code.value),
-        "msg": epp.response.result[0].msg.value,
-        "server_transaction_id": epp.response.tr_id.sv_trid,
-        "client_transaction_id": epp.response.tr_id.cl_trid,
-    }
-
-
-def _find_res_data(epp: Epp, *types):
-    """Return the first res_data element matching one of the given xsdata types."""
-    if epp.response is None or epp.response.res_data is None:
-        return None
-    for item in epp.response.res_data.other_element:
-        if isinstance(item, types):
-            return item
-    return None
-
-
-def _cl_trid(client_request_id) -> str:
-    return client_request_id if client_request_id else str(uuid.uuid4())
-
-
 def create_domain_xml(domain: Domain, client_request_id=None) -> str:
-    return epp_to_str(domain_create(domain, _cl_trid(client_request_id)))
+    return epp_to_str(domain_create(domain, cl_trid(client_request_id)))
 
 
 def info_domain_xml(domain_name: str, client_request_id=None) -> str:
-    return epp_to_str(domain_info(domain_name, _cl_trid(client_request_id)))
+    return epp_to_str(domain_info(domain_name, cl_trid(client_request_id)))
 
 
 def delete_domain_xml(domain_name: str, client_request_id=None) -> str:
-    return epp_to_str(domain_delete(domain_name, _cl_trid(client_request_id)))
+    return epp_to_str(domain_delete(domain_name, cl_trid(client_request_id)))
 
 
 def domain_check_xml(domain_name: str, client_request_id=None) -> str:
-    return epp_to_str(domain_check(domain_name, _cl_trid(client_request_id)))
+    return epp_to_str(domain_check(domain_name, cl_trid(client_request_id)))
 
 
 def create_domain_update_xml(domain_update_model: DomainUpdate, client_request_id=None) -> str:
-    return epp_to_str(domain_update(domain_update_model, _cl_trid(client_request_id)))
+    return epp_to_str(domain_update(domain_update_model, cl_trid(client_request_id)))
 
 
 def _ns_from_epp(ns) -> Union[NS, None]:
@@ -84,7 +60,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
     if client_transaction_id is None:
         header["client_transaction_id"] = None
 
-    data = _find_res_data(epp, InfData, CreData)
+    data = find_res_data(epp, InfData, CreData)
 
     registrant = getattr(data, "registrant", None) if data else None
 
@@ -107,20 +83,12 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
 
     ns = _ns_from_epp(getattr(data, "ns", None)) if data else None
 
-    def _dt(value):
-        # Emit UTC ISO form with fractional seconds and a trailing "Z"
-        # (e.g. "2026-07-10T14:43:55.000000Z"), matching the EPP wire format.
-        if value is None:
-            return None
-        dt = value.to_datetime()
-        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-
     domain = Domain(
         name=data.name if data else None,
-        crDate=_dt(getattr(data, "cr_date", None)) if data else None,
-        exDate=_dt(getattr(data, "ex_date", None)) if data else None,
-        upDate=_dt(getattr(data, "up_date", None)) if data else None,
-        trDate=_dt(getattr(data, "tr_date", None)) if data else None,
+        crDate=epp_datetime(getattr(data, "cr_date", None)) if data else None,
+        exDate=epp_datetime(getattr(data, "ex_date", None)) if data else None,
+        upDate=epp_datetime(getattr(data, "up_date", None)) if data else None,
+        trDate=epp_datetime(getattr(data, "tr_date", None)) if data else None,
         status=[s.s.value for s in getattr(data, "status", [])] if data else None,
         clID=getattr(data, "cl_id", None) if data else None,
         crID=getattr(data, "cr_id", None) if data else None,
