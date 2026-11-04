@@ -118,11 +118,10 @@ def test_replacement_keeps_status_labels():
     assert rpp_to_host_replacement(body).status == ["clientDeleteProhibited"]
 
 
-def test_replacement_rejects_a_status_reason():
+def test_replacement_keeps_a_status_reason():
     body = host(status=[{"@type": "hostStatus", "label": "clientDeleteProhibited", "reason": "x"}])
 
-    with pytest.raises(UnsupportedRppFeature):
-        rpp_to_host_replacement(body)
+    assert rpp_to_host_replacement(body).status_reasons == {"clientDeleteProhibited": "x"}
 
 
 def test_replacement_rejects_dns_controls():
@@ -151,6 +150,13 @@ def test_read_representation_follows_the_draft_example():
         {"@type": "dnsRecord", "name": "NS1.EXAMPLE.EXAMPLE.", "type": "a", "rdata": {"address": "192.0.2.1"}},
         {"@type": "dnsRecord", "name": "NS1.EXAMPLE.EXAMPLE.", "type": "aaaa", "rdata": {"address": "2001:db8::1"}},
     ]
+
+
+def test_read_gives_a_status_reason():
+    rpp = host_to_rpp(Host(name=NAME, status=["clientDeleteProhibited"], status_reasons={"clientDeleteProhibited": "x"},
+                           clID="ClientX"))
+
+    assert rpp["status"] == [{"@type": "hostStatus", "label": "clientDeleteProhibited", "reason": "x"}]
 
 
 def test_host_without_addresses_has_no_dns():

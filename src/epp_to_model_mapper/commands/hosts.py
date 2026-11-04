@@ -27,7 +27,10 @@ def _add_rem(changes: HostUpdateChanges | None) -> AddRemType | None:
         return None
     return AddRemType(
         addr=_addresses(changes.ipv4, changes.ipv6),
-        status=[StatusType(s=StatusValueType(label)) for label in changes.status],
+        status=[
+            StatusType(s=StatusValueType(label), value=changes.status_reasons.get(label, ""))
+            for label in changes.status
+        ],
     )
 
 

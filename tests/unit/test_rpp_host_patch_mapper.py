@@ -50,9 +50,10 @@ def test_add_status_rejects_a_server_status():
         update(add("/status", {"@type": "hostStatus", "label": "ok"}))
 
 
-def test_add_status_rejects_a_reason():
-    with pytest.raises(UnsupportedRppFeature):
-        update(add("/status", {**STATUS, "reason": "x"}))
+def test_add_status_keeps_the_reason():
+    assert update(add("/status", {**STATUS, "reason": "x"})).add == HostUpdateChanges(
+        status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "x"}
+    )
 
 
 def test_remove_status():

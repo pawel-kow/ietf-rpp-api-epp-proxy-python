@@ -32,7 +32,7 @@ the EPP `clID`/`pw` login credentials.
 The backend hangs on a repeated clTRID, so every EPP command needs a new one. It drops
 addresses given when creating an external host, so tests of addresses at create use an
 internal host, which needs its domain to exist first. Its other host defects are
-#49, #50, #51 and #52.
+#49, #50, #51, #52 and #54.
 
 ## Tests without the backend
 

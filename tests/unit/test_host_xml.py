@@ -62,6 +62,15 @@ def test_update_add_and_remove():
     assert "host:chg" not in xml
 
 
+def test_update_sends_the_status_reason():
+    xml = create_host_update_xml(HostUpdate(
+        name="ns1.example.example",
+        add=HostUpdateChanges(status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "x & y"}),
+    ))
+
+    assert ">x &amp; y</host:status>" in xml
+
+
 def test_update_rename():
     xml = create_host_update_xml(HostUpdate(name="ns1.example.example", new_name="ns2.example.example"))
 
@@ -110,6 +119,18 @@ def test_parse_info_does_not_rely_on_the_ip_attribute():
 
     assert host.ipv4 == ["192.0.2.1"]
     assert host.ipv6 == ["2001:db8::1"]
+
+
+def test_parse_info_status_reason():
+    xml = reply(INFO.format(addresses="")).replace('<host:status s="ok"/>', '<host:status s="ok">Checked</host:status>')
+
+    assert parse_host_response(xml, "cl-1").host.status_reasons == {"ok": "Checked"}
+
+
+def test_parse_info_status_text_equal_to_the_label_is_no_reason():
+    xml = reply(INFO.format(addresses="")).replace('<host:status s="ok"/>', '<host:status s="ok">ok</host:status>')
+
+    assert parse_host_response(xml, "cl-1").host.status_reasons == {}
 
 
 def test_parse_create():

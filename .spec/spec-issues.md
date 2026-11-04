@@ -99,11 +99,6 @@ Each entry says what the proxy does today.
 - The same applies to domain create.
 - **Proxy:** 501 (`02102`).
 
-## Status `reason` on hosts
-
-- `reason` is accepted by `hostStatus.create`. EPP can hold it as the text of `<host:status>`, but backends return the status label there, so it cannot be told apart from a real reason on read.
-- **Proxy:** 501 (`02102`) on PUT and PATCH.
-
 ## Host transfer
 
 - Data-objects §13.4 gives the host a Transfer Process and the OpenAPI has the operations. RFC 5732 defines no host transfer: subordinate hosts move with their domain, and data-objects §11.4.2 disallows anything that breaks that relationship.

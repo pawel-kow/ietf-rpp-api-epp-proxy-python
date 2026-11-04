@@ -45,17 +45,28 @@ def _client_statuses(host: Host) -> set[str]:
     return {label for label in host.status or [] if label.startswith(CLIENT_STATUS_PREFIX)}
 
 
+def _statuses_with_a_new_reason(current: Host, wanted: Host) -> set[str]:
+    """EPP cannot change a reason, so these statuses are removed and added again."""
+    return {
+        label for label in _client_statuses(current) & _client_statuses(wanted)
+        if current.status_reasons.get(label) != wanted.status_reasons.get(label)
+    }
+
+
 def _difference(host_name: str, current: Host, wanted: Host) -> HostUpdate:
     """The update that turns the current host into the wanted one (core §16.8: what is omitted is cleared)."""
+    new_reason = _statuses_with_a_new_reason(current, wanted)
+    add_status = sorted(_client_statuses(wanted) - _client_statuses(current) | new_reason)
     add = HostUpdateChanges(
         ipv4=_addresses_missing_from(wanted.ipv4, current.ipv4),
         ipv6=_addresses_missing_from(wanted.ipv6, current.ipv6),
-        status=sorted(_client_statuses(wanted) - _client_statuses(current)),
+        status=add_status,
+        status_reasons={label: wanted.status_reasons[label] for label in add_status if label in wanted.status_reasons},
     )
     remove = HostUpdateChanges(
         ipv4=_addresses_missing_from(current.ipv4, wanted.ipv4),
         ipv6=_addresses_missing_from(current.ipv6, wanted.ipv6),
-        status=sorted(_client_statuses(current) - _client_statuses(wanted)),
+        status=sorted(_client_statuses(current) - _client_statuses(wanted) | new_reason),
     )
     return HostUpdate(
         name=host_name,

@@ -21,7 +21,7 @@ Host objects (#31): the `/hosts` operations that have an EPP counterpart.
 - `status` on create is 501 (`02102`), `host:create` has none. Spec issue.
 - PUT clears what the request omits (core §16.8), so an omitted `dns` removes the addresses and an omitted `status` removes the client statuses.
 - `add` on `/hostName` acts as `replace` (json §5.2).
-- `reason` on a status is 501 (`02102`): read cannot return it. To be confirmed in the PR.
+- `reason` on a status is sent to EPP as the status text, and read returns it. The backend losing it is #54, not a reason for a 501. A PUT that changes a reason removes and adds the status in one update.
 - A failed readback after a mutation answers 202 with no body, as for domains.
 
 ## Findings
@@ -37,7 +37,7 @@ Host objects (#31): the `/hosts` operations that have an EPP counterpart.
 
 ## Corrections
 - Empty PATCH is `02001` from the OpenAPI validation, it never reaches the backend.
-- Backend defects filed as #49, #50, #51, #52. `draft_host/test5-update` and `host_delete/test4-delete_prohibited` are skipped on them.
+- Backend defects filed as #49, #50, #51, #52, #54. `draft_host/test5-update` and `host_delete/test4-delete_prohibited` and `host_update/test17-status_reason_read` are skipped on them.
 
 ## Open questions
 None.

@@ -1,7 +1,7 @@
 from models import HostUpdate, HostUpdateChanges
 from rpp_schema_validator import validate_schema
 from .common import parse_rpp, reject_operation
-from .hosts import rpp_record_to_address, rpp_to_status_label
+from .hosts import add_rpp_status, rpp_record_to_address
 from .rpp_models import RPPDnsRecord, RPPPatchOperation, RPPStatus
 
 HOST_NAME_PATH = "/hostName"
@@ -63,7 +63,7 @@ class _PatchedHostUpdate:
     def _change(self, operation: RPPPatchOperation, element: dict, changes: HostUpdateChanges):
         if operation.path == STATUS_PATH:
             validate_schema("hostStatus.create", element)
-            changes.status.append(rpp_to_status_label(parse_rpp(RPPStatus, element)))
+            add_rpp_status(parse_rpp(RPPStatus, element), changes)
             return
         validate_schema("dnsRecord.create", element)
         address = rpp_record_to_address(self.host_name, parse_rpp(RPPDnsRecord, element))

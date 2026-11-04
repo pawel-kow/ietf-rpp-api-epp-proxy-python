@@ -14,8 +14,9 @@ def epp_reply(code, res_data=""):
     )
 
 
-def info(statuses=("ok",), addresses=()):
-    status = "".join(f'<host:status s="{s}"/>' for s in statuses)
+def info(statuses=("ok",), addresses=(), reasons=None):
+    reasons = reasons or {}
+    status = "".join(f'<host:status s="{s}">{reasons.get(s, "")}</host:status>' for s in statuses)
     addr = "".join(f'<host:addr ip="v">{a}</host:addr>' for a in addresses)
     return (True, "1000", epp_reply(1000, (
         f'<resData><host:infData {HOST_NS}><host:name>NS1.EXAMPLE.EXAMPLE</host:name><host:roid>H1</host:roid>'
@@ -133,6 +134,49 @@ def test_replace_adds_a_status():
     replace_host(epp, NAME, Host(name=NAME, status=["clientUpdateProhibited"]), "cl-1")
 
     assert 's="clientUpdateProhibited"' in sent_update(epp)
+
+
+def test_replace_sends_the_reason_of_a_new_status():
+    epp = client(info(), DONE, info())
+
+    wanted = Host(name=NAME, status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "x"})
+    replace_host(epp, NAME, wanted, "cl-1")
+
+    assert ">x</host:status>" in sent_update(epp)
+
+
+def status_blocks(xml):
+    return xml[xml.index("<host:add>"):xml.index("</host:add>")], xml[xml.index("<host:rem>"):xml.index("</host:rem>")]
+
+
+def test_replace_with_another_reason_replaces_the_status():
+    epp = client(info(statuses=["clientDeleteProhibited"], reasons={"clientDeleteProhibited": "old"}), DONE, info())
+
+    wanted = Host(name=NAME, status=["clientDeleteProhibited"], status_reasons={"clientDeleteProhibited": "new"})
+    replace_host(epp, NAME, wanted, "cl-1")
+
+    add, rem = status_blocks(sent_update(epp))
+    assert ">new</host:status>" in add
+    assert 's="clientDeleteProhibited"' in rem
+
+
+def test_replace_that_omits_a_reason_clears_it():
+    epp = client(info(statuses=["clientDeleteProhibited"], reasons={"clientDeleteProhibited": "old"}), DONE, info())
+
+    replace_host(epp, NAME, Host(name=NAME, status=["clientDeleteProhibited"]), "cl-1")
+
+    add, rem = status_blocks(sent_update(epp))
+    assert 's="clientDeleteProhibited"' in add
+    assert 's="clientDeleteProhibited"' in rem
+
+
+def test_replace_with_the_same_reason_changes_nothing():
+    epp = client(info(statuses=["clientDeleteProhibited"], reasons={"clientDeleteProhibited": "x"}), DONE, info())
+
+    wanted = Host(name=NAME, status=["clientDeleteProhibited"], status_reasons={"clientDeleteProhibited": "x"})
+    replace_host(epp, NAME, wanted, "cl-1")
+
+    assert "host:status" not in sent_update(epp)
 
 
 def test_replace_with_another_name_renames():

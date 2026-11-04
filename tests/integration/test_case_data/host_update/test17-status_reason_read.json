@@ -1,0 +1,69 @@
+{
+  "test_id": "test17-status_reason_read",
+  "skip": "#54",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t17.{random_name}.net"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "host"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/hosts/t17.{random_name}.net",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/status",
+            "value": {
+              "@type": "hostStatus",
+              "label": "clientDeleteProhibited",
+              "reason": "Requested by the registrant"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": [
+            {
+              "@type": "hostStatus",
+              "label": "clientDeleteProhibited",
+              "reason": "Requested by the registrant"
+            }
+          ]
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    }
+  ]
+}

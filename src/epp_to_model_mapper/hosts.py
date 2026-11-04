@@ -42,6 +42,11 @@ def _addresses(data: InfData) -> tuple[list[str] | None, list[str] | None]:
     return [a for a in addresses if ":" not in a] or None, [a for a in addresses if ":" in a] or None
 
 
+def _status_reasons(data: InfData) -> dict[str, str]:
+    """The status texts that say something: the backend repeats the label there (#54)."""
+    return {s.s.value: s.value for s in data.status if s.value and s.value != s.s.value}
+
+
 def parse_host_response(xml_string: str, client_transaction_id: str | None) -> HostInfoResponse | ErrorResponse:
     """Parses an EPP host info response."""
     epp = str_to_epp(xml_string)
@@ -52,6 +57,7 @@ def parse_host_response(xml_string: str, client_transaction_id: str | None) -> H
         ipv4=ipv4,
         ipv6=ipv6,
         status=[s.s.value for s in data.status],
+        status_reasons=_status_reasons(data),
         clID=data.cl_id,
         crID=data.cr_id,
         crDate=epp_datetime(data.cr_date),

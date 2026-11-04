@@ -1,8 +1,8 @@
 import ipaddress
 
-from models import Host, HostCheckResponse
+from models import Host, HostCheckResponse, HostUpdateChanges
 from rpp_schema_validator import validate_schema
-from .common import parse_rpp, prov_metadata_to_rpp, reject_set, statuses_to_rpp
+from .common import parse_rpp, prov_metadata_to_rpp, reject_set
 from .rpp_models import RPPDnsData, RPPDnsRecord, RPPHost, RPPHostAvailability, RPPStatus
 from .unsupported_rpp_feature import UnsupportedRppFeature
 
@@ -48,9 +48,12 @@ def rpp_record_to_address(host_name: str, record: RPPDnsRecord) -> tuple[str, st
     return family, _check_address(record, address_class)
 
 
-def rpp_to_status_label(status: RPPStatus) -> str:
-    reject_set(reason=status.reason, due=status.due)
-    return status.label
+def add_rpp_status(status: RPPStatus, target: Host | HostUpdateChanges):
+    """Adds a status and its reason to what holds them."""
+    reject_set(due=status.due)
+    target.status.append(status.label)
+    if status.reason:
+        target.status_reasons[status.label] = status.reason
 
 
 def _rpp_to_host(host_rpp: RPPHost) -> Host:
@@ -79,7 +82,9 @@ def rpp_to_host_replacement(rpp: dict) -> Host:
     validate_schema("host.update", rpp)
     host_rpp = parse_rpp(RPPHost, rpp)
     host = _rpp_to_host(host_rpp)
-    host.status = [rpp_to_status_label(status) for status in host_rpp.status or []]
+    host.status = []
+    for status in host_rpp.status or []:
+        add_rpp_status(status, host)
     return host
 
 
@@ -93,12 +98,19 @@ def _dns_to_rpp(host: Host) -> RPPDnsData | None:
     return RPPDnsData(records=records)
 
 
+def _statuses_to_rpp(host: Host) -> list[RPPStatus]:
+    return [
+        RPPStatus(at_type="hostStatus", label=label, reason=host.status_reasons.get(label))
+        for label in host.status or []
+    ]
+
+
 def host_to_rpp(host: Host) -> dict:
     """Converts a Host to its read representation."""
     host_dict = RPPHost(
         hostName=host.name,
         provMetadata=prov_metadata_to_rpp(host),
-        status=statuses_to_rpp(host, "hostStatus"),
+        status=_statuses_to_rpp(host),
         dns=_dns_to_rpp(host),
     ).to_rpp()
     validate_schema("host.read", host_dict)
