@@ -1,5 +1,6 @@
 import socket
 import struct
+import threading
 from .tcpclient import TCPClient
 import uuid
 import re
@@ -10,6 +11,12 @@ from helpers import decode_xml
 class EPPClient:
     """
     A simple EPP client class.
+
+    One instance owns one EPP session and is shared by all concurrent requests of
+    that user. EPP has no way to match a response to a command on the wire other
+    than order, so a command and its response must not interleave with any other
+    traffic on the socket: _lock serializes every exchange. It is re-entrant because
+    connect() and disconnect() send login/logout through the same path.
     """
 
     def __init__(self, server_address, server_port, username, password):
@@ -24,22 +31,24 @@ class EPPClient:
         self.username = username
         self.password = password
         self._connected = False 
+        self._lock = threading.RLock()
 
     def connect(self):
         """
         Connects to the server.
         """
-        try:
-            self.client.connect()
-            # Reading Hello message from server
-            hello = self.client.receive()
-            print("Hello from the server", hello)
-            # Sending login message
-            self._send_login(self.username, self.password)
-            self._connected = True
-        except Exception as e:
-            print(f"Error connecting to server: {e}")
-            self._connected = False
+        with self._lock:
+            try:
+                self.client.connect()
+                # Reading Hello message from server
+                hello = self.client.receive()
+                print("Hello from the server", hello)
+                # Sending login message
+                self._send_login(self.username, self.password)
+                self._connected = True
+            except Exception as e:
+                print(f"Error connecting to server: {e}")
+                self._connected = False
 
     def send_and_get_response(self, message: str) -> tuple[bool, str, str]:
         """
@@ -54,15 +63,17 @@ class EPPClient:
                 - code (str): The EPP response code from the server.
                 - response (str): The full response message from the server.
         """
-        if not self._connected:
-            self.connect()
-        return self._send_and_get_response(message)
+        with self._lock:
+            if not self._connected:
+                self.connect()
+            return self._send_and_get_response(message)
 
     def _send_and_get_response(self, message: str) -> tuple[bool, str, str]:
         """
         Class internal method to send a message and receive a response.
         This method is used internally by the class to handle the sending and receiving of messages.
         It is not intended to be used directly by the user.
+        Callers must hold self._lock.
 
         Args:
             message (str): The message to send.
@@ -103,17 +114,18 @@ class EPPClient:
         """
         Disconnects from the server.
         """
-        try:
+        with self._lock:
             try:
-                # Sending logout message
-                if send_logout:
-                    self._send_logout()
-            finally:
-                #disconnect TCP connection
-                self.client.disconnect()
-                self._connected = False
-        except Exception as e:
-            print(f"Error disconnecting from server: {e}")
+                try:
+                    # Sending logout message
+                    if send_logout:
+                        self._send_logout()
+                finally:
+                    #disconnect TCP connection
+                    self.client.disconnect()
+                    self._connected = False
+            except Exception as e:
+                print(f"Error disconnecting from server: {e}")
 
     def _send_login(self, username, password):
         """
