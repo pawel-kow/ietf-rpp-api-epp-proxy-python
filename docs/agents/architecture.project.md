@@ -37,7 +37,10 @@ single feature (e.g. "domain update") touches every layer:
 
 `domains_Create` and `domains_Update` do not build their response from the
 create/update reply. They issue a **follow-up EPP Info** call and map that to RPP,
-because EPP mutation responses don't echo full object state.
+because EPP mutation responses don't echo full object state. If that Info fails, the
+mutation has still been applied, so the handler answers **202** with no body and the
+mutation's `RPP-*` headers. `openapi.yaml` does not define this 202 (#23 tracks the
+question for the spec).
 
 ## Generated artifacts: do not hand-edit
 

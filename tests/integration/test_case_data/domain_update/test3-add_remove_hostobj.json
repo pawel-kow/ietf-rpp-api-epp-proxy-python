@@ -50,7 +50,7 @@
         }
       },
       "response": {
-        "status": 201,
+        "status": 200,
         "content_type": "application/json",
         "body": {
           "name": "up-test3-{random_name}.example",
@@ -92,7 +92,7 @@
         }
       },
       "response": {
-        "status": 201,
+        "status": 200,
         "content_type": "application/json",
         "body": {
           "name": "up-test3-{random_name}.example",

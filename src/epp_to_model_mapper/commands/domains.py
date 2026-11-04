@@ -140,7 +140,7 @@ def domain_update(domain_update: DomainUpdate, rpp_cl_trid: str) -> Epp:
                 if contact.type != "registrant":
                     add_elem.contact.append(
                         ContactType(
-                            value=contact.contact.id,
+                            value=contact.contact.id.upper(),
                             type_value=ContactAttrType(contact.type),
                         )
                     )
@@ -165,7 +165,7 @@ def domain_update(domain_update: DomainUpdate, rpp_cl_trid: str) -> Epp:
                 if contact.type != "registrant":
                     rem_elem.contact.append(
                         ContactType(
-                            value=contact.contact.id,
+                            value=contact.contact.id.upper(),
                             type_value=ContactAttrType(contact.type),
                         )
                     )
@@ -183,7 +183,7 @@ def domain_update(domain_update: DomainUpdate, rpp_cl_trid: str) -> Epp:
             if add is not None and add.contacts is not None:
                 for contact in add.contacts:
                     if contact.type == "registrant":
-                        new_registrant = contact.contact.id
+                        new_registrant = contact.contact.id.upper()
                         break
             chg.registrant = new_registrant
         if change is not None and change.authInfo is not None and change.authInfo.pw is not None:

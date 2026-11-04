@@ -9,6 +9,20 @@ import asyncio
 import uuid
 from .auth import get_epp_client
 
+def _domain_after_mutation(domain_name, mutation_resp, success_status):
+    """Reads the domain back after a mutation the registry has already applied.
+
+    A failed readback must not look like a failed mutation, so it answers 202 with no body.
+    """
+    headers = generate_rpp_response_headers(mutation_resp)
+    try:
+        inforesp = epp_domains_Info(get_epp_client(), domain_name)
+        if isinstance(inforesp, ErrorResponse):
+            return None, 202, headers
+        return domain_to_rpp(inforesp.domain), success_status, headers
+    except Exception:
+        return None, 202, headers
+
 def domains_CheckFast(id):
     return domains_Check(id)
 
@@ -29,10 +43,7 @@ def domains_Create(body):
         # Call the eppclient function to get the domain information
         domainresp = epp_domains_Create(get_epp_client(), domain, client_transaction_id=request.headers.get('RPP-clTRID'))
         if isinstance(domainresp, DomainCreateResponse):
-            inforesp = epp_domains_Info(get_epp_client(), domainresp.domain.name)
-            # Convert the response to JSON
-            response = domain_to_rpp(inforesp.domain)
-            return response, 201, generate_rpp_response_headers(domainresp)
+            return _domain_after_mutation(domainresp.domain.name, domainresp, 201)
         elif isinstance(domainresp, ErrorResponse):
             if domainresp.code == ResultCode.OBJECT_EXISTS:
                 raise ProblemException(status=409, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))
@@ -104,10 +115,7 @@ def domains_Update(id, body):
         # Call the eppclient function to get the domain information
         domainresp = epp_domains_Update(get_epp_client(), domain_update, client_transaction_id=request.headers.get('RPP-clTRID'))
         if isinstance(domainresp, DomainUpdateResponse):
-            inforesp = epp_domains_Info(get_epp_client(), id)
-            # Convert the response to JSON
-            response = domain_to_rpp(inforesp.domain)
-            return response, 201, generate_rpp_response_headers(domainresp)
+            return _domain_after_mutation(id, domainresp, 200)
         elif isinstance(domainresp, ErrorResponse):
             if domainresp.code == ResultCode.OBJECT_DOES_NOT_EXIST:
                 raise ProblemException(status=404, title=domainresp.code.value[1], detail=domainresp.msg, ext={"code": domainresp.code.value[0]}, headers=generate_rpp_response_headers(domainresp))

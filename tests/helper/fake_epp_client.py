@@ -1,11 +1,15 @@
 class FakeEppClient:
-    """Stands in for EPPClient. Answers every command with the given EPP reply."""
+    """Stands in for EPPClient. Answers every command with the given EPP reply.
 
-    def __init__(self, username, password, reachable=True, reply=None):
+    `replies` answers commands in order instead. An Exception entry is raised.
+    """
+
+    def __init__(self, username, password, reachable=True, reply=None, replies=None):
         self.username = username
         self.password = password
         self.reachable = reachable
         self.reply = reply
+        self.replies = list(replies or [])
         self.connected = False
         self.disconnect_calls = 0
         self.sent = []
@@ -22,5 +26,8 @@ class FakeEppClient:
 
     def send_and_get_response(self, message):
         self.sent.append(message)
-        success, code, response = self.reply
+        reply = self.replies.pop(0) if self.replies else self.reply
+        if isinstance(reply, Exception):
+            raise reply
+        success, code, response = reply
         return success, code, response

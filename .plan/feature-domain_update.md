@@ -38,13 +38,13 @@ with the maintainer's approval.
 
 ## Tasks
 
-- [~] Failing tests first
-- [ ] `domains_Update` returns 200 on success (#6), PATCH fixtures updated
-- [ ] Update or create applied but Info readback failed: 202, in both handlers
-- [ ] `domain_update` uppercases contact and registrant IDs
-- [ ] Issue for the -core spec clarification
-- [ ] Update `architecture.project.md`
-- [ ] Full `pytest` with the live backend
+- [x] Failing tests first
+- [x] `domains_Update` returns 200 on success (#6), PATCH fixtures updated
+- [x] Update or create applied but Info readback failed: 202, in both handlers
+- [x] `domain_update` uppercases contact and registrant IDs
+- [x] Issue for the -core spec clarification (#23)
+- [x] Update `architecture.project.md`
+- [x] Full `pytest` with the live backend: 70 passed, 2 skipped
 
 ## Findings
 
