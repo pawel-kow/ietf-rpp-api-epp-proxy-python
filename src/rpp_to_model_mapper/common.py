@@ -1,7 +1,7 @@
 from dataclasses_json.undefined import UndefinedParameterError
 
 from models import AuthInfo, ProvisioningObject
-from .rpp_models import RPPAuthInfo, RPPProvMetadata, RPPStatus
+from .rpp_models import RPPAuthInfo, RPPPatchOperation, RPPProvMetadata, RPPStatus
 from .unsupported_rpp_feature import UnsupportedRppFeature
 
 AUTHINFO_METHOD = "authinfo"
@@ -20,6 +20,10 @@ def reject_set(**members):
     for name, value in members.items():
         if value:
             raise UnsupportedRppFeature(f"'{name}' is not supported")
+
+
+def reject_operation(operation: RPPPatchOperation):
+    raise UnsupportedRppFeature(f"'{operation.op}' on '{operation.path}' is not supported")
 
 
 def rpp_to_auth_info(rpp: RPPAuthInfo | None) -> AuthInfo | None:

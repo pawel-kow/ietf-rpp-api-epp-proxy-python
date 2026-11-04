@@ -1,0 +1,83 @@
+from connexion import request
+
+from eppclient.epp_hosts import epp_hosts_Check, epp_hosts_Delete, epp_hosts_Info
+from flows import create_host, replace_host, update_host
+from models import ErrorResponse
+from rpp_to_model_mapper import (
+    host_availability_to_rpp, host_to_rpp, rpp_to_host, rpp_to_host_replacement, rpp_to_host_update,
+)
+from .auth import get_epp_client
+from .helper.rpp_response import (
+    client_transaction_id, generate_rpp_response_headers, map_request, raise_epp_error, require_empty_body,
+    rpp_operation,
+)
+
+
+def _mutation_response(result, success_status, extra_headers=None):
+    """Renders a mutation. Applied but not readable answers 202 with no body."""
+    if isinstance(result, ErrorResponse):
+        raise_epp_error(result)
+    headers = {**generate_rpp_response_headers(result.mutation), **(extra_headers or {})}
+    if result.host is None:
+        return None, 202, headers
+    try:
+        return host_to_rpp(result.host), success_status, headers
+    except Exception:
+        return None, 202, headers
+
+
+def _availability(host_name):
+    ret = epp_hosts_Check(get_epp_client(), host_name, client_transaction_id=client_transaction_id())
+    if isinstance(ret, ErrorResponse):
+        raise_epp_error(ret)
+    return ret
+
+
+@rpp_operation
+def hosts_availabilityHead(hostName):
+    ret = _availability(hostName)
+    headers = generate_rpp_response_headers(ret)
+    del headers["Content-Type"]  # the OpenAPI defines no content for HEAD
+    return None, 200 if ret.available else 404, headers
+
+
+@rpp_operation
+def hosts_availability(hostName):
+    ret = _availability(hostName)
+    return host_availability_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)
+
+
+@rpp_operation
+def hosts_create(body):
+    host = map_request(rpp_to_host, body)
+    result = create_host(get_epp_client(), host, client_transaction_id())
+    return _mutation_response(result, 201, {"Location": f"{str(request.url).rstrip('/')}/{host.name}"})
+
+
+@rpp_operation
+def hosts_read(hostName):
+    hostresp = epp_hosts_Info(get_epp_client(), hostName, client_transaction_id=client_transaction_id())
+    if isinstance(hostresp, ErrorResponse):
+        raise_epp_error(hostresp)
+    return host_to_rpp(hostresp.host), 200, generate_rpp_response_headers(hostresp)
+
+
+@rpp_operation
+def hosts_update(hostName, body):
+    wanted = map_request(rpp_to_host_replacement, body)
+    return _mutation_response(replace_host(get_epp_client(), hostName, wanted, client_transaction_id()), 200)
+
+
+@rpp_operation
+def hosts_updatePartial(hostName, body):
+    update = map_request(rpp_to_host_update, hostName, body)
+    return _mutation_response(update_host(get_epp_client(), update, client_transaction_id()), 200)
+
+
+@rpp_operation
+def hosts_delete(hostName):
+    require_empty_body()
+    hostresp = epp_hosts_Delete(get_epp_client(), hostName, client_transaction_id=client_transaction_id())
+    if isinstance(hostresp, ErrorResponse):
+        raise_epp_error(hostresp)
+    return None, 200, generate_rpp_response_headers(hostresp)

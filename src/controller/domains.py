@@ -1,9 +1,8 @@
-from connexion import request, ProblemException
+from connexion import request
 from eppclient.epp_domains import *
 from models import *
 from rpp_to_model_mapper import *
 from .helper.rpp_response import *
-import asyncio
 from .auth import get_epp_client
 
 def _domain_after_mutation(domain_name, mutation_resp, success_status, extra_headers=None):
@@ -49,8 +48,7 @@ def domainNames_create(body):
 
 @rpp_operation
 def domainNames_delete(name):
-    if asyncio.run(request.get_body()):
-        raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
+    require_empty_body()
     domainresp = epp_domains_Delete(get_epp_client(), name, client_transaction_id=client_transaction_id())
     if isinstance(domainresp, ErrorResponse):
         raise_epp_error(domainresp)

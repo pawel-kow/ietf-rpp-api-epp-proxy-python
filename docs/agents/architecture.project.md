@@ -25,25 +25,28 @@ single feature (e.g. "domain update") touches every layer:
    cannot hold raises `UnsupportedRppFeature`, which answers 501 (`02102`), so nothing
    is dropped silently. `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
    without reading the object, so operations that need the current state are
-   unsupported (#27).
+   unsupported (#27). `host_patch.py` does the same for a `HostUpdate`.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
    [src/models/response.py](../../src/models/response.py).
-5. **`eppclient/`:** orchestrates one EPP operation: build XML →
+5. **`eppclient/`:** runs one EPP operation: build XML →
    `send_and_get_response` → parse. `epp_*` functions return a typed `*Response`
    model or an `ErrorResponse`, and controllers branch on `isinstance`.
    [eppclient.py](../../src/eppclient/eppclient.py) is the raw TCP+XML client
    (login/logout, `_parse_epp_response` reads the `<result code>`; codes matching
    `1xxx` = success).
-6. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
+6. **`flows/`:** multi-step operations, free of the web framework. A flow returns a
+   typed result or an `ErrorResponse`, and the handler renders it. `flows/hosts.py`
+   holds mutate-then-Info, and PUT as Info, difference, update and Info.
+7. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
    inbound EPP XML into models. `epp_model/` holds xsdata-generated dataclasses for
    the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
    is dead code: ignore it.
 
-`domainNames_create` and `domainNames_updatePartial` do not build their response from
-the create/update reply. They issue a **follow-up EPP Info** call and map that to RPP,
-because EPP mutation responses don't echo full object state. If that Info fails, the
+`domainNames_create`, `domainNames_updatePartial` and the host mutations do not build
+their response from the create/update reply. They issue a **follow-up EPP Info** call and
+map that to RPP, because EPP mutation responses don't echo full object state. If that Info fails, the
 mutation has still been applied, so the handler answers **202** with no body and the
 mutation's `RPP-*` headers. `openapi.yaml` does not define this 202 (#23 tracks the
 question for the spec).

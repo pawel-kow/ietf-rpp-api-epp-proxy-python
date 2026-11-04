@@ -81,3 +81,35 @@ Each entry says what the proxy does today.
 
 - Only `dns` could carry `ns.hostAttr`, and nothing says how `dnsData` maps to EPP. Core §5 refers to a mapping document that does not exist yet ([TODO REF]).
 - **Proxy:** `dns` is 501 (`02102`), see #26.
+
+## Host DNS records
+
+- The EPP Compatibility Profile (data-objects §13.2) limits the entries of `dns` to A and AAAA, but the host examples (json §8.3.2 to §8.3.4) include an `ns` record.
+- The same section allows entries subordinate to the host name, but EPP has one address list per host, so a record for another name has no place in EPP.
+- **Proxy:** follows the examples. An `ns` record is accepted only as the self-reference (`@` with the host as `nsdname`), and A and AAAA records must name the host itself (`@` or its name), anything else is 501 (`02102`). A read emits the `ns` record plus A and AAAA records when the host has addresses, and no `dns` when it has none.
+
+## Data the EPP Compatibility Profile cannot hold
+
+- The host create example (json §8.3.2) has `dns.controls.ttl`, which EPP has no element for, and the data-objects draft does not limit `controls` in the EPP Compatibility Profile. An example the profile cannot carry leaves open what a server should do: reject it, ignore it, or apply a default. Should the profile forbid `controls`, and with which result code?
+- **Proxy:** 501 (`02102`), nothing is dropped silently, so the §8.3.2 example answers 501 as written (`draft_host/test2`).
+
+## `status` on host create
+
+- `status` is read-write on a host, and `host.create` accepts `clientDeleteProhibited` and `clientUpdateProhibited`. EPP `<host:create>` has no status element, so honouring it takes a create and an update, which is not atomic. Should the EPP Compatibility Profile exclude `status` from create?
+- The same applies to domain create.
+- **Proxy:** 501 (`02102`).
+
+## Status `reason` on hosts
+
+- `reason` is accepted by `hostStatus.create`. EPP can hold it as the text of `<host:status>`, but backends return the status label there, so it cannot be told apart from a real reason on read.
+- **Proxy:** 501 (`02102`) on PUT and PATCH.
+
+## Host transfer
+
+- Data-objects §13.4 gives the host a Transfer Process and the OpenAPI has the operations. RFC 5732 defines no host transfer: subordinate hosts move with their domain, and data-objects §11.4.2 disallows anything that breaks that relationship.
+- **Proxy:** 501 (`02101`).
+
+## Full update without a change
+
+- A host update must provide at least one change (data-objects §13.3.4), but a PUT repeating the stored state is a valid full update (core §16.8) and PUT is idempotent in HTTP.
+- **Proxy:** passes the empty update on, the backend answers `2003` (400).

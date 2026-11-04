@@ -3,20 +3,15 @@ from models import (
     DomainUpdateRemove, HostObj, NS,
 )
 from rpp_schema_validator import validate_schema
-from .common import parse_rpp, rpp_to_auth_info
+from .common import parse_rpp, reject_operation, rpp_to_auth_info
 from .domains import REGISTRANT, check_contact_label
 from .rpp_models import (
     RPPAuthInfo, RPPContactReference, RPPHostReference, RPPLabelledContact, RPPPatchOperation,
 )
-from .unsupported_rpp_feature import UnsupportedRppFeature
 
 ARRAY_PATHS = ("/nameservers", "/contacts")
 OBJECT_PATHS = ("/registrant", "/authInfo")
 UNSUPPORTED_PATHS = ("/status", "/dns")
-
-
-def _reject(operation: RPPPatchOperation):
-    raise UnsupportedRppFeature(f"'{operation.op}' on '{operation.path}' is not supported")
 
 
 def _validated(member: str, value):
@@ -51,7 +46,7 @@ class _PatchedUpdate:
         if operation.op not in ("add", "remove", "replace"):
             raise ValueError(f"Operation '{operation.op}' is not allowed")
         if operation.path in UNSUPPORTED_PATHS:
-            _reject(operation)
+            reject_operation(operation)
         if operation.path in ARRAY_PATHS:
             self._apply_to_array(operation)
         elif operation.path in OBJECT_PATHS:
@@ -67,7 +62,7 @@ class _PatchedUpdate:
         elif operation.op == "remove" and operation.match is not None:
             self._remove_element(operation)
         else:
-            _reject(operation)
+            reject_operation(operation)
 
     def _add_element(self, operation: RPPPatchOperation):
         if operation.path == "/nameservers":
@@ -82,12 +77,12 @@ class _PatchedUpdate:
     def _remove_element(self, operation: RPPPatchOperation):
         if operation.path == "/nameservers":
             if "hostName" not in operation.match:
-                _reject(operation)
+                reject_operation(operation)
             self.remove_hosts.append(HostObj(id=operation.match["hostName"]))
         else:
             contact = _matched_contact(operation.match)
             if contact is None:
-                _reject(operation)
+                reject_operation(operation)
             self.remove_contacts.append(contact)
 
     def _apply_to_object(self, operation: RPPPatchOperation):
@@ -96,7 +91,7 @@ class _PatchedUpdate:
         if operation.path == "/registrant":
             self._apply_to_registrant(operation)
         elif operation.op == "remove":
-            _reject(operation)
+            reject_operation(operation)
         else:
             _validated("authInfo", operation.value)
             self.auth_info = rpp_to_auth_info(parse_rpp(RPPAuthInfo, operation.value))

@@ -1,0 +1,40 @@
+{
+  "test_id": "test1-external_minimal",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t1.{random_name}.net"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "host",
+          "hostName": "t1.{random_name}.net",
+          "status": [
+            {
+              "@type": "hostStatus",
+              "label": "ok"
+            }
+          ]
+        },
+        "headers": {
+          "Location": {
+            "type": "not_null"
+          },
+          "RPP-Code": "01000"
+        }
+      }
+    }
+  ]
+}

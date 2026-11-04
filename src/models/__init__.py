@@ -2,3 +2,11 @@ from .domains import *
 from .common import *
 from .contacts import *
 from .response import *
+from .host import Host
+from .host_check_response import HostCheckResponse
+from .host_create_response import HostCreateResponse
+from .host_delete_response import HostDeleteResponse
+from .host_info_response import HostInfoResponse
+from .host_update import HostUpdate
+from .host_update_changes import HostUpdateChanges
+from .host_update_response import HostUpdateResponse
