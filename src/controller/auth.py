@@ -1,26 +1,5 @@
-import os
-from eppclient.eppclient import EPPClient
 from connexion import request
 
-os.environ["BASICINFO_FUNC"] = 'controller.basic_auth'
-
-CLIENTS = {
-}
-
-def basic_auth(username, password):
-    if CLIENTS.get(username) is None:
-        client = EPPClient("localhost", 7001, username, password)
-        client.connect()
-        if not client.connected:
-            return None
-        CLIENTS[username] = client
-    else:
-        if not CLIENTS[username].verify_credentials(username, password):
-            return None
-
-    return {
-        "epp_client": CLIENTS[username]
-    }
 
 def get_epp_client():
     """

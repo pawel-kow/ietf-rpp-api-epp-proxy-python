@@ -1,7 +1,7 @@
 from models import ErrorResponse, ResultCode
 from helpers import decode_xml
 
-def get_epp_error_response(xml_string: str, client_transaction_id: str) -> ErrorResponse:
+def get_epp_error_response(xml_string: str, client_transaction_id: str | None) -> ErrorResponse:
     root = decode_xml(xml_string)
     return ErrorResponse(
         code=get_epp_code(root),
@@ -43,7 +43,7 @@ def get_epp_clTRID(root):
     else:
         return None
 
-def map_epp_code(code: str) -> ResultCode:
+def map_epp_code(code: str | int) -> ResultCode:
     """
     Maps EPP result codes to OperationResponse.EPPResultCode.
     Args:
@@ -89,6 +89,6 @@ def map_epp_code(code: str) -> ResultCode:
     }
     
     try:
-        return epp_code_map[code]
-    except ValueError:
-        raise ValueError(f"Unknown EPP result code: {code}")
+        return epp_code_map[str(code)]
+    except KeyError:
+        raise KeyError(f"Unknown EPP result code: {code}")

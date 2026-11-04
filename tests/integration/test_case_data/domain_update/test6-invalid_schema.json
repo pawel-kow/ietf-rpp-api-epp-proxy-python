@@ -1,0 +1,36 @@
+{
+  "test_id": "test6-invalid_schema",
+  "steps": [
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domains/up-test6-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "RPP-clTRID": "up-test6-{random_name}-clTRID"
+        },
+        "body_json": {
+          "add": {
+            "contacts": [
+              {
+                "type": "not-a-valid-type",
+                "object": {
+                  "id": "FO-TEST1"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {},
+        "fields": {},
+        "headers": {
+          "RPP-clTRID": "up-test6-{random_name}-clTRID"
+        }
+      }
+    }
+  ]
+}

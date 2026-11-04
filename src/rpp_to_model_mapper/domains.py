@@ -7,7 +7,7 @@ def rpp_to_domain(rpp: dict) -> Domain:
     """Converts a JSON string to a Domain object according to the provided schema."""
     # First validate the schema
     validate_schema("Domain", rpp)
-    domain_rpp = RPPDomain.from_dict(rpp)
+    domain_rpp = RPPDomain.from_dict(rpp) # type: ignore
     # Create a Domain object from the request body
     domain = Domain(
         name=domain_rpp.name,
@@ -31,13 +31,12 @@ def rpp_to_domain(rpp: dict) -> Domain:
         domain.processes = {}
         for process_name, process in rpp["processes"].items():
             if process_name == "creation":
-                domain.processes[process_name] = CreationProcess()
-                domain.processes[process_name].duration=process["period"]
+                domain.processes[process_name] = CreationProcess(duration=process["period"])
             else:
                 domain.processes[process_name] = Process()
     return domain
 
-def domain_to_rpp(domain: Domain) -> str:
+def domain_to_rpp(domain: Domain) -> dict:
     """Converts a Domain object to a JSON string according to the provided schema."""
 
     domain_dict = {}
@@ -59,3 +58,53 @@ def domain_to_rpp(domain: Domain) -> str:
 
     validate_schema("Domain", domain_dict)
     return domain_dict
+
+def rpp_to_domain_update(domain_name: str, rpp: dict) -> DomainUpdate:
+    """Converts a JSON string to a DomainUpdate object according to the provided schema."""
+    # First validate the schema
+    validate_schema("DomainUpdateModel", rpp)
+    domain_rpp_update = RPPDomainUpdate.from_dict(rpp) # type: ignore
+    
+    return DomainUpdate(
+        name=domain_name,
+        add=DomainUpdateAdd(
+            ns=rpp_hosts_to_hosts(domain_rpp_update.add.ns) if domain_rpp_update.add.ns is not None else None,
+            contacts=rpp_contacts_to_contact_references(domain_rpp_update.add.contacts) if domain_rpp_update.add.contacts is not None else None
+            # TODO: dnsSEC
+        ) if domain_rpp_update.add is not None else None,
+        remove=DomainUpdateRemove(
+            ns=rpp_hosts_to_hosts(domain_rpp_update.remove.ns) if domain_rpp_update.remove.ns is not None else None,
+            contacts=rpp_contacts_to_contact_references(domain_rpp_update.remove.contacts) if domain_rpp_update.remove.contacts is not None else None
+            # TODO: dnsSEC
+        ) if domain_rpp_update.remove is not None else None,
+        change=DomainUpdateChange(
+            authInfo=AuthInfo(
+                pw=domain_rpp_update.update.authInfo.pw,
+                hash=domain_rpp_update.update.authInfo.hash
+            ) if domain_rpp_update.update.authInfo is not None else None
+        ) if domain_rpp_update.update is not None else None
+    )
+    
+def rpp_hosts_to_hosts(rpp_hosts: RPPNS) -> NS:
+    return NS(
+        host_attrs = [
+            HostAttr(
+                id=host_attr.name,
+                ipv4=[ip for ip in host_attr.addr.ipv4] if host_attr.addr and host_attr.addr.ipv4 else None,
+                ipv6=[ip for ip in host_attr.addr.ipv6] if host_attr.addr and host_attr.addr.ipv6 else None
+            ) for host_attr in rpp_hosts.hostAttr
+        ] if rpp_hosts.hostAttr else None,
+        host_objs = [
+            HostObj(
+                id=host_obj.name
+            ) for host_obj in rpp_hosts.hostObj
+        ] if rpp_hosts.hostObj else None
+    )
+
+def rpp_contacts_to_contact_references(rpp_contacts: List[RPPContactReferenceNew]) -> List[ContactReferenceNew]:
+    return [
+        ContactReferenceNew(
+            type=contact.type,
+            contact=ContactMinimal(id=contact.object.id)
+        ) for contact in rpp_contacts
+    ]

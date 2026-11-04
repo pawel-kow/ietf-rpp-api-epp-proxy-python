@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "DomainRenewal.json",
+    "type": "object",
+    "properties": {
+        "period": {
+            "type": "string",
+            "format": "duration",
+            "description": "The period for which the domain registration should be extended. The allowed unit and range are defined by the registry policy."
+        }
+    },
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "Parameters specific to the renewal of a domain."
+}

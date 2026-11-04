@@ -8,9 +8,9 @@ class Process:
 
 @dataclass
 class AuthInfo:
-    pw: str
-    hash: str
-
+    pw: Optional[str] = None
+    hash: Optional[str] = None
+    
 @dataclass(kw_only=True)
 class ProvisioningObject:
     status: Optional[List[str]] = None

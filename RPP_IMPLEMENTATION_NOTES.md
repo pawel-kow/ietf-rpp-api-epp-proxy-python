@@ -18,6 +18,7 @@
   - full object update with UPDATE (check host and domain)
   - INFO with morphing answers (list or detail or even something else)
 - Requirement: contact shall have clear contact type (and only one name field?)
+- RPP-Code-Text ???
 
 ### Status codes
 

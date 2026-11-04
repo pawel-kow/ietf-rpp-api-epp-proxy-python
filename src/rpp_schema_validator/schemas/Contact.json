@@ -3,9 +3,6 @@
     "$id": "Contact.json",
     "type": "object",
     "properties": {
-        "id": {
-            "type": "string"
-        },
         "name": {
             "type": "string"
         },
@@ -60,30 +57,13 @@
             }
         },
         "authInfo": {
-            "type": "object",
-            "properties": {
-                "pw": {
-                    "type": "string"
-                },
-                "hash": {
-                    "type": "string"
-                }
-            },
-            "unevaluatedProperties": {
-                "not": {}
-            }
+            "$ref": "#/$defs/AuthInfo"
         },
         "status": {
             "type": "array",
             "items": {
                 "type": "string"
             }
-        },
-        "crDate": {
-            "type": "string"
-        },
-        "exDate": {
-            "type": "string"
         },
         "upDate": {
             "type": "string"
@@ -96,12 +76,22 @@
         },
         "crID": {
             "type": "string"
+        },
+        "crDate": {
+            "type": "string"
+        },
+        "exDate": {
+            "type": "string"
         }
     },
     "required": [
-        "id",
         "contactType",
         "authInfo"
+    ],
+    "allOf": [
+        {
+            "$ref": "ContactMinimal.json"
+        }
     ],
     "unevaluatedProperties": {
         "not": {}
@@ -113,6 +103,17 @@
                 "PERSON",
                 "ORG"
             ]
+        },
+        "AuthInfo": {
+            "type": "object",
+            "properties": {
+                "pw": {
+                    "type": "string"
+                }
+            },
+            "unevaluatedProperties": {
+                "not": {}
+            }
         }
     }
 }

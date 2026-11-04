@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
-from .common import Process, ProvisioningObject
+
+from models.contacts import ContactMinimal
+from .common import AuthInfo, Process, ProvisioningObject
 from .response import OperationResponse
 
 @dataclass(kw_only=True)
@@ -10,8 +12,8 @@ class HostObj:
 @dataclass(kw_only=True)
 class HostAttr:
     id: str
-    ipv4: str
-    ipv6: str
+    ipv4: Optional[List[str]] = None
+    ipv6: Optional[List[str]] = None
 
 @dataclass(kw_only=True)
 class NS:
@@ -24,37 +26,75 @@ class ContactReference:
     id: str
 
 @dataclass(kw_only=True)
+class ContactReferenceNew:
+    type: str
+    contact: ContactMinimal
+
+@dataclass(kw_only=True)
 class DnsSec:
     # Add DNSSEC properties here if needed
     pass
 
+@dataclass(kw_only=True)
 class CreationProcess(Process):
     duration: str
 
 @dataclass(kw_only=True)
 class Domain(ProvisioningObject):
     name: str
-    ns: NS = None
+    ns: Optional[NS] = None
     contacts: Optional[List[ContactReference]] = None
     dnsSEC: Optional[List[DnsSec]] = None
-    processes: Dict[str, Process] = None
+    processes: Optional[Dict[str, Process]] = None
     
-    def update(self, domain):
-        super().update(domain)
+    def update(self, obj):
+        super().update(obj)
 
-        self.name = domain.name if domain.name else self.name
-        self.processes = domain.processes if domain.processes else self.processes
+        self.name = obj.name if obj.name else self.name
+        self.processes = obj.processes if obj.processes else self.processes
         # TODO: cascade update
-        self.ns = domain.ns if domain.ns and (domain.ns.host_objs and len(domain.ns.host_objs) > 0 or domain.ns.host_attrs and len(domain.ns.host_attrs) > 0) else self.ns
+        self.ns = obj.ns if obj.ns and (obj.ns.host_objs and len(obj.ns.host_objs) > 0 or obj.ns.host_attrs and len(obj.ns.host_attrs) > 0) else self.ns
         # TODO: cascade update
-        self.contacts = domain.contacts if domain.contacts else self.contacts
+        self.contacts = obj.contacts if obj.contacts else self.contacts
         # TODO: cascade update
-        self.dnsSEC = domain.dnsSEC if domain.dnsSEC else self.dnsSEC
+        self.dnsSEC = obj.dnsSEC if obj.dnsSEC else self.dnsSEC
+    
+@dataclass(kw_only=True)
+class DomainUpdateAdd:
+    ns: Optional[NS] = None
+    contacts: Optional[List[ContactReferenceNew]] = None
+    dnsSEC: Optional[List[DnsSec]] = None
 
+@dataclass(kw_only=True)
+class DomainUpdateRemove:
+    ns: Optional[NS] = None
+    contacts: Optional[List[ContactReferenceNew]] = None
+    dnsSEC: Optional[List[DnsSec]] = None
+
+@dataclass(kw_only=True)
+class DomainUpdateChange:
+    authInfo: Optional[AuthInfo] = None
+    
+@dataclass(kw_only=True)
+class DomainUpdate:
+    name: str
+    add: Optional[DomainUpdateAdd] = None
+    remove: Optional[DomainUpdateRemove] = None
+    change: Optional[DomainUpdateChange] = None
 
 @dataclass(kw_only=True)
 class DomainCreateResponse(OperationResponse):
     domain: Domain
+
+@dataclass(kw_only=True)
+class DomainCheckResponseSingle(OperationResponse):
+    domain_name: str
+    available: bool
+    reason: str
+
+@dataclass(kw_only=True)
+class DomainCheckResponseBulk(OperationResponse):
+    responses: dict[str, DomainCheckResponseSingle]
 
 @dataclass(kw_only=True)
 class DomainInfoResponse(OperationResponse):
@@ -62,4 +102,8 @@ class DomainInfoResponse(OperationResponse):
 
 @dataclass(kw_only=True)
 class DomainDeleteResponse(OperationResponse):
+    pass
+
+@dataclass(kw_only=True)
+class DomainUpdateResponse(OperationResponse):
     pass

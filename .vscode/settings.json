@@ -9,4 +9,5 @@
     "pythonTestExplorer.testplanEnabled": true,
     "python.testing.cwd": "${workspaceFolder}",
     "python.testing.pytestPath": ".venv/bin/pytest",
+    "python.analysis.typeCheckingMode": "standard",
 }

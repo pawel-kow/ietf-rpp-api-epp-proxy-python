@@ -29,7 +29,7 @@ test_start = datetime.datetime.now(datetime.UTC)
 # Error responses (400, 500) should match the structure defined by Connexion/Flask ProblemException.
 
 # Prepare test cases
-# Ensure that a contact handle FOO-TEST1, FOO-TEST2, FOO-TEST3, FOO-TEST4 exist in the database
+# Ensure that a contact handle FO-TEST1, FO-TEST2, FO-TEST3, FO-TEST4 exist in the database
 # Ensure that host objects ns1.bar.example and ns2.bar.example exist in the database
 # Ensure that the domain NOT-FREE.EXAMPLE is already taken in the database
 test_cases = []
@@ -226,6 +226,6 @@ if False:
 
 
 # --- Test Function ---
-@pytest.mark.parametrize("case", test_cases, ids=[f"{__name__.replace("test_", "")}-{c["test_id"]}" for c in test_cases])
+@pytest.mark.parametrize("case", test_cases, ids=[f'{__name__.replace("test_", "")}-{c["test_id"]}' for c in test_cases])
 def test_domains_Delete(client, case):
     return endpoint_test(client, case)

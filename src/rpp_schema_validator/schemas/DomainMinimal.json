@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "DomainMinimal.json",
+    "type": "object",
+    "properties": {
+        "crDate": {
+            "type": "string"
+        },
+        "exDate": {
+            "type": "string"
+        }
+    },
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "A minimal representation of a domain, containing only essential provisioning information."
+}

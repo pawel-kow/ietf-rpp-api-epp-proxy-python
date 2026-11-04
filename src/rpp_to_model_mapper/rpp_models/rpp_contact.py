@@ -19,8 +19,12 @@ class RPPContactType(Enum):
 
 @dataclass_json
 @dataclass(kw_only=True)
-class RPPContact(RPPProvisioningObject):
+class RPPContactMinimal:
     id: str;
+
+@dataclass_json
+@dataclass(kw_only=True)
+class RPPContact(RPPProvisioningObject, RPPContactMinimal):
     contactType: RPPContactType
     name: Optional[str] = None;
     organisationName: Optional[str] = None;

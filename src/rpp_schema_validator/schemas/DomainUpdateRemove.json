@@ -1,0 +1,34 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "DomainUpdateRemove.json",
+    "type": "object",
+    "properties": {
+        "ns": {
+            "anyOf": [
+                {
+                    "$ref": "DomainEPPHostAttr.json"
+                },
+                {
+                    "$ref": "DomainHostObj.json"
+                }
+            ]
+        },
+        "contacts": {
+            "type": "array",
+            "items": {
+                "$ref": "ContactReferenceNew.json"
+            },
+            "description": "An array of contacts to be removed from the domain."
+        },
+        "dnsSEC": {
+            "type": "array",
+            "items": {
+                "$ref": "DnsSec.json"
+            },
+            "description": "An array of DNSSEC data to be removed from the domain."
+        }
+    },
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

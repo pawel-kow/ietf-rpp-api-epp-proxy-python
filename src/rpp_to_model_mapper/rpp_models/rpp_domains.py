@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from typing import List, Optional, Dict
-from .rpp_common import RPPProvisioningObject
+from .rpp_common import RPPAuthInfo, RPPProvisioningObject
+from .rpp_contact import RPPContactMinimal
 
 
 @dataclass_json
@@ -9,24 +10,36 @@ from .rpp_common import RPPProvisioningObject
 class RPPHostObj:
     name: str
 
+
+@dataclass_json
+@dataclass
+class RPPAddr:
+    ipv4: Optional[List[str]] = None
+    ipv6: Optional[List[str]] = None
+
 @dataclass_json
 @dataclass
 class RPPHostAttr:
     name: str
-    ipv4: str
-    ipv6: str
+    addr: Optional[RPPAddr] = None
 
 @dataclass_json
 @dataclass
 class RPPNS:
     hostObj: Optional[List[RPPHostObj]] = None
-    hostAttrs: Optional[List[RPPHostAttr]] = None
+    hostAttr: Optional[List[RPPHostAttr]] = None
 
 @dataclass_json
 @dataclass
 class RPPContactReference:
     type: List[str]
     value: str
+
+@dataclass_json
+@dataclass
+class RPPContactReferenceNew:
+    type: str
+    object: RPPContactMinimal
 
 @dataclass_json
 @dataclass
@@ -65,7 +78,33 @@ class RPPProcessMap:
 @dataclass
 class RPPDomain(RPPProvisioningObject):
     name: str
-    ns: RPPNS = None
+    ns: Optional[RPPNS] = None
     contacts: Optional[List[RPPContactReference]] = None
     dnsSEC: Optional[List[RPPDnsSec]] = None
-    processes: RPPProcessMap = None
+    processes: Optional[RPPProcessMap] = None
+    
+@dataclass_json
+@dataclass
+class RPPDomainUpdateAdd:
+    ns: Optional[RPPNS] = None
+    contacts: Optional[List[RPPContactReferenceNew]] = None
+    dnsSEC: Optional[List[RPPDnsSec]] = None
+
+@dataclass_json
+@dataclass
+class RPPDomainUpdateRemove:
+    ns: Optional[RPPNS] = None
+    contacts: Optional[List[RPPContactReferenceNew]] = None
+    dnsSEC: Optional[List[RPPDnsSec]] = None
+
+@dataclass_json
+@dataclass
+class RPPDomainUpdateChange:
+    authInfo: Optional[RPPAuthInfo] = None
+    
+@dataclass_json
+@dataclass
+class RPPDomainUpdate:
+    add: Optional[RPPDomainUpdateAdd] = None
+    remove: Optional[RPPDomainUpdateRemove] = None
+    update: Optional[RPPDomainUpdateChange] = None

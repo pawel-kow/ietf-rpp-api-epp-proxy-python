@@ -1,5 +1,5 @@
 {
-  "test_id": "test5-simple_delete_no_auth",
+  "test_id": "test7-simple_delete_no_auth",
   "steps": [
     {
       "request": {

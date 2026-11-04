@@ -1,0 +1,20 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "DomainEPPHostAttr.json",
+    "type": "object",
+    "properties": {
+        "hostAttr": {
+            "type": "array",
+            "items": {
+                "$ref": "EPPHost.json"
+            }
+        }
+    },
+    "required": [
+        "hostAttr"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "EPP-stype hostAttr"
+}
