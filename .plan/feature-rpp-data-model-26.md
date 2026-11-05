@@ -16,10 +16,14 @@
 - Backend accepts secDNS on create and update, but Info returns no `secDNS:infData`.
 - Backend accepts `hostAttr`, and stores a `hostObj` and a subordinate host. Info returns no addresses.
 
+## Corrections
+
+- `a`, `aaaa` etc. in upper case were 501 on hosts, but data-objects §9.9 says to convert the type to lowercase. Fixed in the code shared with domains.
+
 ## Tasks
 
-- [~] Read metadata: `repositoryId`, `upClientId`, `subordinateHosts`
-- [ ] DNSSEC on create and read
-- [ ] Delegation in `dns` on create, `hostAttr` on read
-- [ ] Docs, spec-issues, skip of `draft_domain/test7-read_idn`
-- [ ] Full pytest, draft PR, follow-up issues
+- [x] Read metadata: `repositoryId`, `upClientId`, `subordinateHosts`
+- [x] DNSSEC on create and read
+- [x] Delegation in `dns` on create, `hostAttr` on read
+- [x] Docs, spec-issues, skip of `draft_domain/test7-read_idn`
+- [~] Full pytest, draft PR, follow-up issues

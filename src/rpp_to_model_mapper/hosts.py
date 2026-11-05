@@ -1,32 +1,15 @@
-import ipaddress
-
 from models import Host, HostCheckResponse, HostUpdateChanges
 from rpp_schema_validator import validate_schema
 from .common import parse_rpp, prov_metadata_to_rpp, reject_set
+from .dns_records import (
+    ADDRESS_RECORDS, ORIGIN, check_record_class, nameserver_records, record_address, record_rdata, record_type,
+)
 from .rpp_models import RPPDnsData, RPPDnsRecord, RPPHost, RPPHostAvailability, RPPStatus
 from .unsupported_rpp_feature import UnsupportedRppFeature
-
-ADDRESS_RECORDS = {"a": ("ipv4", ipaddress.IPv4Address), "aaaa": ("ipv6", ipaddress.IPv6Address)}
-ORIGIN = "@"
-RECORD_CLASS_INTERNET = "IN"
 
 
 def _is_host(host_name: str, name: str) -> bool:
     return name.removesuffix(".").lower() == host_name.lower()
-
-
-def _rdata(record: RPPDnsRecord, member: str):
-    if set(record.rdata) != {member}:
-        raise ValueError(f"The rdata of a '{record.type}' record must have '{member}' only")
-    return record.rdata[member]
-
-
-def _check_address(record: RPPDnsRecord, address_class) -> str:
-    address = _rdata(record, "address")
-    if not isinstance(address, str):
-        raise ValueError("The address of a record must be a string")
-    address_class(address)  # raises a ValueError
-    return address
 
 
 def rpp_record_to_address(host_name: str, record: RPPDnsRecord) -> tuple[str, str] | None:
@@ -34,18 +17,17 @@ def rpp_record_to_address(host_name: str, record: RPPDnsRecord) -> tuple[str, st
 
     The self-referencing `ns` record carries nothing EPP has to hold, so it gives None.
     """
-    if record.record_class not in (None, RECORD_CLASS_INTERNET):
-        raise UnsupportedRppFeature(f"DNS class '{record.record_class}' is not supported")
+    check_record_class(record)
     if record.name != ORIGIN and not _is_host(host_name, record.name):
         raise UnsupportedRppFeature(f"A DNS record for '{record.name}' is not supported")
-    if record.type == "ns":
-        if not _is_host(host_name, str(_rdata(record, "nsdname"))):
+    kind = record_type(record)
+    if kind == "ns":
+        if not _is_host(host_name, record_rdata(record, "nsdname")[0]):
             raise UnsupportedRppFeature("An 'ns' record for another host is not supported")
         return None
-    if record.type not in ADDRESS_RECORDS:
+    if kind not in ADDRESS_RECORDS:
         raise UnsupportedRppFeature(f"DNS record type '{record.type}' is not supported")
-    family, address_class = ADDRESS_RECORDS[record.type]
-    return family, _check_address(record, address_class)
+    return record_address(record)
 
 
 def add_rpp_status(status: RPPStatus, target: Host | HostUpdateChanges):
@@ -91,11 +73,7 @@ def rpp_to_host_replacement(rpp: dict) -> Host:
 def _dns_to_rpp(host: Host) -> RPPDnsData | None:
     if not host.ipv4 and not host.ipv6:
         return None
-    fqdn = f"{host.name}."
-    records = [RPPDnsRecord(name=ORIGIN, type="ns", rdata={"nsdname": fqdn})]
-    records += [RPPDnsRecord(name=fqdn, type="a", rdata={"address": ip}) for ip in host.ipv4 or []]
-    records += [RPPDnsRecord(name=fqdn, type="aaaa", rdata={"address": ip}) for ip in host.ipv6 or []]
-    return RPPDnsData(records=records)
+    return RPPDnsData(records=nameserver_records(host.name, host.ipv4, host.ipv6))
 
 
 def _statuses_to_rpp(host: Host) -> list[RPPStatus]:

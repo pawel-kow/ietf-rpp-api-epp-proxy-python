@@ -84,7 +84,7 @@ def test_error_is_a_problem_detail():
 
 
 def test_unsupported_input_is_a_501_unimplemented_option():
-    body = {"@type": "domainName", "name": "foo.example", "dns": {"@type": "dnsData"}}
+    body = {"@type": "domainName", "name": "foo.example", "uName": "foo.example"}
 
     response = client_with().post("/domainNames", json=body, headers=BODY_HEADERS)
 

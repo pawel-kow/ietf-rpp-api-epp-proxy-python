@@ -54,12 +54,14 @@ def parse_host_response(xml_string: str, client_transaction_id: str | None) -> H
     ipv4, ipv6 = _addresses(data)
     host = Host(
         name=data.name,
+        roid=data.roid or None,
         ipv4=ipv4,
         ipv6=ipv6,
         status=[s.s.value for s in data.status],
         status_reasons=_status_reasons(data),
         clID=data.cl_id,
         crID=data.cr_id,
+        upID=data.up_id or None,
         crDate=epp_datetime(data.cr_date),
         upDate=epp_datetime(data.up_date),
         trDate=epp_datetime(data.tr_date),

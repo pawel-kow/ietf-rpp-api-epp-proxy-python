@@ -1,6 +1,6 @@
 {
   "test_id": "test7-read_idn",
-  "skip": "#26",
+  "skip": "#58",
   "steps": [
     {
       "request": {

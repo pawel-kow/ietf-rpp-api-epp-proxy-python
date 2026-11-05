@@ -114,6 +114,11 @@
         },
         "headers": {
           "RPP-Code": "01000"
+        },
+        "fields": {
+          "provMetadata.repositoryId": {
+            "type": "not_null"
+          }
         }
       }
     }

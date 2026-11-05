@@ -33,7 +33,10 @@ The backend hangs on a repeated clTRID, so every EPP command needs a new one. It
 addresses given when creating an external host, so tests of addresses at create use an
 internal host, which needs its domain to exist first. Its other host defects are
 #49, #50, #51, #52 and #54. It rejects non-ASCII contact data, also in `postalInfo
-type="loc"` (#55), so non-ASCII localizations are tested only in unit tests.
+type="loc"` (#55), so non-ASCII localizations are tested only in unit tests. Info returns no
+`secDNS:infData` (#60) and no `domain:upID` or `domain:upDate` (#61), so reading
+DNSSEC and `upClientId` is tested only in unit tests. It stores `domain:hostAttr` as a host
+object, so a domain created with glue reads back with `nameservers`.
 
 ## Tests without the backend
 

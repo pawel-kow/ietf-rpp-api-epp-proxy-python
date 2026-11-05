@@ -1,7 +1,9 @@
-from models import *
+import base64
 from typing import Union
+
+from models import *
 from .epp_core import map_epp_code
-from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header
+from .epp_response import cl_trid, epp_datetime, find_extension, find_res_data, parse_epp_response_header
 from .commands.domains import (
     domain_check,
     domain_create,
@@ -12,6 +14,7 @@ from .commands.domains import (
 from .commands.helper import epp_to_str, str_to_epp
 from .epp_model.domain_1_0 import CreData, InfData
 from .epp_model.epp_1_0 import Epp
+from .epp_model.sec_dns_1_1 import InfData as SecDnsInfData
 
 
 def create_domain_xml(domain: Domain, client_request_id=None) -> str:
@@ -53,6 +56,28 @@ def _ns_from_epp(ns) -> Union[NS, None]:
     return None
 
 
+def _dns_sec_from_epp(epp: Epp) -> Union[DnsSec, None]:
+    """The DNSSEC data of an Info response. A keyData inside a dsData is not kept (spec-issues.md)."""
+    data = find_extension(epp, SecDnsInfData)
+    if data is None or not (data.ds_data or data.key_data):
+        return None
+    return DnsSec(
+        ds_data=[
+            DsData(keyTag=ds.key_tag, algorithm=ds.alg, digestType=ds.digest_type, digest=ds.digest.hex().upper())
+            for ds in data.ds_data
+        ] or None,
+        key_data=[
+            KeyData(
+                flags=key.flags,
+                protocol=key.protocol,
+                algorithm=key.alg,
+                publicKey=base64.b64encode(key.pub_key).decode(),
+            )
+            for key in data.key_data
+        ] or None,
+    )
+
+
 def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[DomainCreateResponse, ErrorResponse]:
     """Parses an EPP domain create/info response into a DomainCreateResponse."""
     epp = str_to_epp(xml_string)
@@ -85,6 +110,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
 
     domain = Domain(
         name=data.name if data else None,
+        roid=(getattr(data, "roid", None) or None) if data else None,
         crDate=epp_datetime(getattr(data, "cr_date", None)) if data else None,
         exDate=epp_datetime(getattr(data, "ex_date", None)) if data else None,
         upDate=epp_datetime(getattr(data, "up_date", None)) if data else None,
@@ -92,10 +118,12 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
         status=[s.s.value for s in getattr(data, "status", [])] if data else None,
         clID=getattr(data, "cl_id", None) if data else None,
         crID=getattr(data, "cr_id", None) if data else None,
+        upID=(getattr(data, "up_id", None) or None) if data else None,
         ns=ns,
         authInfo=authInfo,
         contacts=contacts,
-        dnsSEC=None,
+        dnsSEC=_dns_sec_from_epp(epp),
+        subordinateHosts=(getattr(data, "host", None) or None) if data else None,
     )
     return DomainCreateResponse(domain=domain, **header)
 

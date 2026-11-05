@@ -42,9 +42,11 @@ def auth_info_to_rpp(auth_info: AuthInfo | None) -> RPPAuthInfo | None:
 
 def prov_metadata_to_rpp(obj: ProvisioningObject) -> RPPProvMetadata:
     return RPPProvMetadata(
+        repositoryId=obj.roid,
         spClientId=obj.clID,
         crClientId=obj.crID,
         crDate=obj.crDate,
+        upClientId=obj.upID,
         upDate=obj.upDate,
         trDate=obj.trDate,
     )

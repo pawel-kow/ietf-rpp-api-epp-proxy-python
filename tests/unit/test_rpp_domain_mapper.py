@@ -2,7 +2,7 @@ import pytest
 from jsonschema import ValidationError
 
 from models import (
-    AuthInfo, ContactReference, Domain, HostAttr, HostObj, NS,
+    AuthInfo, ContactReference, Domain, HostObj, NS,
 )
 from rpp_to_model_mapper import UnsupportedRppFeature, domain_to_rpp, rpp_to_domain
 
@@ -54,7 +54,6 @@ def test_create_maps_period_to_duration(value, unit, duration):
 
 
 @pytest.mark.parametrize("extra", [
-    {"dns": {"@type": "dnsData"}},
     {"status": [{"@type": "domainStatus", "label": "clientHold"}]},
     {"uName": "bücher.example"},
     {"lgr": "latn-1.0"},
@@ -112,16 +111,10 @@ def test_read_splits_registrant_from_labelled_contacts():
     ]
 
 
-def test_read_maps_host_objects_and_attributes_to_host_references():
-    rpp = domain_to_rpp(info_domain(ns=NS(
-        host_objs=[HostObj(id="ns1.foo.example")],
-        host_attrs=[HostAttr(id="ns2.foo.example", ipv4=["192.0.2.1"])],
-    )))
+def test_read_maps_host_objects_to_host_references():
+    rpp = domain_to_rpp(info_domain(ns=NS(host_objs=[HostObj(id="ns1.foo.example")], host_attrs=None)))
 
-    assert rpp["nameservers"] == [
-        {"@type": "host", "hostName": "ns1.foo.example"},
-        {"@type": "host", "hostName": "ns2.foo.example"},
-    ]
+    assert rpp["nameservers"] == [{"@type": "host", "hostName": "ns1.foo.example"}]
 
 
 def test_read_maps_password_to_authinfo():
@@ -132,3 +125,10 @@ def test_read_maps_password_to_authinfo():
 
 def test_read_leaves_out_unset_members():
     assert set(domain_to_rpp(info_domain())) == {"@type", "name", "provMetadata", "status"}
+
+
+def test_read_builds_repository_and_update_client():
+    metadata = domain_to_rpp(info_domain(roid="D1-EX", upID="ClientY"))["provMetadata"]
+
+    assert metadata["repositoryId"] == "D1-EX"
+    assert metadata["upClientId"] == "ClientY"

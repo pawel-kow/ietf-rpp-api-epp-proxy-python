@@ -3,6 +3,7 @@ from typing import List, Optional, Dict
 
 from models.contacts import ContactMinimal
 from .common import AuthInfo, Process, ProvisioningObject
+from .dns_sec import DnsSec
 from .response import OperationResponse
 
 @dataclass(kw_only=True)
@@ -31,11 +32,6 @@ class ContactReferenceNew:
     contact: ContactMinimal
 
 @dataclass(kw_only=True)
-class DnsSec:
-    # Add DNSSEC properties here if needed
-    pass
-
-@dataclass(kw_only=True)
 class CreationProcess(Process):
     duration: str
 
@@ -44,7 +40,8 @@ class Domain(ProvisioningObject):
     name: str
     ns: Optional[NS] = None
     contacts: Optional[List[ContactReference]] = None
-    dnsSEC: Optional[List[DnsSec]] = None
+    dnsSEC: Optional[DnsSec] = None
+    subordinateHosts: Optional[List[str]] = None
     processes: Optional[Dict[str, Process]] = None
     
     def update(self, obj):
@@ -63,13 +60,13 @@ class Domain(ProvisioningObject):
 class DomainUpdateAdd:
     ns: Optional[NS] = None
     contacts: Optional[List[ContactReferenceNew]] = None
-    dnsSEC: Optional[List[DnsSec]] = None
+    dnsSEC: Optional[DnsSec] = None
 
 @dataclass(kw_only=True)
 class DomainUpdateRemove:
     ns: Optional[NS] = None
     contacts: Optional[List[ContactReferenceNew]] = None
-    dnsSEC: Optional[List[DnsSec]] = None
+    dnsSEC: Optional[DnsSec] = None
 
 @dataclass(kw_only=True)
 class DomainUpdateChange:

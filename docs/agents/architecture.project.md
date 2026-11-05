@@ -23,7 +23,9 @@ single feature (e.g. "domain update") touches every layer:
    against a JSON Schema via `validate_schema(...)` before mapping. Also does the
    reverse (`*_to_rpp`) and re-validates the outbound dict. Valid input the model
    cannot hold raises `UnsupportedRppFeature`, which answers 501 (`02102`), so nothing
-   is dropped silently. `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
+   is dropped silently. `dns_records.py` holds what hosts and domains share for DNS
+   records, and `domain_dns.py` maps a domain's `dns` to `hostAttr` and secDNS.
+   `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
    without reading the object, so operations that need the current state are
    unsupported (#27). `host_patch.py` does the same for a `HostUpdate`.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
@@ -102,7 +104,7 @@ resolve the function by name and it could not receive dependencies.
 
 Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
 
-- **Several classes per file:** `src/models/domains.py` (18),
+- **Several classes per file:** `src/models/domains.py` (17),
   `src/models/contacts.py` (7), `src/models/response.py` (3),
   `src/models/common.py` (3), `src/eppclient/tcpclient.py` (2).
   Generated `epp_model/` is exempt. (#20)

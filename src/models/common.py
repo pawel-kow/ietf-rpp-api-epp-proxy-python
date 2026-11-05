@@ -13,6 +13,7 @@ class AuthInfo:
     
 @dataclass(kw_only=True)
 class ProvisioningObject:
+    roid: Optional[str] = None
     status: Optional[List[str]] = None
     crDate: Optional[str] = None
     exDate: Optional[str] = None
@@ -20,9 +21,11 @@ class ProvisioningObject:
     trDate: Optional[str] = None
     clID: Optional[str] = None
     crID: Optional[str] = None
+    upID: Optional[str] = None
     authInfo: Optional[AuthInfo] = None
     
     def update(self, obj):
+        self.roid = obj.roid if obj.roid else self.roid
         self.status = obj.status if obj.status and len(obj.status) > 0 else self.status
         self.crDate = obj.crDate if obj.crDate else self.crDate
         self.exDate = obj.exDate if obj.exDate else self.exDate
@@ -30,4 +33,5 @@ class ProvisioningObject:
         self.trDate = obj.trDate if obj.trDate else self.trDate
         self.clID = obj.clID if obj.clID else self.clID
         self.crID = obj.crID if obj.crID else self.crID
+        self.upID = obj.upID if obj.upID else self.upID
         self.authInfo = obj.authInfo if obj.authInfo else self.authInfo

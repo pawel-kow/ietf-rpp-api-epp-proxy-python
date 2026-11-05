@@ -1,5 +1,5 @@
 {
-  "test_id": "test5-create_with_dns_is_unsupported",
+  "test_id": "test21-ds_and_dnskey_are_unsupported",
   "steps": [
     {
       "request": {
@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "test5-{random_name}.example",
+          "name": "t21-{random_name}.example",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -18,10 +18,24 @@
             "records": [
               {
                 "@type": "dnsRecord",
-                "name": "ns1.test5-{random_name}.example.",
-                "type": "A",
+                "name": "@",
+                "type": "ds",
                 "rdata": {
-                  "address": "192.168.1.1"
+                  "keyTag": "12345",
+                  "algorithm": "3",
+                  "digestType": "1",
+                  "digest": "49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC"
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "dnskey",
+                "rdata": {
+                  "flags": "257",
+                  "protocol": "3",
+                  "algorithm": "8",
+                  "publicKey": "AQPJ////4Q=="
                 }
               }
             ]

@@ -29,6 +29,10 @@ def test_host_without_dns_has_no_addresses():
     assert rpp_to_host(host()) == Host(name=NAME)
 
 
+def test_record_type_is_converted_to_lowercase():
+    assert rpp_to_host(host(record("A", {"address": "192.0.2.1"}))).ipv4 == ["192.0.2.1"]
+
+
 def test_a_and_aaaa_records_become_addresses():
     mapped = rpp_to_host(host(NS, A, AAAA))
 

@@ -176,3 +176,10 @@ def test_parse_update_and_delete():
 
 def test_no_client_transaction_id_is_not_reported():
     assert parse_host_update_response(reply(), None).client_transaction_id is None
+
+
+def test_parse_info_reads_the_repository_and_update_client():
+    host = parsed_info().host
+
+    assert host.roid == "H1-EX"
+    assert host.upID == "foo"
