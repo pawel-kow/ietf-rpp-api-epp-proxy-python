@@ -1,7 +1,9 @@
 from models import HostUpdate, HostUpdateChanges
 from rpp_schema_validator import validate_schema
+from . import host_dns
 from .common import parse_rpp, reject_operation
-from .hosts import add_rpp_status, rpp_record_to_address
+from .hosts import add_rpp_status
+from .not_supported_by_epp import NotSupportedByEpp
 from .rpp_models import RPPDnsRecord, RPPPatchOperation, RPPStatus
 
 HOST_NAME_PATH = "/hostName"
@@ -35,7 +37,7 @@ class _PatchedHostUpdate:
         if operation.match is not None:
             raise ValueError("'match' can only be used on an array")
         if operation.op == "remove":
-            reject_operation(operation)
+            reject_operation(operation, NotSupportedByEpp)
         validate_schema("host.update", {"@type": "host", "hostName": operation.value})
         self.new_name = operation.value
 
@@ -66,9 +68,9 @@ class _PatchedHostUpdate:
             add_rpp_status(parse_rpp(RPPStatus, element), changes)
             return
         validate_schema("dnsRecord.create", element)
-        address = rpp_record_to_address(self.host_name, parse_rpp(RPPDnsRecord, element))
+        address = host_dns.rpp_to_model(self.host_name, parse_rpp(RPPDnsRecord, element))
         if address is None:
-            reject_operation(operation)
+            reject_operation(operation, NotSupportedByEpp)
         family, value = address
         getattr(changes, family).append(value)
 
@@ -81,7 +83,7 @@ class _PatchedHostUpdate:
         )
 
 
-def rpp_to_host_update(host_name: str, rpp: list) -> HostUpdate:
+def rpp_to_model(host_name: str, rpp: list) -> HostUpdate:
     """Converts a partial update (JSON Patch, json draft §5.2) to a HostUpdate."""
     update = _PatchedHostUpdate(host_name)
     for operation in rpp:

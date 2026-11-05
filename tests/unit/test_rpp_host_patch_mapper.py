@@ -2,7 +2,7 @@ import jsonschema
 import pytest
 
 from models import HostUpdate, HostUpdateChanges
-from rpp_to_model_mapper import UnsupportedRppFeature, rpp_to_host_update
+from rpp_to_model_mapper import UnsupportedRppFeature, host_patch
 
 NAME = "ns1.example.example"
 A = {"@type": "dnsRecord", "name": f"{NAME}.", "type": "a", "rdata": {"address": "192.0.2.1"}}
@@ -11,7 +11,7 @@ STATUS = {"@type": "hostStatus", "label": "clientUpdateProhibited"}
 
 
 def update(*operations):
-    return rpp_to_host_update(NAME, list(operations))
+    return host_patch.rpp_to_model(NAME, list(operations))
 
 
 def add(path, value):

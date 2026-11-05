@@ -2,6 +2,9 @@ from .domains import *
 from .common import *
 from .address import Address
 from .contacts import *
+from .dns_sec import DnsSec
+from .ds_data import DsData
+from .key_data import KeyData
 from .localized_postal_info import LocalizedPostalInfo
 from .response import *
 from .host import Host

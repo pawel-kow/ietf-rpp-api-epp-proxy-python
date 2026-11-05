@@ -1,20 +1,20 @@
 from connexion import request
 from eppclient.epp_contacts import *
 from models import *
-from rpp_to_model_mapper import *
+import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import *
 from .auth import get_epp_client
 
 @rpp_operation
 def contacts_create(body):
-    contact = map_request(rpp_to_contact, body)
+    contact = map_request(rpp_mapper.contacts.rpp_to_model, body)
     contactresp = epp_contacts_Create(get_epp_client(), contact, client_transaction_id=client_transaction_id())
     if isinstance(contactresp, ErrorResponse):
         raise_epp_error(contactresp)
     inforesp = epp_contacts_Info(get_epp_client(), contactresp.contact.id)
     headers = generate_rpp_response_headers(contactresp)
     headers["Location"] = f"{str(request.url).rstrip('/')}/{contact.id}"
-    return contact_to_rpp(inforesp.contact), 201, headers
+    return rpp_mapper.contacts.model_to_rpp(inforesp.contact), 201, headers
 
 @rpp_operation
 def contacts_delete(id):
@@ -29,4 +29,4 @@ def contacts_read(id):
     contactresp = epp_contacts_Info(get_epp_client(), id, client_transaction_id=client_transaction_id())
     if isinstance(contactresp, ErrorResponse):
         raise_epp_error(contactresp)
-    return contact_to_rpp(contactresp.contact), 200, generate_rpp_response_headers(contactresp)
+    return rpp_mapper.contacts.model_to_rpp(contactresp.contact), 200, generate_rpp_response_headers(contactresp)

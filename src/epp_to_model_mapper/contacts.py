@@ -81,6 +81,7 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
 
     contact = Contact(
         id=data.id if data else None,
+        roid=(getattr(data, "roid", None) or None) if data else None,
         name=name,
         organisationName=org,
         type=ContactType.ORG if org is not None or (localized and localized.organisationName)
@@ -99,6 +100,7 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
         trDate=epp_datetime(getattr(data, "tr_date", None)) if data else None,
         clID=getattr(data, "cl_id", None) if data else None,
         crID=getattr(data, "cr_id", None) if data else None,
+        upID=(getattr(data, "up_id", None) or None) if data else None,
         authInfo=AuthInfo(pw=pw, hash=None) if pw is not None else None,
     )
 

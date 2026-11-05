@@ -87,3 +87,13 @@ def test_parse_loc_only_org():
 
     assert parsed.type == ContactType.ORG
     assert parsed.localizedPostalInfo.organisationName == "Müller GmbH"
+
+
+def test_parse_reads_the_repository():
+    assert parse_contact_response(info_reply(), "cl-1").contact.roid == "R-1"
+
+
+def test_parse_reads_the_update_client():
+    xml = info_reply().replace("</contact:crDate>", "</contact:crDate><contact:upID>ClientY</contact:upID>")
+
+    assert parse_contact_response(xml, "cl-1").contact.upID == "ClientY"

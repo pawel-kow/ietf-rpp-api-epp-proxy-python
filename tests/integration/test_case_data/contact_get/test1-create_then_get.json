@@ -189,6 +189,9 @@
           },
           "provMetadata.crClientId": {
             "type": "not_null"
+          },
+          "provMetadata.repositoryId": {
+            "type": "not_null"
           }
         },
         "headers": {

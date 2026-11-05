@@ -2,7 +2,7 @@ import pytest
 from jsonschema import ValidationError
 
 from models import AuthInfo, ContactMinimal, ContactReferenceNew, HostObj
-from rpp_to_model_mapper import UnsupportedRppFeature, rpp_to_domain_update
+from rpp_to_model_mapper import UnsupportedRppFeature, domain_patch
 
 CONTACT = {"@type": "contact", "id": "SH-8014"}
 HOST = {"@type": "host", "hostName": "ns1.foo.example"}
@@ -10,7 +10,7 @@ AUTH = {"@type": "authInfo", "method": "authinfo", "authdata": "2BARfoo"}
 
 
 def update(*operations):
-    return rpp_to_domain_update("foo.example", list(operations))
+    return domain_patch.rpp_to_model("foo.example", list(operations))
 
 
 def reference(label):

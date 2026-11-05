@@ -1,8 +1,9 @@
+import base64
 import re
 
 from xsdata.models.datatype import XmlDate
 
-from models import Domain, DomainUpdate
+from models import DnsSec, Domain, DomainUpdate
 
 from ..epp_model.domain_1_0 import (
     AddRemType,
@@ -37,7 +38,7 @@ from ..epp_model.epp_1_0 import (
 from ..epp_model.eppcom_1_0 import PwAuthInfoType
 from ..epp_model.host_1_0 import AddrType, IpType
 from ..epp_model.sec_dns_1_1 import Create as SecdnsCreateType
-from ..epp_model.sec_dns_1_1 import KeyDataType
+from ..epp_model.sec_dns_1_1 import DsDataType, KeyDataType
 
 
 def _ns_type(ns) -> NsType:
@@ -53,6 +54,19 @@ def _ns_type(ns) -> NsType:
             )
             for h in (ns.host_attrs or [])
         ]
+    )
+
+
+def _sec_dns_create(dns_sec: DnsSec) -> SecdnsCreateType:
+    return SecdnsCreateType(
+        ds_data=[
+            DsDataType(key_tag=ds.keyTag, alg=ds.algorithm, digest_type=ds.digestType, digest=bytes.fromhex(ds.digest))
+            for ds in dns_sec.ds_data or []
+        ],
+        key_data=[
+            KeyDataType(flags=key.flags, protocol=key.protocol, alg=key.algorithm, pub_key=base64.b64decode(key.publicKey))
+            for key in dns_sec.key_data or []
+        ],
     )
 
 
@@ -121,6 +135,7 @@ def domain_create(domain: Domain, rpp_cl_trid: str) -> Epp:
     return Epp(
         command=CommandType(
             create=ReadWriteType(other_element=create),
+            extension=ExtAnyType(other_element=[_sec_dns_create(domain.dnsSEC)]) if domain.dnsSEC else None,
             cl_trid=rpp_cl_trid,
         )
     )

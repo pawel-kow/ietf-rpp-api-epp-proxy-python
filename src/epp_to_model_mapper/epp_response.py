@@ -24,6 +24,16 @@ def find_res_data(epp: Epp, *types):
     return None
 
 
+def find_extension(epp: Epp, extension_type):
+    """Return the first response extension of the given xsdata type."""
+    if epp.response is None or epp.response.extension is None:
+        return None
+    for item in epp.response.extension.other_element:
+        if isinstance(item, extension_type):
+            return item
+    return None
+
+
 def cl_trid(client_request_id) -> str:
     return client_request_id if client_request_id else str(uuid.uuid4())
 

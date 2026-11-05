@@ -21,9 +21,13 @@ single feature (e.g. "domain update") touches every layer:
 3. **`rpp_to_model_mapper/`:** converts inbound RPP JSON dicts ↔ internal `models`
    dataclasses, through the RPP dataclasses in `rpp_models/`. Validates every payload
    against a JSON Schema via `validate_schema(...)` before mapping. Also does the
-   reverse (`*_to_rpp`) and re-validates the outbound dict. Valid input the model
-   cannot hold raises `UnsupportedRppFeature`, which answers 501 (`02102`), so nothing
-   is dropped silently. `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
+   reverse and re-validates the outbound dict. Every module converts one thing through
+   `rpp_to_model` and `model_to_rpp`, so the module name selects the conversion, and
+   callers write `rpp_mapper.domains.rpp_to_model`. Valid input that cannot reach the
+   backend answers 501, so nothing is dropped silently, see
+   [Unsupported input](#unsupported-input). `dns_records.py` holds what hosts and domains share for DNS
+   records, and `domain_dns.py` maps a domain's `dns` to `hostAttr` and secDNS.
+   `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
    without reading the object, so operations that need the current state are
    unsupported (#27). `host_patch.py` does the same for a `HostUpdate`.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
@@ -35,7 +39,8 @@ single feature (e.g. "domain update") touches every layer:
    model or an `ErrorResponse`, and controllers branch on `isinstance`.
    [eppclient.py](../../src/eppclient/eppclient.py) is the raw TCP+XML client
    (login/logout, `_parse_epp_response` reads the `<result code>`; codes matching
-   `1xxx` = success).
+   `1xxx` = success). It keeps the extensions of the greeting for
+   `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` the server offers.
 6. **`flows/`:** multi-step operations, free of the web framework. A flow returns a
    typed result or an `ErrorResponse`, and the handler renders it. `flows/hosts.py`
    holds mutate-then-Info, and PUT as Info, difference, update and Info.
@@ -74,6 +79,24 @@ the JSContact profile requires beyond the schema (key sequence, US-ASCII, key ag
 features) is checked in `rpp_to_model_mapper/contacts.py` on requests, before anything
 the model cannot hold is rejected, so a profile violation is a 400 and not a 501.
 
+## Unsupported input
+
+Valid input that cannot reach the backend answers 501. There are three kinds, each with
+its own message:
+
+| Kind | Raised as | RPP code |
+|---|---|---|
+| EPP has no place for it, in the core or in an extension the proxy knows of | `NotSupportedByEpp` | `02102` |
+| EPP can hold it, but the proxy does not map it | `NotSupportedByProxy` | `02103` if it names an extension, otherwise `02102` |
+| The proxy uses an extension the server does not offer | `ErrorResponse` from `epp_*` | `02103` |
+
+An extension the proxy does not know of cannot be told apart from no extension, so it
+counts as the first kind. A PATCH that EPP could do once the proxy has read the object
+is the second kind (#27).
+
+The third kind is known only from the EPP greeting, which mappers cannot reach, so the
+`epp_*` function checks `supports_extension` and `raise_epp_error` renders the result.
+
 ## Wire contract
 
 The frozen contract covers the OpenAPI paths and schemas, the core §18.1 result code
@@ -102,7 +125,7 @@ resolve the function by name and it could not receive dependencies.
 
 Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
 
-- **Several classes per file:** `src/models/domains.py` (18),
+- **Several classes per file:** `src/models/domains.py` (17),
   `src/models/contacts.py` (7), `src/models/response.py` (3),
   `src/models/common.py` (3), `src/eppclient/tcpclient.py` (2).
   Generated `epp_model/` is exempt. (#20)

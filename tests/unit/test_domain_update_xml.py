@@ -1,9 +1,9 @@
 from epp_to_model_mapper.domains import create_domain_update_xml
-from rpp_to_model_mapper import rpp_to_domain_update
+from rpp_to_model_mapper import domain_patch
 
 
 def update_xml(body):
-    return create_domain_update_xml(rpp_to_domain_update("foo.example", body), client_request_id="t")
+    return create_domain_update_xml(domain_patch.rpp_to_model("foo.example", body), client_request_id="t")
 
 
 def add_contact(label, contact_id):

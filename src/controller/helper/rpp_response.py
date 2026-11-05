@@ -92,8 +92,9 @@ def map_request(mapper, *args):
     try:
         return mapper(*args)
     except UnsupportedRppFeature as e:
-        code = ResultCode.UNIMPLEMENTED_OPTION
-        raise ProblemException(status=501, title=code.value[1], detail=str(e), headers=problem_headers(code))
+        raise ProblemException(
+            status=http_status(e.code), title=e.code.value[1], detail=str(e), headers=problem_headers(e.code),
+        )
     except ValidationError as e:
         # Only the message: str(e) would print the request, including its authInfo.
         raise ProblemException(status=400, title="Bad Request", detail=e.message)

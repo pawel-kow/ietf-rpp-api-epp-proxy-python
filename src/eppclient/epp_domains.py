@@ -1,6 +1,6 @@
 from models import *
 from epp_to_model_mapper import *
-from .eppclient import EPPClient
+from .eppclient import EPPClient, SEC_DNS_EXTENSION
 import os
 from typing import Union
 
@@ -14,6 +14,13 @@ def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction
     Returns:
         DomainCreateResponse: The response from the EPP server.
     """
+    if domain.dnsSEC and not epp_client.supports_extension(SEC_DNS_EXTENSION):
+        return ErrorResponse(
+            code=ResultCode.UNIMPLEMENTED_EXTENSION,
+            msg=f"DNSSEC needs {SEC_DNS_EXTENSION}, which the EPP server does not offer",
+            server_transaction_id=None,
+            client_transaction_id=client_transaction_id,
+        )
     eppxml = create_domain_xml(domain, client_request_id=client_transaction_id)
     success, code, response = epp_client.send_and_get_response(eppxml)
     

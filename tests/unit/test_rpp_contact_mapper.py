@@ -6,7 +6,7 @@ from connexion import ProblemException
 from controller.helper.rpp_response import map_request
 from models import Address, AuthInfo, Contact, ContactType, LocalizedPostalInfo
 from rpp_schema_validator import validate_schema
-from rpp_to_model_mapper import contact_to_rpp, rpp_to_contact
+from rpp_to_model_mapper import contacts
 
 
 def card(**extra):
@@ -41,12 +41,12 @@ def info_contact(**extra):
 
 def rejected_status(body):
     with pytest.raises(ProblemException) as rejected:
-        map_request(rpp_to_contact, body)
+        map_request(contacts.rpp_to_model, body)
     return rejected.value.status
 
 
 def test_create_maps_identity():
-    contact = rpp_to_contact(create_body())
+    contact = contacts.rpp_to_model(create_body())
 
     assert (contact.id, contact.name, contact.type) == ("JD-1234", "John Doe", ContactType.PERSON)
 
@@ -54,11 +54,11 @@ def test_create_maps_identity():
 def test_create_without_kind_is_an_individual():
     body = create_body({"@type": "Card", "version": "2.0", "name": {"full": "John Doe"}})
 
-    assert rpp_to_contact(body).type == ContactType.PERSON
+    assert contacts.rpp_to_model(body).type == ContactType.PERSON
 
 
 def test_create_maps_org_card():
-    contact = rpp_to_contact(create_body(org_card()))
+    contact = contacts.rpp_to_model(create_body(org_card()))
 
     assert (contact.type, contact.organisationName) == (ContactType.ORG, "Example Inc.")
 
@@ -69,7 +69,7 @@ def test_create_maps_address_components():
         ("region", "VA"), ("postcode", "20166"),
     )))
 
-    assert rpp_to_contact(body).address == Address(
+    assert contacts.rpp_to_model(body).address == Address(
         street=["Line 1", "Line 2"], city="Dulles", stateProvince="VA", postalCode="20166", country="US",
     )
 
@@ -79,13 +79,13 @@ def test_create_keeps_the_order_of_street_lines():
         ("name", "B"), ("locality", "Dulles"), ("name", "A"), ("name", "C"),
     )))
 
-    assert rpp_to_contact(body).address.street == ["B", "A", "C"]
+    assert contacts.rpp_to_model(body).address.street == ["B", "A", "C"]
 
 
 def test_create_maps_email():
     body = create_body(card(emails={"email": {"address": "jdoe@example.example"}}))
 
-    assert rpp_to_contact(body).email == ["jdoe@example.example"]
+    assert contacts.rpp_to_model(body).email == ["jdoe@example.example"]
 
 
 @pytest.mark.parametrize("tel, e164", [
@@ -97,7 +97,7 @@ def test_create_maps_email():
 def test_create_maps_tel_uri_to_epp_number(tel, e164):
     body = create_body(card(phones={"voice": {"number": tel}}))
 
-    assert rpp_to_contact(body).phone == [e164]
+    assert contacts.rpp_to_model(body).phone == [e164]
 
 
 @pytest.mark.parametrize("number", [
@@ -125,7 +125,7 @@ def test_create_splits_voice_and_fax_by_key():
         "fax": {"number": "tel:+1.7035555556", "features": {"fax": True}},
     }))
 
-    contact = rpp_to_contact(body)
+    contact = contacts.rpp_to_model(body)
     assert (contact.phone, contact.fax) == (["+1.7035555555"], ["+1.7035555556"])
 
 
@@ -133,13 +133,13 @@ def test_create_splits_voice_and_fax_by_key():
 def test_create_accepts_a_voice_number_with_or_without_features(features):
     phone = {"number": "tel:+1.7035555555", **({"features": features} if features else {})}
 
-    assert rpp_to_contact(create_body(card(phones={"voice": phone}))).phone == ["+1.7035555555"]
+    assert contacts.rpp_to_model(create_body(card(phones={"voice": phone}))).phone == ["+1.7035555555"]
 
 
 def test_create_maps_authinfo():
     body = create_body(authInfo={"@type": "authInfo", "method": "authinfo", "authdata": "2fooBAR"})
 
-    assert rpp_to_contact(body).authInfo == AuthInfo(pw="2fooBAR")
+    assert contacts.rpp_to_model(body).authInfo == AuthInfo(pw="2fooBAR")
 
 
 def test_create_accepts_type_on_every_object():
@@ -155,7 +155,7 @@ def test_create_accepts_type_on_every_object():
         phones={"voice": {"@type": "Phone", "number": "tel:+1.7035555555"}},
     ))
 
-    contact = rpp_to_contact(body)
+    contact = contacts.rpp_to_model(body)
     assert (contact.name, contact.address.city) == ("John Doe", "Dulles")
 
 
@@ -248,15 +248,15 @@ def test_create_rejects_a_profile_violation_before_what_the_model_cannot_hold():
 
 
 def test_create_accepts_language():
-    assert rpp_to_contact(create_body(card(language="en"))).name == "John Doe"
+    assert contacts.rpp_to_model(create_body(card(language="en"))).name == "John Doe"
 
 
 def test_create_without_localizations_has_no_localized_form():
-    assert rpp_to_contact(create_body()).localizedPostalInfo is None
+    assert contacts.rpp_to_model(create_body()).localizedPostalInfo is None
 
 
 def test_create_empty_localization_has_no_localized_form():
-    assert rpp_to_contact(create_body(card(localizations={"de": {}}))).localizedPostalInfo is None
+    assert contacts.rpp_to_model(create_body(card(localizations={"de": {}}))).localizedPostalInfo is None
 
 
 def test_create_maps_a_full_localization():
@@ -266,7 +266,7 @@ def test_create_maps_a_full_localization():
         "addresses": {"addr": {"components": components(("locality", "München")), "countryCode": "DE"}},
     }}))
 
-    assert rpp_to_contact(body).localizedPostalInfo == LocalizedPostalInfo(
+    assert contacts.rpp_to_model(body).localizedPostalInfo == LocalizedPostalInfo(
         name="Jörg Müller",
         organisationName="Müller GmbH",
         address=Address(street=None, city="München", country="DE"),
@@ -278,7 +278,7 @@ def test_create_partial_localization_inherits_the_internationalized_form():
         "addresses": {"addr": {"components": components(("locality", "München")), "countryCode": "DE"}},
     }}))
 
-    assert rpp_to_contact(body).localizedPostalInfo == LocalizedPostalInfo(
+    assert contacts.rpp_to_model(body).localizedPostalInfo == LocalizedPostalInfo(
         name="John Doe",
         organisationName="Example Inc.",
         address=Address(street=None, city="München", country="DE"),
@@ -288,7 +288,7 @@ def test_create_partial_localization_inherits_the_internationalized_form():
 def test_create_localization_inherits_the_address():
     body = create_body(card(addresses=address(LOCALITY), localizations={"de": {"name": {"full": "Jörg"}}}))
 
-    localized = rpp_to_contact(body).localizedPostalInfo
+    localized = contacts.rpp_to_model(body).localizedPostalInfo
     assert (localized.name, localized.address.city) == ("Jörg", "Dulles")
 
 
@@ -341,7 +341,7 @@ def test_draft_figure_2_maps_without_the_additional_entries():
     figure["kind"] = "org"
     del figure["emails"]["email-1"], figure["phones"]["voice-1"]
 
-    contact = rpp_to_contact(create_body(figure))
+    contact = contacts.rpp_to_model(create_body(figure))
 
     assert contact.localizedPostalInfo == LocalizedPostalInfo(
         name="Joe User",
@@ -354,7 +354,7 @@ def test_draft_figure_2_maps_without_the_additional_entries():
 
 
 def test_read_builds_the_card():
-    rpp = contact_to_rpp(info_contact(
+    rpp = contacts.model_to_rpp(info_contact(
         email=["jdoe@example.example"],
         phone=["+1.7035555555x12"],
         fax=["+1.7035555556"],
@@ -384,18 +384,18 @@ def test_read_builds_the_card():
 
 
 def test_read_maps_org_kind():
-    rpp = contact_to_rpp(info_contact(type=ContactType.ORG, organisationName="Example Inc."))
+    rpp = contacts.model_to_rpp(info_contact(type=ContactType.ORG, organisationName="Example Inc."))
 
     assert rpp["contactInfo"]["kind"] == "org"
     assert rpp["contactInfo"]["organizations"] == {"org": {"name": "Example Inc."}}
 
 
 def test_read_leaves_out_kind_when_undefined():
-    assert "kind" not in contact_to_rpp(info_contact(type=ContactType.UNDEFINED))["contactInfo"]
+    assert "kind" not in contacts.model_to_rpp(info_contact(type=ContactType.UNDEFINED))["contactInfo"]
 
 
 def test_read_maps_metadata_and_status():
-    rpp = contact_to_rpp(info_contact(crID="ClientY"))
+    rpp = contacts.model_to_rpp(info_contact(crID="ClientY"))
 
     assert rpp["@type"] == "contact"
     assert rpp["provMetadata"] == {"@type": "provMetadata", "spClientId": "ClientX", "crClientId": "ClientY"}
@@ -408,11 +408,11 @@ MUNICH_RPP = {"components": components(("locality", "München")), "countryCode":
 
 
 def test_read_without_a_localized_form_has_no_localizations():
-    assert "localizations" not in contact_to_rpp(info_contact(address=DULLES))["contactInfo"]
+    assert "localizations" not in contacts.model_to_rpp(info_contact(address=DULLES))["contactInfo"]
 
 
 def test_read_returns_the_localized_form_as_undetermined_language():
-    rpp = contact_to_rpp(info_contact(
+    rpp = contacts.model_to_rpp(info_contact(
         type=ContactType.ORG, organisationName="Example Inc.", address=DULLES,
         localizedPostalInfo=LocalizedPostalInfo(name="Jörg", organisationName="Müller GmbH", address=MUNICH),
     ))
@@ -425,7 +425,7 @@ def test_read_returns_the_localized_form_as_undetermined_language():
 
 
 def test_read_returns_only_members_that_differ():
-    rpp = contact_to_rpp(info_contact(
+    rpp = contacts.model_to_rpp(info_contact(
         address=DULLES, localizedPostalInfo=LocalizedPostalInfo(name="John Doe", address=MUNICH),
     ))
 
@@ -433,7 +433,7 @@ def test_read_returns_only_members_that_differ():
 
 
 def test_read_identical_localized_form_has_no_localizations():
-    rpp = contact_to_rpp(info_contact(
+    rpp = contacts.model_to_rpp(info_contact(
         address=DULLES, localizedPostalInfo=LocalizedPostalInfo(name="John Doe", address=DULLES),
     ))
 
@@ -441,7 +441,7 @@ def test_read_identical_localized_form_has_no_localizations():
 
 
 def test_read_localized_only_contact_has_no_internationalized_form():
-    rpp = contact_to_rpp(info_contact(
+    rpp = contacts.model_to_rpp(info_contact(
         name=None, localizedPostalInfo=LocalizedPostalInfo(name="Jörg", address=MUNICH),
     ))
 

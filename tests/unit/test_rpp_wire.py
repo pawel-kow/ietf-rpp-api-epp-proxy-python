@@ -84,12 +84,32 @@ def test_error_is_a_problem_detail():
 
 
 def test_unsupported_input_is_a_501_unimplemented_option():
-    body = {"@type": "domainName", "name": "foo.example", "dns": {"@type": "dnsData"}}
+    body = {"@type": "domainName", "name": "foo.example", "uName": "foo.example"}
 
     response = client_with().post("/domainNames", json=body, headers=BODY_HEADERS)
 
     assert response.status_code == 501
     assert response.headers["RPP-Code"] == "02102"
+
+
+def test_dnssec_on_a_server_without_the_extension_is_a_501_unimplemented_extension():
+    def factory(username, password):
+        return FakeEppClient(username, password, extensions=())
+
+    client = create_app(EppSessionAuthenticator(factory)).test_client()
+    record = {
+        "@type": "dnsRecord", "name": "@", "type": "ds",
+        "rdata": {"keyTag": "1", "algorithm": "3", "digestType": "1", "digest": "AB"},
+    }
+    body = {"@type": "domainName", "name": "foo.example", "dns": {"@type": "dnsData", "records": [record]}}
+
+    response = client.post("/domainNames", json=body, headers=BODY_HEADERS)
+
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02103"
+    assert response.json()["detail"] == (
+        "DNSSEC needs urn:ietf:params:xml:ns:secDNS-1.1, which the EPP server does not offer"
+    )
 
 
 @pytest.mark.parametrize("method, url", [

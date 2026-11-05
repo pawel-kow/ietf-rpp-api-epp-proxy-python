@@ -91,10 +91,31 @@ Each entry says what the proxy does today.
 - `authInfo` is optional in `domainName.create`, but EPP requires it, and the backend answers `2003` (400).
 - **Proxy:** passes that through. Should the EPP Compatibility Profile make it required?
 
-## Glue records
+## Domain `dns` and EPP
 
-- Only `dns` could carry `ns.hostAttr`, and nothing says how `dnsData` maps to EPP. Core §5 refers to a mapping document that does not exist yet ([TODO REF]).
-- **Proxy:** `dns` is 501 (`02102`), see #26.
+- Nothing says how `dnsData` maps to EPP. Core §5 refers to a mapping document that does not exist yet ([TODO REF]).
+- **Proxy:** on create, `ns` records and their glue are `ns.hostAttr`, `ds` and `dnskey` records are secDNS. `ns`, `ds` and `dnskey` must be owned by the domain, and `a` and `aaaa` by a nameserver given in the same request and subordinate to the domain. Other records, and `ds` or `dnskey` below the domain, are 501 (`02102`). A read returns `ns.hostAttr` as `dns` and `ns.hostObj` as `nameservers`.
+- A registry can store `hostAttr` as host objects, as the test backend does. The create then reads back as `nameservers`, and the glue is at `GET /hosts/{name}`.
+
+## DNSSEC with `nameservers`
+
+- Data-objects §11.2 forbids `nameservers` together with DNS Data entries, without excepting `ds` and `dnskey`. Read literally, a domain delegated through host objects cannot have DNSSEC, and a client has to give its delegation as `ns` records. Should the rule be limited to `ns`, `a` and `aaaa`?
+- **Proxy:** a create with `nameservers` and any `dns` record is a 400. A read of such a domain returns both, because it would otherwise lose data.
+
+## `ds` with `dnskey`
+
+- Data-objects §9.9.1 has a TBC on `keyData` inside `dsData`, and §9.11 lets a client send both record types. RFC 5910 has a DS and a key data interface, and a server uses one.
+- **Proxy:** both in one request are 501 (`02102`). A read leaves out a `keyData` nested in a `dsData`.
+
+## IDN
+
+- json §6.4 requires `lgr` whenever `uName` is present, and core EPP has no element for either. So `uName` cannot be computed from the A-label on read without breaking that rule.
+- **Proxy:** both are 501 (`02102`) on create and are left out of a read (#58).
+
+## Disclose
+
+- The Disclose Object is TBD in data-objects §9.13, and `disclose.read` has only `@type`.
+- **Proxy:** 501 (`02102`) (#59).
 
 ## Host DNS records
 
@@ -104,8 +125,8 @@ Each entry says what the proxy does today.
 
 ## Data the EPP Compatibility Profile cannot hold
 
-- The host create example (json §8.3.2) has `dns.controls.ttl`, which EPP has no element for, and the data-objects draft does not limit `controls` in the EPP Compatibility Profile. An example the profile cannot carry leaves open what a server should do: reject it, ignore it, or apply a default. Should the profile forbid `controls`, and with which result code?
-- **Proxy:** 501 (`02102`), nothing is dropped silently, so the §8.3.2 example answers 501 as written (`draft_host/test2`).
+- The host create example (json §8.3.2) has `dns.controls.ttl`, which core EPP has no element for (RFC 9803 adds one), and the data-objects draft does not limit `controls` in the EPP Compatibility Profile. An example the profile cannot carry leaves open what a server should do: reject it, ignore it, or apply a default. Should the profile forbid `controls`, and with which result code?
+- **Proxy:** `ttl` is 501 (`02103`), because the proxy does not implement RFC 9803, on hosts and domains, so the §8.3.2 example answers 501 as written (`draft_host/test2`). `maxSigLifetime` is 501 (`02102`), and a read leaves out the secDNS `maxSigLife`. Nothing is dropped silently.
 
 ## `status` on host create
 

@@ -1,0 +1,58 @@
+{
+  "test_id": "test19-dns_records_with_nameservers",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "t19-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "ns1.t19-{random_name}.example"
+            }
+          ],
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ds",
+                "rdata": {
+                  "keyTag": "12345",
+                  "algorithm": "3",
+                  "digestType": "1",
+                  "digest": "49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC"
+                }
+              }
+            ]
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02001"
+        }
+      }
+    }
+  ]
+}
