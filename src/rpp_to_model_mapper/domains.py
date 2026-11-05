@@ -3,7 +3,7 @@ from models import (
 )
 from rpp_schema_validator import validate_schema
 from . import auth_info, domain_dns, prov_metadata, statuses
-from .common import parse_rpp, reject_set
+from .common import parse_rpp, period_duration, reject_set
 from .not_supported_by_epp import NotSupportedByEpp
 from .rpp_models import RPPContactReference, RPPDomain, RPPHostReference, RPPLabelledContact
 
@@ -36,7 +36,7 @@ def _rpp_to_processes(domain_rpp: RPPDomain) -> dict | None:
     period = create_processes[0].period
     if period is None:
         return None
-    return {"creation": CreationProcess(duration=f"P{period.value}{period.unit.upper()}")}
+    return {"creation": CreationProcess(duration=period_duration(period))}
 
 
 def _rpp_to_delegation(domain_rpp: RPPDomain) -> tuple[NS | None, DnsSec | None]:

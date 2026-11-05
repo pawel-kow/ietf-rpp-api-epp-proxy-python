@@ -10,6 +10,7 @@ class Process:
 class AuthInfo:
     pw: Optional[str] = None
     hash: Optional[str] = None
+    roid: Optional[str] = None
     
 @dataclass(kw_only=True)
 class ProvisioningObject:

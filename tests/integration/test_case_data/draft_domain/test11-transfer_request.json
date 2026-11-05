@@ -1,17 +1,44 @@
 {
   "test_id": "test11-transfer_request",
-  "skip": "#33",
   "steps": [
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/ex10-{random_name}.example/processes/transferProcesses",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "ex11-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
         "headers": {
+          "Content-Type": "application/rpp+json",
           "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ex11-{random_name}.example/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json",
-          "RPP-Authorization": "authinfo value=MmZvb0JBUg=="
+          "RPP-Authorization": "authinfo value=UGFzc3dvcmQxIUA="
         },
         "body_json": {
           "@type": "domainTransferProcess",
@@ -29,7 +56,32 @@
         "body": {
           "@type": "domainTransferProcess",
           "trStatus": "pending",
-          "transferDir": "pull"
+          "transferDir": "pull",
+          "reqClientId": "baz",
+          "actClientId": "foo"
+        },
+        "headers": {
+          "RPP-Code": "01001",
+          "Location": {
+            "type": "not_empty_string"
+          }
+        },
+        "fields": {
+          "reqClientId": {
+            "type": "not_empty_string"
+          },
+          "requestDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": -60,
+            "max_delta": 120
+          },
+          "actionDate": {
+            "type": "not_null"
+          },
+          "expiryDate": {
+            "type": "not_null"
+          }
         }
       }
     }

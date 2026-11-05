@@ -1,13 +1,71 @@
 {
   "test_id": "test14-transfer_cancel",
-  "skip": "#33",
   "steps": [
     {
       "request": {
-        "method": "DELETE",
-        "url": "/domainNames/ex10-{random_name}.example/processes/transferProcesses/latest",
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "ex14-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
         "headers": {
+          "Content-Type": "application/rpp+json",
           "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ex14-{random_name}.example/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=UGFzc3dvcmQxIUA="
+        },
+        "body_json": {
+          "@type": "domainTransferProcess",
+          "transferDir": "pull"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainTransferProcess",
+          "trStatus": "pending",
+          "transferDir": "pull",
+          "reqClientId": "baz",
+          "actClientId": "foo"
+        },
+        "headers": {
+          "RPP-Code": "01001"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/ex14-{random_name}.example/processes/transferProcesses/latest",
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -16,7 +74,11 @@
         "status": 200,
         "content_type": "application/rpp+json",
         "body": {
-          "@type": "domainTransferProcess"
+          "@type": "domainTransferProcess",
+          "trStatus": "clientCancelled"
+        },
+        "headers": {
+          "RPP-Code": "01000"
         }
       }
     }
