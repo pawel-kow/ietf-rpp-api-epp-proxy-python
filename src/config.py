@@ -8,6 +8,7 @@ class Config:
     rpp_epp_host: str
     rpp_epp_port: Optional[int] = 700
     rpp_epp_use_tls: Optional[bool] = True
+    rpp_epp_tls_insecure_skip_verify: Optional[bool] = False
     rpp_epp_timeout: Optional[float] = 5.0
 
     rpp_epp_objects: List[str] = field(default_factory=lambda: [

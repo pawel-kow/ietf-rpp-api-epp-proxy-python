@@ -120,7 +120,9 @@ leading `0`.
 `false`) toggles between stateless per-request EPP connections and a cached,
 stateful connection. The EPP backend host and port come from `rpp_epp_host` and
 `rpp_epp_port`, and `new_epp_client` in [src/run.py](../../src/run.py) uses them to
-open the connection.
+open the connection. `rpp_epp_use_tls` (default `true`) connects over TLS with the
+certificate and hostname verified. `rpp_epp_tls_insecure_skip_verify` (default `false`)
+turns both checks off, for test backends only.
 
 ## Composition
 

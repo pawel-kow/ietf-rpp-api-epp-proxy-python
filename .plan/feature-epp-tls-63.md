@@ -2,11 +2,12 @@
 
 ## Tasks
 
-- [~] Failing tests: TLS context, TCPClient wrapping, loopback TLS server, short reads
-- [ ] `eppclient/tls.py`, `TCPClient` TLS and `_recv_exact`, `Config`, `run.py`
-- [ ] `config.yaml`: port 743, TLS on, `rpp_epp_tls_insecure_skip_verify: true`
-- [ ] Docs: `architecture.project.md`, `testing.project.md`
-- [ ] Full `pytest`, draft PR
+- [x] Failing tests: TLS context, TCPClient wrapping, loopback TLS server, short reads
+- [x] `eppclient/tls.py`, `TCPClient` TLS and `_recv_exact`, `Config`, `run.py`
+- [x] `config.yaml`: port 743, TLS on, `rpp_epp_tls_insecure_skip_verify: true`
+- [x] Docs: `architecture.project.md`, `testing.project.md`, `security.project.md`
+- [x] Full `pytest`: 657 passed, 19 skipped
+- [~] Draft PR, maintainer acceptance
 
 ## Findings
 
@@ -20,6 +21,7 @@
 - Opt-in is the boolean `rpp_epp_tls_insecure_skip_verify`, default false. It turns off
   both the certificate and the hostname check.
 - #11 is fixed here, because a reply over 16 KB is cut short over TLS.
+- No key in the repository: the test certificate is generated per session with `openssl`.
 - `rpp_epp_timeout` stays out of scope, #8 stays open for it and `connection_cache`.
 
 ## Open questions

@@ -11,16 +11,19 @@ class TCPClient:
     A simple TCP client class.
     """
 
-    def __init__(self, server_address, server_port):
+    def __init__(self, server_address, server_port, tls_context=None):
         """
         Initializes the TCP client with server address and port.
 
         Args:
             server_address (str): The server's IP address or hostname.
             server_port (int): The server's port number.
+            tls_context (ssl.SSLContext): Connects over TLS if given, otherwise over
+                plain TCP.
         """
         self.server_address = server_address
         self.server_port = server_port
+        self.tls_context = tls_context
         self.socket = None
 
     def connect(self):
@@ -31,9 +34,14 @@ class TCPClient:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(EPP_READ_TIMEOUT)  # Set a timeout for the connection
             self.socket.connect((self.server_address, self.server_port))
+            if self.tls_context:
+                self.socket = self.tls_context.wrap_socket(
+                    self.socket, server_hostname=self.server_address)
             print(f"TCPClient: Connected to {self.server_address}:{self.server_port}")
         except Exception as e:
             print(f"Error connecting to server: {e}")
+            if self.socket:
+                self.socket.close()
             self.socket = None
             raise
 
@@ -85,12 +93,12 @@ class TCPClient:
             raise ConnectionException("TCPClient: Connection failed. Cannot receive message.")
 
         try:
-            length_bytes = self.socket.recv(4)
-            if not length_bytes:
-                raise ConnectionException("TCPClient: Connection closed by server")
-
+            length_bytes = self._recv_exact(4)
             payload_length = struct.unpack('>L', length_bytes)[0]
-            payload = self.socket.recv(payload_length - 4)  # Subtract 4 bytes for the length field
+            if payload_length < 4:
+                raise ConnectionException(f"Invalid message length {payload_length}")
+
+            payload = self._recv_exact(payload_length - 4)  # Subtract 4 bytes for the length field
             # A backend may echo rejected input in another encoding.
             message = payload.decode('utf-8', errors='replace')
 
@@ -101,6 +109,21 @@ class TCPClient:
             print(f"TCPClient: Error receiving message: {e}")
             self.disconnect()
             raise ConnectionException(f"TCPClient: Error receiving message: {e}")
+
+    def _recv_exact(self, size):
+        """
+        Reads exactly size bytes. One recv() may return less, over TLS at most one record.
+
+        Args:
+            size (int): The number of bytes to read.
+        """
+        data = bytearray()
+        while len(data) < size:
+            chunk = self.socket.recv(size - len(data))
+            if not chunk:
+                raise ConnectionException("TCPClient: Connection closed by server")
+            data += chunk
+        return bytes(data)
 
     def disconnect(self):
         """
