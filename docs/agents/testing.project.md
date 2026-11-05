@@ -95,4 +95,4 @@ afterwards.
 Isolate one update facet per file (authInfo-only, hostObj add/remove,
 contacts+registrant, …). `domainNames_create` and `domainNames_updatePartial` build their
 success body from a follow-up EPP **Info** call, so a passing update test also transitively
-exercises Info and `domain_to_rpp`.
+exercises Info and `domains.model_to_rpp`.

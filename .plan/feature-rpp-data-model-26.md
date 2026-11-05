@@ -30,6 +30,6 @@
 - [x] Delegation in `dns` on create, `hostAttr` on read
 - [x] Docs, spec-issues, skip of `draft_domain/test7-read_idn`
 - [x] Full pytest, draft PR, follow-up issues
-- [~] Review: `rpp_to_model` and `model_to_rpp` in every mapper module
-- [ ] Review: three kinds of "not supported", greeting extensions
+- [x] Review: `rpp_to_model` and `model_to_rpp` in every mapper module
+- [~] Review: three kinds of "not supported", greeting extensions
 - [ ] Docs, full pytest, push

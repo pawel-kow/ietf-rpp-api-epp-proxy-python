@@ -1,14 +1,10 @@
 from models import (
-    ContactReference, CreationProcess, DnsSec, Domain, DomainCheckResponseSingle, HostObj, NS,
+    ContactReference, CreationProcess, DnsSec, Domain, HostObj, NS,
 )
 from rpp_schema_validator import validate_schema
-from .common import (
-    auth_info_to_rpp, parse_rpp, prov_metadata_to_rpp, reject_set, rpp_to_auth_info, statuses_to_rpp,
-)
-from .domain_dns import dns_to_rpp, rpp_to_dns
-from .rpp_models import (
-    RPPContactReference, RPPDomain, RPPDomainNameAvailability, RPPHostReference, RPPLabelledContact,
-)
+from . import auth_info, domain_dns, prov_metadata, statuses
+from .common import parse_rpp, reject_set
+from .rpp_models import RPPContactReference, RPPDomain, RPPHostReference, RPPLabelledContact
 from .unsupported_rpp_feature import UnsupportedRppFeature
 
 REGISTRANT = "registrant"
@@ -51,11 +47,11 @@ def _rpp_to_delegation(domain_rpp: RPPDomain) -> tuple[NS | None, DnsSec | None]
         return ns, None
     if ns and domain_rpp.dns.records:
         raise ValueError("'nameservers' and records in 'dns' cannot be used together")
-    dns_ns, dns_sec = rpp_to_dns(domain_rpp.name, domain_rpp.dns)
+    dns_ns, dns_sec = domain_dns.rpp_to_model(domain_rpp.name, domain_rpp.dns)
     return ns or dns_ns, dns_sec
 
 
-def rpp_to_domain(rpp: dict) -> Domain:
+def rpp_to_model(rpp: dict) -> Domain:
     """Converts a create request to a Domain."""
     validate_schema("domainName.create", rpp)
     domain_rpp = parse_rpp(RPPDomain, rpp)
@@ -63,7 +59,7 @@ def rpp_to_domain(rpp: dict) -> Domain:
     ns, dns_sec = _rpp_to_delegation(domain_rpp)
     return Domain(
         name=domain_rpp.name,
-        authInfo=rpp_to_auth_info(domain_rpp.authInfo),
+        authInfo=auth_info.rpp_to_model(domain_rpp.authInfo),
         ns=ns,
         dnsSEC=dns_sec,
         contacts=_rpp_to_contacts(domain_rpp),
@@ -93,25 +89,19 @@ def _contacts_to_rpp(domain: Domain) -> list[RPPLabelledContact] | None:
     ] or None
 
 
-def domain_to_rpp(domain: Domain) -> dict:
+def model_to_rpp(domain: Domain) -> dict:
     """Converts a Domain to its read representation."""
     domain_dict = RPPDomain(
         name=domain.name,
-        provMetadata=prov_metadata_to_rpp(domain),
-        status=statuses_to_rpp(domain, "domainStatus"),
+        provMetadata=prov_metadata.model_to_rpp(domain),
+        status=statuses.model_to_rpp(domain, "domainStatus"),
         registrant=_registrant_to_rpp(domain),
         contacts=_contacts_to_rpp(domain),
         nameservers=_nameservers_to_rpp(domain),
-        dns=dns_to_rpp(domain),
+        dns=domain_dns.model_to_rpp(domain),
         subordinateHosts=[RPPHostReference(hostName=name) for name in domain.subordinateHosts or []] or None,
         expiryDate=domain.exDate,
-        authInfo=auth_info_to_rpp(domain.authInfo),
+        authInfo=auth_info.model_to_rpp(domain.authInfo),
     ).to_rpp()
     validate_schema("domainName.read", domain_dict)
     return domain_dict
-
-
-def domain_availability_to_rpp(check: DomainCheckResponseSingle) -> dict:
-    availability = RPPDomainNameAvailability(available=check.available, reason=check.reason).to_rpp()
-    validate_schema("domainNameAvailability.read", availability)
-    return availability

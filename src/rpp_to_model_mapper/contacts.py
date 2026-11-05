@@ -1,9 +1,7 @@
 from models import Address, Contact, ContactType, LocalizedPostalInfo
 from rpp_schema_validator import validate_schema
-from .common import (
-    auth_info_to_rpp, parse_rpp, prov_metadata_to_rpp, reject_set, rpp_to_auth_info, statuses_to_rpp,
-)
-from .phones import epp_to_tel, tel_to_epp
+from . import auth_info, phones, prov_metadata, statuses
+from .common import parse_rpp, reject_set
 from .rpp_models import (
     RPPCard, RPPCardAddress, RPPCardAddressComponent, RPPCardEmail, RPPCardLocalization, RPPCardName,
     RPPCardOrganization, RPPCardPhone, RPPContact,
@@ -90,7 +88,7 @@ def _rpp_to_address(addresses: dict[str, RPPCardAddress] | None) -> Address | No
 
 def _rpp_to_phone(card: RPPCard, key: str) -> list[str] | None:
     phone = (card.phones or {}).get(key)
-    return [tel_to_epp(phone.number)] if phone else None
+    return [phones.rpp_to_model(phone.number)] if phone else None
 
 
 def _reject_multiple_features(card: RPPCard):
@@ -123,7 +121,7 @@ def _rpp_to_localized(card: RPPCard) -> LocalizedPostalInfo | None:
     )
 
 
-def rpp_to_contact(rpp: dict) -> Contact:
+def rpp_to_model(rpp: dict) -> Contact:
     """Converts a create request to a Contact."""
     validate_schema("contact.create", rpp)
     contact_rpp = parse_rpp(RPPContact, rpp)
@@ -144,7 +142,7 @@ def rpp_to_contact(rpp: dict) -> Contact:
         fax=_rpp_to_phone(card, PHONE_FAX),
         address=_rpp_to_address(card.addresses),
         localizedPostalInfo=_rpp_to_localized(card),
-        authInfo=rpp_to_auth_info(contact_rpp.authInfo),
+        authInfo=auth_info.rpp_to_model(contact_rpp.authInfo),
     )
 
 
@@ -161,12 +159,12 @@ def _address_to_rpp(address: Address | None) -> dict[str, RPPCardAddress] | None
 
 
 def _phones_to_rpp(contact: Contact) -> dict[str, RPPCardPhone] | None:
-    phones = {}
+    numbers = {}
     if contact.phone and contact.phone[0]:
-        phones["voice"] = RPPCardPhone(number=epp_to_tel(contact.phone[0]))
+        numbers["voice"] = RPPCardPhone(number=phones.model_to_rpp(contact.phone[0]))
     if contact.fax and contact.fax[0]:
-        phones["fax"] = RPPCardPhone(number=epp_to_tel(contact.fax[0]), features={"fax": True})
-    return phones or None
+        numbers["fax"] = RPPCardPhone(number=phones.model_to_rpp(contact.fax[0]), features={"fax": True})
+    return numbers or None
 
 
 def _name_to_rpp(name: str | None) -> RPPCardName | None:
@@ -205,14 +203,14 @@ def _card_to_rpp(contact: Contact) -> RPPCard:
     )
 
 
-def contact_to_rpp(contact: Contact) -> dict:
+def model_to_rpp(contact: Contact) -> dict:
     """Converts a Contact to its read representation."""
     contact_dict = RPPContact(
         id=contact.id,
-        provMetadata=prov_metadata_to_rpp(contact),
-        status=statuses_to_rpp(contact, "contactStatus"),
+        provMetadata=prov_metadata.model_to_rpp(contact),
+        status=statuses.model_to_rpp(contact, "contactStatus"),
         contactInfo=_card_to_rpp(contact),
-        authInfo=auth_info_to_rpp(contact.authInfo),
+        authInfo=auth_info.model_to_rpp(contact.authInfo),
     ).to_rpp()
     validate_schema("contact.read", contact_dict)
     return contact_dict

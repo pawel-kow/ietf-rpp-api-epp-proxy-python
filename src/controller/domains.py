@@ -1,7 +1,7 @@
 from connexion import request
 from eppclient.epp_domains import *
 from models import *
-from rpp_to_model_mapper import *
+import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import *
 from .auth import get_epp_client
 
@@ -15,7 +15,7 @@ def _domain_after_mutation(domain_name, mutation_resp, success_status, extra_hea
         inforesp = epp_domains_Info(get_epp_client(), domain_name)
         if isinstance(inforesp, ErrorResponse):
             return None, 202, headers
-        return domain_to_rpp(inforesp.domain), success_status, headers
+        return rpp_mapper.domains.model_to_rpp(inforesp.domain), success_status, headers
     except Exception:
         return None, 202, headers
 
@@ -35,11 +35,11 @@ def domainNames_availabilityHead(name):
 @rpp_operation
 def domainNames_availability(name):
     ret = _availability(name)
-    return domain_availability_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)
+    return rpp_mapper.domain_availability.model_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)
 
 @rpp_operation
 def domainNames_create(body):
-    domain = map_request(rpp_to_domain, body)
+    domain = map_request(rpp_mapper.domains.rpp_to_model, body)
     domainresp = epp_domains_Create(get_epp_client(), domain, client_transaction_id=client_transaction_id())
     if isinstance(domainresp, ErrorResponse):
         raise_epp_error(domainresp)
@@ -59,11 +59,11 @@ def domainNames_read(name):
     domainresp = epp_domains_Info(get_epp_client(), name, client_transaction_id=client_transaction_id())
     if isinstance(domainresp, ErrorResponse):
         raise_epp_error(domainresp)
-    return domain_to_rpp(domainresp.domain), 200, generate_rpp_response_headers(domainresp)
+    return rpp_mapper.domains.model_to_rpp(domainresp.domain), 200, generate_rpp_response_headers(domainresp)
 
 @rpp_operation
 def domainNames_updatePartial(name, body):
-    domain_update = map_request(rpp_to_domain_update, name, body)
+    domain_update = map_request(rpp_mapper.domain_patch.rpp_to_model, name, body)
     domainresp = epp_domains_Update(get_epp_client(), domain_update, client_transaction_id=client_transaction_id())
     if isinstance(domainresp, ErrorResponse):
         raise_epp_error(domainresp)

@@ -3,7 +3,8 @@ from models import (
     DomainUpdateRemove, HostObj, NS,
 )
 from rpp_schema_validator import validate_schema
-from .common import parse_rpp, reject_operation, rpp_to_auth_info
+from . import auth_info
+from .common import parse_rpp, reject_operation
 from .domains import REGISTRANT, check_contact_label
 from .rpp_models import (
     RPPAuthInfo, RPPContactReference, RPPHostReference, RPPLabelledContact, RPPPatchOperation,
@@ -94,7 +95,7 @@ class _PatchedUpdate:
             reject_operation(operation)
         else:
             _validated("authInfo", operation.value)
-            self.auth_info = rpp_to_auth_info(parse_rpp(RPPAuthInfo, operation.value))
+            self.auth_info = auth_info.rpp_to_model(parse_rpp(RPPAuthInfo, operation.value))
 
     def _apply_to_registrant(self, operation: RPPPatchOperation):
         if operation.op == "remove":
@@ -121,7 +122,7 @@ class _PatchedUpdate:
         )
 
 
-def rpp_to_domain_update(domain_name: str, rpp: list) -> DomainUpdate:
+def rpp_to_model(domain_name: str, rpp: list) -> DomainUpdate:
     """Converts a partial update (JSON Patch, json draft §5.2) to a DomainUpdate."""
     update = _PatchedUpdate()
     for operation in rpp:

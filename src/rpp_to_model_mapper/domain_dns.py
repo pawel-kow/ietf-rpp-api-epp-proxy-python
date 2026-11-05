@@ -71,7 +71,7 @@ def _add_glue(domain_name: str, hosts: dict[str, HostAttr], owner: str, record: 
     setattr(host, family, (getattr(host, family) or []) + [address])
 
 
-def rpp_to_dns(domain_name: str, dns: RPPDnsData) -> tuple[NS | None, DnsSec | None]:
+def rpp_to_model(domain_name: str, dns: RPPDnsData) -> tuple[NS | None, DnsSec | None]:
     """The delegation and DNSSEC data of the records. Delegation goes to EPP as host attributes."""
     reject_set(controls=dns.controls)
     domain_name = domain_name.lower()
@@ -121,7 +121,7 @@ def _key_to_rpp(key: KeyData) -> RPPDnsRecord:
     })
 
 
-def dns_to_rpp(domain: Domain) -> RPPDnsData | None:
+def model_to_rpp(domain: Domain) -> RPPDnsData | None:
     """Host attributes and DNSSEC data as records. Host objects are `nameservers`."""
     records = []
     for host in (domain.ns.host_attrs if domain.ns else None) or []:

@@ -21,7 +21,9 @@ single feature (e.g. "domain update") touches every layer:
 3. **`rpp_to_model_mapper/`:** converts inbound RPP JSON dicts ↔ internal `models`
    dataclasses, through the RPP dataclasses in `rpp_models/`. Validates every payload
    against a JSON Schema via `validate_schema(...)` before mapping. Also does the
-   reverse (`*_to_rpp`) and re-validates the outbound dict. Valid input the model
+   reverse and re-validates the outbound dict. Every module converts one thing through
+   `rpp_to_model` and `model_to_rpp`, so the module name selects the conversion, and
+   callers write `rpp_mapper.domains.rpp_to_model`. Valid input the model
    cannot hold raises `UnsupportedRppFeature`, which answers 501 (`02102`), so nothing
    is dropped silently. `dns_records.py` holds what hosts and domains share for DNS
    records, and `domain_dns.py` maps a domain's `dns` to `hostAttr` and secDNS.

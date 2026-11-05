@@ -1,7 +1,7 @@
 import pytest
 
 from models import DnsSec, Domain, DsData, HostAttr, HostObj, KeyData, NS
-from rpp_to_model_mapper import UnsupportedRppFeature, domain_to_rpp, rpp_to_domain
+from rpp_to_model_mapper import UnsupportedRppFeature, domains
 
 DS_RDATA = {"keyTag": "12345", "algorithm": "3", "digestType": "1", "digest": "49FD46E6C4B45C55D4AC"}
 KEY_RDATA = {"flags": "257", "protocol": "3", "algorithm": "8", "publicKey": "AQPJ////4Q=="}
@@ -22,7 +22,7 @@ def glue(name="ns1.foo.example.", record_type="a", address="192.0.2.1"):
 
 
 def create(*records, **extra):
-    return rpp_to_domain({
+    return domains.rpp_to_model({
         "@type": "domainName",
         "name": "foo.example",
         "dns": {"@type": "dnsData", "records": list(records), **extra},
@@ -30,7 +30,7 @@ def create(*records, **extra):
 
 
 def read(**extra):
-    return domain_to_rpp(Domain(name="foo.example", status=["ok"], clID="ClientX", **extra))
+    return domains.model_to_rpp(Domain(name="foo.example", status=["ok"], clID="ClientX", **extra))
 
 
 def test_create_without_records_holds_nothing():
@@ -79,7 +79,7 @@ def test_create_can_hold_delegation_and_dnssec_together():
 
 def test_create_rejects_dns_records_together_with_nameservers():
     with pytest.raises(ValueError):
-        rpp_to_domain({
+        domains.rpp_to_model({
             "@type": "domainName",
             "name": "foo.example",
             "nameservers": [{"@type": "host", "hostName": "ns1.foo.example"}],
