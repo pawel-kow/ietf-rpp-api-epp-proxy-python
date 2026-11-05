@@ -8,6 +8,9 @@
 - `kind: individual` with `organizations`: stays 501.
 - #26 closes with this PR. `disclose` gets its own issue, `processes` on read stays with #33, #35, #36. PATCH `/dns` and `/status` stay with #21 and #27.
 - Still 501: `dns.controls`, DS and DNSKEY in one request, other record types.
+- Review: every public mapper is `rpp_to_model` or `model_to_rpp`, the module selects the conversion. Private helpers stay as they are.
+- Review: three kinds of "not supported", all 501, each with its own message. a) not in EPP or in an extension the proxy knows: `02102`. b) in EPP, not in the proxy: `02103` when an extension is missing, otherwise `02102`. c) the server does not offer an extension the proxy uses: `02103`.
+- Sorting accepted: `status` on create and `uName`/`lgr` are a), `disclose` is b).
 
 ## Findings
 
@@ -26,4 +29,7 @@
 - [x] DNSSEC on create and read
 - [x] Delegation in `dns` on create, `hostAttr` on read
 - [x] Docs, spec-issues, skip of `draft_domain/test7-read_idn`
-- [~] Full pytest, draft PR, follow-up issues
+- [x] Full pytest, draft PR, follow-up issues
+- [~] Review: `rpp_to_model` and `model_to_rpp` in every mapper module
+- [ ] Review: three kinds of "not supported", greeting extensions
+- [ ] Docs, full pytest, push
