@@ -1,0 +1,60 @@
+{
+  "test_id": "test6-sponsor_requests",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "t6-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/t6-{random_name}.example/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=UGFzc3dvcmQxIUA="
+        },
+        "body_json": {
+          "@type": "domainTransferProcess",
+          "transferDir": "pull"
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02106"
+        }
+      }
+    }
+  ]
+}

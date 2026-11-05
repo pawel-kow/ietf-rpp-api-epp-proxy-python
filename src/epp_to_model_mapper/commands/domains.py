@@ -3,7 +3,7 @@ import re
 
 from xsdata.models.datatype import XmlDate
 
-from models import DnsSec, Domain, DomainUpdate
+from models import AuthInfo, DnsSec, Domain, DomainTransfer, DomainUpdate
 
 from ..epp_model.domain_1_0 import (
     AddRemType,
@@ -57,6 +57,16 @@ def _ns_type(ns) -> NsType:
     )
 
 
+def _period(duration: str) -> PeriodType:
+    match = re.match(r"P([0-9]+)([MY])", duration)
+    if not match:
+        raise ValueError(
+            "Unsupported duration format. Only whole years (Y) or months (M) are allowed."
+        )
+    value, unit = match.groups()
+    return PeriodType(value=int(value), unit=PUnitType(unit.lower()))
+
+
 def _sec_dns_create(dns_sec: DnsSec) -> SecdnsCreateType:
     return SecdnsCreateType(
         ds_data=[
@@ -99,18 +109,31 @@ def domain_delete(domainname: str, rpp_cl_trid: str) -> Epp:
     )
 
 
+def _transfer_auth_info(auth_info: AuthInfo) -> AuthInfoType:
+    return AuthInfoType(pw=PwAuthInfoType(value=auth_info.pw, roid=auth_info.roid))
+
+
+def domain_transfer(transfer: DomainTransfer, rpp_cl_trid: str) -> Epp:
+    return Epp(
+        command=CommandType(
+            transfer=TransferType(
+                op=TransferOpType(transfer.operation.value),
+                other_element=Transfer(
+                    name=transfer.name,
+                    period=_period(transfer.duration) if transfer.duration else None,
+                    auth_info=_transfer_auth_info(transfer.authInfo) if transfer.authInfo else None,
+                ),
+            ),
+            cl_trid=rpp_cl_trid,
+        )
+    )
+
+
 def domain_create(domain: Domain, rpp_cl_trid: str) -> Epp:
     create = Create(name=domain.name.upper())
 
     if domain.processes and domain.processes.get("creation"):
-        duration = domain.processes["creation"].duration
-        match = re.match(r"P([0-9]+)([MY])", duration)
-        if not match:
-            raise ValueError(
-                "Unsupported duration format. Only whole years (Y) or months (M) are allowed."
-            )
-        value, unit = match.groups()
-        create.period = PeriodType(value=int(value), unit=PUnitType(unit.lower()))
+        create.period = _period(domain.processes["creation"].duration)
 
     if domain.ns and (domain.ns.host_objs or domain.ns.host_attrs):
         create.ns = _ns_type(domain.ns)

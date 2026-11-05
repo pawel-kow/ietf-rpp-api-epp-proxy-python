@@ -1,0 +1,107 @@
+{
+  "test_id": "test2-reject_without_body",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "t2-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/t2-{random_name}.example/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=UGFzc3dvcmQxIUA="
+        },
+        "body_json": {
+          "@type": "domainTransferProcess",
+          "transferDir": "pull"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainTransferProcess",
+          "trStatus": "pending",
+          "transferDir": "pull",
+          "reqClientId": "baz",
+          "actClientId": "foo"
+        },
+        "headers": {
+          "RPP-Code": "01001"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/t2-{random_name}.example/processes/transferProcesses/latest/transferReject",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainTransferProcess",
+          "trStatus": "clientRejected"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/t2-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "provMetadata": {
+            "spClientId": "foo"
+          }
+        }
+      }
+    }
+  ]
+}

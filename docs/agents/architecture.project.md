@@ -30,6 +30,8 @@ single feature (e.g. "domain update") touches every layer:
    `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
    without reading the object, so operations that need the current state are
    unsupported (#27). `host_patch.py` does the same for a `HostUpdate`.
+   `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
+   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a transfer.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
@@ -55,6 +57,14 @@ map that to RPP, because EPP mutation responses don't echo full object state. If
 mutation has still been applied, so the handler answers **202** with no body and the
 mutation's `RPP-*` headers. `openapi.yaml` does not define this 202 (#23 tracks the
 question for the spec).
+
+Transfer handlers are in `controller/domain_transfers.py`. An EPP `<transfer>` reply carries
+the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer` runs all
+five operations, chosen by `DomainTransfer.operation`. EPP has no process ids, so only
+`latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process).
+
+`RppRequestBodyValidator` and `RppResponseBodyValidator` let a body be absent where the
+OpenAPI allows it, which Connexion's validators do not. The handler then gets an empty dict.
 
 ## Generated artifacts: do not hand-edit
 

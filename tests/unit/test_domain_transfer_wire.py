@@ -1,0 +1,216 @@
+import base64
+
+import pytest
+
+from app import create_app
+from controller.epp_session_authenticator import EppSessionAuthenticator
+from tests.helper.fake_epp_client import FakeEppClient
+
+MEDIA_TYPE = "application/rpp+json"
+HEADERS = {
+    "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
+    "Accept": MEDIA_TYPE,
+    "RPP-Cltrid": "cl-1",
+}
+BODY_HEADERS = {**HEADERS, "Content-Type": MEDIA_TYPE}
+PROCESSES = "/domainNames/foo.example/processes/transferProcesses"
+LATEST = f"{PROCESSES}/latest"
+CREATE_BODY = {"@type": "domainTransferProcess", "transferDir": "pull"}
+TYPE_ONLY = {"@type": "domainTransferProcess"}
+
+
+def epp_reply(code, res_data=""):
+    return (
+        f'<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><response><result code="{code}"><msg>Message</msg></result>'
+        f'{res_data}<trID><clTRID>cl-1</clTRID><svTRID>sv-1</svTRID></trID></response></epp>'
+    )
+
+
+def transfer_reply(code, status):
+    return (True, str(code), epp_reply(code, (
+        '<resData><domain:trnData xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">'
+        f'<domain:name>FOO.EXAMPLE</domain:name><domain:trStatus>{status}</domain:trStatus>'
+        '<domain:reID>ClientX</domain:reID><domain:reDate>2000-06-08T22:00:00.0Z</domain:reDate>'
+        '<domain:acID>ClientY</domain:acID><domain:acDate>2000-06-13T22:00:00.0Z</domain:acDate>'
+        '</domain:trnData></resData>'
+    )))
+
+
+def error_reply(code):
+    return (False, str(code), epp_reply(code))
+
+
+def setup(*replies):
+    clients = []
+
+    def factory(username, password):
+        clients.append(FakeEppClient(username, password, replies=list(replies)))
+        return clients[-1]
+
+    return create_app(EppSessionAuthenticator(factory)).test_client(), clients
+
+
+def client_with(*replies):
+    return setup(*replies)[0]
+
+
+def post_create(http, **kwargs):
+    return http.post(PROCESSES, json=CREATE_BODY, headers=BODY_HEADERS, **kwargs)
+
+
+def test_pending_request_is_created_at_latest():
+    """Core §16.9.5.1."""
+    response = post_create(client_with(transfer_reply(1001, "pending")))
+    assert response.status_code == 201
+    assert response.headers["RPP-Code"] == "01001"
+    assert response.headers["RPP-Svtrid"] == "sv-1"
+    assert response.headers["RPP-Cltrid"] == "cl-1"
+    assert response.headers["Location"].endswith(LATEST)
+    assert response.json()["trStatus"] == "pending"
+    assert response.json()["@type"] == "domainTransferProcess"
+
+
+def test_request_completed_at_once_exposes_no_process():
+    """Core §16.1.4: without a persistent process resource, 200 and not 201."""
+    response = post_create(client_with(transfer_reply(1000, "serverApproved")))
+    assert response.status_code == 200
+    assert response.headers["RPP-Code"] == "01000"
+    assert "Location" not in response.headers
+    assert response.json()["trStatus"] == "serverApproved"
+
+
+def test_authorization_header_reaches_epp():
+    http, clients = setup(transfer_reply(1001, "pending"))
+    headers = {**BODY_HEADERS, "RPP-Authorization": "authinfo value=TXkgU2VjcmV0IFRva2Vu, roid=REG-123"}
+    assert http.post(PROCESSES, json=CREATE_BODY, headers=headers).status_code == 201
+    assert "My Secret Token" in clients[-1].sent[-1]
+    assert 'roid="REG-123"' in clients[-1].sent[-1]
+
+
+def test_malformed_authorization_is_a_400_without_epp():
+    http, clients = setup()
+    headers = {**BODY_HEADERS, "RPP-Authorization": "authinfo value=%%%"}
+    response = http.post(PROCESSES, json=CREATE_BODY, headers=headers)
+    assert response.status_code == 400
+    assert "%%%" not in response.text
+    assert not any("transfer" in sent for client in clients for sent in client.sent)
+
+
+def test_other_authorization_method_is_a_501():
+    headers = {**BODY_HEADERS, "RPP-Authorization": "bearer abc"}
+    response = client_with().post(PROCESSES, json=CREATE_BODY, headers=headers)
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02102"
+
+
+def test_push_is_a_501():
+    body = {"@type": "domainTransferProcess", "transferDir": "push", "gainingClientId": "ClientX"}
+    response = client_with().post(PROCESSES, json=body, headers=BODY_HEADERS)
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02102"
+
+
+def test_query():
+    response = client_with(transfer_reply(1000, "pending")).get(LATEST, headers=HEADERS)
+    assert response.status_code == 200
+    assert response.headers["RPP-Code"] == "01000"
+    assert response.json()["transferDir"] == "pull"
+
+
+def test_query_sends_the_query_operation():
+    http, clients = setup(transfer_reply(1000, "pending"))
+    http.get(LATEST, headers=HEADERS)
+    assert 'op="query"' in clients[-1].sent[-1]
+
+
+def test_cancel():
+    http, clients = setup(transfer_reply(1000, "clientCancelled"))
+    response = http.delete(LATEST, headers=HEADERS)
+    assert response.status_code == 200
+    assert response.json()["trStatus"] == "clientCancelled"
+    assert 'op="cancel"' in clients[-1].sent[-1]
+
+
+def test_cancel_takes_no_body():
+    """Core §16.1.4."""
+    response = client_with().request("DELETE", LATEST, json=TYPE_ONLY, headers=BODY_HEADERS)
+    assert response.status_code == 400
+
+
+def test_approve_without_a_body():
+    """Core §16.9.5.5."""
+    http, clients = setup(transfer_reply(1000, "clientApproved"))
+    response = http.post(f"{LATEST}/transferApprove", headers=HEADERS)
+    assert response.status_code == 200
+    assert response.json()["trStatus"] == "clientApproved"
+    assert 'op="approve"' in clients[-1].sent[-1]
+
+
+def test_approve_with_the_type_only_body():
+    """Json §8.1.10."""
+    http = client_with(transfer_reply(1000, "clientApproved"))
+    response = http.post(f"{LATEST}/transferApprove", json=TYPE_ONLY, headers=BODY_HEADERS)
+    assert response.status_code == 200
+
+
+def test_reject_without_a_body():
+    """Core §16.9.5.4."""
+    http, clients = setup(transfer_reply(1000, "clientRejected"))
+    response = http.post(f"{LATEST}/transferReject", headers=HEADERS)
+    assert response.status_code == 200
+    assert response.json()["trStatus"] == "clientRejected"
+    assert 'op="reject"' in clients[-1].sent[-1]
+
+
+def test_reject_with_the_type_only_body():
+    http = client_with(transfer_reply(1000, "clientRejected"))
+    response = http.post(f"{LATEST}/transferReject", json=TYPE_ONLY, headers=BODY_HEADERS)
+    assert response.status_code == 200
+
+
+def test_reject_with_reason_is_a_501():
+    """Data-objects §10.1.1.5: not in the EPP Compatibility Profile."""
+    body = {**TYPE_ONLY, "reason": "No"}
+    response = client_with().post(f"{LATEST}/transferReject", json=body, headers=BODY_HEADERS)
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02102"
+
+
+@pytest.mark.parametrize("epp_code,status,rpp_code", [
+    (2106, 409, "02106"),
+    (2201, 403, "02201"),
+    (2202, 401, "02202"),
+    (2300, 409, "02300"),
+    (2303, 404, "02303"),
+])
+def test_request_errors(epp_code, status, rpp_code):
+    """Core §18.1 Table 9."""
+    response = post_create(client_with(error_reply(epp_code)))
+    assert response.status_code == status
+    assert response.headers["RPP-Code"] == rpp_code
+    assert response.headers["Content-Type"].startswith("application/problem+json")
+
+
+@pytest.mark.parametrize("method,url", [
+    ("GET", LATEST),
+    ("DELETE", LATEST),
+    ("POST", f"{LATEST}/transferApprove"),
+    ("POST", f"{LATEST}/transferReject"),
+])
+def test_nothing_pending_is_a_409(method, url):
+    response = client_with(error_reply(2301)).request(method, url, headers=HEADERS)
+    assert response.status_code == 409
+    assert response.headers["RPP-Code"] == "02301"
+
+
+@pytest.mark.parametrize("method,url", [
+    ("GET", PROCESSES),
+    ("GET", f"{PROCESSES}/XYZ-12345"),
+    ("DELETE", f"{PROCESSES}/XYZ-12345"),
+    ("POST", f"{PROCESSES}/XYZ-12345/transferApprove"),
+    ("POST", f"{PROCESSES}/XYZ-12345/transferReject"),
+])
+def test_what_needs_process_ids_is_a_501(method, url):
+    response = client_with().request(method, url, headers=HEADERS)
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02101"

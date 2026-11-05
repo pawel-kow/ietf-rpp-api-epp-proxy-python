@@ -9,10 +9,11 @@ from .commands.domains import (
     domain_create,
     domain_delete,
     domain_info,
+    domain_transfer,
     domain_update,
 )
 from .commands.helper import epp_to_str, str_to_epp
-from .epp_model.domain_1_0 import CreData, InfData
+from .epp_model.domain_1_0 import CreData, InfData, TrnData
 from .epp_model.epp_1_0 import Epp
 from .epp_model.sec_dns_1_1 import InfData as SecDnsInfData
 
@@ -35,6 +36,10 @@ def domain_check_xml(domain_name: str, client_request_id=None) -> str:
 
 def create_domain_update_xml(domain_update_model: DomainUpdate, client_request_id=None) -> str:
     return epp_to_str(domain_update(domain_update_model, cl_trid(client_request_id)))
+
+
+def transfer_domain_xml(transfer: DomainTransfer, client_request_id=None) -> str:
+    return epp_to_str(domain_transfer(transfer, cl_trid(client_request_id)))
 
 
 def _ns_from_epp(ns) -> Union[NS, None]:
@@ -146,6 +151,27 @@ def parse_domain_update_response(xml_string: str, client_transaction_id: str | N
     return DomainUpdateResponse(**header)
 
 
+def parse_domain_transfer_response(xml_string: str, client_transaction_id: str | None) -> DomainTransferResponse:
+    """Parses an EPP domain transfer response, which is the same for every operation."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    data = find_res_data(epp, TrnData)
+    return DomainTransferResponse(
+        transfer=DomainTransferProcess(
+            name=data.name,
+            trStatus=data.tr_status.value,
+            reqClientId=data.re_id,
+            requestDate=epp_datetime(data.re_date),
+            actClientId=data.ac_id,
+            actionDate=epp_datetime(data.ac_date),
+            expiryDate=epp_datetime(data.ex_date),
+        ),
+        **header,
+    )
+
+
 def parse_domain_check_response_single(xml_string: str, domain_name: str, client_transaction_id: str) -> Union[DomainCheckResponseSingle, ErrorResponse]:
     response = parse_domain_check_response_bulk(xml_string, client_transaction_id)
     if isinstance(response, DomainCheckResponseBulk):
@@ -186,3 +212,4 @@ def parse_domain_check_response_bulk(xml_string: str, client_transaction_id: str
             )
 
     return res
+

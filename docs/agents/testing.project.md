@@ -27,7 +27,8 @@ reached over the shared `epp-server-docker_epp_net` docker network (attached via
 [.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json)).
 
 Auth uses HTTP Basic, and the username and password are passed straight through as
-the EPP `clID`/`pw` login credentials.
+the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and `baz`
+(contact prefixes `FO-` and `BZ-`), and transfer cases set `Authorization` per step.
 
 The backend hangs on a repeated clTRID, so every EPP command needs a new one. It drops
 addresses given when creating an external host, so tests of addresses at create use an
@@ -37,6 +38,11 @@ type="loc"` (#55), so non-ASCII localizations are tested only in unit tests. Inf
 `secDNS:infData` (#60) and no `domain:upID` or `domain:upDate` (#61), so reading
 DNSSEC and `upClientId` is tested only in unit tests. It stores `domain:hostAttr` as a host
 object, so a domain created with glue reads back with `nameservers`.
+
+A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
+`serverApproved`. Info does not show `pendingTransfer` (#64), a completed transfer cannot be
+queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in
+unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67).
 
 ## Tests without the backend
 

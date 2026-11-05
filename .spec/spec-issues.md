@@ -143,3 +143,16 @@ Each entry says what the proxy does today.
 
 - A host update must provide at least one change (data-objects §13.3.4), but a PUT repeating the stored state is a valid full update (core §16.8) and PUT is idempotent in HTTP.
 - **Proxy:** passes the empty update on, the backend answers `2003` (400).
+
+## Transfer process
+
+- `GET .../transferProcesses/latest` with nothing pending gets EPP `2301`. Table 9 maps `02301` to 409, but the OpenAPI has no 409 on that GET, and core §16.9.5.2 says the resource "may not exist", which suggests 404 (#68).
+- **Proxy:** 409 (`02301`).
+- Core §16.9.5.5 shows approve with no content and the OpenAPI declares no `requestBody`, but json §8.1.10 sends `{"@type": "domainTransferProcess"}`.
+- **Proxy:** accepts both.
+- Json §8.2.9 gives an example with `reason`, which data-objects §10.1.1.5 forbids in the EPP Compatibility Profile, without naming the rejection.
+- **Proxy:** 501 (`02102`).
+- EPP has no process ids and no transfer history, so the list and `/{processId}` operations have nothing to map to.
+- **Proxy:** 501 (`02101`), and responses have no `processId`.
+- EPP has no push transfer, and its response does not say the direction.
+- **Proxy:** `transferDir: push` and `gainingClientId` are 501 (`02102`), and responses always have `transferDir: pull`.

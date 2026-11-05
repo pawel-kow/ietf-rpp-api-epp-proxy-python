@@ -14,6 +14,8 @@ from .rpp_dns_record import RPPDnsRecord
 from .rpp_domain import RPPDomain
 from .rpp_domain_create_process import RPPDomainCreateProcess
 from .rpp_domain_name_availability import RPPDomainNameAvailability
+from .rpp_domain_transfer_process import RPPDomainTransferProcess
+from .rpp_domain_transfer_reject import RPPDomainTransferReject
 from .rpp_host import RPPHost
 from .rpp_host_availability import RPPHostAvailability
 from .rpp_host_reference import RPPHostReference

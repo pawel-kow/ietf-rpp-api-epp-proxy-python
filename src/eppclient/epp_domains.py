@@ -110,3 +110,21 @@ def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, clien
     else:
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
+
+def epp_domains_Transfer(epp_client: EPPClient, transfer: DomainTransfer, client_transaction_id=None) -> Union[DomainTransferResponse, ErrorResponse]:
+    """
+    Runs one operation on the transfer of a domain using EPP commands.
+    Args:
+        epp_client (EPPClient): The EPP client instance.
+        transfer (DomainTransfer): The transfer operation.
+        client_transaction_id (str): The client transaction ID for the request.
+    Returns:
+        DomainTransferResponse: The state of the transfer after the operation.
+    """
+    eppxml = transfer_domain_xml(transfer, client_request_id=client_transaction_id)
+    success, code, response = epp_client.send_and_get_response(eppxml)
+
+    if success == True:
+        return parse_domain_transfer_response(response, client_transaction_id=client_transaction_id)
+    else:
+        return get_epp_error_response(response, client_transaction_id=client_transaction_id)

@@ -15,3 +15,8 @@ from .host_info_response import HostInfoResponse
 from .host_update import HostUpdate
 from .host_update_changes import HostUpdateChanges
 from .host_update_response import HostUpdateResponse
+
+from .domain_transfer import DomainTransfer
+from .domain_transfer_process import DomainTransferProcess
+from .domain_transfer_response import DomainTransferResponse
+from .transfer_operation import TransferOperation

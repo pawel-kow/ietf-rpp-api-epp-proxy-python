@@ -5,9 +5,11 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware import MiddlewarePosition
 from connexion.problem import problem
 from connexion.resolver import RelativeResolver
+from connexion.validators import VALIDATOR_MAP
 from starlette.middleware.cors import CORSMiddleware
 from controller import *
 from controller.helper.rpp_response import RPP_ERROR_TYPE, problem_headers
+from controller.rpp_request_body_validator import RppRequestBodyValidator
 from controller.rpp_response_body_validator import RppResponseBodyValidator
 from controller.epp_basic_security_handler import EppBasicSecurityHandler
 from models import ResultCode
@@ -61,6 +63,9 @@ def create_app(authenticator):
     )
     app.add_api("openapi.yaml", resolver=RelativeResolver('controller'), resolver_error=501,
                 validate_responses=True, options={"swagger_ui": True, "serve_spec": True},
-                validator_map={"response": MediaTypeDict({"*/*json": RppResponseBodyValidator})})
+                validator_map={
+                    "body": MediaTypeDict({**VALIDATOR_MAP["body"], "*/*json": RppRequestBodyValidator}),
+                    "response": MediaTypeDict({"*/*json": RppResponseBodyValidator}),
+                })
     app.add_error_handler(ProblemException, handle_rpp_error)
     return app
