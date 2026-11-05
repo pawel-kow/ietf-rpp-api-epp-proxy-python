@@ -21,10 +21,12 @@ doubles: they exercise the full RPP→EPP→RPP round trip against a live regist
 
 Its host and port come from `config.yaml` (`rpp_epp_host`/`rpp_epp_port`) via
 `new_epp_client` in [src/run.py](../../src/run.py). In the
-devcontainer that is the `epp-server-docker-epp-server-1` container on port `700`,
+devcontainer that is the `epp-server-docker-epp-server-1` container on TLS port `743`,
 reached over the shared `epp-server-docker_epp_net` docker network (attached via
 `postStartCommand` in
-[.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json)).
+[.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json)). Its certificate
+is self-signed and does not name that host, so `config.yaml` sets
+`rpp_epp_tls_insecure_skip_verify`.
 
 Auth uses HTTP Basic, and the username and password are passed straight through as
 the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and `baz`
@@ -54,6 +56,9 @@ Unit tests in `tests/unit/` inject test doubles through constructors:
 - `create_app(authenticator)` builds a full app around that authenticator, so a
   handler can be tested through `test_client()` without a registry. See
   [test_app_injection.py](../../tests/unit/test_app_injection.py).
+- `TCPClient(host, port, tls_context)` connects to a
+  [LoopbackEppServer](../../tests/helper/loopback_epp_server.py). Its certificate is
+  generated per test session with the `openssl` CLI, so no key is in the repository.
 
 ## Test data format
 

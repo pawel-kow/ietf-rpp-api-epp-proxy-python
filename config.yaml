@@ -4,10 +4,13 @@
 rpp_epp_host: epp-server-docker-epp-server-1
 
 # optional settings
-# container-internal EPP port (published on the docker host as 7001, but we
+# container-internal EPP TLS port (published on the docker host as 7043, but we
 # reach the container directly on the shared network here)
-rpp_epp_port: 700
-#rpp_epp_use_tls: true
+rpp_epp_port: 743
+rpp_epp_use_tls: true
+# Accepts any certificate for any name, so a man-in-the-middle goes unnoticed.
+# For test backends only: this one is self-signed and rpp_epp_host is not in its SANs.
+rpp_epp_tls_insecure_skip_verify: true
 # timeout (secs) for requests sent to EPP server
 #rpp_epp_timeout: 5
 
