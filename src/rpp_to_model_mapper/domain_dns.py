@@ -2,12 +2,13 @@ import base64
 import re
 
 from models import DnsSec, Domain, DsData, HostAttr, KeyData, NS
-from .common import reject_set
 from .dns_records import (
     ADDRESS_RECORDS, ORIGIN, check_record_class, nameserver_records, record_address, record_rdata, record_type,
+    reject_ttl,
 )
+from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPDnsData, RPPDnsRecord
-from .unsupported_rpp_feature import UnsupportedRppFeature
 
 HEX = re.compile(r"(?:[0-9A-Fa-f]{2})+")
 MAX_BYTE = 255
@@ -66,14 +67,21 @@ def _add_glue(domain_name: str, hosts: dict[str, HostAttr], owner: str, record: 
     if owner != domain_name and not owner.endswith(f".{domain_name}"):
         raise ValueError(f"The record for '{record.name}' is not in the domain")
     if owner not in hosts:
-        raise UnsupportedRppFeature(f"A DNS record for '{record.name}' is not supported")
+        raise NotSupportedByEpp(f"A DNS record for '{record.name}'")
     host = hosts[owner]
     setattr(host, family, (getattr(host, family) or []) + [address])
 
 
+def _reject_controls(controls: dict | None):
+    """secDNS has `maxSigLife`, which the proxy does not map."""
+    if controls:
+        reject_ttl(controls)
+        raise NotSupportedByProxy("'dns.controls'")
+
+
 def rpp_to_model(domain_name: str, dns: RPPDnsData) -> tuple[NS | None, DnsSec | None]:
     """The delegation and DNSSEC data of the records. Delegation goes to EPP as host attributes."""
-    reject_set(controls=dns.controls)
+    _reject_controls(dns.controls)
     domain_name = domain_name.lower()
     hosts: dict[str, HostAttr] = {}
     ds_data, key_data, glue = [], [], []
@@ -84,9 +92,9 @@ def rpp_to_model(domain_name: str, dns: RPPDnsData) -> tuple[NS | None, DnsSec |
         if kind in ADDRESS_RECORDS:
             glue.append((owner, record))
         elif kind not in ZONE_APEX_RECORDS:
-            raise UnsupportedRppFeature(f"DNS record type '{record.type}' is not supported")
+            raise NotSupportedByEpp(f"DNS record type '{record.type}'")
         elif owner != domain_name:
-            raise UnsupportedRppFeature(f"A DNS record for '{record.name}' is not supported")
+            raise NotSupportedByEpp(f"A DNS record for '{record.name}'")
         elif kind == "ns":
             host_name = record_rdata(record, "nsdname")[0].removesuffix(".")
             hosts.setdefault(host_name.lower(), HostAttr(id=host_name))
@@ -95,7 +103,7 @@ def rpp_to_model(domain_name: str, dns: RPPDnsData) -> tuple[NS | None, DnsSec |
         else:
             key_data.append(_rpp_to_key(record))
     if ds_data and key_data:
-        raise UnsupportedRppFeature("'ds' and 'dnskey' records in one request are not supported")
+        raise NotSupportedByProxy("'ds' and 'dnskey' records in one request")
     for owner, record in glue:
         _add_glue(domain_name, hosts, owner, record)
     ns = NS(host_objs=None, host_attrs=list(hosts.values())) if hosts else None

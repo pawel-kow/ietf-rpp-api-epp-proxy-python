@@ -3,6 +3,7 @@ from rpp_schema_validator import validate_schema
 from . import host_dns
 from .common import parse_rpp, reject_operation
 from .hosts import add_rpp_status
+from .not_supported_by_epp import NotSupportedByEpp
 from .rpp_models import RPPDnsRecord, RPPPatchOperation, RPPStatus
 
 HOST_NAME_PATH = "/hostName"
@@ -36,7 +37,7 @@ class _PatchedHostUpdate:
         if operation.match is not None:
             raise ValueError("'match' can only be used on an array")
         if operation.op == "remove":
-            reject_operation(operation)
+            reject_operation(operation, NotSupportedByEpp)
         validate_schema("host.update", {"@type": "host", "hostName": operation.value})
         self.new_name = operation.value
 
@@ -69,7 +70,7 @@ class _PatchedHostUpdate:
         validate_schema("dnsRecord.create", element)
         address = host_dns.rpp_to_model(self.host_name, parse_rpp(RPPDnsRecord, element))
         if address is None:
-            reject_operation(operation)
+            reject_operation(operation, NotSupportedByEpp)
         family, value = address
         getattr(changes, family).append(value)
 

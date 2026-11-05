@@ -1,5 +1,7 @@
 from dataclasses_json.undefined import UndefinedParameterError
 
+from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPPatchOperation
 from .unsupported_rpp_feature import UnsupportedRppFeature
 
@@ -13,11 +15,12 @@ def parse_rpp(rpp_class, rpp: dict):
 
 
 def reject_set(**members):
-    """Rejects the named members when the request gives them a value."""
+    """Rejects the named members, which EPP has no place for, when the request gives them a value."""
     for name, value in members.items():
         if value:
-            raise UnsupportedRppFeature(f"'{name}' is not supported")
+            raise NotSupportedByEpp(f"'{name}'")
 
 
-def reject_operation(operation: RPPPatchOperation):
-    raise UnsupportedRppFeature(f"'{operation.op}' on '{operation.path}' is not supported")
+def reject_operation(operation: RPPPatchOperation, rejection: type[UnsupportedRppFeature] = NotSupportedByProxy):
+    """By default an operation EPP could do, but the proxy only with the current state of the object (#27)."""
+    raise rejection(f"'{operation.op}' on '{operation.path}'")

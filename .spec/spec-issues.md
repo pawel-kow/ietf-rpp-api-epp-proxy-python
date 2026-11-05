@@ -125,8 +125,8 @@ Each entry says what the proxy does today.
 
 ## Data the EPP Compatibility Profile cannot hold
 
-- The host create example (json §8.3.2) has `dns.controls.ttl`, which EPP has no element for, and the data-objects draft does not limit `controls` in the EPP Compatibility Profile. An example the profile cannot carry leaves open what a server should do: reject it, ignore it, or apply a default. Should the profile forbid `controls`, and with which result code?
-- **Proxy:** 501 (`02102`), on hosts and domains, nothing is dropped silently, so the §8.3.2 example answers 501 as written (`draft_host/test2`). A read leaves out the secDNS `maxSigLife`.
+- The host create example (json §8.3.2) has `dns.controls.ttl`, which core EPP has no element for (RFC 9803 adds one), and the data-objects draft does not limit `controls` in the EPP Compatibility Profile. An example the profile cannot carry leaves open what a server should do: reject it, ignore it, or apply a default. Should the profile forbid `controls`, and with which result code?
+- **Proxy:** `ttl` is 501 (`02103`), because the proxy does not implement RFC 9803, on hosts and domains, so the §8.3.2 example answers 501 as written (`draft_host/test2`). `maxSigLifetime` is 501 (`02102`), and a read leaves out the secDNS `maxSigLife`. Nothing is dropped silently.
 
 ## `status` on host create
 

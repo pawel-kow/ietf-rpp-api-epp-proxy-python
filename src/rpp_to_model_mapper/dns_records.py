@@ -1,11 +1,13 @@
 import ipaddress
 
+from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPDnsRecord
-from .unsupported_rpp_feature import UnsupportedRppFeature
 
 ADDRESS_RECORDS = {"a": ("ipv4", ipaddress.IPv4Address), "aaaa": ("ipv6", ipaddress.IPv6Address)}
 ORIGIN = "@"
 RECORD_CLASS_INTERNET = "IN"
+TTL_EXTENSION = "RFC 9803"
 
 
 def record_type(record: RPPDnsRecord) -> str:
@@ -15,7 +17,12 @@ def record_type(record: RPPDnsRecord) -> str:
 
 def check_record_class(record: RPPDnsRecord):
     if record.record_class not in (None, RECORD_CLASS_INTERNET):
-        raise UnsupportedRppFeature(f"DNS class '{record.record_class}' is not supported")
+        raise NotSupportedByEpp(f"DNS class '{record.record_class}'")
+
+
+def reject_ttl(controls: dict):
+    if "ttl" in controls:
+        raise NotSupportedByProxy("'dns.controls.ttl'", TTL_EXTENSION)
 
 
 def record_rdata(record: RPPDnsRecord, *members: str) -> list[str]:

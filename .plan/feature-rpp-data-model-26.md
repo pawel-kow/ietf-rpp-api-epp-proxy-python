@@ -11,6 +11,8 @@
 - Review: every public mapper is `rpp_to_model` or `model_to_rpp`, the module selects the conversion. Private helpers stay as they are.
 - Review: three kinds of "not supported", all 501, each with its own message. a) not in EPP or in an extension the proxy knows: `02102`. b) in EPP, not in the proxy: `02103` when an extension is missing, otherwise `02102`. c) the server does not offer an extension the proxy uses: `02103`.
 - Sorting accepted: `status` on create and `uName`/`lgr` are a), `disclose` is b).
+- PATCH: everything EPP could do once the proxy has read the object is b). Only removing `/hostName` and `ns` records are a). `domain:null` exists, so removing `/authInfo` is b). `maxSigLifetime` on a host is a), secDNS is for domains only.
+- c) is an `ErrorResponse` from `epp_domains_Create`, not an exception: mappers cannot reach the client, and `raise_epp_error` renders it.
 
 ## Findings
 
@@ -31,5 +33,5 @@
 - [x] Docs, spec-issues, skip of `draft_domain/test7-read_idn`
 - [x] Full pytest, draft PR, follow-up issues
 - [x] Review: `rpp_to_model` and `model_to_rpp` in every mapper module
-- [~] Review: three kinds of "not supported", greeting extensions
-- [ ] Docs, full pytest, push
+- [x] Review: three kinds of "not supported", greeting extensions
+- [~] Docs, full pytest, push

@@ -4,8 +4,8 @@ from models import (
 from rpp_schema_validator import validate_schema
 from . import auth_info, domain_dns, prov_metadata, statuses
 from .common import parse_rpp, reject_set
+from .not_supported_by_epp import NotSupportedByEpp
 from .rpp_models import RPPContactReference, RPPDomain, RPPHostReference, RPPLabelledContact
-from .unsupported_rpp_feature import UnsupportedRppFeature
 
 REGISTRANT = "registrant"
 CONTACT_LABELS = ("admin", "billing", "tech")
@@ -14,7 +14,7 @@ CONTACT_LABELS = ("admin", "billing", "tech")
 def check_contact_label(label: str) -> str:
     """EPP knows three contact roles, the RPP label is open."""
     if label not in CONTACT_LABELS:
-        raise UnsupportedRppFeature(f"Contact label '{label}' is not supported")
+        raise NotSupportedByEpp(f"Contact label '{label}'")
     return label
 
 

@@ -6,6 +6,11 @@ import re
 import xml.etree.ElementTree as ET
 from lxml import etree
 from helpers import decode_xml
+from .tcpclient import ConnectionException
+
+EPP_NAMESPACE = {'epp': 'urn:ietf:params:xml:ns:epp-1.0'}
+SEC_DNS_EXTENSION = "urn:ietf:params:xml:ns:secDNS-1.1"
+LOGIN_EXTENSIONS = (SEC_DNS_EXTENSION,)
 
 class EPPClient:
     """
@@ -31,6 +36,7 @@ class EPPClient:
         self.username = username
         self.password = password
         self._connected = False 
+        self._server_extensions = frozenset()
         self._lock = threading.RLock()
 
     def connect(self):
@@ -43,6 +49,7 @@ class EPPClient:
                 # Reading Hello message from server
                 hello = self.client.receive()
                 print("Hello from the server", hello)
+                self._server_extensions = self._parse_greeting(hello)
                 # Sending login message
                 self._send_login(self.username, self.password)
                 self._connected = True
@@ -103,6 +110,15 @@ class EPPClient:
             self.disconnect(send_logout=False)
             raise
 
+    def supports_extension(self, uri: str) -> bool:
+        """Whether the server offers an extension, which only its greeting says."""
+        with self._lock:
+            if not self._connected:
+                self.connect()
+            if not self._connected:
+                raise ConnectionException("EPP server is not reachable")
+            return uri in self._server_extensions
+
     def verify_credentials(self, user, password):
         return self.username == user and self.password == password
 
@@ -149,9 +165,7 @@ class EPPClient:
         <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
         <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
         <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
-        <svcExtension>
-          <extURI>urn:ietf:params:xml:ns:secDNS-1.1</extURI>
-        </svcExtension>
+        {self._login_service_extension()}
       </svcs>
     </login>
     <clTRID>{uuid.uuid4()}</clTRID>
@@ -162,6 +176,13 @@ class EPPClient:
         success, code, msg = self._parse_epp_response(response[2])
         if not success:
             raise Exception(f"Login failed: {msg}")
+
+    def _login_service_extension(self) -> str:
+        """What the proxy uses and the server offers. The element may not be empty."""
+        uris = [uri for uri in LOGIN_EXTENSIONS if uri in self._server_extensions]
+        if not uris:
+            return ""
+        return "<svcExtension>" + "".join(f"<extURI>{uri}</extURI>" for uri in uris) + "</svcExtension>"
 
     def _send_logout(self):
         """
@@ -179,6 +200,10 @@ class EPPClient:
         if not success:
             raise Exception(f"Logout failed: {msg}")
 
+    def _parse_greeting(self, greeting: str) -> frozenset[str]:
+        path = "./epp:greeting/epp:svcMenu/epp:svcExtension/epp:extURI"
+        return frozenset((uri.text or "").strip() for uri in decode_xml(greeting).findall(path, namespaces=EPP_NAMESPACE))
+
     def _parse_epp_response(self, response):
         """
         Parses an EPP response.
@@ -187,10 +212,8 @@ class EPPClient:
             response (str): The response to parse.
         """
         root = decode_xml(response)
-        namespace = {'epp': 'urn:ietf:params:xml:ns:epp-1.0'}
-
-        code = root.find("./epp:response/epp:result", namespaces=namespace).attrib.get("code")
-        msg = root.find("./epp:response/epp:result/epp:msg", namespaces=namespace).text
+        code = root.find("./epp:response/epp:result", namespaces=EPP_NAMESPACE).attrib.get("code")
+        msg = root.find("./epp:response/epp:result/epp:msg", namespaces=EPP_NAMESPACE).text
         if re.match(r"1[0-9]{3}", code):
             return True, code, msg
         else:

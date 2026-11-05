@@ -2,7 +2,8 @@ from models import Host, HostUpdateChanges
 from rpp_schema_validator import validate_schema
 from . import host_dns, prov_metadata
 from .common import parse_rpp, reject_set
-from .dns_records import nameserver_records
+from .dns_records import nameserver_records, reject_ttl
+from .not_supported_by_epp import NotSupportedByEpp
 from .rpp_models import RPPDnsData, RPPHost, RPPStatus
 
 
@@ -14,13 +15,20 @@ def add_rpp_status(status: RPPStatus, target: Host | HostUpdateChanges):
         target.status_reasons[status.label] = status.reason
 
 
+def _reject_controls(controls: dict | None):
+    """EPP has a TTL extension for hosts, but `maxSigLifetime` is secDNS, which is for domains only."""
+    if controls:
+        reject_ttl(controls)
+        raise NotSupportedByEpp("'dns.controls' on a host")
+
+
 def rpp_host_to_model(host_rpp: RPPHost) -> Host:
     """The Host of a parsed request, without its status."""
     if host_rpp.provMetadata:
         raise ValueError("Undeclared property: provMetadata")
     addresses = {"ipv4": [], "ipv6": []}
     if host_rpp.dns:
-        reject_set(controls=host_rpp.dns.controls)
+        _reject_controls(host_rpp.dns.controls)
         for record in host_rpp.dns.records or []:
             address = host_dns.rpp_to_model(host_rpp.hostName, record)
             if address:

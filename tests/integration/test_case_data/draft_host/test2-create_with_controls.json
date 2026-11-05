@@ -85,7 +85,7 @@
       "response": {
         "status": 501,
         "headers": {
-          "RPP-Code": "02102"
+          "RPP-Code": "02103"
         },
         "body": {
           "type": "urn:ietf:params:rpp:error"
