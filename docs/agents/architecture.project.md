@@ -58,9 +58,21 @@ are copied verbatim from `.spec/auto/` by [copy_models.sh](../../copy_models.sh)
 JSON schema is the single source of truth for request/response validation. `$defs`
 names (e.g. `"domainName.read"`) are passed by string to `validate_schema`. If
 validation fails unexpectedly, check whether the schema and the mapper drifted.
+A change to the contract goes to `.spec/auto/`, then through `copy_models.sh`. The
+JSContact profile -02 changes there were made by hand and still have to reach
+TypeSpec (#56). OpenAPI 3.0 cannot express all of them, so the JSON schema is the
+stricter of the two.
 
 Points in the drafts that cannot be implemented or are unclear go to
 [.spec/spec-issues.md](../../.spec/spec-issues.md).
+
+## Contact forms
+
+A Card's internationalized form is the EPP `postalInfo type="int"` on `Contact`, and
+its one localization is `postalInfo type="loc"` in `Contact.localizedPostalInfo`. What
+the JSContact profile requires beyond the schema (key sequence, US-ASCII, key against
+features) is checked in `rpp_to_model_mapper/contacts.py` on requests, before anything
+the model cannot hold is rejected, so a profile violation is a 400 and not a 501.
 
 ## Wire contract
 
@@ -91,7 +103,7 @@ resolve the function by name and it could not receive dependencies.
 Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
 
 - **Several classes per file:** `src/models/domains.py` (18),
-  `src/models/contacts.py` (8), `src/models/response.py` (3),
+  `src/models/contacts.py` (7), `src/models/response.py` (3),
   `src/models/common.py` (3), `src/eppclient/tcpclient.py` (2).
   Generated `epp_model/` is exempt. (#20)
 - **Flows in handlers:** the mutate-then-Info orchestration sits inside

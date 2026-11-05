@@ -6,6 +6,7 @@ from dataclasses_json import Undefined, dataclass_json
 from .rpp_object import RPPObject, type_field
 from .rpp_card_address import RPPCardAddress
 from .rpp_card_email import RPPCardEmail
+from .rpp_card_localization import RPPCardLocalization
 from .rpp_card_name import RPPCardName
 from .rpp_card_organization import RPPCardOrganization
 from .rpp_card_phone import RPPCardPhone
@@ -24,4 +25,4 @@ class RPPCard(RPPObject):
     phones: Optional[Dict[str, RPPCardPhone]] = None
     emails: Optional[Dict[str, RPPCardEmail]] = None
     links: Optional[Dict[str, Any]] = None
-    localizations: Optional[Dict[str, Any]] = None
+    localizations: Optional[Dict[str, RPPCardLocalization]] = None

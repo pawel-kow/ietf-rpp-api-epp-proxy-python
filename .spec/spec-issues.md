@@ -5,24 +5,38 @@ Each entry says what the proxy does today.
 
 ## Phone numbers
 
-- The `contactInfo` examples (json §8.2) use `tel:+1-703-555-5555`. The EPP Compatibility Profile (data-objects, Contact) requires `+1.7035555555`, and the `phoneNumber` definition (json §6.1.3) has the same form but no JSContact property uses it. Which form applies inside a Card?
-- A `tel:` URI has no country code delimiter, so EPP's `+CC.number` cannot be derived from `tel:+17035555555`.
-- **Proxy:** `tel:` only. The first hyphen ends the country code, anything else is a 400. `;ext=` maps to EPP `x`. Digit grouping is lost, so `tel:+1-703-555-5555` reads back as `tel:+1-7035555555`.
+- The JSContact profile -02 requires `tel:+CC.number`, but the `contactInfo` examples (json §8.2) still use `tel:+1-703-555-5555`, which the profile rejects.
+- **Proxy:** follows the profile, anything else is a 400. `;ext=` maps to EPP `x`. The tests based on json §8.2 use the profile form.
+
+## Phone key and features
+
+- The profile assumes voice when `features` is absent, and gives the key `fax` to the preferred fax number. It does not say what a `fax` key without `features` means, or a `voice` key with `{"fax": true}`.
+- Should the key pattern and `features` always have to match? The type of a number is stated twice, and §4.1.10 and §4.1.8 do not bind the two together. If they must match, `features` is redundant for a single-purpose number, and the profile should say so and name the rejection. If they need not, it should say which one decides.
+- §4.1.8 says `features` "MUST contain only the "voice" or "fax" keys", which can mean those two keys are allowed together, or exactly one of them. If both are allowed, the meaning of the map key is open: does `voice` with `{"voice": true, "fax": true}` also count as the preferred fax number, and which entry wins if a `fax` key exists too?
+- Suggested text for §4.1.8: "The "features" member MUST contain exactly one key, and that key MUST match the predefined key of the map entry."
+- **Proxy:** a key and features that disagree are a 400. Both features on one number are a 501 (`02102`). EPP could hold such a number as both `voice` and `fax`, but it would read back as two entries, so the round trip would not keep what the client sent.
+
+## Localization language
+
+- The profile keys `localizations` by language tag and wants `language` on the Card when there are localizations. EPP `postalInfo type="loc"` has no language, so neither survives a round trip through an EPP backend. The EPP Compatibility Profile should say how a server reads back a localization.
+- **Proxy:** accepts `language` and any tag and stores neither. A read uses the key `und`, and returns only the members that differ from the internationalized form.
+- EPP needs a complete `loc`, so a partial localization inherits the rest and reads back without it.
+- A read of a contact with only a `loc` form has no internationalized form, only `localizations`, which the profile does not foresee.
+
+## Localized and additional entries the EPP mapping cannot hold
+
+- The profile allows a localized email, `email-1`, `voice-1` and `fax-1`. RFC 5733 has one email, one voice and one fax number, none of them per postalInfo.
+- **Proxy:** 501 (`02102`), as for `links` and more than 3 street lines. More than one localization is a 501 too. The profile only says to reject it, without a result code.
+
+## Card in the JSON draft
+
+- json §6.2.9 still has `addresses[*].full` and open `features`, and does not reference the profile. It should follow profile -02.
+- **Proxy:** follows the profile.
 
 ## Individual contact with an organisation
 
 - The contact example (json §8.2.2) is `kind: individual` with `organizations`. EPP has one `postalInfo` with `name` and `org`, but no kind, so the kind cannot survive a round trip through an EPP backend.
 - **Proxy:** 501 (`02102`). The draft example is tested as such in `draft_contact/test2`, and without `organizations` in `test3`.
-
-## Card without `kind`
-
-- `kind` is optional in the schema, and the drafts do not give a default.
-- **Proxy:** treated as `individual`, the JSContact default.
-
-## Address component kinds
-
-- The schema enum has `country` (`AddressComponentKind`), the Card in json §6.2.9 does not.
-- **Proxy:** 501 (`02102`), `countryCode` is the only country input.
 
 ## Contact labels
 

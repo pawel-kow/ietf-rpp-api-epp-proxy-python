@@ -3,6 +3,7 @@ from .rpp_card import RPPCard
 from .rpp_card_address import RPPCardAddress
 from .rpp_card_address_component import RPPCardAddressComponent
 from .rpp_card_email import RPPCardEmail
+from .rpp_card_localization import RPPCardLocalization
 from .rpp_card_name import RPPCardName
 from .rpp_card_organization import RPPCardOrganization
 from .rpp_card_phone import RPPCardPhone

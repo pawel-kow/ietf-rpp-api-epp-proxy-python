@@ -1,23 +1,10 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
+from .address import Address
 from .common import ProvisioningObject
+from .localized_postal_info import LocalizedPostalInfo
 from .response import OperationResponse
 from enum import Enum
-
-@dataclass(kw_only=True)
-class Address:
-    street: Optional[List[str]]
-    city: Optional[str] = None
-    stateProvince: Optional[str] = None
-    postalCode: Optional[str] = None
-    country: Optional[str] = None
-    
-    def update(self, address):
-        self.street = address.street if address.street else self.street
-        self.city = address.city if address.city else self.city
-        self.stateProvince = address.stateProvince if address.stateProvince else self.stateProvince
-        self.postalCode = address.postalCode if address.postalCode else self.postalCode
-        self.country = address.country if address.country else self.country
 
 class ContactType(Enum):
     UNDEFINED = "UNDEFINED"
@@ -38,9 +25,11 @@ class Contact(ProvisioningObject, ContactMinimal):
     phone: Optional[List[str]] = None;
     fax: Optional[List[str]] = None;
     address: Optional[Address] = None;
+    localizedPostalInfo: Optional[LocalizedPostalInfo] = None
     
     def __post_init__(self):
-        if self.type == ContactType.ORG and not self.organisationName:
+        localized = self.localizedPostalInfo
+        if self.type == ContactType.ORG and not (self.organisationName or (localized and localized.organisationName)):
             raise ValueError("Organisation name is required for contact type ORG")
     
     def update(self, contact):

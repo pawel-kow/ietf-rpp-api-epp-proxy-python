@@ -32,7 +32,8 @@ the EPP `clID`/`pw` login credentials.
 The backend hangs on a repeated clTRID, so every EPP command needs a new one. It drops
 addresses given when creating an external host, so tests of addresses at create use an
 internal host, which needs its domain to exist first. Its other host defects are
-#49, #50, #51, #52 and #54.
+#49, #50, #51, #52 and #54. It rejects non-ASCII contact data, also in `postalInfo
+type="loc"` (#55), so non-ASCII localizations are tested only in unit tests.
 
 ## Tests without the backend
 

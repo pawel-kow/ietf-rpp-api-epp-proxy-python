@@ -46,13 +46,13 @@
             },
             "phones": {
               "voice": {
-                "number": "tel:+1-703-555-5555"
+                "number": "tel:+1.7035555555"
               },
               "fax": {
                 "features": {
                   "fax": true
                 },
-                "number": "tel:+1-703-555-5556"
+                "number": "tel:+1.7035555556"
               }
             },
             "emails": {
@@ -128,13 +128,13 @@
             },
             "phones": {
               "voice": {
-                "number": "tel:+1-7035555555"
+                "number": "tel:+1.7035555555"
               },
               "fax": {
                 "features": {
                   "fax": true
                 },
-                "number": "tel:+1-7035555556"
+                "number": "tel:+1.7035555556"
               }
             },
             "emails": {
