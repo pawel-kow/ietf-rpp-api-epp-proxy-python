@@ -1,0 +1,99 @@
+{
+  "test_id": "test10-no_element_matches",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "up-test10-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {}
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/up-test10-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/nameservers",
+            "value": {
+              "@type": "host",
+              "hostName": "ns1.bar.example"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {}
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/up-test10-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/nameservers",
+            "match": {
+              "hostName": "ns9.bar.example"
+            },
+            "value": {
+              "@type": "host",
+              "hostName": "ns2.bar.example"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 422,
+          "errors": [
+            {
+              "result": "02308"
+            }
+          ]
+        },
+        "headers": {
+          "RPP-Code": "02308"
+        }
+      }
+    }
+  ]
+}

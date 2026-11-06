@@ -39,7 +39,7 @@ internal host, which needs its domain to exist first. Its other host defects are
 type="loc"` (#55), so non-ASCII localizations are tested only in unit tests. Info returns no
 `secDNS:infData` (#60) and no `domain:upID` or `domain:upDate` (#61), so reading
 DNSSEC and `upClientId` is tested only in unit tests. It stores `domain:hostAttr` as a host
-object, so a domain created with glue reads back with `nameservers`.
+object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.
 
 A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
 `serverApproved`. Info does not show `pendingTransfer` (#64), a completed transfer cannot be

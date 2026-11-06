@@ -24,6 +24,7 @@ from ..epp_model.domain_1_0 import (
     PUnitType,
     Renew,
     StatusType,
+    StatusValueType,
     Transfer,
     Update,
 )
@@ -38,7 +39,8 @@ from ..epp_model.epp_1_0 import (
 from ..epp_model.eppcom_1_0 import PwAuthInfoType
 from ..epp_model.host_1_0 import AddrType, IpType
 from ..epp_model.sec_dns_1_1 import Create as SecdnsCreateType
-from ..epp_model.sec_dns_1_1 import DsDataType, KeyDataType
+from ..epp_model.sec_dns_1_1 import DsDataType, DsOrKeyType, KeyDataType, RemType as SecdnsRemType
+from ..epp_model.sec_dns_1_1 import Update as SecdnsUpdateType
 
 
 def _ns_type(ns) -> NsType:
@@ -78,6 +80,33 @@ def _sec_dns_create(dns_sec: DnsSec) -> SecdnsCreateType:
             for key in dns_sec.key_data or []
         ],
     )
+
+
+def _ds_data(dns_sec: DnsSec) -> list[DsDataType]:
+    return [
+        DsDataType(key_tag=ds.keyTag, alg=ds.algorithm, digest_type=ds.digestType, digest=bytes.fromhex(ds.digest))
+        for ds in dns_sec.ds_data or []
+    ]
+
+
+def _key_data(dns_sec: DnsSec) -> list[KeyDataType]:
+    return [
+        KeyDataType(flags=key.flags, protocol=key.protocol, alg=key.algorithm, pub_key=base64.b64decode(key.publicKey))
+        for key in dns_sec.key_data or []
+    ]
+
+
+def _sec_dns_update(add: DnsSec | None, remove: DnsSec | None) -> SecdnsUpdateType | None:
+    if not (add or remove):
+        return None
+    return SecdnsUpdateType(
+        add=DsOrKeyType(ds_data=_ds_data(add), key_data=_key_data(add)) if add else None,
+        rem=SecdnsRemType(ds_data=_ds_data(remove), key_data=_key_data(remove)) if remove else None,
+    )
+
+
+def _status_types(labels: list[str] | None, reasons: dict[str, str] | None = None) -> list[StatusType]:
+    return [StatusType(s=StatusValueType(label), value=(reasons or {}).get(label, "")) for label in labels or []]
 
 
 def domain_check(domainname: str, rpp_cl_trid: str) -> Epp:
@@ -186,18 +215,14 @@ def domain_update(domain_update: DomainUpdate, rpp_cl_trid: str) -> Epp:
                     set_registrant = True
         if add.ns is not None and (add.ns.host_objs or add.ns.host_attrs):
             add_elem.ns = _ns_type(add.ns)
-        if add_elem.contact or add_elem.ns:
+        add_elem.status = _status_types(add.status, add.status_reasons)
+        if add_elem.contact or add_elem.ns or add_elem.status:
             update.add = add_elem
 
     if remove is not None:
         rem_elem = AddRemType()
         if remove.ns is not None and (remove.ns.host_objs or remove.ns.host_attrs):
-            if remove.ns.host_objs:
-                rem_elem.ns = NsType(host_obj=[h.id for h in remove.ns.host_objs])
-            else:
-                rem_elem.ns = NsType(
-                    host_attr=[HostAttrType(host_name=h.id) for h in remove.ns.host_attrs]
-                )
+            rem_elem.ns = _ns_type(remove.ns)
         if remove.contacts is not None:
             for contact in remove.contacts:
                 if contact.type != "registrant":
@@ -209,7 +234,8 @@ def domain_update(domain_update: DomainUpdate, rpp_cl_trid: str) -> Epp:
                     )
                 else:
                     set_registrant = True
-        if rem_elem.contact or rem_elem.ns:
+        rem_elem.status = _status_types(remove.status)
+        if rem_elem.contact or rem_elem.ns or rem_elem.status:
             update.rem = rem_elem
 
     change = domain_update.change
@@ -226,11 +252,15 @@ def domain_update(domain_update: DomainUpdate, rpp_cl_trid: str) -> Epp:
             chg.registrant = new_registrant
         if change is not None and change.authInfo is not None and change.authInfo.pw is not None:
             chg.auth_info = AuthInfoChgType(pw=PwAuthInfoType(value=change.authInfo.pw))
+        elif change is not None and change.clear_auth_info:
+            chg.auth_info = AuthInfoChgType(null="")
         update.chg = chg
 
+    sec_dns = _sec_dns_update(add.dnsSEC if add else None, remove.dnsSEC if remove else None)
     return Epp(
         command=CommandType(
             update=ReadWriteType(other_element=update),
+            extension=ExtAnyType(other_element=[sec_dns]) if sec_dns else None,
             cl_trid=rpp_cl_trid,
         )
     )

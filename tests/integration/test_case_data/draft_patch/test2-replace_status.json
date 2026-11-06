@@ -17,7 +17,7 @@
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "2fooBAR"
+            "authdata": "Password1!@"
           }
         }
       },
@@ -52,19 +52,17 @@
         ]
       },
       "response": {
-        "status": 501,
-        "content_type": "application/problem+json",
+        "status": 200,
+        "content_type": "application/rpp+json",
         "body": {
-          "type": "urn:ietf:params:rpp:error",
-          "status": 501,
-          "errors": [
+          "@type": "domainName",
+          "name": "ex2-{random_name}.example",
+          "status": [
             {
-              "result": "02102"
+              "@type": "domainStatus",
+              "label": "clientUpdateProhibited"
             }
           ]
-        },
-        "headers": {
-          "RPP-Code": "02102"
         }
       }
     }

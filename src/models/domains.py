@@ -61,16 +61,20 @@ class DomainUpdateAdd:
     ns: Optional[NS] = None
     contacts: Optional[List[ContactReferenceNew]] = None
     dnsSEC: Optional[DnsSec] = None
+    status: Optional[List[str]] = None
+    status_reasons: Optional[Dict[str, str]] = None
 
 @dataclass(kw_only=True)
 class DomainUpdateRemove:
     ns: Optional[NS] = None
     contacts: Optional[List[ContactReferenceNew]] = None
     dnsSEC: Optional[DnsSec] = None
+    status: Optional[List[str]] = None
 
 @dataclass(kw_only=True)
 class DomainUpdateChange:
     authInfo: Optional[AuthInfo] = None
+    clear_auth_info: bool = False
     
 @dataclass(kw_only=True)
 class DomainUpdate:
