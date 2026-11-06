@@ -79,11 +79,13 @@ def test_operations_accumulate():
     {"op": "replace", "path": "/nameservers", "match": {"hostName": "a"}, "value": HOST},
     {"op": "replace", "path": "/status", "match": {"label": "ok"}, "value": {"@type": "domainStatus", "label": "clientHold"}},
     {"op": "replace", "path": "/dns", "value": {"@type": "dnsData"}},
-    {"op": "remove", "path": "/authInfo"},
 ])
-def test_operations_needing_more_than_a_direct_mapping_are_unsupported(operation):
-    with pytest.raises(UnsupportedRppFeature):
-        update(operation)
+def test_operations_needing_the_current_domain_have_no_direct_update(operation):
+    assert update(operation) is None
+
+
+def test_remove_auth_info_clears_it():
+    assert update({"op": "remove", "path": "/authInfo"}).change.clear_auth_info is True
 
 
 @pytest.mark.parametrize("operation", [

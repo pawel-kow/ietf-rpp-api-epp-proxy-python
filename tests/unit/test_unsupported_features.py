@@ -70,12 +70,6 @@ NOT_IN_PROXY = [
 ]
 
 NOT_IN_PROXY_PATCH = [
-    (domain_patch.rpp_to_model, "foo.example", op("replace", "/status", value=DOMAIN_STATUS)),
-    (domain_patch.rpp_to_model, "foo.example", op("replace", "/dns", value=dns())),
-    (domain_patch.rpp_to_model, "foo.example", op("replace", "/nameservers", value=[])),
-    (domain_patch.rpp_to_model, "foo.example", op("remove", "/nameservers", match={"other": "x"})),
-    (domain_patch.rpp_to_model, "foo.example", op("remove", "/contacts", match={"label": "tech"})),
-    (domain_patch.rpp_to_model, "foo.example", op("remove", "/authInfo")),
     (host_patch.rpp_to_model, "ns1.foo.example", op("replace", "/status", value=[])),
     (host_patch.rpp_to_model, "ns1.foo.example", op("replace", "/dns", value=dns())),
     (host_patch.rpp_to_model, "ns1.foo.example", op("remove", "/status", match={"other": "x"})),

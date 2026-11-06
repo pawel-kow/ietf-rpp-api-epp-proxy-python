@@ -101,6 +101,14 @@ def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, clien
     Returns:
         DomainCreateResponse: The response from the EPP server.
     """
+    dns_sec = (domain_update.add and domain_update.add.dnsSEC) or (domain_update.remove and domain_update.remove.dnsSEC)
+    if dns_sec and not epp_client.supports_extension(SEC_DNS_EXTENSION):
+        return ErrorResponse(
+            code=ResultCode.UNIMPLEMENTED_EXTENSION,
+            msg=f"DNSSEC needs {SEC_DNS_EXTENSION}, which the EPP server does not offer",
+            server_transaction_id=None,
+            client_transaction_id=client_transaction_id,
+        )
     eppxml = create_domain_update_xml(domain_update, client_request_id=client_transaction_id)
     success, code, response = epp_client.send_and_get_response(eppxml)
     

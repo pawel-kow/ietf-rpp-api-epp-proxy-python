@@ -27,9 +27,13 @@ single feature (e.g. "domain update") touches every layer:
    backend answers 501, so nothing is dropped silently, see
    [Unsupported input](#unsupported-input). `dns_records.py` holds what hosts and domains share for DNS
    records, and `domain_dns.py` maps a domain's `dns` to `hostAttr` and secDNS.
-   `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
-   without reading the object, so operations that need the current state are
-   unsupported (#27). `host_patch.py` does the same for a `HostUpdate`.
+   `domain_patch.py` turns a JSON Patch into a `DomainUpdate` without reading the object, and
+   answers `None` when an operation needs the current state (whole-array `replace` or `remove`,
+   `replace` with `match`, a partial `match`, `/status`, `/dns`). `rpp_to_model_with_current` then
+   applies the patch to the read representation of the domain with `json_patch.py` (json §5.2.2),
+   and `domain_patch_difference.py` turns the difference into the update. A patch that matches no
+   element, or matches several for a `replace`, is `PatchNotApplicable` (`02308`, 422).
+   `host_patch.py` converts a patch to a `HostUpdate` without reading the host (#71).
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
    `domain_transfer_process.py` and `domain_transfer_reject.py` convert a transfer.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
@@ -45,7 +49,9 @@ single feature (e.g. "domain update") touches every layer:
    `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` the server offers.
 6. **`flows/`:** multi-step operations, free of the web framework. A flow returns a
    typed result or an `ErrorResponse`, and the handler renders it. `flows/hosts.py`
-   holds mutate-then-Info, and PUT as Info, difference, update and Info.
+   holds mutate-then-Info, and PUT as Info, difference, update and Info. `flows/domains.py`
+   holds PATCH of a domain: update and Info for a patch that maps directly, and Info, update and Info
+   for one that needs the current state. The read and the update are not atomic.
 7. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
    inbound EPP XML into models. `epp_model/` holds xsdata-generated dataclasses for
    the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
@@ -102,7 +108,7 @@ its own message:
 
 An extension the proxy does not know of cannot be told apart from no extension, so it
 counts as the first kind. A PATCH that EPP could do once the proxy has read the object
-is the second kind (#27).
+is the second kind (#71 for hosts, #29 for contacts).
 
 The third kind is known only from the EPP greeting, which mappers cannot reach, so the
 `epp_*` function checks `supports_extension` and `raise_epp_error` renders the result.

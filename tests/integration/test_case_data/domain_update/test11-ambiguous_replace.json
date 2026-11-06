@@ -1,0 +1,102 @@
+{
+  "test_id": "test11-ambiguous_replace",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "up-test11-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
+          },
+          "contacts": [
+            {
+              "label": "admin",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            },
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {}
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/up-test11-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/contacts",
+            "match": {
+              "label": "tech"
+            },
+            "value": {
+              "label": "billing",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 422,
+          "errors": [
+            {
+              "result": "02308"
+            }
+          ]
+        },
+        "headers": {
+          "RPP-Code": "02308"
+        }
+      }
+    }
+  ]
+}

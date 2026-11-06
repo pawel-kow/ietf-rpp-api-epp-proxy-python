@@ -1,6 +1,7 @@
 from connexion import request
 from eppclient.epp_domains import *
 from models import *
+import flows
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import *
 from .auth import get_epp_client
@@ -63,8 +64,17 @@ def domainNames_read(name):
 
 @rpp_operation
 def domainNames_updatePartial(name, body):
-    domain_update = map_request(rpp_mapper.domain_patch.rpp_to_model, name, body)
-    domainresp = epp_domains_Update(get_epp_client(), domain_update, client_transaction_id=client_transaction_id())
-    if isinstance(domainresp, ErrorResponse):
-        raise_epp_error(domainresp)
-    return _domain_after_mutation(name, domainresp, 200)
+    update = map_request(rpp_mapper.domain_patch.rpp_to_model, name, body)
+
+    def update_from_current(current):
+        return map_request(
+            rpp_mapper.domain_patch.rpp_to_model_with_current, name, body, rpp_mapper.domains.model_to_rpp(current),
+        )
+
+    result = flows.patch_domain(get_epp_client(), name, update, update_from_current, client_transaction_id())
+    if isinstance(result, ErrorResponse):
+        raise_epp_error(result)
+    headers = generate_rpp_response_headers(result.mutation)
+    if result.domain is None:
+        return None, 202, headers
+    return rpp_mapper.domains.model_to_rpp(result.domain), 200, headers
