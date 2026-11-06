@@ -128,3 +128,35 @@ def test_invalid_operations(operation):
 def test_removing_an_absent_property_fails():
     with pytest.raises(PatchNotApplicable):
         patch(op("remove", "/expiryDate"))
+
+
+PARENTS = {"/dns": {"@type": "dnsData"}}
+
+
+def patch_with_parents(*operations, document):
+    return json_patch.apply(
+        document, [RPPPatchOperation.from_dict(operation) for operation in operations], ("/dns/records",),
+        absent_parents=PARENTS,
+    )
+
+
+def test_a_known_parent_may_be_absent():
+    patched = patch_with_parents(op("replace", "/dns/records", value=[]), document={})
+
+    assert patched == {"dns": {"@type": "dnsData", "records": []}}
+
+
+def test_an_absent_parent_does_not_change_the_given_defaults():
+    patch_with_parents(op("add", "/dns/records", value={}), document={})
+
+    assert PARENTS == {"/dns": {"@type": "dnsData"}}
+
+
+def test_an_unknown_parent_may_not_be_absent():
+    with pytest.raises(ValueError):
+        patch_with_parents(op("replace", "/other/records", value=[]), document={})
+
+
+def test_an_absent_property_of_a_known_parent_cannot_be_removed():
+    with pytest.raises(PatchNotApplicable):
+        patch_with_parents(op("remove", "/dns/controls"), document={})

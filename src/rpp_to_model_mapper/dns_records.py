@@ -8,6 +8,8 @@ ADDRESS_RECORDS = {"a": ("ipv4", ipaddress.IPv4Address), "aaaa": ("ipv6", ipaddr
 ORIGIN = "@"
 RECORD_CLASS_INTERNET = "IN"
 TTL_EXTENSION = "RFC 9803"
+# For JSON Patch: the object an operation on a member of `dns` starts from when the object has no `dns`.
+DNS_PARENTS = {"/dns": {"@type": "dnsData"}}
 
 
 def record_type(record: RPPDnsRecord) -> str:

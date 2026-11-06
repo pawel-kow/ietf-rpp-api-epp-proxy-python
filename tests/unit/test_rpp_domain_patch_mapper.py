@@ -79,6 +79,10 @@ def test_operations_accumulate():
     {"op": "replace", "path": "/nameservers", "match": {"hostName": "a"}, "value": HOST},
     {"op": "replace", "path": "/status", "match": {"label": "ok"}, "value": {"@type": "domainStatus", "label": "clientHold"}},
     {"op": "replace", "path": "/dns", "value": {"@type": "dnsData"}},
+    {"op": "replace", "path": "/dns/records", "value": []},
+    {"op": "add", "path": "/dns/records", "value": {}},
+    {"op": "remove", "path": "/dns/records", "match": {"type": "ds"}},
+    {"op": "remove", "path": "/dns/controls"},
 ])
 def test_operations_needing_the_current_domain_have_no_direct_update(operation):
     assert update(operation) is None

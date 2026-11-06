@@ -36,6 +36,15 @@ def rpp_host_to_model(host_rpp: RPPHost) -> Host:
     return Host(name=host_rpp.hostName, ipv4=addresses["ipv4"] or None, ipv6=addresses["ipv6"] or None)
 
 
+def rpp_host_with_status_to_model(host_rpp: RPPHost) -> Host:
+    """The Host a full update or a patch asks for."""
+    host = rpp_host_to_model(host_rpp)
+    host.status = []
+    for status in host_rpp.status or []:
+        add_rpp_status(status, host)
+    return host
+
+
 def rpp_to_model(rpp: dict) -> Host:
     """Converts a create request to a Host."""
     validate_schema("host.create", rpp)

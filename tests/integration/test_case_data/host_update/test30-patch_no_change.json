@@ -1,5 +1,5 @@
 {
-  "test_id": "test9-patch_replace_records_is_unsupported",
+  "test_id": "test30-patch_no_change",
   "steps": [
     {
       "request": {
@@ -13,7 +13,7 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "t9.{random_name}.net"
+          "hostName": "t30.{random_name}.net"
         }
       },
       "response": {
@@ -29,7 +29,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/hosts/t9.{random_name}.net",
+        "url": "/hosts/t30.{random_name}.net",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -39,20 +39,25 @@
         "body_json": [
           {
             "op": "replace",
-            "path": "/dns/records",
+            "path": "/status",
             "value": []
           }
         ]
       },
       "response": {
-        "status": 501,
+        "status": 200,
         "headers": {
-          "RPP-Code": "02102"
+          "RPP-Code": "01000"
         },
         "body": {
-          "type": "urn:ietf:params:rpp:error"
-        },
-        "content_type": "application/problem+json"
+          "@type": "host",
+          "status": [
+            {
+              "@type": "hostStatus",
+              "label": "ok"
+            }
+          ]
+        }
       }
     }
   ]

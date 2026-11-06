@@ -1,13 +1,13 @@
 # Full JSON Patch semantics for hosts (#71)
 
 ## Tasks
-- [~] Failing tests (unit and integration)
-- [ ] `json_patch`: parents of known paths may be absent
-- [ ] Shared status view for hosts and domains
-- [ ] `host_patch` read path, `patch_host` flow, controller
-- [ ] Domains: clear statuses, `/dns/records` and `/dns/controls` take the read path
-- [ ] Docs: architecture, testing, spec-issues
-- [ ] Full `pytest`, draft PR
+- [x] Failing tests (unit and integration)
+- [x] `json_patch`: parents of known paths may be absent
+- [x] Shared status view for hosts and domains
+- [x] `host_patch` read path, `patch_host` flow, controller
+- [x] Domains: clear statuses, `/dns/records` and `/dns/controls` take the read path
+- [x] Docs: architecture, testing, spec-issues
+- [~] Full `pytest`, draft PR
 
 ## Decisions (maintainer)
 - `replace /status []` and `remove /status` clear the client statuses, on hosts and domains, although
@@ -23,6 +23,10 @@
 - Read records carry the old name, so a rename in the same patch must not make them foreign.
 - `remove /status` ignores anything in `match` but `label`.
 - #71 names `/hostNames` and `02103`. The path is `/hosts`, and the 501 was `02102`.
+
+## Corrections
+- The decision replaced what was first proposed: `replace` that omits a server status is not an error either.
+- `contact_create/test20` and `domain_create/test17` fail on a clean `main` too.
 
 ## Open questions
 None.

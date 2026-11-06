@@ -5,9 +5,9 @@ from . import domain_dns
 from .common import parse_rpp
 from .domains import REGISTRANT, check_contact_label
 from .not_supported_by_proxy import NotSupportedByProxy
+from .patch_statuses import is_client_label
 from .rpp_models import RPPDnsData
 
-CLIENT_STATUS_PREFIX = "client"
 # Members the difference turns into EPP. Any other member of the object cannot be changed.
 CHANGEABLE = ("nameservers", "registrant", "contacts", "status", "dns", "authInfo")
 
@@ -65,15 +65,8 @@ def _client_statuses(domain: dict) -> dict[str, str | None]:
     return {
         status["label"]: status.get("reason")
         for status in domain.get("status") or []
-        if status["label"].startswith(CLIENT_STATUS_PREFIX)
+        if is_client_label(status["label"])
     }
-
-
-def _check_new_statuses(current: dict, patched: dict):
-    known = {status["label"] for status in current.get("status") or []}
-    for status in patched.get("status") or []:
-        if status["label"] not in known and not status["label"].startswith(CLIENT_STATUS_PREFIX):
-            raise ValueError(f"Status '{status['label']}' can only be set by the server")
 
 
 def _dns_sec_items(dns_sec: DnsSec | None) -> list:
@@ -93,7 +86,6 @@ def _dns_sec_difference(wanted: DnsSec | None, current: DnsSec | None) -> DnsSec
 def difference(domain_name: str, current: dict, patched: dict) -> DomainUpdate:
     """The update that turns the current domain (in RPP form) into the patched one."""
     _reject_other_changes(current, patched)
-    _check_new_statuses(current, patched)
     current_hosts, patched_hosts = _host_names(current), _host_names(patched)
     current_attrs, patched_attrs = _delegation(current)[0], _delegation(patched)[0]
     current_sec, patched_sec = _delegation(current)[1], _delegation(patched)[1]

@@ -1,4 +1,4 @@
-from flows import create_host, replace_host, update_host
+from flows import create_host, patch_host, replace_host, update_host
 from models import ErrorResponse, Host, HostUpdate, HostUpdateChanges
 from tests.helper.fake_epp_client import FakeEppClient
 
@@ -212,3 +212,62 @@ def test_replace_error_from_the_update_is_returned():
 
 def test_update_changes_default_to_empty():
     assert HostUpdateChanges() == HostUpdateChanges(ipv4=[], ipv6=[], status=[])
+
+
+def never_called(host):
+    raise AssertionError("the patch needs no current host")
+
+
+def test_a_direct_patch_is_not_preceded_by_a_read():
+    epp = client(DONE, info())
+    update = HostUpdate(name=NAME, add=HostUpdateChanges(ipv4=["192.0.2.1"]))
+
+    patch_host(epp, NAME, update, never_called, "cl-1")
+
+    assert "host:update" in epp.sent[0] and "host:info" in epp.sent[1]
+
+
+def test_a_patch_needing_the_host_sends_the_difference():
+    epp = client(info(addresses=["192.0.2.1"]), DONE, info())
+
+    patch_host(epp, NAME, None, lambda host: Host(name=NAME, ipv4=["198.51.100.1"]), "cl-1")
+
+    assert "host:info" in epp.sent[0]
+    rem = sent_update(epp)[sent_update(epp).index("<host:rem>"):]
+    assert "192.0.2.1" in rem
+    assert "198.51.100.1" in sent_update(epp)
+
+
+def test_only_the_update_carries_the_client_transaction_id():
+    epp = client(info(), DONE, info())
+
+    patch_host(epp, NAME, None, lambda host: Host(name=NAME, ipv4=["192.0.2.1"]), "cl-1")
+
+    assert "cl-1" not in epp.sent[0]
+    assert "cl-1" in epp.sent[1]
+    assert "cl-1" not in epp.sent[2]
+
+
+def test_a_patch_of_a_missing_host_is_an_error():
+    epp = client(MISSING)
+
+    assert isinstance(patch_host(epp, NAME, None, never_called, "cl-1"), ErrorResponse)
+    assert len(epp.sent) == 1
+
+
+def test_a_patch_without_a_difference_sends_no_update():
+    epp = client(info(addresses=["192.0.2.1"]))
+
+    result = patch_host(epp, NAME, None, lambda host: Host(name=NAME, ipv4=["192.0.2.1"]), "cl-1")
+
+    assert len(epp.sent) == 1
+    assert result.host.ipv4 == ["192.0.2.1"]
+    assert result.mutation.server_transaction_id == "sv-1"
+
+
+def test_a_rename_alone_is_a_difference():
+    epp = client(info(), DONE, info())
+
+    patch_host(epp, NAME, None, lambda host: Host(name="ns2.example.example"), "cl-1")
+
+    assert "ns2.example.example" in sent_update(epp)

@@ -2,7 +2,7 @@ from connexion import request
 
 import rpp_to_model_mapper as rpp_mapper
 from eppclient.epp_hosts import epp_hosts_Check, epp_hosts_Delete, epp_hosts_Info
-from flows import create_host, replace_host, update_host
+from flows import create_host, patch_host, replace_host
 from models import ErrorResponse
 from .auth import get_epp_client
 from .helper.rpp_response import (
@@ -69,7 +69,13 @@ def hosts_update(hostName, body):
 @rpp_operation
 def hosts_updatePartial(hostName, body):
     update = map_request(rpp_mapper.host_patch.rpp_to_model, hostName, body)
-    return _mutation_response(update_host(get_epp_client(), update, client_transaction_id()), 200)
+
+    def wanted_from_current(current):
+        return map_request(
+            rpp_mapper.host_patch.rpp_to_model_with_current, hostName, body, rpp_mapper.hosts.model_to_rpp(current),
+        )
+
+    return _mutation_response(patch_host(get_epp_client(), hostName, update, wanted_from_current, client_transaction_id()), 200)
 
 
 @rpp_operation
