@@ -53,6 +53,108 @@ Each entry says what the proxy does today.
 - §5.2.2 requires an error when no element matches, and step 6 validates the resulting object. A proxy that translates operations to EPP add/rem/chg has no resulting object. Result codes for patch failures are not defined either (no match, ambiguous match, create-only path).
 - **Proxy:** no check before EPP. Non-patchable paths are 400 (`02001`).
 
+## JSON Patch operations that need a read before the write
+
+- EPP update is a delta (`add`, `rem`, `chg`) and has no "set". Some patch operations cannot become a delta without the current object: `replace` or `remove` of a whole array, `replace` with `match`, `remove` with a partial `match` (EPP `rem` needs the full value: role and id, host name and addresses, the whole DS), `/status`, `/dns`, and removal of `authInfo`.
+- §5.2.2 says a partial update MUST be atomic. A proxy that reads, applies and then sends the diff is not atomic: another client can change the object in between, and the EPP update then fails or applies on a different state than the one that was patched.
+- Open question for the EPP Compatibility Profile: must these operations be forbidden for an EPP backend (with a defined error), or may a server implement them with a read and a non-atomic write? If they are allowed, §5.2.2 needs an exception for atomicity, or the profile needs to say what the client gets when the object changed in between. If they are forbidden, the profile should list them, and name the result code, as `02102` is only a generic "not implemented".
+- §5.2.2 requires an error when no element matches or when a `replace` with `match` is ambiguous, but defines no result code. The EPP Compatibility Profile should name one. 2308 (data management policy violation, 422) fits best, as the request is well formed but the object state does not allow it; 2303 would suggest the whole object is missing.
+- Suggested: allow them, as OPTIONAL, and state that atomicity is only guaranteed for operations that map to a single EPP update.
+- **Proxy:** no element matches and an ambiguous `replace` answer `02308` (422), with the index of the failed operation in the detail. Operations that map directly (`add` to an array, `remove` with a full `match`, `replace` of `registrant` and `authInfo`) are sent without a read, and a missing element is reported from the EPP error (2303, 2306), if the registry gives one: the test server accepts the removal of a host the domain does not have. Operations that need the current state read the object first (`info`), apply the patch, and send the diff in one EPP update. The read and the update are not atomic. The "no element matches" error is only exact for the reading path.
+
+Example 1, `replace` of a whole array. The domain has `ns1.example.net` and `ns2.example.net`:
+
+```json
+[{"op": "replace", "path": "/nameservers", "value": [{"hostName": "ns3.example.net"}]}]
+```
+
+EPP has no "set", so the proxy reads the domain (`<domain:info>`), sees the two hosts, and sends:
+
+```xml
+<domain:update>
+  <domain:name>example.example</domain:name>
+  <domain:add><domain:ns><domain:hostObj>ns3.example.net</domain:hostObj></domain:ns></domain:add>
+  <domain:rem><domain:ns>
+    <domain:hostObj>ns1.example.net</domain:hostObj>
+    <domain:hostObj>ns2.example.net</domain:hostObj>
+  </domain:ns></domain:rem>
+</domain:update>
+```
+
+Example 2, `remove` with a partial `match`. The domain has `tech` contacts `REG-200` and `REG-300`:
+
+```json
+[{"op": "remove", "path": "/contacts", "match": {"label": "tech"}}]
+```
+
+EPP `rem` needs role and id, so the proxy reads the domain and expands the match to every matching element:
+
+```xml
+<domain:rem>
+  <domain:contact type="tech">REG-200</domain:contact>
+  <domain:contact type="tech">REG-300</domain:contact>
+</domain:rem>
+```
+
+Example 3, no atomicity. Client A sends example 1. Between the `info` and the `update`, client B adds `ns4.example.net`. The `update` is built from the old state and still succeeds, so `ns4.example.net` stays, and the result is not what A's patch would give when applied to the object (§5.2.2 step 6). If B had removed `ns2.example.net` instead, the `rem` would fail with 2303 and A would see an error for a patch that was valid when it was sent.
+
+## EPP operations that RPP PATCH cannot express without a read by the client
+
+- EPP changes one part of an element by `rem` and `add` of values the client names. JSON Patch has no such step: `match` does not reach nested data (§5.2.1), and `replace` takes the complete element. To change one address of a nameserver, one field of a DS, or a flag of a status, the client has to read the element and send it back whole, or use an index path (`/nameservers/1/addresses/0`), which needs the current array and shifts when someone else changes it. §5.2.2 step 2 does not say whether index paths are allowed.
+- EPP `add` of a value that is already present, and `rem` of one that is not, are errors (2306, 2303). JSON Patch `add` without `match` only appends, and does not say whether a duplicate is an error. A client that wants "make sure X is present" or "make sure X is gone" has to read first, in EPP and in RPP alike. The draft has no conditional or idempotent form.
+- EPP can `rem` and `add` the same value in one update, as long as the end state is valid. Patch operations run in order and step 6 only checks the end state, so this works; but a `replace` with `match` that must match exactly one element (§5.2.2) fails for a client that does not know whether there is a duplicate.
+- The profile does not say which statuses a client may set. EPP rejects server statuses (`serverUpdateProhibited` and others), so a client cannot tell from the patch alone which `/status` entries to touch, and has to read the object to see which ones it owns.
+- **Proxy:** none of these are handled specially. Index paths are a 400 (`02001`). The draft is not clear on whether they are allowed. A whole-element `replace` with `match` goes through the read path above.
+
+Example 4, one part of an element. The domain uses `hostAttr` and `ns2.example.net` has addresses `192.0.2.1` and `192.0.2.2`. The client wants to change only the first address:
+
+```json
+[{"op": "replace", "path": "/nameservers/1/addresses/0/ip", "value": "192.0.2.9"}]
+```
+
+It must know that `ns2.example.net` is at index 1 and that the address is at index 0, which needs a read, and the indexes are wrong if the arrays change before the patch arrives. Without indexes, the only option is to replace the whole element, and the client has to send the other address as well:
+
+```json
+[{"op": "replace", "path": "/nameservers",
+  "match": {"hostName": "ns2.example.net"},
+  "value": {"hostName": "ns2.example.net",
+            "addresses": [{"ip": "192.0.2.9", "version": "v4"}, {"ip": "192.0.2.2", "version": "v4"}]}}]
+```
+
+EPP can only do this as `rem` and `add` of the whole `hostAttr`:
+
+```xml
+<domain:add><domain:ns><domain:hostAttr>
+  <domain:hostName>ns2.example.net</domain:hostName>
+  <domain:hostAddr ip="v4">192.0.2.9</domain:hostAddr>
+  <domain:hostAddr ip="v4">192.0.2.2</domain:hostAddr>
+</domain:hostAttr></domain:ns></domain:add>
+<domain:rem><domain:ns><domain:hostAttr>
+  <domain:hostName>ns2.example.net</domain:hostName>
+  <domain:hostAddr ip="v4">192.0.2.1</domain:hostAddr>
+  <domain:hostAddr ip="v4">192.0.2.2</domain:hostAddr>
+</domain:hostAttr></domain:ns></domain:rem>
+```
+
+Here the `rem` needs the old addresses too, so the proxy reads even for this whole-element `replace`.
+
+Example 5, "ensure present". The client wants `ns3.example.net` to be a nameserver and does not know whether it is already one:
+
+```json
+[{"op": "add", "path": "/nameservers", "value": {"hostName": "ns3.example.net"}}]
+```
+
+If it is already one, EPP rejects the whole update (RFC 5731, result code 2306), while JSON Patch has no defined result for a duplicate:
+
+```xml
+<response><result code="2306">
+  <msg>Parameter value policy error</msg>
+  <extValue><reason>nameserver already associated with the domain</reason></extValue>
+</result></response>
+```
+
+The "ensure gone" case is the same with `remove` and `match`, and EPP answers 2303. To avoid the error the client has to read the domain first, and then send the patch only if it is needed.
+
 ## Delete response
 
 - Core §16.7 and json §8.1.6 show a 200 with a body, the OpenAPI says "output cardinality 0-1", and `domainName.read` requires `provMetadata` and `status`. EPP delete returns no object data.
