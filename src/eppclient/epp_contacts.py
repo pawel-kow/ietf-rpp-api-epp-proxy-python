@@ -63,3 +63,12 @@ def epp_contacts_Delete(epp_client: EPPClient, id: str, client_transaction_id=No
     else:
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
+
+
+def epp_contacts_Check(epp_client: EPPClient, id: str, client_transaction_id=None) -> Union[ContactCheckResponse, ErrorResponse]:
+    """Checks whether a contact id can be created. Returns the check result or the EPP error."""
+    eppxml = contact_check_xml(id, client_request_id=client_transaction_id)
+    success, code, response = epp_client.send_and_get_response(eppxml)
+    if success:
+        return parse_contact_check_response(response, id, client_transaction_id)
+    return get_epp_error_response(response, client_transaction_id=client_transaction_id)

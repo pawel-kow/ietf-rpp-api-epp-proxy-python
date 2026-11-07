@@ -1,11 +1,64 @@
 {
   "test_id": "test1-availability",
-  "skip": "#30",
   "steps": [
     {
       "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}-07",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
+    {
+      "request": {
         "method": "GET",
-        "url": "/contacts/JD-1234/availability",
+        "url": "/contacts/FO-{random_id_10}-07/availability",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -14,11 +67,11 @@
       },
       "response": {
         "status": 404,
-        "content_type": "application/rpp+json",
         "body": {
           "@type": "contactAvailability",
           "available": false
-        }
+        },
+        "content_type": "application/rpp+json"
       }
     }
   ]

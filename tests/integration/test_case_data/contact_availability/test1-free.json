@@ -1,0 +1,26 @@
+{
+  "test_id": "test1-free",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}-01/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contactAvailability",
+          "available": true
+        }
+      }
+    }
+  ]
+}
