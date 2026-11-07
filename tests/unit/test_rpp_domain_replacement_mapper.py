@@ -208,8 +208,8 @@ def test_host_objects_over_records_with_addresses_are_removed_and_added():
 
     result = replace(STAYS, ns=current_ns)
 
-    assert ids(result.add.ns) == ["ns1.foo.example"]
-    assert [h.id for h in result.remove.ns.host_attrs] == ["ns1.foo.example"]
+    assert ids(result.add.ns) == ["ns1.foo.example", "ns2.foo.example"]
+    assert [h.id for h in result.remove.ns.host_attrs] == ["ns1.foo.example", "ns2.foo.example"]
 
 
 def test_a_change_of_glue_is_remove_and_add():

@@ -69,8 +69,9 @@ def _client_statuses(domain: dict) -> dict[str, str | None]:
         reject_set(due=status.get("due"))
     reasons: dict[str, str | None] = {}
     for status in domain.get("status") or []:
-        if is_client_label(status["label"]) and not reasons.get(status["label"]):
-            reasons[status["label"]] = status.get("reason") or None
+        label, reason = status["label"], status.get("reason") or None
+        if is_client_label(label) and (reason or label not in reasons):
+            reasons[label] = reason
     return reasons
 
 
@@ -123,7 +124,9 @@ def _nameserver_changes(
         host for name, host in current_by_name.items()
         if (name not in wanted_by_name and (name not in wanted_obj_names or _addresses(host)))
     ] + [current_by_name[host.id.lower()] for host in changed_attrs]
-    if current_by_name and wanted_objs and not current_objs and current_by_name.keys() != wanted_obj_names:
+    if current_by_name and wanted_objs and not current_objs and (
+        current_by_name.keys() != wanted_obj_names or any(_addresses(host) for host in current_by_name.values())
+    ):
         # EPP takes host objects or host attributes, not both: a registry that shows attributes stores them.
         return _missing_from(wanted_objs, [], str.lower), [], [], list(current_by_name.values())
     add_hosts = _missing_from(wanted_objs, current_objs, str.lower)

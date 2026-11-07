@@ -301,6 +301,14 @@ def test_add_of_a_status_without_a_reason_keeps_the_stored_reason():
     assert result.add is None and result.remove is None
 
 
+def test_add_of_a_status_with_a_new_reason_replaces_the_stored_one():
+    result = update(
+        op("add", "/status", value={**STATUS, "reason": "New"}), status=["clientHold"], status_reasons={"clientHold": "Unpaid"},
+    )
+
+    assert result.add.status_reasons == {"clientHold": "New"} and result.remove.status == ["clientHold"]
+
+
 def test_stored_glue_out_of_the_zone_does_not_block_a_patch_that_leaves_dns_alone():
     ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.bar.example", ipv4=["192.0.2.1"])])
 

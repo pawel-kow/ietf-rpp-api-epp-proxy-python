@@ -50,6 +50,8 @@
 
 10. Round 2 review, 8 items: sponsor compared without case; status `ok` in a PATCH matched by label; current host attributes against other wanted host objects are swapped whole (the reverse keeps the partial change); `domain_update/test32` proves the registrant is gone with a PATCH of `/registrant` and `/status` (422 `02308`); the patched delegation is checked only when `dns` changed; an empty reason is None and a duplicate without a reason does not override one with it; the PATCH nested undeclared members are #82 (not fixed here); `status_reasons` moved to `epp_response.py`.
 
+11. Round 3: current host attributes with any address against wanted host objects are swapped whole too; a later non-empty reason wins over a stored one, a later empty one does not.
+
 ## Findings (2)
 
 - PATCH treats nameservers plus DNSSEC differently from create: `domain_patch_difference.difference` rejects only `nameservers` together with `ns` records of `dns` (verified: adding a `ds` record to a domain that has `nameservers` is accepted and yields `add.dnsSEC`), while create (`domains._rpp_to_delegation`) rejects `nameservers` with any `dns.records`. A read of such a domain returns both, so a PUT built from that read would be 400 under the create rule. Asked the maintainer.
