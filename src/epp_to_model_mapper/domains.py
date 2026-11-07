@@ -83,6 +83,11 @@ def _dns_sec_from_epp(epp: Epp) -> Union[DnsSec, None]:
     )
 
 
+def _status_reasons(data) -> dict[str, str]:
+    """The status texts that say something: the backend repeats the label there (#54)."""
+    return {s.s.value: s.value for s in getattr(data, "status", []) if s.value and s.value != s.s.value}
+
+
 def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[DomainCreateResponse, ErrorResponse]:
     """Parses an EPP domain create/info response into a DomainCreateResponse."""
     epp = str_to_epp(xml_string)
@@ -121,6 +126,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
         upDate=epp_datetime(getattr(data, "up_date", None)) if data else None,
         trDate=epp_datetime(getattr(data, "tr_date", None)) if data else None,
         status=[s.s.value for s in getattr(data, "status", [])] if data else None,
+        status_reasons=_status_reasons(data) if data else {},
         clID=getattr(data, "cl_id", None) if data else None,
         crID=getattr(data, "cr_id", None) if data else None,
         upID=(getattr(data, "up_id", None) or None) if data else None,

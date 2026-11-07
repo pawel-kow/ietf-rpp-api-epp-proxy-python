@@ -35,7 +35,7 @@ def current(**members):
 
 def replace(body_members, **domain_members):
     body = {"@type": "domainName", **body_members}
-    return domain_replacement.rpp_to_model_with_current(NAME, domain_replacement.rpp_to_model(body), current(**domain_members))
+    return domain_replacement.rpp_to_model_with_current(NAME, domain_replacement.rpp_to_model(NAME, body), current(**domain_members))
 
 
 STAYS = {
@@ -96,21 +96,166 @@ def test_omitted_status_clears_the_client_statuses_and_validates_with_none_left(
 
 
 def test_a_new_reason_is_remove_and_add():
-    result = replace({**STAYS, "status": [status("clientHold", reason="New")]}, status=["clientHold"])
+    result = replace(
+        {**STAYS, "status": [status("clientHold", reason="New")]},
+        status=["clientHold"], status_reasons={"clientHold": "Old"},
+    )
 
     assert result.add.status == ["clientHold"] and result.remove.status == ["clientHold"]
+    assert result.add.status_reasons == {"clientHold": "New"}
+
+
+def test_the_same_reason_changes_nothing():
+    result = replace(
+        {**STAYS, "status": [status("clientHold", reason="Same")]},
+        status=["clientHold"], status_reasons={"clientHold": "Same"},
+    )
+
+    assert result.add is None and result.remove is None
+
+
+def test_dropping_a_reason_is_a_change():
+    result = replace({**STAYS, "status": [status("clientHold")]}, status=["clientHold"], status_reasons={"clientHold": "Old"})
+
+    assert result.add.status == ["clientHold"] and result.remove.status == ["clientHold"]
+    assert result.add.status_reasons is None
+
+
+def test_a_status_with_a_due_date_is_unsupported():
+    with pytest.raises(NotSupportedByEpp, match="due"):
+        replace({**STAYS, "status": [status("clientHold", due="2027-01-01T00:00:00Z")]})
+
+
+@pytest.mark.parametrize("members", [
+    {"registrant": {"@type": "contact", "id": "R1", "foo": "bar"}},
+    {"contacts": [{"label": "tech", "object": {"@type": "contact", "id": "R1", "foo": "bar"}}]},
+    {"contacts": [{"label": "tech", "foo": "bar", "object": {"@type": "contact", "id": "R1"}}]},
+    {"nameservers": [{"@type": "host", "hostName": "ns1.foo.example", "foo": "bar"}]},
+    {"status": [{"@type": "domainStatus", "label": "clientHold", "foo": "bar"}]},
+    {"authInfo": {"@type": "authInfo", "method": "authinfo", "authdata": "x", "foo": "bar"}},
+])
+def test_an_undeclared_nested_member_is_rejected(members):
+    with pytest.raises(ValueError, match="Undeclared"):
+        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", **members})
+
+
+def test_an_auth_info_method_other_than_authinfo_is_unsupported():
+    with pytest.raises(NotSupportedByEpp):
+        replace({**STAYS, "authInfo": {"@type": "authInfo", "method": "other", "authdata": "x"}})
+
+
+def test_contacts_with_several_roles_are_compared_by_role_and_id():
+    result = replace({**STAYS, "contacts": [contact("tech", "REG-2"), contact("admin", "REG-2"), contact("billing", "REG-2")]})
+
+    assert sorted((c.type, c.contact.id) for c in result.add.contacts) == [("admin", "REG-2"), ("billing", "REG-2")]
+    assert result.remove is None
+
+
+def owns(name, *addresses):
+    return [
+        {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": f"{name}."}},
+        *({"@type": "dnsRecord", "name": f"{name}.", "type": "a", "rdata": {"address": address}} for address in addresses),
+    ]
+
+
+WITHOUT_NAMESERVERS = {k: v for k, v in STAYS.items() if k != "nameservers"}
+
+
+def with_records(*records):
+    return {**WITHOUT_NAMESERVERS, "dns": {"@type": "dnsData", "records": list(records)}}
+
+
+def test_host_objects_to_records_of_the_same_hosts_change_nothing():
+    result = replace(with_records(*owns("NS1.foo.example"), *owns("ns2.foo.example")))
+
+    assert result.add is None and result.remove is None
+
+
+def test_records_to_host_objects_of_the_same_hosts_change_nothing():
+    current_ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.foo.example"), HostAttr(id="NS2.foo.example")])
+
+    result = replace(STAYS, ns=current_ns)
+
+    assert result.add is None and result.remove is None
+
+
+def test_host_objects_to_records_of_other_hosts_are_replaced():
+    result = replace(with_records(*owns("ns1.foo.example"), *owns("ns9.foo.example")))
+
+    assert [h.id for h in result.add.ns.host_attrs] == ["ns9.foo.example"]
+    assert ids(result.remove.ns) == ["ns2.foo.example"]
+
+
+def test_records_to_host_objects_of_other_hosts_are_replaced():
+    current_ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.foo.example"), HostAttr(id="ns2.foo.example")])
+
+    result = replace({**STAYS, "nameservers": [host("ns1.foo.example"), host("ns9.foo.example")]}, ns=current_ns)
+
+    assert ids(result.add.ns) == ["ns9.foo.example"]
+    assert [h.id for h in result.remove.ns.host_attrs] == ["ns2.foo.example"]
+
+
+def test_records_with_addresses_over_host_objects_are_removed_and_added():
+    result = replace(with_records(*owns("ns1.foo.example", "192.0.2.1"), *owns("ns2.foo.example")))
+
+    assert [(h.id, h.ipv4) for h in result.add.ns.host_attrs] == [("ns1.foo.example", ["192.0.2.1"])]
+    assert ids(result.remove.ns) == ["ns1.foo.example"]
+
+
+def test_host_objects_over_records_with_addresses_are_removed_and_added():
+    current_ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.foo.example", ipv4=["192.0.2.1"]), HostAttr(id="ns2.foo.example")])
+
+    result = replace(STAYS, ns=current_ns)
+
+    assert ids(result.add.ns) == ["ns1.foo.example"]
+    assert [h.id for h in result.remove.ns.host_attrs] == ["ns1.foo.example"]
+
+
+def test_a_change_of_glue_is_remove_and_add():
+    current_ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.foo.example", ipv4=["192.0.2.1"])])
+
+    result = replace(with_records(*owns("ns1.foo.example", "192.0.2.2")), ns=current_ns)
+
+    assert result.add.ns.host_attrs[0].ipv4 == ["192.0.2.2"]
+    assert result.remove.ns.host_attrs[0].ipv4 == ["192.0.2.1"]
+
+
+def test_glue_out_of_the_zone_in_the_stored_domain_does_not_block_a_change():
+    current_ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.bar.example", ipv4=["192.0.2.1"])])
+
+    result = replace(WITHOUT_NAMESERVERS, ns=current_ns)
+
+    assert [h.id for h in result.remove.ns.host_attrs] == ["ns1.bar.example"]
+
+
+def test_nameservers_with_glue_are_rejected_like_ns_records():
+    glue = {"@type": "dnsRecord", "name": "ns1.foo.example.", "type": "a", "rdata": {"address": "192.0.2.1"}}
+
+    with pytest.raises(ValueError, match="cannot be used together"):
+        replace({**STAYS, "dns": {"@type": "dnsData", "records": [glue]}})
+
+
+def test_ds_to_dnskey_removes_the_ds_and_adds_the_key():
+    dns_sec = DnsSec(ds_data=[DsData(keyTag=1, algorithm=8, digestType=2, digest="AB")])
+    key = {"@type": "dnsRecord", "name": "@", "type": "dnskey", "rdata": {
+        "flags": "257", "protocol": "3", "algorithm": "8", "publicKey": "AQID"}}
+
+    result = replace({**STAYS, "dns": {"@type": "dnsData", "records": [key]}}, dnsSEC=dns_sec)
+
+    assert result.add.dnsSEC.key_data[0].flags == 257 and result.add.dnsSEC.ds_data is None
+    assert result.remove.dnsSEC.ds_data == dns_sec.ds_data
 
 
 @pytest.mark.parametrize("label", ["ok", "serverHold"])
 def test_a_status_of_the_server_is_rejected(label):
     with pytest.raises(ValidationError):
-        domain_replacement.rpp_to_model({"@type": "domainName", "status": [status(label)]})
+        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", "status": [status(label)]})
 
 
 @pytest.mark.parametrize("member", ["name", "provMetadata", "expiryDate", "subordinateHosts", "uName", "lgr", "processes"])
 def test_a_member_outside_the_update_is_rejected(member):
     with pytest.raises(ValueError, match=member):
-        domain_replacement.rpp_to_model({"@type": "domainName", member: "x"})
+        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", member: "x"})
 
 
 def test_auth_info_present_is_always_sent():

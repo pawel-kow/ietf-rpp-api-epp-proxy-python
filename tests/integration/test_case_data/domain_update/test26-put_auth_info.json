@@ -55,7 +55,12 @@
         "status": 200,
         "content_type": "application/rpp+json",
         "body": {
-          "@type": "domainName"
+          "@type": "domainName",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "NewPassword1!@"
+          }
         },
         "headers": {
           "RPP-Code": "01000"
@@ -80,7 +85,12 @@
         "status": 200,
         "content_type": "application/rpp+json",
         "body": {
-          "@type": "domainName"
+          "@type": "domainName",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "NewPassword1!@"
+          }
         },
         "headers": {
           "RPP-Code": "01000"

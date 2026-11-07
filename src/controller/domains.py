@@ -26,6 +26,16 @@ def _availability(name):
         raise_epp_error(ret)
     return ret
 
+def _updated_domain(result):
+    """The answer to an update: the domain as read after it, or 202 when that read failed."""
+    if isinstance(result, ErrorResponse):
+        raise_epp_error(result)
+    headers = generate_rpp_response_headers(result.mutation)
+    if result.domain is None:
+        return None, 202, headers
+    return rpp_mapper.domains.model_to_rpp(result.domain), 200, headers
+
+
 @rpp_operation
 def domainNames_availabilityHead(name):
     ret = _availability(name)
@@ -72,17 +82,12 @@ def domainNames_updatePartial(name, body):
         )
 
     result = flows.patch_domain(get_epp_client(), name, update, update_from_current, client_transaction_id())
-    if isinstance(result, ErrorResponse):
-        raise_epp_error(result)
-    headers = generate_rpp_response_headers(result.mutation)
-    if result.domain is None:
-        return None, 202, headers
-    return rpp_mapper.domains.model_to_rpp(result.domain), 200, headers
+    return _updated_domain(result)
 
 
 @rpp_operation
 def domainNames_update(name, body):
-    replacement = map_request(rpp_mapper.domain_replacement.rpp_to_model, body)
+    replacement = map_request(rpp_mapper.domain_replacement.rpp_to_model, name, body)
 
     def update_from_current(current):
         return map_request(
@@ -90,9 +95,4 @@ def domainNames_update(name, body):
         )
 
     result = flows.replace_domain(get_epp_client(), name, update_from_current, client_transaction_id())
-    if isinstance(result, ErrorResponse):
-        raise_epp_error(result)
-    headers = generate_rpp_response_headers(result.mutation)
-    if result.domain is None:
-        return None, 202, headers
-    return rpp_mapper.domains.model_to_rpp(result.domain), 200, headers
+    return _updated_domain(result)

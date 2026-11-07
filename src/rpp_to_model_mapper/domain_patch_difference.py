@@ -2,7 +2,7 @@ from models import (
     ContactMinimal, ContactReferenceNew, DnsSec, DomainUpdate, DomainUpdateAdd, DomainUpdateRemove, HostAttr, HostObj, NS,
 )
 from . import domain_dns
-from .common import parse_rpp
+from .common import parse_rpp, reject_set
 from .domains import REGISTRANT, check_contact_label
 from .not_supported_by_proxy import NotSupportedByProxy
 from .patch_statuses import is_client_label
@@ -49,11 +49,14 @@ def _registrant(domain: dict) -> str | None:
     return (domain.get("registrant") or {}).get("id")
 
 
-def _delegation(domain: dict) -> tuple[list[HostAttr], DnsSec | None]:
-    """The host attributes and DNSSEC data of the records of `dns`."""
+NAMESERVER_RECORDS = ("ns", "a", "aaaa")
+
+
+def _delegation(domain: dict, checked: bool = True) -> tuple[list[HostAttr], DnsSec | None]:
+    """The host attributes and DNSSEC data of the records of `dns`. The current domain is not `checked`."""
     if not domain.get("dns"):
         return [], None
-    ns, dns_sec = domain_dns.rpp_to_model(domain["name"], parse_rpp(RPPDnsData, domain["dns"]))
+    ns, dns_sec = domain_dns.rpp_to_model(domain["name"], parse_rpp(RPPDnsData, domain["dns"]), checked)
     return (ns.host_attrs if ns else []), dns_sec
 
 
@@ -62,6 +65,8 @@ def _addresses(host: HostAttr) -> frozenset[str]:
 
 
 def _client_statuses(domain: dict) -> dict[str, str | None]:
+    for status in domain.get("status") or []:
+        reject_set(due=status.get("due"))
     return {
         status["label"]: status.get("reason")
         for status in domain.get("status") or []
@@ -83,24 +88,56 @@ def _dns_sec_difference(wanted: DnsSec | None, current: DnsSec | None) -> DnsSec
     return DnsSec(ds_data=ds_data or None, key_data=key_data or None) if ds_data or key_data else None
 
 
+def _reject_nameservers_with_records(domain: dict):
+    """`nameservers` cannot go with the records that delegate (data-objects §11.2). `ds` and `dnskey` can, see spec-issues.md."""
+    records = (domain.get("dns") or {}).get("records") or []
+    if domain.get("nameservers") and any(str(record.get("type")).lower() in NAMESERVER_RECORDS for record in records):
+        raise ValueError("'nameservers' and nameserver records in 'dns' cannot be used together")
+
+
+def _nameserver_changes(
+    current_objs: list[str], current_attrs: list[HostAttr], wanted_objs: list[str], wanted_attrs: list[HostAttr],
+) -> tuple[list[str], list[str], list[HostAttr], list[HostAttr]]:
+    """What EPP adds and removes to turn the current delegation into the wanted one.
+
+    A host is the same in both forms, whatever the case. The addresses of a host object live on the host, so a
+    host attribute with addresses is never the same as a host object: it is removed and added.
+    """
+    def by_name(attrs):
+        return {host.id.lower(): host for host in attrs}
+
+    current_by_name, wanted_by_name = by_name(current_attrs), by_name(wanted_attrs)
+    current_obj_names = {name.lower() for name in current_objs}
+    wanted_obj_names = {name.lower() for name in wanted_objs}
+
+    changed_attrs = [
+        host for name, host in wanted_by_name.items()
+        if name in current_by_name and _addresses(current_by_name[name]) != _addresses(host)
+    ]
+    add_attrs = [
+        host for name, host in wanted_by_name.items()
+        if (name not in current_by_name and (name not in current_obj_names or _addresses(host)))
+    ] + changed_attrs
+    remove_attrs = [
+        host for name, host in current_by_name.items()
+        if (name not in wanted_by_name and (name not in wanted_obj_names or _addresses(host)))
+    ] + [current_by_name[host.id.lower()] for host in changed_attrs]
+    add_hosts = _missing_from(wanted_objs, current_objs, str.lower)
+    add_hosts = [name for name in add_hosts if name.lower() not in current_by_name or _addresses(current_by_name[name.lower()])]
+    remove_hosts = _missing_from(current_objs, wanted_objs, str.lower)
+    remove_hosts = [name for name in remove_hosts if name.lower() not in wanted_by_name or _addresses(wanted_by_name[name.lower()])]
+    return add_hosts, remove_hosts, add_attrs, remove_attrs
+
+
 def difference(domain_name: str, current: dict, patched: dict) -> DomainUpdate:
     """The update that turns the current domain (in RPP form) into the patched one."""
     _reject_other_changes(current, patched)
-    current_hosts, patched_hosts = _host_names(current), _host_names(patched)
-    current_attrs, patched_attrs = _delegation(current)[0], _delegation(patched)[0]
-    current_sec, patched_sec = _delegation(current)[1], _delegation(patched)[1]
-    if patched_hosts and patched_attrs:
-        raise ValueError("'nameservers' and nameserver records in 'dns' cannot be used together")
-    changed_attrs = [
-        host for host in patched_attrs
-        if any(old.id.lower() == host.id.lower() and _addresses(old) != _addresses(host) for old in current_attrs)
-    ]
-    add_attrs = _missing_from(patched_attrs, current_attrs, lambda host: host.id.lower()) + changed_attrs
-    remove_attrs = _missing_from(current_attrs, patched_attrs, lambda host: host.id.lower()) + [
-        old for old in current_attrs if any(old.id.lower() == host.id.lower() for host in changed_attrs)
-    ]
-    add_hosts = _missing_from(patched_hosts, current_hosts, str.lower)
-    remove_hosts = _missing_from(current_hosts, patched_hosts, str.lower)
+    _reject_nameservers_with_records(patched)
+    current_attrs, current_sec = _delegation(current, checked=False)
+    patched_attrs, patched_sec = _delegation(patched)
+    add_hosts, remove_hosts, add_attrs, remove_attrs = _nameserver_changes(
+        _host_names(current), current_attrs, _host_names(patched), patched_attrs,
+    )
 
     add_sec, remove_sec = _dns_sec_difference(patched_sec, current_sec), _dns_sec_difference(current_sec, patched_sec)
     if add_sec and add_sec.ds_data and add_sec.key_data:
@@ -116,7 +153,7 @@ def difference(domain_name: str, current: dict, patched: dict) -> DomainUpdate:
         remove_contacts.append(ContactReferenceNew(type=REGISTRANT, contact=ContactMinimal(id="")))
 
     status_before, status_after = _client_statuses(current), _client_statuses(patched)
-    new_reason = {label for label in status_before.keys() & status_after.keys() if status_after[label] not in (None, status_before[label])}
+    new_reason = {label for label in status_before.keys() & status_after.keys() if status_after[label] != status_before[label]}
     add_status = sorted(status_after.keys() - status_before.keys() | new_reason)
     remove_status = sorted(status_before.keys() - status_after.keys() | new_reason)
 

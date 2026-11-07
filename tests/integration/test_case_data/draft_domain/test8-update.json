@@ -64,6 +64,11 @@
           "registrant": {
             "@type": "contact",
             "id": "FO-TEST2"
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2BARfoo"
           }
         }
       }

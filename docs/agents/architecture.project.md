@@ -68,7 +68,7 @@ single feature (e.g. "domain update") touches every layer:
    the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
    is dead code: ignore it.
 
-`domainNames_create`, `domainNames_updatePartial` and the host mutations do not build
+`domainNames_create`, `domainNames_updatePartial`, `domainNames_update` and the host mutations do not build
 their response from the create/update reply. They issue a **follow-up EPP Info** call and
 map that to RPP, because EPP mutation responses don't echo full object state. If that Info fails, the
 mutation has still been applied, so the handler answers **202** with no body and the

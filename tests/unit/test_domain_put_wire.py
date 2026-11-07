@@ -24,11 +24,11 @@ def epp_reply(code):
     )
 
 
-def info(*hosts):
+def info(*hosts, sponsor="user"):
     ns = "".join(f"<domain:hostObj>{host}</domain:hostObj>" for host in hosts)
     reply = epp_reply(1000).replace("</result>", (
         f'</result><resData><domain:infData {DOMAIN_NS}><domain:name>FOO.EXAMPLE</domain:name><domain:roid>D1</domain:roid>'
-        f'<domain:status s="ok"/><domain:ns>{ns}</domain:ns><domain:clID>foo</domain:clID><domain:crID>foo</domain:crID>'
+        f'<domain:status s="ok"/><domain:ns>{ns}</domain:ns><domain:clID>{sponsor}</domain:clID><domain:crID>foo</domain:crID>'
         '<domain:crDate>2026-11-04T10:00:00.0Z</domain:crDate></domain:infData></resData>'
     ))
     return (True, "1000", reply)
@@ -60,6 +60,13 @@ def test_put_without_a_change_is_a_200_and_sends_no_update():
 
     assert response.status_code == 200
     assert response.json()["name"] == "FOO.EXAMPLE"
+
+
+def test_put_without_a_change_by_another_client_than_the_sponsor_is_a_403():
+    response = put(info("ns1.foo.example", sponsor="baz"))
+
+    assert response.status_code == 403
+    assert response.headers["RPP-Code"] == "02201"
 
 
 def test_put_of_a_missing_domain_is_a_404():

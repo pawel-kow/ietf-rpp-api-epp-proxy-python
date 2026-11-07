@@ -2,7 +2,7 @@ from typing import Callable
 
 from eppclient.epp_domains import epp_domains_Info, epp_domains_Update
 from eppclient.eppclient import EPPClient
-from models import Domain, DomainUpdate, ErrorResponse
+from models import Domain, DomainInfoResponse, DomainUpdate, ErrorResponse, ResultCode
 from .domain_mutation_result import DomainMutationResult
 
 
@@ -24,6 +24,19 @@ def _changes_nothing(update: DomainUpdate) -> bool:
     return update.add is None and update.remove is None and update.change is None
 
 
+def _unchanged(epp_client: EPPClient, current: DomainInfoResponse, client_transaction_id) -> DomainMutationResult | ErrorResponse:
+    """The answer to an update that changes nothing, which sends no EPP command. Only the sponsor may update
+    (data-objects §11.3.4), and EPP would have said so."""
+    if current.domain.clID != epp_client.username:
+        return ErrorResponse(
+            code=ResultCode.AUTHORIZATION_ERROR,
+            msg="Only the sponsoring client can update the domain",
+            server_transaction_id=current.server_transaction_id,
+            client_transaction_id=client_transaction_id,
+        )
+    return DomainMutationResult(mutation=current, domain=current.domain)
+
+
 def patch_domain(
     epp_client: EPPClient,
     domain_name: str,
@@ -39,7 +52,7 @@ def patch_domain(
             return current
         update = update_from_current(current.domain)
         if _changes_nothing(update):
-            return DomainMutationResult(mutation=current, domain=current.domain)
+            return _unchanged(epp_client, current, client_transaction_id)
     updated = epp_domains_Update(epp_client, update, client_transaction_id=client_transaction_id)
     if isinstance(updated, ErrorResponse):
         return updated

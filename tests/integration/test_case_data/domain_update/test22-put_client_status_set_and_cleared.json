@@ -72,6 +72,42 @@
     },
     {
       "request": {
+        "method": "PATCH",
+        "url": "/domainNames/put22-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/status",
+            "match": {
+              "label": "clientUpdateProhibited"
+            },
+            "value": {
+              "@type": "domainStatus",
+              "label": "clientUpdateProhibited",
+              "reason": "Hold"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
         "method": "PUT",
         "url": "/domainNames/put22-{random_name}.example",
         "headers": {
@@ -118,7 +154,11 @@
             "match": {
               "label": "clientUpdateProhibited"
             },
-            "value": []
+            "value": {
+              "@type": "domainStatus",
+              "label": "clientUpdateProhibited",
+              "reason": "Hold"
+            }
           }
         ]
       },

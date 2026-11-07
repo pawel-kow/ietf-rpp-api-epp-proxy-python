@@ -3,7 +3,7 @@ from rpp_schema_validator import validate_schema
 from . import auth_info, domain_patch_difference, patch_statuses
 from .common import parse_rpp
 from .domain_patch_difference import CHANGEABLE
-from .rpp_models import RPPAuthInfo
+from .rpp_models import RPPAuthInfo, RPPDomain
 
 TYPE = "@type"
 AUTH_INFO = "authInfo"
@@ -11,7 +11,7 @@ AUTH_INFO = "authInfo"
 REPLACED = tuple(member for member in CHANGEABLE if member != AUTH_INFO)
 
 
-def rpp_to_model(rpp: dict) -> dict:
+def rpp_to_model(domain_name: str, rpp: dict) -> dict:
     """Checks a full update and returns it.
 
     A member outside `domainName.update` is rejected, also a create-only or a read-only one (json §4.4, core §16.8).
@@ -19,6 +19,7 @@ def rpp_to_model(rpp: dict) -> dict:
     validate_schema("domainName.update", rpp)
     for member in rpp.keys() - {TYPE, *CHANGEABLE}:
         raise ValueError(f"'{member}' cannot be sent in a full update")
+    parse_rpp(RPPDomain, {**rpp, "name": domain_name})  # rejects undeclared properties at any depth (json §4.9.1)
     return rpp
 
 
