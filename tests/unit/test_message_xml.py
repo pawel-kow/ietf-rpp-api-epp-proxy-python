@@ -423,7 +423,8 @@ def test_a_message_id_cannot_inject_a_log_line(log):
     q = f'<msgQ count="1" id="{evil}"><qDate>2026-11-05T16:49:34.0Z</qDate><msg><field a="b"/></msg></msgQ>'
     xmls = [
         reply(1301, q, '<resData><x:other xmlns:x="urn:example:x"/></resData>'),
-        reply(1301, q, domain_trn("pending") + '<x:other xmlns:x="urn:example:x"/>'.join(["", ""]), '<extension><x:e xmlns:x="urn:example:x"/></extension>'),
+        reply(1301, q, domain_trn("pending").replace("</resData>", '<x:other xmlns:x="urn:example:x"/></resData>')),
+        reply(1301, q, domain_trn("pending"), '<extension><x:e xmlns:x="urn:example:x"/></extension>'),
         reply(1301, q, pan("domain", DOMAIN, "name", "maybe")),
         reply(1301, q),
         reply(1301, q, "<resData><foo/></resData>"),
@@ -431,5 +432,5 @@ def test_a_message_id_cannot_inject_a_log_line(log):
     with log() as captured:
         for xml in xmls:
             parse(xml)
-    assert len(captured.lines) >= 5
+    assert len(captured.lines) >= 6
     assert all("\n" not in line for line in captured.lines)
