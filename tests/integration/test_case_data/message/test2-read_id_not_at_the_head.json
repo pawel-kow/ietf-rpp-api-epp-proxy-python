@@ -1,0 +1,61 @@
+{
+  "test_id": "test2-read_id_not_at_the_head",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/messages/MSG37-nosuch-{random_id_10}",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02102"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/messages/MSG37-nosuch-{random_id_10}",
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "any_of": [
+          {
+            "status": 404,
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            },
+            "headers": {
+              "RPP-Code": "02303"
+            }
+          },
+          {
+            "status": 501,
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            },
+            "headers": {
+              "RPP-Code": "02102"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,14 +1,14 @@
 # Messages (#37)
 
-Base: `main` at 5258d2b. Open PRs #81, #83, #86, #88, #90 are not merged.
+Base: `origin/feature/contact-transfer-34` (PR #90, stacked, merges first). Other open PRs #81, #83, #86, #88 are not needed.
 
 ## Tasks
 
-- [~] Settle the open questions with the maintainer
-- [ ] Failing tests: EPP poll XML, poll/ack parsers, message mapper, wire cases, integration cases
-- [ ] models, eppclient, epp_to_model_mapper, rpp_to_model_mapper, flow, controller
-- [ ] `.spec/spec-issues.md`, `docs/agents/*.project.md`
-- [ ] Full `pytest`, draft PR
+- [x] Settle the open questions with the maintainer
+- [x] Failing tests: EPP poll XML, poll/ack parsers, message mapper, wire cases, integration cases
+- [x] models, eppclient, epp_to_model_mapper, rpp_to_model_mapper, flow, controller
+- [x] `.spec/spec-issues.md`, `docs/agents/*.project.md`
+- [~] Full `pytest`, draft PR
 - [ ] `git rm` this plan, release the mutex on `main`
 
 ## Findings
@@ -48,9 +48,14 @@ Modules (one class per file): `models/queue_message.py`, `transfer_event.py`, `p
 
 ## Decisions
 
-(none yet)
+- Stack on #90. Rebased, own branch force-pushed with `--force-with-lease`.
+- Empty queue: 200, `[]`, `01300`. Non-head id on read: 501 `02102`. Both in spec-issues.
+- Anything that cannot become a valid typed message, including a failed `.read` validation, is a `serviceNoticeMessage`, never a 500. `qName` is logged without content.
+- `process` is included, with no `processId`. `Content-Language` from `msg/@lang`, omitted if absent.
+- `includeElements` not fixed: #95. Read-then-ack integration case: #96. `POST /messages` is an explicit 501 `02101`.
+- Wire tests cover acking a real head.
 
-## Open questions
+## Open questions (answered, see Decisions)
 
 1. Empty queue body: `[]` (query schema is an array). No normative text.
 2. Read by id of a non-head id: 501 `02102`, as it cannot be told from an unknown id.

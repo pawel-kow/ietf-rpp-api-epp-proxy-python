@@ -305,3 +305,17 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - The OpenAPI declares no 501 on the transfer operations, which the proxy answers for list, `/{processId}`, push, `gainingClientId` and `reason`.
 - `RPP-Authorization` can accompany query, cancel, approve and reject too. RFC 5730 §2.9.3.4 says authorization information MUST be provided to complete a transfer command, and RFC 5733 §3.2.4 gives `contact:authInfo` for every `op` without saying a server ignores it on any of them.
 - **Proxy:** forwards it on every operation. EPP has a place for it, so nothing is dropped, and refusing it would change the domain wire.
+
+## Messages
+
+- Core §16.10.1 says the messages endpoint retrieves "exactly one message", while the OpenAPI and json §6.8.3 define an array, and nothing says what an empty queue returns. EPP answers `1300`, which Table 10 maps to 200.
+- **Proxy:** follows the schema: an array with the one message, and `[]` for an empty queue, with `RPP-Code` `01300` and `RPP-Queue-Size: 0`.
+- The core has no read-by-id section, although the OpenAPI has `messages_read`. EPP cannot read past the head of the queue, so a queued message that is not the head, an acknowledged one and an unknown one look the same.
+- **Proxy:** a read of the head id is 200. An empty queue is 404 (`02303`), any other id is 501 (`02102`). The backend answers an ack of an unknown id with `2303`, so that DELETE is 404.
+- Data-objects §9.19.1 and §9.19.3 (and §9.19.4) give the transfer messages no member for the human-readable text that the EPP `msg` carries, only the review response (`message`) and the service notice have one.
+- **Proxy:** the `msg` text of a transfer message is not returned. It is generated from the structured data. `Content-Language` is the `lang` of the EPP `msg`.
+- EPP can send messages RPP has no type for: no `resData`, other object data, several `resData` elements, an `extension`, and `qDate` is optional in EPP while `creationDate` is required in RPP.
+- **Proxy:** such a message, and any message whose mapping fails the `.read` schema, is a `serviceNoticeMessage` with the `msg` text and a sentence naming the element (never its content). It can still be read and acknowledged, and is never a 500. A missing or invalid `qDate` becomes the time of the read. A pending-action reply with `paResult` false is `approved: false`.
+- `RPP-Queue-Size` is a MAY in core §6.2. **Proxy:** sent on the messages operations only, from `msgQ/@count` (0 on `1300`), and omitted when an ack reply has no `msgQ`. `type` is ignored (core §16.10.1, EPP Compatibility Profile), `status` is always `queued`, and `process` has no `processId`.
+- Only the server creates messages (data-objects §15.3.1), and EPP has no command for it.
+- **Proxy:** `POST /messages` is 501 (`02101`), after the body is validated, so the json §8.6.1 example answers 501 (`draft_message/test1`).

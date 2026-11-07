@@ -40,6 +40,11 @@ is tested only in unit tests. It refuses the secDNS key data interface with `230
 already holds even under another keyTag (pawel-kow/epp#20). It stores `domain:hostAttr` as a host
 object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.
 
+The message queue is shared per registrar, and other cases add to it (every transfer request queues a message for the
+losing registrar), so `message/` cases assert only the shape of the head and use `any_of` where the queue may be empty.
+Acking a real head is tested in `tests/unit/test_message_wire.py`, as the integration runner cannot carry an id from
+one step to the next. The backend returns the id of the acknowledged message in the `msgQ` of an ack reply.
+
 A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
 `serverApproved`. Info does not show `pendingTransfer` (#64), a completed transfer cannot be
 queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in

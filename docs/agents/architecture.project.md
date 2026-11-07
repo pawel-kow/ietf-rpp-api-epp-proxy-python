@@ -77,6 +77,14 @@ the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer
 `epp_contacts_Transfer` run all five operations, chosen by the model's `operation`. EPP has no process ids, so only
 `latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process).
 
+Messages are in `controller/messages.py`. `GET /messages` is EPP `poll req`, `DELETE /messages/{id}` is
+`poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in `flows/messages.py`,
+because EPP cannot read past the head. `epp_to_model_mapper/messages.py` turns the reply into a `QueueMessage`
+whose `event` is a `TransferEvent` (domain and contact `trnData`) or a `PendingActionEvent` (`panData`), and
+`rpp_to_model_mapper/messages.py` renders it. Anything the proxy cannot translate, or that fails the `.read`
+schema, becomes a `serviceNoticeMessage`, so a client can always read and acknowledge it, see
+[spec-issues.md](../../.spec/spec-issues.md#messages).
+
 `BodyBufferingMiddleware` in `controller/body_buffering_middleware.py` is the middleware that `create_app`
 adds after security and before Connexion's validators, so an anonymous client gets its 401 before its body is read. It reads the whole body of a request that has one before anything else runs, drops the request if the client
 disconnects first, and passes on a complete request with a `content-length`. So chunked bodies, late bodies and
