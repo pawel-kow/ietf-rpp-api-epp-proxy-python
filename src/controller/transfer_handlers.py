@@ -1,3 +1,6 @@
+import asyncio
+import json
+
 from connexion import request
 from models import ErrorResponse, ResultCode, TransferOperation
 import rpp_to_model_mapper as rpp_mapper
@@ -12,14 +15,15 @@ LATEST = "latest"
 class TransferHandlers:
     """The operations on the transfer of one kind of object, which EPP runs with one command.
 
-    `run(epp_client, transfer, client_transaction_id=...)` runs a transfer, `create_mapper` and
-    `reject_mapper` convert a request, `response_mapper` a process, and `make_transfer(id, operation,
+    `run(epp_client, transfer, client_transaction_id=...)` runs a transfer, `create_mapper`,
+    `approve_mapper` and `reject_mapper` convert a request, `response_mapper` a process, and `make_transfer(id, operation,
     auth_info)` builds a transfer without content.
     """
 
-    def __init__(self, run, create_mapper, reject_mapper, response_mapper, make_transfer):
+    def __init__(self, run, create_mapper, approve_mapper, reject_mapper, response_mapper, make_transfer):
         self._run_epp = run
         self._create_mapper = create_mapper
+        self._approve_mapper = approve_mapper
         self._reject_mapper = reject_mapper
         self._response_mapper = response_mapper
         self._make_transfer = make_transfer
@@ -36,6 +40,8 @@ class TransferHandlers:
 
     def _process(self, transfer):
         resp = self._run(transfer)
+        if resp.transfer is None:  # applied, but EPP gave no state to show
+            return None, 202, generate_rpp_response_headers(resp)
         return self._response_mapper(resp.transfer), 200, generate_rpp_response_headers(resp)
 
     def _operation(self, id, operation):
@@ -44,8 +50,10 @@ class TransferHandlers:
 
     def create(self, id, body):
         resp = self._run(map_request(self._create_mapper, id, body, self._authorization()))
-        process = self._response_mapper(resp.transfer)
         headers = generate_rpp_response_headers(resp)
+        if resp.transfer is None:  # applied, but EPP gave no state to show
+            return None, 202, headers
+        process = self._response_mapper(resp.transfer)
         if resp.code != ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
             return process, 200, headers  # completed at once: EPP exposes no process (core §16.1.4)
         return process, 201, {**headers, "Location": f"{str(request.url).rstrip('/')}/{LATEST}"}
@@ -57,8 +65,15 @@ class TransferHandlers:
         require_empty_body()
         return self._operation(id, TransferOperation.CANCEL)
 
+    @staticmethod
+    def _optional_body():
+        """The OpenAPI declares no body for approve, so Connexion does not read it: None for none."""
+        raw = asyncio.run(request.body())
+        return json.loads(raw) if raw and raw.strip() else None
+
     def approve(self, id):
-        return self._operation(id, TransferOperation.APPROVE)
+        body = map_request(self._optional_body)
+        return self._process(map_request(self._approve_mapper, id, body, self._authorization()))
 
     def reject(self, id, body):
         return self._process(map_request(self._reject_mapper, id, body, self._authorization()))

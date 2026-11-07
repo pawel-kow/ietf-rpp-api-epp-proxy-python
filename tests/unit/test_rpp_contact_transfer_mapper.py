@@ -2,7 +2,7 @@ import pytest
 from jsonschema import ValidationError
 
 from models import AuthInfo, ContactTransfer, ContactTransferProcess, TransferOperation
-from rpp_to_model_mapper import NotSupportedByEpp, contact_transfer_process, contact_transfer_reject
+from rpp_to_model_mapper import NotSupportedByEpp, contact_transfer_approve, contact_transfer_process, contact_transfer_reject
 
 PROCESS = {"@type": "transferProcess"}
 
@@ -74,3 +74,30 @@ def test_read_is_the_draft_example():
         "actClientId": "ClientY",
         "actionDate": "2000-06-13T22:00:00.000000Z",
     }
+
+
+@pytest.mark.parametrize("member", ["trStatus", "reqClientId", "actClientId", "requestDate", "actionDate", "processId"])
+def test_request_with_a_read_only_member_is_rejected(member):
+    """Json §4.4."""
+    with pytest.raises(ValueError):
+        contact_transfer_process.rpp_to_model("FO-1", {**PROCESS, member: "x"}, None)
+
+
+def test_approve_body_is_optional():
+    transfer = contact_transfer_approve.rpp_to_model("FO-1", None, "authinfo value=MmZvb0JBUg==")
+    assert transfer == ContactTransfer(id="FO-1", operation=TransferOperation.APPROVE, authInfo=AuthInfo(pw="2fooBAR"))
+
+
+def test_approve_takes_the_type_only():
+    assert contact_transfer_approve.rpp_to_model("FO-1", PROCESS, None).operation == TransferOperation.APPROVE
+
+
+@pytest.mark.parametrize("body", [{}, [], {"x": 1}, {"@type": "nonsense"}, {**PROCESS, "unknown": 1}])
+def test_approve_body_is_validated(body):
+    with pytest.raises((ValidationError, ValueError)):
+        contact_transfer_approve.rpp_to_model("FO-1", body, None)
+
+
+def test_approve_reason_is_not_allowed_in_the_epp_profile():
+    with pytest.raises(NotSupportedByEpp, match="reason"):
+        contact_transfer_approve.rpp_to_model("FO-1", {**PROCESS, "reason": "ok"}, None)

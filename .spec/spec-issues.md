@@ -293,7 +293,7 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - `GET .../transferProcesses/latest` with nothing pending gets EPP `2301`. Table 9 maps `02301` to 409, but the OpenAPI has no 409 on that GET, and core §16.9.5.2 says the resource "may not exist", which suggests 404 (#68).
 - **Proxy:** 409 (`02301`).
 - Core §16.9.5.5 shows approve with no content and the OpenAPI declares no `requestBody`, but json §8.1.10 sends `{"@type": "domainTransferProcess"}`.
-- **Proxy:** accepts both.
+- **Proxy:** accepts both. Approve reads its body like reject does: `reason` is 501 (`02102`), anything else the schema does not allow is 400 (`02001`), and nothing is sent to EPP, because an approval cannot be undone.
 - Json §8.2.9 gives an example with `reason`, which data-objects §10.1.1.5 forbids in the EPP Compatibility Profile, without naming the rejection.
 - **Proxy:** 501 (`02102`).
 - EPP has no process ids and no transfer history, so the list and `/{processId}` operations have nothing to map to.

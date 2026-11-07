@@ -50,6 +50,8 @@ def parse_contact_transfer_response(xml_string: str, client_transaction_id: str 
     if client_transaction_id is None:
         header["client_transaction_id"] = None
     data = find_res_data(epp, TrnData)
+    if data is None:  # applied, but EPP gave no state
+        return ContactTransferResponse(transfer=None, **header)
     return ContactTransferResponse(
         transfer=ContactTransferProcess(
             id=data.id,

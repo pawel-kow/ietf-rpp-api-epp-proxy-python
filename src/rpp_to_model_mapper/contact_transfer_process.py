@@ -1,20 +1,15 @@
 from models import ContactTransfer, ContactTransferProcess, TransferOperation
 from rpp_schema_validator import validate_schema
 from . import rpp_authorization
-from .common import parse_rpp, reject_set
-from .not_supported_by_epp import NotSupportedByEpp
-from .rpp_models import RPPTransferProcess
-
-PULL = "pull"
+from .common import PULL, parse_rpp, reject_push
+from .rpp_models import RPPTransferProcess, RPPTransferRequest
 
 
 def rpp_to_model(id: str, rpp: dict, authorization: str | None) -> ContactTransfer:
     """Converts a transfer request, with the value of its RPP-Authorization header."""
     validate_schema("transferProcess.create", rpp)
-    process_rpp = parse_rpp(RPPTransferProcess, rpp)
-    if process_rpp.transferDir not in (None, PULL):
-        raise NotSupportedByEpp(f"Transfer direction '{process_rpp.transferDir}'")
-    reject_set(gainingClientId=process_rpp.gainingClientId)
+    request_rpp = parse_rpp(RPPTransferRequest, rpp)
+    reject_push(request_rpp.transferDir, request_rpp.gainingClientId)
     return ContactTransfer(
         id=id,
         operation=TransferOperation.REQUEST,

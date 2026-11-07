@@ -7,6 +7,7 @@ from .transfer_handlers import TransferHandlers
 _handlers = TransferHandlers(
     run=epp_contacts_Transfer,
     create_mapper=rpp_mapper.contact_transfer_process.rpp_to_model,
+    approve_mapper=rpp_mapper.contact_transfer_approve.rpp_to_model,
     reject_mapper=rpp_mapper.contact_transfer_reject.rpp_to_model,
     response_mapper=rpp_mapper.contact_transfer_process.model_to_rpp,
     make_transfer=lambda id, operation, auth_info: ContactTransfer(id=id, operation=operation, authInfo=auth_info),
