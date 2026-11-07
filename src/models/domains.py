@@ -43,6 +43,7 @@ class Domain(ProvisioningObject):
     dnsSEC: Optional[DnsSec] = None
     subordinateHosts: Optional[List[str]] = None
     processes: Optional[Dict[str, Process]] = None
+    status_reasons: Dict[str, str] = field(default_factory=dict)
     
     def update(self, obj):
         super().update(obj)

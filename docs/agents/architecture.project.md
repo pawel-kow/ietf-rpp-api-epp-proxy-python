@@ -37,7 +37,17 @@ single feature (e.g. "domain update") touches every layer:
    update. A patch that matches no element, or matches several for a `replace`, is
    `PatchNotApplicable` (`02308`, 422). `host_patch.py` does the same for hosts: its
    `rpp_to_model_with_current` returns the wanted `Host`, and the flow takes the difference.
-   `patch_statuses.py` hides server statuses from a patch, on hosts and domains, see
+   `domain_replacement.py` does the same for a domain PUT: it rejects members outside `domainName.update`, keeps
+   the read-only members and server statuses of the read, takes only the replaceable members from the body (an
+   omitted one is cleared) and lets `domain_patch_difference.py` produce the update. A present `authInfo` always
+   goes as `chg`, an omitted one is left alone, see [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-domain).
+   `contacts.py` also holds `contact_from_rpp`, the Card conversion that create, PUT and PATCH share.
+   `contact_difference.py` turns a current and a wanted `Contact` into a `ContactUpdate`: every changed `postalInfo`
+   form is sent complete, the organisation and the numbers are cleared by an empty element, and what EPP cannot
+   clear is refused (`NotSupportedByEpp`). `contact_replacement.py` (PUT) keeps what EPP cannot clear when the body
+   omits it, and `contact_patch.py` sends `/status` and `/authInfo` without a read and reads for `/contactInfo`, see
+   [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-contact).
+   `patch_statuses.py` hides server statuses from a patch, on hosts, domains and contacts, see
    [spec-issues.md](../../.spec/spec-issues.md#status-in-json-patch).
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
    `domain_transfer_process.py` and `domain_transfer_reject.py` convert a transfer.
@@ -56,14 +66,16 @@ single feature (e.g. "domain update") touches every layer:
    typed result or an `ErrorResponse`, and the handler renders it. `flows/hosts.py`
    holds mutate-then-Info, and PUT as Info, difference, update and Info. `patch_host` in
    `flows/hosts.py` and `patch_domain` in `flows/domains.py` hold PATCH: update and Info for a patch
-   that maps directly, and Info, update and Info for one that needs the current state. The read and
-   the update are not atomic.
+   that maps directly, and Info, update and Info for one that needs the current state. `replace_domain`
+   is a domain PUT: it takes the second path, and a PUT that changes nothing sends no update. `flows/contacts.py`
+   does the same for contacts. `flows/sponsor.py` holds the 403 for an update that changes nothing and is not the
+   sponsor's, which sends no EPP command to say so. The read and the update are not atomic.
 7. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
    inbound EPP XML into models. `epp_model/` holds xsdata-generated dataclasses for
    the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
    is dead code: ignore it.
 
-`domainNames_create`, `domainNames_updatePartial` and the host mutations do not build
+`domainNames_create`, `domainNames_updatePartial`, `domainNames_update` and the host mutations do not build
 their response from the create/update reply. They issue a **follow-up EPP Info** call and
 map that to RPP, because EPP mutation responses don't echo full object state. If that Info fails, the
 mutation has still been applied, so the handler answers **202** with no body and the
@@ -114,7 +126,7 @@ its own message:
 
 An extension the proxy does not know of cannot be told apart from no extension, so it
 counts as the first kind. A PATCH that EPP could do once the proxy has read the object
-is the second kind (#29 for contacts).
+is the second kind.
 
 The third kind is known only from the EPP greeting, which mappers cannot reach, so the
 `epp_*` function checks `supports_extension` and `raise_epp_error` renders the result.

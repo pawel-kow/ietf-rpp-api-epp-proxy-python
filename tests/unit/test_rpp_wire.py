@@ -114,7 +114,6 @@ def test_dnssec_on_a_server_without_the_extension_is_a_501_unimplemented_extensi
 
 @pytest.mark.parametrize("method, url", [
     ("get", "/hosts/ns1.foo.example/processes/transferProcesses/latest"),
-    ("put", "/domainNames/foo.example"),
     ("get", "/contacts/JD-1234/availability"),
     ("get", "/.well-known/rpp"),
 ])

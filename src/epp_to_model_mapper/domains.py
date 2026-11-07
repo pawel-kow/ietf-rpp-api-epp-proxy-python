@@ -3,7 +3,7 @@ from typing import Union
 
 from models import *
 from .epp_core import map_epp_code
-from .epp_response import cl_trid, epp_datetime, find_extension, find_res_data, parse_epp_response_header
+from .epp_response import cl_trid, epp_datetime, find_extension, find_res_data, parse_epp_response_header, status_reasons
 from .commands.domains import (
     domain_check,
     domain_create,
@@ -121,6 +121,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
         upDate=epp_datetime(getattr(data, "up_date", None)) if data else None,
         trDate=epp_datetime(getattr(data, "tr_date", None)) if data else None,
         status=[s.s.value for s in getattr(data, "status", [])] if data else None,
+        status_reasons=status_reasons(data) if data else {},
         clID=getattr(data, "cl_id", None) if data else None,
         crID=getattr(data, "cr_id", None) if data else None,
         upID=(getattr(data, "up_id", None) or None) if data else None,

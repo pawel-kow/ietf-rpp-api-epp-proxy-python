@@ -37,6 +37,7 @@ Each entry says what the proxy does today.
 
 - The contact example (json §8.2.2) is `kind: individual` with `organizations`. EPP has one `postalInfo` with `name` and `org`, but no kind, so the kind cannot survive a round trip through an EPP backend.
 - **Proxy:** 501 (`02102`). The draft example is tested as such in `draft_contact/test2`, and without `organizations` in `test3`.
+- A read derives `kind` from the organisation, so a PATCH that removes the organisation would leave `kind: org` without one, which a create refuses. Unless the patch names `/contactInfo/kind` or replaces `/contactInfo`, the kind of the patched contact is derived again from its end state (`org` with an organisation, `individual` without), so `remove /contactInfo/organizations/org` and `add /contactInfo/organizations` need no `kind` operation. A PUT follows create: `kind: org` without an organisation is 400 (`02001`).
 
 ## Length of contact fields
 
@@ -110,7 +111,7 @@ Example 3, no atomicity. Client A sends example 1. Between the `info` and the `u
 - `status` has cardinality 1+ (data-objects §13.2) and Figure 3 of json §5.2.2 rejects `remove` of such a property, as step 6 rejects `replace` with an empty array. But the client owns only the client statuses, and the registry sets `ok` when none is left, so the resulting object is valid. A full update can clear them (core §16.8), so a client expects a patch to be able to.
 - A `replace` of `/status` holds the whole array, but a client cannot set or remove server statuses. The draft does not say whether a server status left out of the value is an error, ignored, or has to be repeated.
 - Should the EPP Compatibility Profile say that a patch of `status` covers only the statuses a client owns?
-- **Proxy:** a patch of `/status` applies as if the object had no server statuses, on hosts and domains. `remove /status` and `replace /status []` clear the client statuses (a deviation from Figure 3), and server statuses are left alone. A value that names a server status is 400 (`02001`), even if the object has it, and a `match` that names one finds no element (422, `02308`). `ok` is the exception, it stays visible because the draft's example in §5.3.1 replaces it.
+- **Proxy:** a patch of `/status` applies as if the object had no server statuses, on hosts, domains and contacts. `remove /status` and `replace /status []` clear the client statuses (a deviation from Figure 3), and server statuses are left alone. A value that names a server status is 400 (`02001`), even if the object has it, and a `match` that names one finds no element (422, `02308`). `ok` is the exception, it stays visible because the draft's example in §5.3.1 replaces it.
 
 ## `ok` in the partial update example
 
@@ -227,11 +228,12 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - Nothing says how `dnsData` maps to EPP. Core §5 refers to a mapping document that does not exist yet ([TODO REF]).
 - **Proxy:** on create, `ns` records and their glue are `ns.hostAttr`, `ds` and `dnskey` records are secDNS. `ns`, `ds` and `dnskey` must be owned by the domain, and `a` and `aaaa` by a nameserver given in the same request and subordinate to the domain. Other records, and `ds` or `dnskey` below the domain, are 501 (`02102`). A read returns `ns.hostAttr` as `dns` and `ns.hostObj` as `nameservers`.
 - A registry can store `hostAttr` as host objects, as the test backend does. The create then reads back as `nameservers`, and the glue is at `GET /hosts/{name}`.
+- **Proxy:** a host is the same in both forms, whatever the case, so a PATCH or PUT with `ns` records of the hosts the domain has as host objects (and the reverse) changes nothing, which is what a repeated PUT does on such a registry. The addresses of a host object live on the host and cannot be compared, so a `hostAttr` with addresses over a host object (or the reverse) is a `rem` and an `add`. Current host attributes against wanted host objects are swapped whole when the set of names differs, or when any current host attribute has an address, all removed and all added, because EPP takes one form or the other and a registry that shows attributes stores them. The reverse, current host objects and wanted records with a partial overlap, only removes and adds the names that differ, because a registry that stores attributes as objects would refuse to add again a host that is still associated. A PUT that gives the delegation as records therefore needs a host with its own addresses to be an exact repeat, or the glue is sent again each time.
 
 ## DNSSEC with `nameservers`
 
 - Data-objects §11.2 forbids `nameservers` together with DNS Data entries, without excepting `ds` and `dnskey`. Read literally, a domain delegated through host objects cannot have DNSSEC, and a client has to give its delegation as `ns` records. Should the rule be limited to `ns`, `a` and `aaaa`?
-- **Proxy:** a create with `nameservers` and any `dns` record is a 400. A read of such a domain returns both, because it would otherwise lose data.
+- **Proxy:** a create with `nameservers` and any `dns` record is a 400, while PATCH and PUT reject only `ns` records and their glue (`a`, `aaaa`) with `nameservers`. A read of such a domain returns both, because it would otherwise lose data, and a full replacement of an existing object has to be able to express what a read returns. A PUT that omits `dns` removes the DNSSEC data, so a domain with host objects and a DS has to be sent with both. A glue record (`a`, `aaaa`) counts as an `ns` record here, so `nameservers` with glue is a 400 as well.
 
 ## `ds` with `dnskey`
 
@@ -278,6 +280,26 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - The same applies to domain create.
 - **Proxy:** 501 (`02102`).
 
+## Full update of a domain
+
+- Core §16.8 clears what a PUT omits, "subject to server policy". Data-objects §11.3.4 says the Authorisation Information MAY be removed, and json §4.9.3 says a client MUST NOT send `authInfo` in a request body and a server MUST reject it. Yet `domainName.create` and `domainName.update` both carry `authInfo`, and a read can return it (see `authdata` in read responses). A client that follows §4.9.3 and PUTs back what it read would wipe the password on every PUT.
+- **Proxy:** an omitted `authInfo` leaves the password alone, a present one replaces it (EPP `chg`, without comparing to the current value), and §4.9.3 is not applied to `authInfo` in the body, as on create. A wipe cannot be undone, which makes it the worse mistake, and §16.8 leaves the policy to the server.
+- Json §4.4 requires a server to reject a data element that is not allowed in a request, and `status` accepts only client statuses (`domainStatus.create`).
+- **Proxy:** a PUT with a member outside `domainName.update` (`name`, `provMetadata`, `expiryDate`, `subordinateHosts`, `uName`, `lgr`, `processes`) is a 400 (`02001`), and so is `ok` or another server status in `status`, unlike a PATCH, which accepts `ok` (see the `ok` entry). `status` is a set: client statuses not listed are removed (an omitted `status` removes them all), a changed reason is a remove and an add, and server statuses stay. The path name is the only identity. The registry sets `ok` when no status is left. A `due` date has no place in EPP and is 501 (`02102`), on a PUT and a PATCH. A domain read now carries the status `reason` when the registry gives one (the test backend does not), so a PUT or PATCH with the same reason changes nothing and one without it drops it. A member the schema does not declare is a 400 at any depth.
+- A full update has no EPP command, so the proxy reads the domain, takes the difference and sends one update, as for a PATCH that needs the current state. The read and the update are not atomic. The `dns` and `nameservers` checks of a create apply (`ttl` 501, `ds` with `dnskey` 501), except as in "DNSSEC with `nameservers`".
+
+## Full update of a contact
+
+- Core §16.8 clears what a PUT omits, "subject to server policy", but the json §8.2.4 example omits `name` and `organizations` and its response keeps both, with `kind: individual` and an organisation (which a create refuses, see above). EPP can clear the organisation, `voice` and `fax` (an empty element), but not the `name`, the address (`city` and `cc` are required), the email, or a `postalInfo` form: RFC 5733 has no element to remove one. Data-objects §12.3.4 does not say what a PUT does with them.
+- **Proxy:** an omitted `organizations`, `voice` or `fax` is cleared (the example's response differs here). An omitted `name`, address, email or localization is kept, because EPP cannot clear it. An address that is sent replaces the whole address, so an omitted region or postcode is cleared. A PATCH that removes one of these explicitly is 501 (`02102`), and so is clearing the name or address of a localization on a contact that has only that form. A localization the read shows in part (the members equal to the card are left out) is not rewritten from that read: a repeated PUT or an unrelated PATCH leaves the stored form alone, unless it is equal to the card, which reads back as none and follows the card when that changes. A kept localization that shared the organisation of the card takes the new organisation, because EPP can clear it.
+- Each `postalInfo` form that differs is sent complete, as the test backend replaces a form on a `chg` and wipes the address members that are not sent again. A `chg` of a form the contact does not have is ignored by that backend, which still answers 1000 (pawel-kow/epp#23), and RFC 5733 does not say what a server must do.
+- **Proxy:** after the read-back the proxy compares which forms exist, on the contact model (an invisible localization counts), and a form that the update added and that the registry still lacks is a 500 (`02400`) naming the form, because the registry reported success and does not hold the data, and the client did nothing wrong. The fields of a form are not compared, as the registry may normalise or cut them. The update is not split, so the other members of the same update may already be applied, and the proxy cannot undo that. A correct registry adds the form, so nothing is refused up front.
+- Data-objects §12.3.4 says the Authorisation Information MAY be changed, not removed, and RFC 5733 has no null element for a contact's `authInfo`, unlike domains. **Proxy:** `remove /authInfo` is 501 (`02102`). As for domains, an omitted `authInfo` is left alone and a present one replaces it.
+- `disclose` is 501 (`02102`), as on create. An omitted `disclose` is left alone, because a read does not show it.
+- Statuses are as for domains: a set of the client statuses, compared by label, a changed reason is a remove and an add, `due` is 501, a server status is 400. The registry's `ok` is not a client status. A member outside `contact.update` (`id`, `provMetadata`, `processes`) is 400 (`02001`), at any depth.
+- A PATCH of `status` and `authInfo` is sent without a read, and every operation on `contactInfo` reads the contact first, applies the patch to it, and sends the difference in one update. The read and the update are not atomic. No element matches is 422 (`02308`) only on the read path, see the entry "JSON Patch operations that need a read before the write": a direct operation, such as the removal of a status the contact does not have, is sent, and the test backend accepts it. Two operations on one status label are not sent together, as their order would be lost, so they take the read path.
+- A PUT that changes nothing is a 200 with the current contact and no EPP update, and 403 (`02201`) for a client that is not the sponsor, as for domains.
+
 ## Host transfer
 
 - Data-objects §13.4 gives the host a Transfer Process and the OpenAPI has the operations. RFC 5732 defines no host transfer: subordinate hosts move with their domain, and data-objects §11.4.2 disallows anything that breaks that relationship.
@@ -286,7 +308,8 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 ## Full update without a change
 
 - A host update must provide at least one change (data-objects §13.3.4), but a PUT repeating the stored state is a valid full update (core §16.8) and PUT is idempotent in HTTP.
-- **Proxy:** passes the empty update on, the backend answers `2003` (400).
+- Data-objects §11.3.4 has the same "at least one change" rule for domains, while core §16.8 requires a 200 with the object.
+- **Proxy:** differs by object. A domain or contact PUT that changes nothing is a 200 with the current domain and no EPP update, as a domain PATCH that changes nothing, unless the client is not the sponsor (the `clID` of the read differs from the session's): then it is 403 (`02201`), because no EPP command runs to refuse it. The login id is assumed to equal the `clID` of the object, compared without regard to case. A host PUT passes the empty update on, the backend answers `2003` (400).
 
 ## Transfer process
 

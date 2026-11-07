@@ -1,0 +1,163 @@
+{
+  "test_id": "test15-put_with_lowercase_id",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}15A",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.123123123"
+              },
+              "fax": {
+                "number": "tel:+49.456456456",
+                "features": {
+                  "fax": true
+                }
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}15A"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/contacts/fo-{random_id_10}15a",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.123123123"
+              },
+              "fax": {
+                "number": "tel:+49.456456456",
+                "features": {
+                  "fax": true
+                }
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "low@example.com"
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "contactInfo": {
+            "emails": {
+              "email": {
+                "address": "low@example.com"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
