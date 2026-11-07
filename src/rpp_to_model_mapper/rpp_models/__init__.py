@@ -25,3 +25,5 @@ from .rpp_period import RPPPeriod
 from .rpp_processes import RPPProcesses
 from .rpp_prov_metadata import RPPProvMetadata
 from .rpp_status import RPPStatus
+from .rpp_transfer_process import RPPTransferProcess
+from .rpp_transfer_reject import RPPTransferReject

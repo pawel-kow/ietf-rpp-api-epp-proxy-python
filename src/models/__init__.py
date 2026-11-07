@@ -16,6 +16,9 @@ from .host_update import HostUpdate
 from .host_update_changes import HostUpdateChanges
 from .host_update_response import HostUpdateResponse
 
+from .contact_transfer import ContactTransfer
+from .contact_transfer_process import ContactTransferProcess
+from .contact_transfer_response import ContactTransferResponse
 from .domain_transfer import DomainTransfer
 from .domain_transfer_process import DomainTransferProcess
 from .domain_transfer_response import DomainTransferResponse

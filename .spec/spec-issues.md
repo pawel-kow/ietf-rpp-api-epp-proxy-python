@@ -300,3 +300,5 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - **Proxy:** 501 (`02101`), and responses have no `processId`.
 - EPP has no push transfer, and its response does not say the direction.
 - **Proxy:** `transferDir: push` and `gainingClientId` are 501 (`02102`), and responses always have `transferDir: pull`.
+- Contacts use the same mapping as domains (core §16.9.5, json §8.2.6 to §8.2.9) with `@type` `transferProcess`. RFC 5733 has no period and `contact:trnData` no expiry date, so a contact has neither, and a `transferPeriod` in a contact request is not in the schema (json §4.4).
+- **Proxy:** `transferPeriod` on a contact is 400 (`02001`). Json §8.2.9's reject example has `reason`, so the draft's own example is 501 (`02102`) and `draft_contact/test11` expects that.

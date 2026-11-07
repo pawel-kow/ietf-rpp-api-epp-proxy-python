@@ -40,7 +40,8 @@ single feature (e.g. "domain update") touches every layer:
    `patch_statuses.py` hides server statuses from a patch, on hosts and domains, see
    [spec-issues.md](../../.spec/spec-issues.md#status-in-json-patch).
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
-   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a transfer.
+   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a domain transfer, and
+   `contact_transfer_process.py` and `contact_transfer_reject.py` a contact transfer.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
@@ -70,9 +71,10 @@ mutation has still been applied, so the handler answers **202** with no body and
 mutation's `RPP-*` headers. `openapi.yaml` does not define this 202 (#23 tracks the
 question for the spec).
 
-Transfer handlers are in `controller/domain_transfers.py`. An EPP `<transfer>` reply carries
-the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer` runs all
-five operations, chosen by `DomainTransfer.operation`. EPP has no process ids, so only
+Transfer handlers are in `controller/domain_transfers.py` and `controller/contact_transfers.py`, thin
+functions over `TransferHandlers` in `controller/transfer_handlers.py`. An EPP `<transfer>` reply carries
+the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer` and
+`epp_contacts_Transfer` run all five operations, chosen by the model's `operation`. EPP has no process ids, so only
 `latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process).
 
 `RppRequestBodyValidator` and `RppResponseBodyValidator` let a body be absent where the
