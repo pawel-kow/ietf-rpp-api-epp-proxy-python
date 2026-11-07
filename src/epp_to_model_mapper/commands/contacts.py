@@ -1,6 +1,6 @@
 import re
 
-from models import Address, Contact, ContactTransfer, ContactType
+from models import Address, AuthInfo, Contact, ContactTransfer, ContactType
 
 from ..epp_model.contact_1_0 import (
     AddrType,
@@ -98,15 +98,18 @@ def contact_delete(contact_id: str, rpp_cl_trid: str) -> Epp:
     )
 
 
+def _transfer_auth_info(auth_info: AuthInfo) -> AuthInfoType:
+    return AuthInfoType(pw=PwAuthInfoType(value=auth_info.pw, roid=auth_info.roid))
+
+
 def contact_transfer(transfer: ContactTransfer, rpp_cl_trid: str) -> Epp:
-    auth_info = transfer.authInfo
     return Epp(
         command=CommandType(
             transfer=TransferType(
                 op=TransferOpType(transfer.operation.value),
                 other_element=Transfer(
-                    id=transfer.id,
-                    auth_info=AuthInfoType(pw=PwAuthInfoType(value=auth_info.pw, roid=auth_info.roid)) if auth_info else None,
+                    id=transfer.id.upper(),
+                    auth_info=_transfer_auth_info(transfer.authInfo) if transfer.authInfo else None,
                 ),
             ),
             cl_trid=rpp_cl_trid,

@@ -61,3 +61,9 @@ def test_trn_data_is_parsed():
         actClientId="ClientY",
         actionDate="2000-06-13T22:00:00.000000Z",
     )
+
+
+def test_id_is_sent_in_upper_case():
+    """As contact create does."""
+    root = command(ContactTransfer(id="fo-abc", operation=TransferOperation.QUERY))
+    assert only(root, "//contact:transfer/contact:id/text()") == ["FO-ABC"]

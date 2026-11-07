@@ -300,3 +300,38 @@ def test_success_without_trn_data_is_a_202_without_body(method, url):
     assert response.headers["RPP-Code"] == "01000"
     assert response.headers["RPP-Svtrid"] == "sv-1"
     assert response.content == b""
+
+
+FOUR = [
+    ("GET", LATEST, "query", "clientApproved"),
+    ("DELETE", LATEST, "cancel", "clientCancelled"),
+    ("POST", f"{LATEST}/transferApprove", "approve", "clientApproved"),
+    ("POST", f"{LATEST}/transferReject", "reject", "clientRejected"),
+]
+
+
+@pytest.mark.parametrize("method,url,op,status", FOUR)
+def test_authorization_header_reaches_epp_on_every_operation(method, url, op, status):
+    http, clients = setup(transfer_reply(1000, status))
+    headers = {**HEADERS, "RPP-Authorization": "authinfo value=TXkgU2VjcmV0IFRva2Vu, roid=REG-123"}
+    assert http.request(method, url, headers=headers).status_code == 200
+    assert f'op="{op}"' in clients[-1].sent[-1]
+    assert "My Secret Token" in clients[-1].sent[-1]
+    assert 'roid="REG-123"' in clients[-1].sent[-1]
+
+
+@pytest.mark.parametrize("method,url,op,status", FOUR)
+def test_malformed_authorization_is_a_400_without_epp_on_every_operation(method, url, op, status):
+    http, clients = setup(transfer_reply(1000, status))
+    response = http.request(method, url, headers={**HEADERS, "RPP-Authorization": "authinfo value=%%%"})
+    assert response.status_code == 400
+    assert not any("transfer" in sent for client in clients for sent in client.sent)
+
+
+@pytest.mark.parametrize("method,url,op,status", FOUR)
+def test_other_authorization_method_is_a_501_without_epp_on_every_operation(method, url, op, status):
+    http, clients = setup(transfer_reply(1000, status))
+    response = http.request(method, url, headers={**HEADERS, "RPP-Authorization": "bearer abc"})
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02102"
+    assert not any("transfer" in sent for client in clients for sent in client.sent)

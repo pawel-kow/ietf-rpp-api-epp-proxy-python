@@ -27,6 +27,16 @@ Carried over from #33: query with nothing pending 409 (02301); approve takes an 
 - `draft_contact/test11` keeps the draft's reject body with `reason` and expects 501 (02102); `contact_transfer/test2` rejects without a body.
 - Adapted `draft_contact` test7 to test11 with `FO-` ids and real steps.
 
+## Review round (PR #90)
+
+- Approve reads and validates its body per object kind (`*_transfer_approve`), in the shared handler, so domains change too: `reason` 501 (02102), anything else not allowed 400 (02001), nothing sent to EPP. Raw body is read with `request.body()`, since `get_body()` returns parsed JSON.
+- Requests are parsed with request-only classes (`RPPTransferRequest`, `RPPDomainTransferRequest`): a read-only member is 400 (02001) for contacts and domains (json §4.4).
+- A success reply without `trnData` is 202 with no body and the `RPP-*` headers, in the shared handler, for both kinds.
+- Contact transfer sends `id.upper()`, as create does. Other contact commands are not changed, see the issue filed.
+- `authInfo` stays forwarded on query, cancel, approve and reject. RFC 5733 §3.2.4 does not say a server ignores it, so that is not cited.
+- The direction guard is `reject_push` in `common.py`. The contact command has its own `_transfer_auth_info`, because the contact and domain `AuthInfoType` are different classes.
+- Commit 5302270 holds the domain behaviour change and, necessarily, the contact approve and request classes it wires.
+
 ## Backend notes
 
 - A completed contact transfer cannot be queried (2301), like #65. Cancel by the non-requester is 2201, also with nothing pending, like #66.
