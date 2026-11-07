@@ -103,7 +103,8 @@ def _nameserver_changes(
 
     A host is the same in both forms, whatever the case. The addresses of a host object live on the host, so a
     host attribute with addresses is never the same as a host object: it is removed and added. Current host
-    attributes against other wanted host objects are all removed and all added.
+    attributes against wanted host objects are all removed and all added when the names differ or any of them
+    has an address.
     """
     def by_name(attrs):
         return {host.id.lower(): host for host in attrs}
