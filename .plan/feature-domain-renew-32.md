@@ -4,13 +4,13 @@ Base: `main` at 5258d2b. Independent of PRs #81, #83 and #86 as far as the plan 
 
 ## Tasks
 
-- [~] Settle the open questions with the maintainer
-- [ ] Failing tests first: unit (mapper, XML, wire) and integration (`domain_renew/`), unskip `draft_domain/test10-renew`
-- [ ] `DomainRenew` and `DomainRenewProcess` models, `renew` EPP command XML, `renData` parser, `epp_domains_Renew`
-- [ ] `rpp_to_model_mapper/domain_renew_process.py` (`rpp_to_model`, `model_to_rpp`), `RPPDomainRenewProcess`
-- [ ] Flow `renew_domain` in `flows/domains.py`, controller handler `domainNameRenewProcesses_renewCreate`
-- [ ] `.spec/spec-issues.md` "Renew process", `architecture.project.md`, `testing.project.md`
-- [ ] Full `pytest`, draft PR
+- [x] Settle the open questions with the maintainer
+- [x] Failing tests first: unit (mapper, XML, wire) and integration (`domain_renew/`), unskip `draft_domain/test10-renew`
+- [x] `DomainRenew` and `DomainRenewProcess` models, `renew` EPP command XML, `renData` parser, `epp_domains_Renew`
+- [x] `rpp_to_model_mapper/domain_renew_process.py` (`rpp_to_model`, `model_to_rpp`), `RPPDomainRenewProcess`
+- [x] Flow `renew_domain` in `flows/domains.py`, controller handler `domainNameRenewProcesses_renewCreate`
+- [x] `.spec/spec-issues.md` "Renew process", `architecture.project.md`, `testing.project.md`
+- [~] Full `pytest`, draft PR
 - [ ] `git rm` this plan, release the mutex on `main`
 
 ## Findings
@@ -21,12 +21,16 @@ Base: `main` at 5258d2b. Independent of PRs #81, #83 and #86 as far as the plan 
 - `RenewType` and `RenData` are already generated; `CommandType.renew` exists.
 - RPP expiryDate is optional (data-objects §10.3) while EPP curExpDate is required.
 
-## Decisions
+## Decisions (orchestrator, for the maintainer)
 
-(none yet)
+1. `expiryDate` absent: read the domain (Info) and use the date of `exDate`. Not atomic, the client gave up the guard, a retry after a lost response renews twice. Info error is passed through, nothing is renewed.
+2. `expiryDate` present: send its UTC date (offset converted), do not reject a non-midnight time. A mismatch is EPP's error (2306, 422).
+3. Response 200 (core §16.1.4), no Location, no processId, body validated against `renewProcess.read`. `draft_domain/test10-renew` now expects 200.
+4. `1001` is a 200 with `01001`. No `period` in EPP when `renewalPeriod` is absent, no default invented.
+5. A `1000` without `renData` gives the body with `@type` only (valid against `renewProcess.read`).
 
-## Open questions
+## Findings from the build
 
-1. Absent `expiryDate`: read the domain (Info) for `exDate` and use its date, or 501?
-2. Present `expiryDate`: EPP carries a date only; the time of day has no element.
-3. Response: `expiryDate` only (no `renewalPeriod`, no `processId`, no Location). 200 or 201? The OpenAPI POST has both; core §16.9.4 pairs 201 with Location "if the server exposes the process resource", and the draft example test10 expects 201. Transfers answer 200 when EPP exposes no process (core §16.1.4).
+- The backend refuses a renew period under one year (`2306`, "not under 1 year and not over 10"), also for months, so integration cases use 12m.
+- A wrong `curExpDate` is `2306` on the backend, 422.
+- `jsonschema` does not check `format`, so the mapper rejects an `expiryDate` without an offset itself.

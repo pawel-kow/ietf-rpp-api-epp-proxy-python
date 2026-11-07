@@ -45,6 +45,11 @@ A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait 
 queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in
 unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67).
 
+A renew cannot be given the real current expiry in a data file, because a case cannot carry a value from one
+step to the next. The cases of `domain_renew/` omit `expiryDate`, so the proxy reads it, and assert the new
+expiry against `{test_start}`. A wrong `expiryDate` is `2306`. The backend refuses a renew period under one year
+(`2306`), so month periods are 12 or more. Sending the right `expiryDate` is tested in unit tests.
+
 ## Tests without the backend
 
 Unit tests in `tests/unit/` inject test doubles through constructors:
