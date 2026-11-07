@@ -2,8 +2,9 @@ from typing import Callable
 
 from eppclient.epp_domains import epp_domains_Info, epp_domains_Update
 from eppclient.eppclient import EPPClient
-from models import Domain, DomainInfoResponse, DomainUpdate, ErrorResponse, ResultCode
+from models import Domain, DomainInfoResponse, DomainUpdate, ErrorResponse
 from .domain_mutation_result import DomainMutationResult
+from .sponsor import require_sponsor
 
 
 def _read_back(epp_client: EPPClient, domain_name: str, mutation) -> DomainMutationResult:
@@ -25,16 +26,9 @@ def _changes_nothing(update: DomainUpdate) -> bool:
 
 
 def _unchanged(epp_client: EPPClient, current: DomainInfoResponse, client_transaction_id) -> DomainMutationResult | ErrorResponse:
-    """The answer to an update that changes nothing, which sends no EPP command. Only the sponsor may update
-    (data-objects §11.3.4), and EPP would have said so. The login id is taken to be the `clID`, whatever its case."""
-    if (current.domain.clID or "").lower() != epp_client.username.lower():
-        return ErrorResponse(
-            code=ResultCode.AUTHORIZATION_ERROR,
-            msg="Only the sponsoring client can update the domain",
-            server_transaction_id=current.server_transaction_id,
-            client_transaction_id=client_transaction_id,
-        )
-    return DomainMutationResult(mutation=current, domain=current.domain)
+    """The answer to an update that changes nothing: the domain, for its sponsor."""
+    refused = require_sponsor(epp_client, current.domain.clID, current, client_transaction_id, "domain")
+    return refused or DomainMutationResult(mutation=current, domain=current.domain)
 
 
 def patch_domain(

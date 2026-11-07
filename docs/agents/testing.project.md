@@ -40,6 +40,12 @@ is tested only in unit tests. It refuses the secDNS key data interface with `230
 already holds even under another keyTag (pawel-kow/epp#20). It stores `domain:hostAttr` as a host
 object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.
 
+A contact `chg` of a `postalInfo` form replaces it: the address members not sent again (`sp`, `pc`) are wiped, also when
+only `name` or `org` is sent, so the proxy sends every changed form complete. A `chg` of a form the contact does not have
+is ignored, so a localization cannot be added by an update, and cases only change an existing one (`contact_update/test8`).
+An empty `org`, `voice` or `fax` clears it and reads back as an empty element. Contact cases prove absence with a PATCH
+`remove` that answers 422 (`02308`) because the property is gone, after the same removal answered 200 on a twin contact.
+
 A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
 `serverApproved`. The domain Info returns no status reason, so a domain PUT with a `reason` is a remove and add each time. A registrar that is not
 the sponsor gets `2201` from the Info itself, so the refusal of a change of nothing by a non-sponsor is tested only in unit tests

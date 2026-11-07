@@ -4,15 +4,15 @@ Base: stacked on #81 (`feature/domain-put-28`); PR targets `main`, #81 merges fi
 
 ## Tasks
 
-- [~] Plan approved by the maintainer (open questions below)
-- [ ] Failing unit tests, one facet each: EPP update XML, PUT mapper, PATCH mapper (direct and with the current contact), difference, flows, wire
-- [ ] Models: `ContactUpdate`, `ContactUpdateChanges`, `ContactUpdateChange`, `PostalInfoChange`, `ContactUpdateResponse`, `Contact.status_reasons`
-- [ ] eppclient: `epp_contacts_Update`, command and response mapping, read of status reasons, empty address members read as absent
-- [ ] Mappers: `contact_replacement`, `contact_patch`, `contact_difference`; one shared Card-to-Contact conversion with create
-- [ ] Flows: `flows/contacts.py` (`patch_contact`, `replace_contact`, no-change answer), controller `contacts_update`, `contacts_updatePartial`
-- [ ] Integration cases `contact_update/`, rewrite `draft_contact/test5-update`
-- [ ] Docs: `.spec/spec-issues.md`, `architecture.project.md`, `testing.project.md`
-- [ ] Full `pytest`, draft PR
+- [x] Plan approved by the maintainer
+- [x] Failing unit tests, one facet each: EPP update XML, PUT mapper, PATCH mapper (direct and with the current contact), difference, flows, wire
+- [x] Models: `ContactUpdate`, `ContactUpdateChanges`, `ContactUpdateChange`, `PostalInfoChange`, `ContactUpdateResponse`, `Contact.status_reasons`
+- [x] eppclient: `epp_contacts_Update`, command and response mapping, read of status reasons, empty address members read as absent
+- [x] Mappers: `contact_replacement`, `contact_patch`, `contact_difference`; one shared Card-to-Contact conversion with create
+- [x] Flows: `flows/contacts.py` (`patch_contact`, `replace_contact`, no-change answer), controller `contacts_update`, `contacts_updatePartial`
+- [x] Integration cases `contact_update/`, rewrite `draft_contact/test5-update`
+- [x] Docs: `.spec/spec-issues.md`, `architecture.project.md`, `testing.project.md`
+- [~] Full `pytest`, draft PR
 - [ ] `git rm` this plan, release the mutex
 
 ## Findings (evidence)
@@ -48,3 +48,7 @@ No change: 200 with the current contact and no EPP update, 403 (`02201`) for a n
 ## Open questions
 
 (none)
+
+## Corrections
+
+- The probe note that a `chg` of `loc` adds the form was wrong: the backend ignores a `chg` of a form the contact does not have (Info shows no `loc`). A localization cannot be added by an update there; `contact_update/test8` changes an existing one. Noted in spec-issues and testing.project.md.

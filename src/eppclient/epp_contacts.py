@@ -63,3 +63,22 @@ def epp_contacts_Delete(epp_client: EPPClient, id: str, client_transaction_id=No
     else:
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
+
+
+def epp_contacts_Update(epp_client: EPPClient, update: ContactUpdate, client_transaction_id=None) -> Union[ContactUpdateResponse, ErrorResponse]:
+    """
+    Updates a contact using EPP commands.
+    Args:
+        epp_client (EPPClient): The EPP client instance.
+        update (ContactUpdate): The statuses to add and remove and the data to change.
+        client_transaction_id (str): The client transaction ID for the request.
+    Returns:
+        ContactUpdateResponse: The response from the EPP server.
+    """
+    eppxml = update_contact_xml(update, client_request_id=client_transaction_id)
+    success, code, response = epp_client.send_and_get_response(eppxml)
+
+    if success == True:
+        return parse_contact_update_response(response, client_transaction_id=client_transaction_id)
+    else:
+        return get_epp_error_response(response, client_transaction_id=client_transaction_id)

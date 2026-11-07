@@ -1,11 +1,89 @@
 {
   "test_id": "test5-update",
-  "skip": "#29",
+  "description": "The request is the example of json 8.2.4 (kind and name are omitted, and so are the organizations). It differs from the draft's response in one point: the draft keeps `organizations`, this server clears them, as core 16.8 says an omitted attribute is cleared, and EPP can clear the organisation. `name` is kept because EPP cannot clear it. Absence of the organisation is proven by the PATCH that finds nothing to remove, see spec-issues.md (Full update of a contact).",
   "steps": [
     {
       "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}-U1",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "org",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "Example Inc."
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Reston"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "VA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20190"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1.7035555555"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe@example.example"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}-U1"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
         "method": "PUT",
-        "url": "/contacts/JD-1234",
+        "url": "/contacts/FO-{random_id_10}-U1",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -56,9 +134,77 @@
       "response": {
         "status": 200,
         "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
         "body": {
           "@type": "contact",
-          "id": "JD-1234"
+          "id": "FO-{random_id_10}-U1",
+          "contactInfo": {
+            "name": {
+              "full": "John Doe"
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1.7035555556"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe-new@example.example"
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "456 New Street, Suite 200"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Reston"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "VA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20190"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/FO-{random_id_10}-U1",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/contactInfo/organizations/org"
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02308"
         }
       }
     }
