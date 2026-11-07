@@ -57,9 +57,15 @@ def _read_localization(current: Contact) -> LocalizedPostalInfo | None:
 
 def with_stored_localization(wanted: Contact, current: Contact) -> Contact:
     """A wanted localization that is what a read of the current one gives is the current one, unless that is equal to
-    the card, which has to follow the card (`_loc_change`), or the request changes the card too, and with it what the
-    localization inherits."""
-    unchanged_card = wanted.localizedPostalInfo is None or _form(wanted) == _form(current)
+    the card, which has to follow the card (`_loc_change`), or the request changes the card members the stored form lacks, which
+    the localization inherits."""
+    loc = current.localizedPostalInfo
+    stored = (loc.name, loc.organisationName, loc.address) if loc else (None, None, None)
+    # Only the members the stored form lacks are inherited from the card.
+    unchanged_card = wanted.localizedPostalInfo is None or all(
+        wanted_member == current_member
+        for has, wanted_member, current_member in zip(stored, _form(wanted), _form(current)) if not has
+    )
     if unchanged_card and wanted.localizedPostalInfo == _read_localization(current) and not loc_matches_card(current):
         return replace(wanted, localizedPostalInfo=current.localizedPostalInfo)
     return wanted

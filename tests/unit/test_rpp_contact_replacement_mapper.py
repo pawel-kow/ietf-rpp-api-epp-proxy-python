@@ -322,3 +322,15 @@ def test_moving_the_organisation_to_the_localization_by_a_put():
     forms = {f.form: f for f in update(body, current).change.postal_info}
 
     assert forms["int"].organisationName == "" and forms["loc"].organisationName == "ACME Inc."
+
+
+def test_a_put_changing_the_name_does_not_write_the_organisation_into_the_localization_that_lacks_it():
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.", localizedPostalInfo=localized(name="Yohn", address=ADDRESS),
+    )
+    body = put_body(card(
+        kind="org", name={"full": "Jane Doe"}, organizations={"org": {"name": "ACME Inc."}},
+        localizations={"und": {"name": {"full": "Yohn"}}},
+    ))
+
+    assert [f.form for f in update(body, current).change.postal_info] == ["int"]

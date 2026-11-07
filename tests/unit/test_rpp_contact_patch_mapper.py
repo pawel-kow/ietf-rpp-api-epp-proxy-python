@@ -318,3 +318,9 @@ def test_a_name_patch_leaves_a_hidden_localization_that_differs_from_the_card():
     update = with_current(op("replace", "/contactInfo/name/full", value="Jane Doe"), current=current)
 
     assert [f.form for f in update.change.postal_info] == ["int"]
+
+
+def test_a_name_change_does_not_write_the_organisation_into_the_localization_that_lacks_it():
+    update = with_current(op("replace", "/contactInfo/name/full", value="Jane Doe"), current=current_contact(**ORG_CURRENT))
+
+    assert [f.form for f in update.change.postal_info] == ["int"]
