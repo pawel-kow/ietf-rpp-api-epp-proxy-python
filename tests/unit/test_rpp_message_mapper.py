@@ -1,6 +1,6 @@
-import logging
-
 import pytest
+
+from tests.helper.captured_log import capture_log
 
 from models import (
     ContactTransferProcess, DomainTransferProcess, PendingActionEvent, QueueMessage, TransferEvent,
@@ -121,8 +121,8 @@ def test_missing_creation_date_without_an_event_date_is_the_time_of_the_read():
     validate_schema("message.read", rpp)
 
 
-def test_validation_fallback_names_the_data_and_logs_it_without_content(caplog):
-    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+def test_validation_fallback_names_the_data_and_logs_it_without_content():
+    with capture_log() as caplog:
         data = messages.model_to_rpp(message(transfer("weird"), data_name="{urn:x}trnData"))["data"]
     assert "{urn:x}trnData" in data["message"]
     assert "{urn:x}trnData" in caplog.text

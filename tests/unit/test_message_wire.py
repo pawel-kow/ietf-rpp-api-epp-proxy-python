@@ -1,7 +1,7 @@
 import base64
-import logging
-
 import pytest
+
+from tests.helper.captured_log import capture_log
 
 from app import create_app
 from controller.epp_session_authenticator import EppSessionAuthenticator
@@ -111,10 +111,10 @@ def test_unknown_res_data_is_a_notice_that_can_be_acked(http):
     assert ack.status_code == 200
 
 
-def test_message_that_fails_validation_is_a_notice_and_not_a_500(http, caplog):
+def test_message_that_fails_validation_is_a_notice_and_not_a_500(http):
     """A pending-action reply without a svTRID parses, and fails the schema, which requires serverTransactionId."""
     res = pan("domain", DOMAIN, "name", "1").replace("<svTRID>sv-9</svTRID>", "")
-    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+    with capture_log() as caplog:
         response = answer(http, "get", "/messages", head(res))
     assert response.status_code == 200
     data = response.json()[0]["data"]

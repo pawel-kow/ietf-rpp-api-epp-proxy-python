@@ -1,6 +1,6 @@
-import logging
-
 import pytest
+
+from tests.helper.captured_log import capture_log
 from lxml import etree
 
 from epp_to_model_mapper.messages import parse_ack_response, parse_poll_response, poll_ack_xml, poll_request_xml
@@ -195,9 +195,9 @@ def test_markup_with_attributes_is_named_as_unmapped():
 
 
 @pytest.mark.parametrize("bad", ["garbage", "2026-13-45T00:00:00Z", "2026-01-01T23:59:60Z", "", "2026-01-01T24:00:00Z", "2026-01-01T00:00:00+99:00"])
-def test_a_bad_q_date_is_missing_and_the_message_is_still_mapped(bad, caplog):
+def test_a_bad_q_date_is_missing_and_the_message_is_still_mapped(bad):
     q = f'<msgQ count="1" id="7"><qDate>{bad}</qDate><msg>Hi</msg></msgQ>'
-    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+    with capture_log() as caplog:
         message = parse(reply(1301, q, domain_trn("pending"))).message
     assert message.creationDate is None
     assert isinstance(message.event, TransferEvent)
@@ -215,8 +215,8 @@ def test_message_without_q_date():
     '<resData><other xmlns="">SECRET</other></resData>',
     '<resData><foo>SECRET</foo></resData>',
 ])
-def test_a_reply_that_does_not_follow_the_schema_is_still_a_message(res_data, caplog):
-    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+def test_a_reply_that_does_not_follow_the_schema_is_still_a_message(res_data):
+    with capture_log() as caplog:
         resp = parse(reply(1301, msg_q("Odd."), res_data))
     assert resp.message.id == "42"
     assert resp.message.text == "Odd."
@@ -238,9 +238,9 @@ def test_a_msg_q_that_does_not_follow_the_schema_keeps_id_and_count(q):
     assert message.creationDate
 
 
-def test_unknown_child_in_a_known_extension_is_still_a_message(caplog):
+def test_unknown_child_in_a_known_extension_is_still_a_message():
     ext = '<extension><rgp:infData xmlns:rgp="urn:ietf:params:xml:ns:rgp-1.0"><rgp:bogus>SECRET</rgp:bogus></rgp:infData></extension>'
-    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+    with capture_log() as caplog:
         message = parse(reply(1301, msg_q(), "", ext)).message
     assert message.id == "42"
     assert "rgp-1.0" in message.unmapped
@@ -251,16 +251,16 @@ def test_unknown_child_in_a_known_extension_is_still_a_message(caplog):
     ('<resData><x:other xmlns:x="urn:example:x">SECRET</x:other></resData>', ["urn:example:x", "other"]),
     (domain_trn("pending").replace("</resData>", '<x:other xmlns:x="urn:example:x">SECRET</x:other></resData>'), ["urn:example:x"]),
 ])
-def test_untranslated_data_is_logged_by_name_and_never_by_content(res_data, names, caplog):
-    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+def test_untranslated_data_is_logged_by_name_and_never_by_content(res_data, names):
+    with capture_log() as caplog:
         parse(reply(1301, msg_q(), res_data))
     for name in names:
         assert name in caplog.text
     assert "SECRET" not in caplog.text
 
 
-def test_extension_is_logged_by_name(caplog):
-    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+def test_extension_is_logged_by_name():
+    with capture_log() as caplog:
         parse(reply(1301, msg_q(), "", '<extension><x:ext xmlns:x="urn:example:ext">SECRET</x:ext></extension>'))
     assert "urn:example:ext" in caplog.text and "SECRET" not in caplog.text
 
@@ -292,8 +292,8 @@ def test_data_name_is_carried_for_a_mapped_event():
 
 
 @pytest.mark.parametrize("q", ["", '<msgQ count="3"/>', '<msgQ count="3" id=""/>'])
-def test_1301_without_a_message_id_is_not_an_empty_queue(q, caplog):
-    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+def test_1301_without_a_message_id_is_not_an_empty_queue(q):
+    with capture_log() as caplog:
         resp = parse(reply(1301, q))
     assert isinstance(resp, ErrorResponse)
     assert resp.code == ResultCode.COMMAND_FAILED
