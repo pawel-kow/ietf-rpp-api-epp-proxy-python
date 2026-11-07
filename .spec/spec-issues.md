@@ -300,3 +300,11 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - **Proxy:** 501 (`02101`), and responses have no `processId`.
 - EPP has no push transfer, and its response does not say the direction.
 - **Proxy:** `transferDir: push` and `gainingClientId` are 501 (`02102`), and responses always have `transferDir: pull`.
+
+## Discovery
+
+- Core §11 and data-objects §17.3.1 require the document without authentication. The drafts give no caching rule, and `datetime` is the current time, so a cached document goes stale.
+- Json §6.10 and data-objects §17.2 differ on `objects`. Json §6.10 says each value "MUST be a valid object identifier as defined in the RPP Data Object Registry", and data-objects §17.2 has two descriptions: "The list of identifiers of data objects supported by the server" and, in a second description that follows, "The objects allowed for provisioning operations, for example "domainName", "host" or "contact"". Data objects the server supports includes `message`, which is not a provisioning object, so it is unclear whether `message` belongs in `objects`.
+- Json §5.2.1 shows `idnLgr` elements without `url` and `default`, which `discoveryIdnLgr.read` requires.
+- No RPP extension identifier exists for secDNS, so `extensions` has nothing true to say about DNSSEC. The profile read is not implemented, so `profiles` cannot name a profile a client can then read. Should the draft name the EPP Compatibility Profile for discovery?
+- **Proxy:** answers 200 from configuration and constants, without EPP: `versions` (`1.0`), `environment`, `tlds`, `objects` (`domainName`, `host`, `contact`) and `datetime`. It omits `extensions`, `profiles`, `links`, `idnLgr` and `notices`, and sends no `Cache-Control`. It does not check the `version` parameter of the media type anywhere. Missing configuration is 500 (`02400`) (#38).

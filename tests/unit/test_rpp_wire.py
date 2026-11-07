@@ -156,7 +156,6 @@ def test_dnssec_on_a_server_without_the_extension_is_a_501_unimplemented_extensi
 @pytest.mark.parametrize("method, url", [
     ("get", "/hosts/ns1.foo.example/processes/transferProcesses/latest"),
     ("put", "/domainNames/foo.example"),
-    ("get", "/.well-known/rpp"),
 ])
 def test_unimplemented_operation_is_a_501_unimplemented_command(method, url):
     response = getattr(client_with(), method)(url, headers=HEADERS)

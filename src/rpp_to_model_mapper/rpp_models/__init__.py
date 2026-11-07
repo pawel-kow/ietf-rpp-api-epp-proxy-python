@@ -26,3 +26,6 @@ from .rpp_period import RPPPeriod
 from .rpp_processes import RPPProcesses
 from .rpp_prov_metadata import RPPProvMetadata
 from .rpp_status import RPPStatus
+from .rpp_discovery import RPPDiscovery
+from .rpp_discovery_environment import RPPDiscoveryEnvironment
+from .rpp_discovery_version import RPPDiscoveryVersion

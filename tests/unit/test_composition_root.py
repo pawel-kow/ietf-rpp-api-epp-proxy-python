@@ -53,3 +53,10 @@ def test_tls_is_on_and_verified_when_the_config_is_silent(tmp_path, monkeypatch)
 
     assert settings.rpp_epp_use_tls is True
     assert settings.rpp_epp_tls_insecure_skip_verify is False
+
+
+def test_the_composition_root_gives_discovery_the_configuration():
+    assert config.rpp_base_url
+    assert config.rpp_tlds
+    assert config.rpp_environment_name
+    assert config.rpp_environment_status

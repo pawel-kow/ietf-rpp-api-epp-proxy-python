@@ -41,13 +41,15 @@ def handle_rpp_error(request: ConnexionRequest, exc: ProblemException) -> Connex
     )
 
 
-def create_app(authenticator):
+def create_app(authenticator, discovery_settings=None):
     """
     Builds the application.
 
     Args:
         authenticator: Provides authenticate(username, password), which returns the
             token info holding the request's EPP client, or None to reject the request.
+        discovery_settings: Has rpp_base_url, rpp_tlds, rpp_environment_name and
+            rpp_environment_status, which the discovery document states.
     """
     app = FlaskApp(
         __name__,
@@ -67,5 +69,6 @@ def create_app(authenticator):
                     "body": MediaTypeDict({**VALIDATOR_MAP["body"], "*/*json": RppRequestBodyValidator}),
                     "response": MediaTypeDict({"*/*json": RppResponseBodyValidator}),
                 })
+    app.app.config["RPP_DISCOVERY_SETTINGS"] = discovery_settings
     app.add_error_handler(ProblemException, handle_rpp_error)
     return app

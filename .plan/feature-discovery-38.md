@@ -2,13 +2,13 @@
 
 ## Tasks
 
-- [~] Plan approved by orchestrator
-- [ ] Red tests: mapper unit test, wire tests (module-scoped app), config test
-- [ ] `Discovery` model, `discovery.model_to_rpp` mapper (validates against `discovery.read`)
-- [ ] `controller/discovery.py` `discovery_read`, config keys in `config.yaml` and `Config`
-- [ ] Drop `/.well-known/rpp` from the 501 case in `tests/unit/test_rpp_wire.py`
-- [ ] Docs: architecture.project.md (Configuration, lifecycle), testing.project.md if needed
-- [ ] Full `pytest` at repo root on the reported commit
+- [x] Plan approved by orchestrator
+- [x] Red tests: mapper unit test, wire tests (module-scoped app), config test
+- [x] `Discovery` model, `discovery.model_to_rpp` mapper (validates against `discovery.read`)
+- [x] `controller/discovery.py` `discovery_read`, config keys in `config.yaml` and `Config`
+- [x] Drop `/.well-known/rpp` from the 501 case in `tests/unit/test_rpp_wire.py`
+- [x] Docs: architecture.project.md (Configuration, lifecycle), testing.project.md if needed
+- [~] Full `pytest` at repo root on the reported commit
 
 ## Findings
 
@@ -27,7 +27,15 @@
 
 ## Decisions
 
-(none yet)
+- Q1: discovery does not touch EPP (anonymous request must not open a backend connection). Wire test uses an EPP client factory that fails if called; asserts no session or login.
+- Q2: missing required config answers 500 (02400, COMMAND_FAILED) with a fixed detail naming no keys or values; the log gets a warning naming the missing keys. No startup failure. Values set in `config.yaml`. Base URL is never derived from the `Host` header.
+- Q3: one constant "1.0". The proxy has no media type `version` handling and does not enforce core §12's 406: report it.
+- Q4: no `Cache-Control`; one line in the spec-issues "Discovery" entry.
+- Q5: stay on main, no stacking; `message` not listed (`/messages` is 501 on main). Quote core/json and data-objects §17.2 in the spec entry. File an issue (`severity:low`, `area:not-implemented`) to add `message` after #97.
+- Q6: spec-issues line on the json §5.2.1 idnLgr example lacking `url` and `default`.
+- Spec entry also: `extensions` omitted (no RPP extension id for secDNS), `profiles` omitted (`GET /profiles/{name}` is 501, but the proxy follows the EPP Compatibility Profile: should the draft name it for discovery?).
+- Settings reach the handler through `create_app(authenticator, discovery_settings=None)` (flask app config), composition root passes `config`; tests pass a plain test-double settings object.
+- Missing `RPP-Cltrid`: the OpenAPI declares it required, so the answer is a 400 Problem Detail; tested.
 
 ## Open questions
 

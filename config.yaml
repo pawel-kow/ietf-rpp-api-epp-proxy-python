@@ -41,3 +41,13 @@ rpp_epp_ns_map:
   host: "urn:ietf:params:xml:ns:host-1.0"
   secDNS: "urn:ietf:params:xml:ns:secDNS-1.1"
   rgp: "urn:ietf:params:xml:ns:rgp-1.0"
+
+# What the discovery document (GET /.well-known/rpp) states. Without all four it answers 500.
+# Public base URL of this proxy, which clients prefix to every path. Never taken from the request.
+rpp_base_url: https://localhost:8000
+# TLDs served
+rpp_tlds:
+  - example
+# Name and operational status ("production", "test", "development") of this server
+rpp_environment_name: rpp-epp-proxy.example
+rpp_environment_status: test

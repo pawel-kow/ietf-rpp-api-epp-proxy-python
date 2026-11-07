@@ -136,12 +136,19 @@ open the connection. `rpp_epp_use_tls` (default `true`) connects over TLS with t
 certificate and hostname verified. `rpp_epp_tls_insecure_skip_verify` (default `false`)
 turns both checks off, for test backends only.
 
+`rpp_base_url`, `rpp_tlds`, `rpp_environment_name` and `rpp_environment_status` are what the
+discovery document (`GET /.well-known/rpp`, no authentication, no EPP) states. `controller/discovery.py`
+adds the RPP version and the supported objects, which are constants. Without all four, it answers
+500 (`02400`) and logs the missing keys. The base URL is never taken from the request. The proxy does not
+check the `version` parameter of the media type, so core §12's 406 is not enforced. See
+[spec-issues.md](../../.spec/spec-issues.md#discovery).
+
 ## Composition
 
 [src/run.py](../../src/run.py) is the composition root: it builds the default
 `EPPClient` factory and passes it to
 [`EppSessionAuthenticator`](../../src/controller/epp_session_authenticator.py), which
-goes to `create_app` in [src/app.py](../../src/app.py). `create_app` hands
+goes to `create_app` in [src/app.py](../../src/app.py), with `config` as the settings of the discovery document, which the handler reads from the app configuration. `create_app` hands
 `authenticate` to Connexion through `security_map`, because Connexion would otherwise
 resolve the function by name and it could not receive dependencies.
 
