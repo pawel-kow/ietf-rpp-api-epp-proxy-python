@@ -31,10 +31,42 @@
     },
     {
       "request": {
+        "method": "GET",
+        "url": "/domainNames/rn6-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        },
+        "fields": {
+          "expiryDate": {
+            "type": "not_null"
+          }
+        }
+      },
+      "capture": {
+        "expiry": "expiryDate"
+      }
+    },
+    {
+      "request": {
         "method": "POST",
         "url": "/domainNames/rn6-{random_name}.example/processes/renewProcesses",
         "body_json": {
-          "@type": "renewProcess"
+          "@type": "renewProcess",
+          "expiryDate": "{capture:expiry}",
+          "renewalPeriod": {
+            "@type": "period",
+            "value": 1,
+            "unit": "y"
+          }
         },
         "headers": {
           "Authorization": "Basic YmF6OnF1eA==",

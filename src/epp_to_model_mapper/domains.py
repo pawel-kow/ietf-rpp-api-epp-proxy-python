@@ -178,16 +178,17 @@ def parse_domain_transfer_response(xml_string: str, client_transaction_id: str |
 
 
 def parse_domain_renew_response(xml_string: str, client_transaction_id: str | None) -> DomainRenewResponse:
-    """Parses an EPP domain renew response. `renData` is absent from a pending renewal."""
+    """Parses an EPP domain renew response. A pending renewal has not completed, so it has no new expiry date."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
     if client_transaction_id is None:
         header["client_transaction_id"] = None
     data = find_res_data(epp, RenData)
+    completed = header["code"] != ResultCode.COMMAND_COMPLETED_ACTION_PENDING
     return DomainRenewResponse(
         renewal=DomainRenewProcess(
             name=data.name if data else None,
-            expiryDate=epp_datetime(data.ex_date) if data else None,
+            expiryDate=epp_datetime(data.ex_date) if data and completed else None,
         ),
         **header,
     )

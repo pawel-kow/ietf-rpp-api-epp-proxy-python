@@ -69,3 +69,10 @@ def test_pending_reply():
     response = parse_domain_renew_response(reply(1001), "rn32-cl-1")
     assert response.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING
     assert response.renewal.expiryDate is None
+
+
+def test_pending_reply_with_ren_data_has_no_expiry():
+    """The renewal has not completed (data-objects §10.3), so its new expiry is not reported."""
+    response = parse_domain_renew_response(reply(1001, REN_DATA), "rn32-cl-1")
+    assert response.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING
+    assert response.renewal.expiryDate is None

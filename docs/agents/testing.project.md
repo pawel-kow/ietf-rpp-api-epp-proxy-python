@@ -45,10 +45,8 @@ A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait 
 queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in
 unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67).
 
-A renew cannot be given the real current expiry in a data file, because a case cannot carry a value from one
-step to the next. The cases of `domain_renew/` omit `expiryDate`, so the proxy reads it, and assert the new
-expiry against `{test_start}`. A wrong `expiryDate` is `2306`. The backend refuses a renew period under one year
-(`2306`), so month periods are 12 or more. Sending the right `expiryDate` is tested in unit tests.
+The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
+`expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was.
 
 ## Tests without the backend
 
@@ -84,6 +82,9 @@ update → verify) run against a Flask test client.
 - A step's `response` can be `{"any_of": [...]}`, a list of responses of which one must match,
   for behaviour the protocol leaves to the server. A create that may be refused, or may keep
   the data in another form, lists each outcome, see `domain_create/test16` to `test18`.
+- A step's `capture` maps a name to a dotted field of its response body. Later steps write `{capture:name}`
+  in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
+  a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.

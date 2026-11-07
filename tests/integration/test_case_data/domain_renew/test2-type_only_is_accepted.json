@@ -1,5 +1,5 @@
 {
-  "test_id": "test2-type_only_uses_the_default_period",
+  "test_id": "test2-type_only_is_accepted",
   "steps": [
     {
       "request": {
@@ -60,7 +60,10 @@
         },
         "fields": {
           "expiryDate": {
-            "type": "not_null"
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": 31535940,
+            "max_delta": 315360000
           }
         }
       }

@@ -38,10 +38,11 @@ def renew_reply(code=1000, with_data=True):
 
 
 def info_reply(ex_date="2005-04-03T22:00:00.0Z"):
+    ex = f"<domain:exDate>{ex_date}</domain:exDate>" if ex_date else ""
     return (True, "1000", epp_reply(1000, (
         f'<resData><domain:infData {DOMAIN_NS}><domain:name>FOO.EXAMPLE</domain:name>'
         '<domain:roid>D1-EX</domain:roid><domain:status s="ok"/><domain:clID>user</domain:clID>'
-        f'<domain:exDate>{ex_date}</domain:exDate></domain:infData></resData>'
+        f'{ex}</domain:infData></resData>'
     )))
 
 
@@ -137,6 +138,12 @@ def test_errors_are_passed_on(epp_code, status, rpp_code):
     {"@type": "renewProcess", "renewalPeriod": {"@type": "period", "value": 1, "unit": "y", "extra": 1}},
     {"@type": "renewProcess", "renewalPeriod": {"@type": "period", "value": 100, "unit": "y"}},
     {"@type": "renewProcess", "expiryDate": "not a date"},
+    {"@type": "renewProcess", "expiryDate": ""},
+    {"@type": "renewProcess", "expiryDate": "2005-04-03T22:00:00"},
+    {"@type": "renewProcess", "expiryDate": "2005-W14-7T22:00:00Z"},
+    {"@type": "renewProcess", "expiryDate": "20050403T220000Z"},
+    {"@type": "renewProcess", "expiryDate": "2005-04-03T22:00Z"},
+    {"@type": "renewProcess", "expiryDate": "2005-04-03 22:00:00Z"},
     {"@type": "domainName"},
 ])
 def test_invalid_body_is_a_400_without_epp(body):
@@ -145,6 +152,30 @@ def test_invalid_body_is_a_400_without_epp(body):
     assert response.status_code == 400
     assert response.headers["RPP-Code"] == "02001"
     assert not any(client.sent for client in clients)
+
+
+def test_lowercase_t_and_z_are_a_valid_date_time():
+    http, clients = setup(renew_reply())
+    assert post(http, {"@type": "renewProcess", "expiryDate": "2005-04-03t22:00:00z"}).status_code == 200
+    assert "2005-04-03</" in clients[-1].sent[0]
+
+
+def test_authorization_header_is_a_501_without_epp():
+    """RFC 5731 domain:renew has no authInfo, so it cannot be dropped silently."""
+    http, clients = setup(renew_reply())
+    headers = {**BODY_HEADERS, "RPP-Authorization": "authinfo value=MmZvb0JBUg=="}
+    response = http.post(PROCESSES, json=BODY, headers=headers)
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02102"
+    assert not any(client.sent for client in clients)
+
+
+def test_info_without_expiry_date_is_a_500_and_nothing_is_renewed():
+    http, clients = setup(info_reply(ex_date=None), renew_reply())
+    response = post(http, {"@type": "renewProcess"})
+    assert response.status_code == 500
+    assert response.headers["RPP-Code"] == "02400"
+    assert len(clients[-1].sent) == 1
 
 
 def test_list_is_a_501():

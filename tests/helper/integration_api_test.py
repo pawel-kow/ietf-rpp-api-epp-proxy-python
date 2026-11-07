@@ -90,6 +90,25 @@ def assert_any_response(alternatives, response, test_name):
             failures.append(f"[{i}] {failure}")
     assert False, "No alternative matches:\n" + "\n".join(failures)
 
+CAPTURE = re.compile(r"\{capture:([A-Za-z_]+)(?:\+([0-9]+)y)?\}")
+
+def substitute_captures(value, captures):
+    """Replaces {capture:name} with a value an earlier step captured, and {capture:name+Ny} with that
+    timestamp N years later."""
+    if isinstance(value, dict):
+        return {k: substitute_captures(v, captures) for k, v in value.items()}
+    if isinstance(value, list):
+        return [substitute_captures(v, captures) for v in value]
+    if isinstance(value, str):
+        def replace(match):
+            captured = captures[match.group(1)]
+            if match.group(2) is None:
+                return captured
+            later = datetime.fromisoformat(captured.replace("Z", "+00:00"))
+            return later.replace(year=later.year + int(match.group(2))).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        return CAPTURE.sub(replace, value)
+    return value
+
 def endpoint_test(client, case_sequence):
     """
     Tests the POST /domains endpoint using the Flask test client.
@@ -100,7 +119,9 @@ def endpoint_test(client, case_sequence):
     """
     if "skip" in case_sequence:
         pytest.skip(reason=f"Skipping test case: {case_sequence['test_id']} - {case_sequence['skip']}")
+    captures = {}
     for i, case in enumerate(case_sequence["steps"]):
+        case = substitute_captures(case, captures)
         # --- Make HTTP Request ---
         if "body_json" in case["request"]:
             response = client.request(case["request"]["method"],
@@ -124,3 +145,7 @@ def endpoint_test(client, case_sequence):
             assert_any_response(case["response"]["any_of"], response, test_name)
         else:
             assert_response(case["response"], response, test_name)
+
+        # A step's "capture" maps a name to a dotted field of its response body, for {capture:name} in later steps.
+        for name, path in case.get("capture", {}).items():
+            captures[name] = field_value(response.json(), path)

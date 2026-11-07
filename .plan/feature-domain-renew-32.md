@@ -34,3 +34,12 @@ Base: `main` at 5258d2b. Independent of PRs #81, #83 and #86 as far as the plan 
 - The backend refuses a renew period under one year (`2306`, "not under 1 year and not over 10"), also for months, so integration cases use 12m.
 - A wrong `curExpDate` is `2306` on the backend, 422.
 - `jsonschema` does not check `format`, so the mapper rejects an `expiryDate` without an offset itself.
+
+## Review round 1 (orchestrator)
+
+1. `expiryDate: ""` is a 400 (`is not None` test).
+2. `expiryDate` is checked against an RFC 3339 §5.6 pattern (case-insensitive `T`/`Z`, `:60` refused) before parsing.
+3. `RPP-Authorization` on renew is a 501 (`02102`), through `reject_set` in the mapper.
+4. `expiryDate` is left out of a `1001`, also with `renData`.
+5. Tests: no `exDate` in Info is a 500 `02400` with no renew sent. `test3` uses 24 months and a delta window. `test2` is renamed `type_only_is_accepted`, because a renew without a period leaves the expiry unchanged on the backend. Step `capture` added to the runner. `test10` sends the exact current expiry. `test6` sends the correct expiry, so the 403 (`2201`) comes from the renew.
+6. `parse_rpp` accepting the Python field name is filed as an issue, not fixed here.
