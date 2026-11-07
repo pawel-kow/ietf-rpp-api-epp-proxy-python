@@ -2,7 +2,8 @@
 
 ## Tasks
 
-- [~] Plan accepted by the maintainer
+- [x] Plan accepted by the maintainer
+- [~] Resolve the nameservers plus DNSSEC difference between PATCH and create (blocked, asked the maintainer)
 - [ ] Tests first: integration cases in `tests/integration/test_case_data/domain_update/` (PUT adds and removes nameservers, contacts, registrant, client status; clears what is omitted; replaces `dns` records and DS; authInfo; no change; missing domain; server status in body; invalid body) and unit tests for the new mapper and flow
 - [ ] `rpp_to_model_mapper/domain_replacement.py`: `rpp_to_model` (validates `domainName.update`, returns the wanted representation)
 - [ ] `flows/domains.py`: `replace_domain`
@@ -31,6 +32,19 @@
 - New module `rpp_to_model_mapper/domain_replacement.py` (mirror of `host_replacement.py`), exported in `rpp_to_model_mapper/__init__.py`.
 - New `replace_domain` in `flows/domains.py` (exported from `flows/__init__.py`), next to `patch_domain`. The `_changes_nothing` and `_read_back` helpers are reused.
 - New controller function `domainNames_update` in `controller/domains.py`. No interface change to existing functions, no openapi change.
+
+## Decisions (maintainer, accepted)
+
+1. authInfo omitted in a PUT: left untouched. Present: always sent as `chg`, no comparison. Reason: core §16.8 "subject to server policy", a wipe is irreversible, json §4.9.3 says a client MUST NOT send authInfo, so a PUT built from a read would wipe it. spec-issues entry: §16.8 vs data-objects §11.3.4 vs json §4.9.3, and §4.9.3 vs authInfo in create/update schemas.
+2. PUT without a change: 200 with the current domain, no EPP update (as domain PATCH). Host PUT stays (pinned by host_update/test15). Extend spec-issues "Full update without a change" (data-objects §11.3.4, core §16.8; domain 200, host 400 `2003`).
+3. Members outside `domainName.update` at the top level, including create-only and read-only ones: 400 `02001` (json §4.4, §4.9.1). Check whether host PUT ignores them, if reproduced file one issue (`bug`, `severity:medium`, `area:spec-compliance`), no fix here.
+4. `status` is a set replace: omitted clears all client statuses, a changed reason is remove plus add, server statuses are kept. `ok` or a server status in the body is 400 (the PATCH exception for `ok` does not apply). The wanted object must validate as `domainName.read` also with an empty status array (test).
+5. The path name is the only identity, a body `name` is 400 (3).
+6. Same `dns`/`nameservers` checks as create, reusing the create code. Add the consequence to spec-issues "DNSSEC with `nameservers`". Unskip `draft_domain/test8-update`.
+
+## Findings (2)
+
+- PATCH treats nameservers plus DNSSEC differently from create: `domain_patch_difference.difference` rejects only `nameservers` together with `ns` records of `dns` (verified: adding a `ds` record to a domain that has `nameservers` is accepted and yields `add.dnsSEC`), while create (`domains._rpp_to_delegation`) rejects `nameservers` with any `dns.records`. A read of such a domain returns both, so a PUT built from that read would be 400 under the create rule. Asked the maintainer.
 
 ## Open questions
 
