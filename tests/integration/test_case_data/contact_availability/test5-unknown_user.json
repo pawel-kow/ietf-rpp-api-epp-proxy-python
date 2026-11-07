@@ -13,6 +13,7 @@
       },
       "response": {
         "status": 401,
+        "content_type": "application/problem+json",
         "headers": {
           "RPP-Code": "02200"
         },

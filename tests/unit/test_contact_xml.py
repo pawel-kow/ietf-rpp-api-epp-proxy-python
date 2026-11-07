@@ -113,7 +113,7 @@ def test_check_xml():
     xml = contact_check_xml("jd-1", client_request_id="cl-1")
 
     assert "<contact:check" in xml
-    assert "<contact:id>jd-1</contact:id>" in xml
+    assert "<contact:id>JD-1</contact:id>" in xml
     assert "cl-1" in xml
 
 

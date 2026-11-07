@@ -4,6 +4,6 @@ from .rpp_models import RPPDomainNameAvailability
 
 
 def model_to_rpp(check: DomainCheckResponseSingle) -> dict:
-    availability = RPPDomainNameAvailability(available=check.available, reason=check.reason).to_rpp()
+    availability = RPPDomainNameAvailability(available=check.available, reason=None if check.available else check.reason).to_rpp()
     validate_schema("domainNameAvailability.read", availability)
     return availability

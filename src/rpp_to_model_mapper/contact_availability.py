@@ -4,6 +4,6 @@ from .rpp_models import RPPContactAvailability
 
 
 def model_to_rpp(check: ContactCheckResponse) -> dict:
-    availability = RPPContactAvailability(available=check.available, reason=check.reason).to_rpp()
+    availability = RPPContactAvailability(available=check.available, reason=None if check.available else check.reason).to_rpp()
     validate_schema("contactAvailability.read", availability)
     return availability

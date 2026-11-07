@@ -26,4 +26,8 @@
 - `draft_contact/test1-availability.json`: unskipped, create step with an `FO-` id then check it, draft response shape kept (orchestrator).
 - Probe: lowercase id on a created contact is taken (404), so the backend matches ids case-insensitively. Ids of 2 and 31 chars answer available (200) on the backend, though EPP checkIDType is 3 to 16: backend defect, reported not filed.
 
+- Review items (orchestrator): availability `reason` is dropped when `available` is true (json §6.2.15.1) in contact, host and domain mappers, with a unit case each. `contact_check` sends the uppercased id, as create does, because core §16.4 asks whether the object can be provisioned. Info and Delete still send the id as given. `contact_availability/test5` pins `application/problem+json`.
+- HEAD answers `content-type: text/html` on all three availability controllers: filed as a separate issue, fix location not established.
+- Backend id length defect is pawel-kow/epp#24, added to testing.project.md.
+
 ## Open questions

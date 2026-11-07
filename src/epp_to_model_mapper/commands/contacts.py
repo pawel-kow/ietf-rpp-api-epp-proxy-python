@@ -99,4 +99,4 @@ def contact_delete(contact_id: str, rpp_cl_trid: str) -> Epp:
 
 
 def contact_check(contact_id: str, rpp_cl_trid: str) -> Epp:
-    return Epp(command=CommandType(check=ReadWriteType(other_element=Check(id=[contact_id])), cl_trid=rpp_cl_trid))
+    return Epp(command=CommandType(check=ReadWriteType(other_element=Check(id=[contact_id.upper()])), cl_trid=rpp_cl_trid))
