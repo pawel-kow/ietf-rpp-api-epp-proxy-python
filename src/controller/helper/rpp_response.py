@@ -1,8 +1,8 @@
-import asyncio
 import functools
 import uuid
 
 from connexion import ProblemException, request
+from flask import request as flask_request
 from jsonschema import ValidationError
 
 from models import ErrorResponse, OperationResponse, ResultCode
@@ -82,8 +82,12 @@ def raise_epp_error(resp: ErrorResponse):
 
 
 def require_empty_body():
-    """DELETE takes no request body."""
-    if asyncio.run(request.get_body()):
+    """DELETE takes no request body (core §16.1.4), whatever it holds: `null` or `{}` is still content.
+
+    Read through Flask: Connexion's own `get_body()` gives the parsed content, which is falsy for these,
+    and waiting on the ASGI stream can hang when the body arrives after the headers.
+    """
+    if flask_request.get_data() or flask_request.form:
         raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
 
 

@@ -164,7 +164,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}C3/processes/transferProcesses/latest",
+        "url": "/contacts/FO-{random_id_10}C17/processes/transferProcesses/latest",
         "headers": {
           "Authorization": "Basic YmF6OnF1eA==",
           "Accept": "application/rpp+json",

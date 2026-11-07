@@ -1,7 +1,7 @@
-import asyncio
 import json
 
-from connexion import request
+from connexion import ProblemException, request
+from flask import request as flask_request
 from models import ErrorResponse, ResultCode, TransferOperation
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import (
@@ -40,8 +40,15 @@ class TransferHandlers:
 
     def _process(self, transfer):
         resp = self._run(transfer)
-        if resp.transfer is None:  # applied, but EPP gave no state to show
-            return None, 202, generate_rpp_response_headers(resp)
+        if resp.transfer is None:
+            if transfer.operation == TransferOperation.QUERY:  # nothing was applied, so there is nothing to confirm
+                raise_epp_error(ErrorResponse(
+                    code=ResultCode.COMMAND_FAILED,
+                    msg="The EPP server gave no transfer state",
+                    server_transaction_id=resp.server_transaction_id,
+                    client_transaction_id=resp.client_transaction_id,
+                ))
+            return None, 202, generate_rpp_response_headers(resp)  # applied, but EPP gave no state to show
         return self._response_mapper(resp.transfer), 200, generate_rpp_response_headers(resp)
 
     def _operation(self, id, operation):
@@ -68,11 +75,13 @@ class TransferHandlers:
     @staticmethod
     def _optional_body():
         """The OpenAPI declares no body for approve, so Connexion does not read it: None for none."""
-        raw = asyncio.run(request.body())
-        return json.loads(raw) if raw and raw.strip() else None
+        raw = flask_request.get_data()
+        return json.loads(raw) if raw else None
 
     def approve(self, id):
         body = map_request(self._optional_body)
+        if body is None and flask_request.get_data():  # `null` is content, no content is no body
+            raise ProblemException(status=400, title="Bad Request", detail="Request body must be an object")
         return self._process(map_request(self._approve_mapper, id, body, self._authorization()))
 
     def reject(self, id, body):

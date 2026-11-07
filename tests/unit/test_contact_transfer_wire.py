@@ -286,12 +286,11 @@ def test_create_with_a_read_only_member_is_a_400_without_epp():
 
 @pytest.mark.parametrize("method,url", [
     ("POST", PROCESSES),
-    ("GET", LATEST),
     ("DELETE", LATEST),
     ("POST", f"{LATEST}/transferApprove"),
     ("POST", f"{LATEST}/transferReject"),
 ])
-def test_success_without_trn_data_is_a_202_without_body(method, url):
+def test_mutation_without_trn_data_is_a_202_without_body(method, url):
     """The transfer was applied, but EPP gave no state to show."""
     no_data = (True, "1000", epp_reply(1000))
     kwargs = {"json": CREATE_BODY} if url == PROCESSES else {}
@@ -334,4 +333,23 @@ def test_other_authorization_method_is_a_501_without_epp_on_every_operation(meth
     response = http.request(method, url, headers={**HEADERS, "RPP-Authorization": "bearer abc"})
     assert response.status_code == 501
     assert response.headers["RPP-Code"] == "02102"
+    assert not any("transfer" in sent for client in clients for sent in client.sent)
+
+
+def test_query_without_trn_data_is_a_500_with_a_clean_detail():
+    """A query applied nothing, so there is nothing to confirm."""
+    response = client_with((True, "1000", epp_reply(1000))).get(LATEST, headers=HEADERS)
+    assert response.status_code == 500
+    assert response.headers["RPP-Code"] == "02400"
+    assert response.headers["RPP-Svtrid"] == "sv-1"
+    assert "Error" not in response.json()["detail"] and "object" not in response.json()["detail"]
+
+
+@pytest.mark.parametrize("data", [b"null", b" ", b"\n"])
+def test_approve_with_a_body_of_null_or_whitespace_is_a_400_without_epp(data):
+    """Bytes are content, even when they parse to nothing."""
+    http, clients = setup()
+    response = http.post(f"{LATEST}/transferApprove", content=data, headers=BODY_HEADERS)
+    assert response.status_code == 400
+    assert response.headers["RPP-Code"] == "02001"
     assert not any("transfer" in sent for client in clients for sent in client.sent)

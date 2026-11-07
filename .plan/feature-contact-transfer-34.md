@@ -37,6 +37,14 @@ Carried over from #33: query with nothing pending 409 (02301); approve takes an 
 - The direction guard is `reject_push` in `common.py`. The contact command has its own `_transfer_auth_info`, because the contact and domain `AuthInfoType` are different classes.
 - Commit 5302270 holds the domain behaviour change and, necessarily, the contact approve and request classes it wires.
 
+## Review round 2 (PR #90)
+
+- Bodies are read with `flask.request.get_data()`, not `asyncio.run(request.body())`, which hung under uvicorn when the body arrived after the headers. A loopback uvicorn test with a delayed body reproduces the hang on the old code (4 runs hung) and passes now.
+- `require_empty_body` (all DELETE routes: contacts, domains, hosts and transfer cancel) rejects any raw body, `{}`, `null`, `[]`, `0`, `false`, `""`, whitespace and `{bad` included, and any form body (`flask.request.form` is needed: without it all 5 form tests fail). Core §16.1.4. This is a wire change for every DELETE.
+- Approve with bytes that parse to `null`, or only whitespace, is 400 (02001).
+- A query without `trnData` is 500 (02400) with a fixed detail, since it applied nothing. Create, cancel, approve and reject stay 202.
+- `contact_transfer/test17` reads `C17`.
+
 ## Backend notes
 
 - A completed contact transfer cannot be queried (2301), like #65. Cancel by the non-requester is 2201, also with nothing pending, like #66.
