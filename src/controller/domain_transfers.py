@@ -1,60 +1,38 @@
-from connexion import request
-from eppclient.epp_domains import *
-from models import *
+from eppclient.epp_domains import epp_domains_Transfer
+from models import DomainTransfer
 import rpp_to_model_mapper as rpp_mapper
-from .helper.rpp_response import *
-from .auth import get_epp_client
+from .helper.rpp_response import rpp_operation
+from .transfer_handlers import TransferHandlers
 
-LATEST = "latest"
-
-
-def _authorization():
-    return request.headers.get("RPP-Authorization")
-
-
-def _run(transfer):
-    resp = epp_domains_Transfer(get_epp_client(), transfer, client_transaction_id=client_transaction_id())
-    if isinstance(resp, ErrorResponse):
-        raise_epp_error(resp)
-    return resp
-
-
-def _process(transfer):
-    resp = _run(transfer)
-    return rpp_mapper.domain_transfer_process.model_to_rpp(resp.transfer), 200, generate_rpp_response_headers(resp)
-
-
-def _operation(name, operation):
-    auth_info = map_request(rpp_mapper.rpp_authorization.rpp_to_model, _authorization())
-    return _process(DomainTransfer(name=name, operation=operation, authInfo=auth_info))
+_handlers = TransferHandlers(
+    run=epp_domains_Transfer,
+    create_mapper=rpp_mapper.domain_transfer_process.rpp_to_model,
+    reject_mapper=rpp_mapper.domain_transfer_reject.rpp_to_model,
+    response_mapper=rpp_mapper.domain_transfer_process.model_to_rpp,
+    make_transfer=lambda name, operation, auth_info: DomainTransfer(name=name, operation=operation, authInfo=auth_info),
+)
 
 
 @rpp_operation
 def domainNameTransferProcesses_transferCreate(name, body):
-    resp = _run(map_request(rpp_mapper.domain_transfer_process.rpp_to_model, name, body, _authorization()))
-    process = rpp_mapper.domain_transfer_process.model_to_rpp(resp.transfer)
-    headers = generate_rpp_response_headers(resp)
-    if resp.code != ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
-        return process, 200, headers  # completed at once: EPP exposes no process (core §16.1.4)
-    return process, 201, {**headers, "Location": f"{str(request.url).rstrip('/')}/{LATEST}"}
+    return _handlers.create(name, body)
 
 
 @rpp_operation
 def domainNameTransferProcesses_transferRead(name):
-    return _operation(name, TransferOperation.QUERY)
+    return _handlers.read(name)
 
 
 @rpp_operation
 def domainNameTransferProcesses_transferDelete(name):
-    require_empty_body()
-    return _operation(name, TransferOperation.CANCEL)
+    return _handlers.delete(name)
 
 
 @rpp_operation
 def domainNameTransferProcesses_transferApprove(name):
-    return _operation(name, TransferOperation.APPROVE)
+    return _handlers.approve(name)
 
 
 @rpp_operation
 def domainNameTransferProcesses_transferReject(name, body=None):
-    return _process(map_request(rpp_mapper.domain_transfer_reject.rpp_to_model, name, body, _authorization()))
+    return _handlers.reject(name, body)
