@@ -27,7 +27,7 @@ def epp_reply(code, res_data=""):
 def info(status="ok"):
     return (True, "1000", epp_reply(1000, (
         f'<resData><host:infData {HOST_NS}><host:name>NS1.EXAMPLE.EXAMPLE</host:name><host:roid>H1</host:roid>'
-        f'<host:status s="{status}"/><host:addr ip="v">192.0.2.1</host:addr><host:clID>foo</host:clID>'
+        f'<host:status s="{status}"/><host:addr ip="v4">192.0.2.1</host:addr><host:clID>foo</host:clID>'
         '<host:crID>foo</host:crID><host:crDate>2026-11-04T10:00:00.0Z</host:crDate></host:infData></resData>'
     )))
 

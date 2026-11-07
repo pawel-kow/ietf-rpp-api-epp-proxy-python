@@ -1,3 +1,5 @@
+import pytest
+
 from models import Host, HostUpdate, HostUpdateChanges
 from epp_to_model_mapper import (
     create_host_update_xml, create_host_xml, delete_host_xml, host_check_xml, info_host_xml,
@@ -113,12 +115,20 @@ def test_parse_info_addresses():
     assert host.ipv6 == ["2001:db8::1"]
 
 
-def test_parse_info_does_not_rely_on_the_ip_attribute():
-    """The backend sends ip="v" and ip="vv4"."""
-    host = parsed_info('<host:addr ip="v">192.0.2.1</host:addr><host:addr ip="vv4">2001:db8::1</host:addr>').host
+def test_parse_info_sorts_addresses_by_the_ip_attribute():
+    host = parsed_info('<host:addr ip="v6">192.0.2.1</host:addr>').host
 
-    assert host.ipv4 == ["192.0.2.1"]
-    assert host.ipv6 == ["2001:db8::1"]
+    assert host.ipv4 is None
+    assert host.ipv6 == ["192.0.2.1"]
+
+
+def test_parse_info_ip_defaults_to_v4():
+    assert parsed_info('<host:addr>192.0.2.1</host:addr>').host.ipv4 == ["192.0.2.1"]
+
+
+def test_parse_info_does_not_drop_an_address_with_a_malformed_ip_attribute():
+    with pytest.raises(KeyError):
+        parsed_info('<host:addr ip="v">192.0.2.1</host:addr>')
 
 
 def test_parse_info_status_reason():

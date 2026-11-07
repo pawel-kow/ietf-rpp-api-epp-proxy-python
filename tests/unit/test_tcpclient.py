@@ -21,11 +21,12 @@ def test_receive_decodes_utf8():
     assert client.receive() == "<msg>Jörg</msg>"
 
 
-def test_receive_survives_a_message_that_is_not_utf8():
+def test_receive_rejects_a_message_that_is_not_utf8():
     client = TCPClient("host", 700)
     client.socket = FakeSocket("<msg>Jörg</msg>".encode("latin-1"))
 
-    assert client.receive() == "<msg>J�rg</msg>"
+    with pytest.raises(ConnectionException):
+        client.receive()
 
 
 class TricklingSocket(FakeSocket):
