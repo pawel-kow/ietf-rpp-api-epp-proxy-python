@@ -4,11 +4,11 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}-06/availability",
+        "url": "/contacts/FO-{random_id_10}-a6/availability",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
-          "RPP-Cltrid": "repeated-{random_id_10}"
+          "RPP-Cltrid": "repcontact-{random_id_10}"
         }
       },
       "response": {
@@ -26,11 +26,11 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}-06/availability",
+        "url": "/contacts/FO-{random_id_10}-a6/availability",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
-          "RPP-Cltrid": "repeated-{random_id_10}"
+          "RPP-Cltrid": "repcontact-{random_id_10}"
         }
       },
       "response": {

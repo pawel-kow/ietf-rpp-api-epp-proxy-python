@@ -13,7 +13,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-04",
+          "id": "FO-{random_id_10}-a4",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -58,7 +58,7 @@
     {
       "request": {
         "method": "HEAD",
-        "url": "/contacts/FO-{random_id_10}-04/availability",
+        "url": "/contacts/FO-{random_id_10}-a4/availability",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",

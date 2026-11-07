@@ -4,7 +4,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}-05/availability",
+        "url": "/contacts/FO-{random_id_10}-a5/availability",
         "headers": {
           "Authorization": "Basic Z2hvc3Q6bm9wZQ==",
           "Accept": "application/rpp+json",
