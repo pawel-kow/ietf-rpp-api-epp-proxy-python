@@ -13,7 +13,20 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "t21.{random_name}.net"
+          "hostName": "t21.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t21.{random_name}.net."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {
@@ -76,6 +89,14 @@
             "op": "replace",
             "path": "/dns/records",
             "value": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t21.{random_name}.net."
+                }
+              },
               {
                 "@type": "dnsRecord",
                 "name": "@",

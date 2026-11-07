@@ -3,8 +3,9 @@ from rpp_schema_validator import validate_schema
 from . import host_dns, json_patch, patch_statuses
 from .common import parse_rpp, reject_operation
 from .dns_records import ADDRESS_RECORDS, DNS_PARENTS
-from .hosts import add_rpp_status, rpp_host_with_status_to_model
+from .hosts import add_rpp_status, has_own_ns, rpp_host_with_status_to_model
 from .needs_current_state import NeedsCurrentState
+from .not_supported_by_epp import NotSupportedByEpp
 from .rpp_models import RPPDnsRecord, RPPHost, RPPPatchOperation, RPPStatus
 
 HOST_NAME_PATH = "/hostName"
@@ -76,10 +77,9 @@ class _PatchedHostUpdate:
             return
         validate_schema("dnsRecord.create", element)
         address = host_dns.rpp_to_model(self.host_name, parse_rpp(RPPDnsRecord, element))
-        if address is None:
-            reject_operation(operation)
-        family, value = address
-        getattr(changes, family).append(value)
+        if address is not None:
+            family, value = address
+            getattr(changes, family).append(value)
 
     def to_host_update(self) -> HostUpdate:
         return HostUpdate(
@@ -122,6 +122,9 @@ def rpp_to_model_with_current(host_name: str, rpp: list, current: dict) -> Host:
     patched = patch_statuses.with_server_statuses(patched, current, "hostStatus")
     validate_schema("host.read", patched)
     requested = {member: value for member, value in patched.items() if member != READ_ONLY_MEMBER}
-    host = rpp_host_with_status_to_model(parse_rpp(RPPHost, {**requested, "hostName": current["hostName"]}))
+    host_rpp = parse_rpp(RPPHost, {**requested, "hostName": current["hostName"]})
+    host = rpp_host_with_status_to_model(host_rpp)
+    if not has_own_ns(host_rpp):
+        raise NotSupportedByEpp("Removing the 'ns' record of the host")
     host.name = patched["hostName"]
     return host

@@ -49,7 +49,20 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "ns1.t23-{random_name}.example"
+          "hostName": "ns1.t23-{random_name}.example",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.t23-{random_name}.example."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {

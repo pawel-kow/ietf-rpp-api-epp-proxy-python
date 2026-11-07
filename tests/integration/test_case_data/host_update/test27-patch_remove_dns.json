@@ -13,7 +13,20 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "t27.{random_name}.net"
+          "hostName": "t27.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t27.{random_name}.net."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {
@@ -79,13 +92,14 @@
         ]
       },
       "response": {
-        "status": 200,
+        "status": 501,
         "headers": {
-          "RPP-Code": "01000"
+          "RPP-Code": "02102"
         },
         "body": {
-          "@type": "host"
-        }
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
       }
     }
   ]

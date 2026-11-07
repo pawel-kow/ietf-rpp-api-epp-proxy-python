@@ -25,7 +25,9 @@ single feature (e.g. "domain update") touches every layer:
    `rpp_to_model` and `model_to_rpp`, so the module name selects the conversion, and
    callers write `rpp_mapper.domains.rpp_to_model`. Valid input that cannot reach the
    backend answers 501, so nothing is dropped silently, see
-   [Unsupported input](#unsupported-input). `dns_records.py` holds what hosts and domains share for DNS
+   [Unsupported input](#unsupported-input). The one exception is the self-referencing `ns` record of a
+   host, which EPP represents implicitly: it is mandatory on input and goes no further, see
+   [spec-issues.md](../../.spec/spec-issues.md#the-own-ns-record-of-a-host). `dns_records.py` holds what hosts and domains share for DNS
    records, and `domain_dns.py` maps a domain's `dns` to `hostAttr` and secDNS.
    `domain_patch.py` turns a JSON Patch into a `DomainUpdate` without reading the object, and
    answers `None` when an operation needs the current state (whole-array `replace` or `remove`,

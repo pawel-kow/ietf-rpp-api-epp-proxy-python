@@ -256,7 +256,16 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - A record of the host can name its owner in two forms, `@` and the absolute name, and the examples (json §8.3.2 to §8.3.4) use both in one `records` array: `@` for the `ns` record, `ns1.example.example.` for the addresses. A `match` on `name` then depends on which form the server returns, and a host rename (data-objects §13.3.4) leaves every record with an absolute name pointing at the old name, while `@` follows the host.
 - Suggested: allow only one form for the records of a host, preferably `@`, which also survives a rename. Otherwise the draft should say whether a server normalizes the name, and which name applies in a patch that renames the host.
 - **Proxy:** a patch that renames the host and changes records in one request takes `@` or the old name, and a record under the new name answers 501 (`02102`). A read emits both forms, as the examples do.
-- **Proxy:** follows the examples. An `ns` record is accepted only as the self-reference (`@` with the host as `nsdname`), and A and AAAA records must name the host itself (`@` or its name), anything else is 501 (`02102`). A read emits the `ns` record plus A and AAAA records when the host has addresses, and no `dns` when it has none.
+- **Proxy:** follows the examples. An `ns` record is accepted only as the self-reference (`@` with the host as `nsdname`), and A and AAAA records must name the host itself (`@` or its name), anything else is 501 (`02102`). A read always emits the `ns` record, plus A and AAAA records when the host has addresses.
+
+### The own `ns` record of a host
+
+- A host object represents its name implicitly, so EPP has nothing to store for the self-referencing `ns` record. The examples (json §8.3.2 to §8.3.4) show it, but the drafts do not say whether it is data of the object, or whether a client may omit or remove it.
+- Is the following intended, or at least acceptable? A record that is required on input and carries no information makes a client state what the server already knows. It also goes beyond the drafts: `dns` has cardinality 0-1 (data-objects §13.2), §13.3.2 lets an external host omit its addresses, and `host.create` and `host.update` require only `@type` and `hostName`. If the record is not meant to be mandatory, the EPP Compatibility Profile should say so, and the examples should drop it or mark it as server-generated.
+- **Proxy:** the record is mandatory and never reaches EPP:
+  - A create or PUT without it is a 400 (`02001`), also with no `dns` at all, so `{"@type": "host", "hostName": "..."}` is rejected. A PUT that renames the host gives it with the new name. The checks of the rest of the request come first, so a request that is 501 for another reason stays a 501.
+  - A patch that leaves a host without it is a 501 (`02102`): `remove` with a `match` that hits it, `remove` or `replace` of the whole `/dns/records`, `remove` or `replace` of `/dns`. A client clears the addresses by removing the `a` and `aaaa` records. Removing it and adding it back in one patch is allowed, as only the end state counts (§5.2.2 step 6).
+  - `add` of it is dropped without a read. A patch with nothing else becomes an empty EPP update, and the backend answers `2003` (400), as for an empty patch.
 
 ## Data the EPP Compatibility Profile cannot hold
 

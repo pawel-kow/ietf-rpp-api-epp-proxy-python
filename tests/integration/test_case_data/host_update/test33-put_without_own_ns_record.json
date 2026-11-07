@@ -1,0 +1,69 @@
+{
+  "test_id": "test33-put_without_own_ns_record",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t33.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t33.{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "host"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/hosts/t33.{random_name}.net",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t33.{random_name}.net"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02001"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
+      }
+    }
+  ]
+}

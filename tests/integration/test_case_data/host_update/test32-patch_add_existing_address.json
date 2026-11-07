@@ -44,6 +44,14 @@
             "records": [
               {
                 "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.t32-{random_name}.example."
+                }
+              },
+              {
+                "@type": "dnsRecord",
                 "name": "ns1.t32-{random_name}.example.",
                 "type": "a",
                 "rdata": {

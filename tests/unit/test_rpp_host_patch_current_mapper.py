@@ -6,6 +6,7 @@ from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, PatchNot
 
 NAME = "ns1.foo.example"
 RECORD_A = {"@type": "dnsRecord", "name": "@", "type": "a", "rdata": {"address": "198.51.100.1"}}
+RECORD_NS = {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": f"{NAME}."}}
 STATUS = {"@type": "hostStatus", "label": "clientUpdateProhibited"}
 
 
@@ -32,26 +33,53 @@ def client_statuses(host):
 
 
 def test_replace_records_gives_the_new_addresses():
-    host = wanted(op("replace", "/dns/records", value=[RECORD_A]))
+    host = wanted(op("replace", "/dns/records", value=[RECORD_NS, RECORD_A]))
 
     assert host.ipv4 == ["198.51.100.1"]
     assert host.ipv6 is None
 
 
-def test_remove_records_gives_no_addresses():
-    host = wanted(op("remove", "/dns/records"))
+def test_remove_of_all_addresses_gives_no_addresses():
+    host = wanted(op("remove", "/dns/records", match={"type": "a"}), op("remove", "/dns/records", match={"type": "aaaa"}))
 
     assert host.ipv4 is None and host.ipv6 is None
 
 
-def test_remove_dns_gives_no_addresses():
-    host = wanted(op("remove", "/dns"))
+@pytest.mark.parametrize("operation", [
+    op("remove", "/dns/records", match={"type": "ns"}),
+    op("remove", "/dns/records", match={"name": "@"}),
+    op("remove", "/dns/records", match=RECORD_NS),
+    op("remove", "/dns/records"),
+    op("remove", "/dns"),
+    op("replace", "/dns/records", value=[RECORD_A]),
+    op("replace", "/dns/records", value=[]),
+    op("replace", "/dns/records", match={"type": "ns"}, value=RECORD_A),
+    op("replace", "/dns", value={"@type": "dnsData", "records": [RECORD_A]}),
+])
+def test_removing_the_own_ns_record_cannot_be_expressed_in_epp(operation):
+    with pytest.raises(NotSupportedByEpp):
+        wanted(operation)
 
-    assert host.ipv4 is None and host.ipv6 is None
+
+def test_removing_the_own_ns_record_of_a_host_without_addresses_cannot_be_expressed_in_epp():
+    with pytest.raises(NotSupportedByEpp):
+        wanted(op("replace", "/dns/records", value=[RECORD_A]), ipv4=None, ipv6=None)
+
+
+def test_own_ns_record_removed_and_added_again_stays():
+    host = wanted(op("remove", "/dns/records", match={"type": "ns"}), op("add", "/dns/records", value=RECORD_NS))
+
+    assert host.ipv4 == ["192.0.2.1", "192.0.2.2"]
+
+
+def test_add_of_the_own_ns_record_changes_nothing():
+    host = wanted(op("remove", "/status"), op("add", "/dns/records", value=RECORD_NS))
+
+    assert host.ipv4 == ["192.0.2.1", "192.0.2.2"]
 
 
 def test_replace_dns():
-    host = wanted(op("replace", "/dns", value={"@type": "dnsData", "records": [RECORD_A]}))
+    host = wanted(op("replace", "/dns", value={"@type": "dnsData", "records": [RECORD_NS, RECORD_A]}))
 
     assert host.ipv4 == ["198.51.100.1"]
 
@@ -70,8 +98,8 @@ def test_replace_with_match():
     assert host.ipv6 is None
 
 
-def test_replace_of_records_on_a_host_without_dns():
-    host = wanted(op("replace", "/dns/records", value=[RECORD_A]), ipv4=None, ipv6=None)
+def test_replace_of_records_on_a_host_without_addresses():
+    host = wanted(op("replace", "/dns/records", value=[RECORD_NS, RECORD_A]), ipv4=None, ipv6=None)
 
     assert host.ipv4 == ["198.51.100.1"]
 
@@ -83,7 +111,7 @@ def test_add_after_an_operation_that_reads():
 
 
 def test_operations_apply_in_order():
-    host = wanted(op("remove", "/dns/records"), op("add", "/status", value=STATUS))
+    host = wanted(op("remove", "/dns/records", match={"type": "a"}), op("add", "/status", value=STATUS))
 
     assert client_statuses(host) == ["clientUpdateProhibited"]
     assert host.ipv4 is None

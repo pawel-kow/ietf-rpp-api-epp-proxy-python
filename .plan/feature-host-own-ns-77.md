@@ -4,14 +4,15 @@ Base: `main` at e961421, which includes #73.
 
 ## Tasks
 
-- [~] Settle the open questions with the maintainer
-- [ ] Failing unit tests for each rule
-- [ ] Drop the own `ns` record on `add`, create and PUT, without a read
-- [ ] Reject a removal of the own `ns` record
-- [ ] Reject a create or PUT without the own `ns` record, also with no `dns`
-- [ ] Update the integration cases that create or update hosts without it
-- [ ] Update `.spec/spec-issues.md` (Host DNS records) and `docs/agents` where they describe this
-- [ ] Full `pytest`, draft PR
+- [x] Settle the open questions with the maintainer
+- [x] Failing unit tests for each rule
+- [x] Drop the own `ns` record on `add`, create and PUT, without a read
+- [x] Reject a removal of the own `ns` record
+- [x] Reject a create or PUT without the own `ns` record, also with no `dns`
+- [x] A read always gives the own `ns` record
+- [x] Update the integration cases that create or update hosts without it
+- [x] Update `.spec/spec-issues.md` and `docs/agents`
+- [~] Full `pytest`, draft PR, maintainer acceptance
 - [ ] `git rm` this plan, release the mutex on `main`
 
 ## Decisions (maintainer)
@@ -27,8 +28,9 @@ Base: `main` at e961421, which includes #73.
 - `hosts.model_to_rpp` emits no `dns` for a host without addresses (`_dns_to_rpp`, `test_host_without_addresses_has_no_dns`).
 - A lone `add` of the record gives an empty update, and the backend answers `2003` (400), as `host_update/test5` and `test15` do.
 
-## Open questions
+## Decisions on the open questions (maintainer)
 
-1. Error codes for a removal and for a missing record.
-2. What counts as a removal in a PATCH (`remove /dns`, `replace /dns/records`).
-3. Does a host without addresses read back with its own `ns` record?
+1. Removal: 501 (`02102`). Missing on create or PUT: 400 (`02001`), after the other checks of the request.
+2. A patch whose end state lacks the record is a removal, including `remove /dns`.
+3. A host without addresses reads back with its own `ns` record.
+4. A patch with only `add` of the record answers the backend's `2003` (400).
