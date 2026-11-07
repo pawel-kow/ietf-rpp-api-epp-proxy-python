@@ -52,6 +52,8 @@ Carried over from #33: query with nothing pending 409 (02301); approve takes an 
 - Live cases run every approve, cancel and reject variant with `Content-Length` and chunked, for both kinds (183 cases). Against 972f154, 58 of them failed.
 - A valid chunked create stays 400 (`RequestBody is required`, Connexion's validator), reported in the issue filed for the rest.
 
+- `test_empty_body_wire.py` builds the app once and starts uvicorn once per module. A case cost 1 to 3 s because every one built the app from the OpenAPI and started and stopped a server. The file now takes 8 s, with the same 183 live cases and all body cases.
+
 ## Backend notes
 
 - A completed contact transfer cannot be queried (2301), like #65. Cancel by the non-requester is 2201, also with nothing pending, like #66.

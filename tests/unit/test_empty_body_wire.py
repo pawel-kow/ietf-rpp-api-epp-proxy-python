@@ -39,14 +39,21 @@ def setup():
     return create_app(EppSessionAuthenticator(factory)), clients
 
 
+@pytest.fixture(scope="module")
+def shared():
+    """One app for the module: building it from the OpenAPI takes seconds. Tests clear `clients`."""
+    return setup()
+
+
 def sent_any(clients):
     return any(client.sent for client in clients)
 
 
 @pytest.mark.parametrize("url", DELETES)
 @pytest.mark.parametrize("body", BODIES)
-def test_delete_with_a_body_is_a_400_without_epp(url, body):
-    app, clients = setup()
+def test_delete_with_a_body_is_a_400_without_epp(shared, url, body):
+    app, clients = shared
+    clients.clear()
     response = app.test_client().request("DELETE", url, content=body, headers=HEADERS)
     assert response.status_code == 400
     assert response.headers["RPP-Code"] == "02001"
@@ -54,8 +61,9 @@ def test_delete_with_a_body_is_a_400_without_epp(url, body):
 
 
 @pytest.mark.parametrize("url", DELETES)
-def test_delete_with_a_form_body_is_a_400_without_epp(url):
-    app, clients = setup()
+def test_delete_with_a_form_body_is_a_400_without_epp(shared, url):
+    app, clients = shared
+    clients.clear()
     headers = {k: v for k, v in HEADERS.items() if k != "Content-Type"}
     response = app.test_client().request("DELETE", url, data={"a": "b"}, headers=headers)
     assert response.status_code == 400
@@ -63,8 +71,9 @@ def test_delete_with_a_form_body_is_a_400_without_epp(url):
 
 
 @pytest.mark.parametrize("url", DELETES)
-def test_delete_without_a_body_is_not_rejected(url):
-    app, clients = setup()
+def test_delete_without_a_body_is_not_rejected(shared, url):
+    app, clients = shared
+    clients.clear()
     headers = {k: v for k, v in HEADERS.items() if k != "Content-Type"}
     response = app.test_client().delete(url, headers=headers)
     assert response.status_code == (200 if "processes" not in url else 202)
@@ -166,14 +175,22 @@ def live_cases():
     return cases
 
 
+@pytest.fixture(scope="module")
+def live(shared):
+    """One server for the module: starting and stopping uvicorn costs about a second each."""
+    app, clients = shared
+    with LiveServer(app) as server:
+        yield server, clients
+
+
 @pytest.mark.parametrize("chunked", [False, True], ids=["length", "chunked"])
 @pytest.mark.parametrize("case", live_cases(), ids=lambda case: case[0] if isinstance(case, tuple) else None)
-def test_content_is_seen_whatever_its_framing(case, chunked):
+def test_content_is_seen_whatever_its_framing(live, case, chunked):
     """An approve, cancel or reject that is not valid never reaches EPP, as it does not through the test client."""
     _, method, path, body, content_type, status = case
-    app, clients = setup()
-    with LiveServer(app) as server:
-        line = server.request(method, path, body, content_type, chunked, delay=0.05)
+    server, clients = live
+    clients.clear()
+    line = server.request(method, path, body, content_type, chunked, delay=0)
     assert line is not None, "the request hung"
     expected = status if isinstance(status, tuple) else (status,)
     assert any(f" {code} " in line for code in expected), line
@@ -187,11 +204,10 @@ def test_content_is_seen_whatever_its_framing(case, chunked):
     ("/contacts/FO-1/processes/transferProcesses/latest/transferApprove", b'{"@type": "transferProcess"}', "202"),
     ("/domainNames/foo.example/processes/transferProcesses/latest/transferApprove", b'{"@type": "domainTransferProcess"}', "202"),
 ])
-def test_a_body_that_arrives_after_the_headers_does_not_hang(path, body, status):
-    app, clients = setup()
+def test_a_body_that_arrives_after_the_headers_does_not_hang(live, path, body, status):
+    server, _ = live
     method = "DELETE" if "Approve" not in path else "POST"
-    with LiveServer(app) as server:
-        for _ in range(3):
-            line = server.request(method, path, body)
-            assert line is not None, "the request hung"
-            assert f" {status} " in line
+    for _ in range(3):
+        line = server.request(method, path, body)
+        assert line is not None, "the request hung"
+        assert f" {status} " in line
