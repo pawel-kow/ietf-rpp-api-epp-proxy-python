@@ -38,19 +38,101 @@
         }
       },
       "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        },
-        "fields": {
-          "provMetadata.repositoryId": {
-            "type": "not_null"
+        "any_of": [
+          {
+            "status": 422,
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            },
+            "headers": {
+              "RPP-Code": "02306"
+            }
+          },
+          {
+            "status": 201,
+            "content_type": "application/rpp+json",
+            "body": {
+              "@type": "domainName",
+              "dns": {
+                "@type": "dnsData",
+                "records": [
+                  {
+                    "@type": "dnsRecord",
+                    "name": "@",
+                    "type": "dnskey",
+                    "rdata": {
+                      "flags": "257",
+                      "protocol": "3",
+                      "algorithm": "8",
+                      "publicKey": "AQPJ////4Q=="
+                    }
+                  }
+                ]
+              }
+            },
+            "headers": {
+              "RPP-Code": "01000"
+            }
+          },
+          {
+            "status": 201,
+            "content_type": "application/rpp+json",
+            "body": {
+              "@type": "domainName",
+              "dns": {
+                "@type": "dnsData",
+                "records": [
+                  {
+                    "@type": "dnsRecord",
+                    "name": "@",
+                    "type": "ds",
+                    "rdata": {
+                      "algorithm": "8"
+                    }
+                  }
+                ]
+              }
+            },
+            "headers": {
+              "RPP-Code": "01000"
+            }
+          },
+          {
+            "status": 201,
+            "content_type": "application/rpp+json",
+            "body": {
+              "@type": "domainName",
+              "dns": {
+                "@type": "dnsData",
+                "records": [
+                  {
+                    "@type": "dnsRecord",
+                    "name": "@",
+                    "type": "dnskey",
+                    "rdata": {
+                      "flags": "257",
+                      "protocol": "3",
+                      "algorithm": "8",
+                      "publicKey": "AQPJ////4Q=="
+                    }
+                  },
+                  {
+                    "@type": "dnsRecord",
+                    "name": "@",
+                    "type": "ds",
+                    "rdata": {
+                      "algorithm": "8"
+                    }
+                  }
+                ]
+              }
+            },
+            "headers": {
+              "RPP-Code": "01000"
+            }
           }
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+        ]
       }
     }
   ]

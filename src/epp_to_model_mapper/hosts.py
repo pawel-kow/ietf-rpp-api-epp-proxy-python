@@ -5,7 +5,7 @@ from models import (
 from .commands.helper import epp_to_str, str_to_epp
 from .commands.hosts import host_check, host_create, host_delete, host_info, host_update
 from .epp_model.epp_1_0 import Epp
-from .epp_model.host_1_0 import ChkData, CreData, InfData
+from .epp_model.host_1_0 import ChkData, CreData, InfData, IpType
 from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header
 
 
@@ -37,9 +37,11 @@ def _header(epp: Epp, client_transaction_id: str | None) -> dict:
 
 
 def _addresses(data: InfData) -> tuple[list[str] | None, list[str] | None]:
-    """Sorts addresses by their form: the backend's `ip` attribute is malformed."""
-    addresses = [addr.value for addr in data.addr]
-    return [a for a in addresses if ":" not in a] or None, [a for a in addresses if ":" in a] or None
+    """Sorts addresses by their `ip` attribute. A malformed attribute raises, so no address is lost."""
+    addresses = {IpType.V4: [], IpType.V6: []}
+    for addr in data.addr:
+        addresses[addr.ip].append(addr.value)
+    return addresses[IpType.V4] or None, addresses[IpType.V6] or None
 
 
 def _status_reasons(data: InfData) -> dict[str, str]:

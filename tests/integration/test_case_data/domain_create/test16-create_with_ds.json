@@ -38,19 +38,44 @@
         }
       },
       "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        },
-        "fields": {
-          "provMetadata.repositoryId": {
-            "type": "not_null"
+        "any_of": [
+          {
+            "status": 422,
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            },
+            "headers": {
+              "RPP-Code": "02306"
+            }
+          },
+          {
+            "status": 201,
+            "content_type": "application/rpp+json",
+            "body": {
+              "@type": "domainName",
+              "dns": {
+                "@type": "dnsData",
+                "records": [
+                  {
+                    "@type": "dnsRecord",
+                    "name": "@",
+                    "type": "ds",
+                    "rdata": {
+                      "keyTag": "12345",
+                      "algorithm": "3",
+                      "digestType": "1",
+                      "digest": "49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC"
+                    }
+                  }
+                ]
+              }
+            },
+            "headers": {
+              "RPP-Code": "01000"
+            }
           }
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+        ]
       }
     }
   ]

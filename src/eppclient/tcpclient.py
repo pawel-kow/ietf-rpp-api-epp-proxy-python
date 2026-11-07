@@ -99,8 +99,7 @@ class TCPClient:
                 raise ConnectionException(f"Invalid message length {payload_length}")
 
             payload = self._recv_exact(payload_length - 4)  # Subtract 4 bytes for the length field
-            # A backend may echo rejected input in another encoding.
-            message = payload.decode('utf-8', errors='replace')
+            message = payload.decode('utf-8')
 
             print(f"TCPClient: Received message: {message}")
             return message

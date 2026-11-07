@@ -38,6 +38,13 @@ Each entry says what the proxy does today.
 - The contact example (json §8.2.2) is `kind: individual` with `organizations`. EPP has one `postalInfo` with `name` and `org`, but no kind, so the kind cannot survive a round trip through an EPP backend.
 - **Proxy:** 501 (`02102`). The draft example is tested as such in `draft_contact/test2`, and without `organizations` in `test3`.
 
+## Length of contact fields
+
+- RFC 5733 limits `name`, `org`, `street` and `city` to 255 characters and `pc` to 16. The RPP schema has no `maxLength` on the matching JSContact fields, and the drafts only touch on size: data-objects §2.1.1 says usages "MAY impose" a maximum length, and §7 of the profile says servers "should impose appropriate limits". So a value can be valid RPP and not fit EPP.
+- Should length be limited at all, or left to server policy? Should the EPP Compatibility Profile state the RFC 5733 limits, so the schema can enforce them?
+- If it is server policy, which result code does a value over the limit get, and may a client discover the limit? May a server shorten a value, or must it reject it?
+- **Proxy:** does not check these lengths. The test backend cuts the value and answers `1000` (pawel-kow/epp#21), so a 300-character `name.full` is a 201 and reads back as 255. A correct EPP server would reject it.
+
 ## Contact labels
 
 - `contacts[].label` is an open string. EPP has `admin`, `billing` and `tech`. Are the values registered anywhere, or are they profile-defined?
@@ -178,6 +185,14 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - `RPP-Svtrid` MUST be in every response. A request rejected before reaching the backend has no EPP svTRID.
 - **Proxy:** omits `RPP-Cltrid` when the client did not send it, and generates a UUID for `RPP-Svtrid`.
 
+## Repeated `RPP-Cltrid`
+
+- Core §6.1 calls `RPP-Cltrid` an idempotency key "allowing the server to detect and safely handle duplicate requests", and says the value "MUST be unique per request". It does not say what the server answers to a duplicate, and §8 requires a redirected request to repeat the value "for the purpose of idempotency".
+- An EPP backend can refuse a reused clTRID with `2400`, and Table 9 makes that 500 `02400`. A client retrying a create after a lost response gets a server error, even when the first attempt worked.
+- Is an error the intended answer to a duplicate, or should the server replay the first response? If an error, which status and result code? A client mistake suggests 4xx, for example 409, rather than 500.
+- Must a duplicate with a different body be treated differently from a true retry? How long must the server remember a value, and is the scope per client?
+- **Proxy:** passes the EPP answer on, so a repeated value is 500 (`02400`) on the test backend (`host_availability/test6`). It detects no duplicates itself (#43).
+
 ## `authdata` in read responses
 
 - json §6.2.7 says `authdata` MAY be omitted from read responses, but `authInfo.read` requires it.
@@ -208,6 +223,7 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 
 - Data-objects §9.9.1 has a TBC on `keyData` inside `dsData`, and §9.11 lets a client send both record types. RFC 5910 has a DS and a key data interface, and a server uses one.
 - **Proxy:** both in one request are 501 (`02102`). A read leaves out a `keyData` nested in a `dsData`.
+- A server using the DS interface can refuse `dnskey` (2306, as the test backend does), or derive a `ds` from it. The client then reads back another record type than it sent.
 
 ## IDN
 

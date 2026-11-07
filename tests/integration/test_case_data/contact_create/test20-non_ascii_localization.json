@@ -1,5 +1,5 @@
 {
-  "test_id": "test20-backend_rejects_non_ascii_localization",
+  "test_id": "test20-non_ascii_localization",
   "steps": [
     {
       "request": {
@@ -53,13 +53,52 @@
         }
       },
       "response": {
-        "status": 400,
-        "content_type": "application/problem+json",
+        "status": 201,
+        "content_type": "application/rpp+json",
         "body": {
-          "type": "urn:ietf:params:rpp:error"
+          "@type": "contact",
+          "contactInfo": {
+            "localizations": {
+              "und": {
+                "name": {
+                  "full": "Jörg Müller"
+                }
+              }
+            }
+          }
         },
         "headers": {
-          "RPP-Code": "02005"
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}-20",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "contactInfo": {
+            "localizations": {
+              "und": {
+                "name": {
+                  "full": "Jörg Müller"
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "RPP-Code": "01000"
         }
       }
     }

@@ -17,7 +17,7 @@ def epp_reply(code, res_data=""):
 def info(statuses=("ok",), addresses=(), reasons=None):
     reasons = reasons or {}
     status = "".join(f'<host:status s="{s}">{reasons.get(s, "")}</host:status>' for s in statuses)
-    addr = "".join(f'<host:addr ip="v">{a}</host:addr>' for a in addresses)
+    addr = "".join(f'''<host:addr ip="{"v6" if ":" in a else "v4"}">{a}</host:addr>''' for a in addresses)
     return (True, "1000", epp_reply(1000, (
         f'<resData><host:infData {HOST_NS}><host:name>NS1.EXAMPLE.EXAMPLE</host:name><host:roid>H1</host:roid>'
         f'{status}{addr}<host:clID>foo</host:clID><host:crID>foo</host:crID>'
@@ -63,7 +63,7 @@ def test_exception_during_readback_has_no_host():
 
 
 def test_readback_does_not_reuse_the_client_transaction_id():
-    """The backend hangs on a repeated clTRID."""
+    """The backend refuses a repeated clTRID, so the read-back would fail."""
     epp = client(CREATED, info())
 
     create_host(epp, Host(name=NAME), "cl-1")
