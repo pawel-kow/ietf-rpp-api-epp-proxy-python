@@ -284,3 +284,26 @@ def test_nameservers_with_glue_are_rejected():
 
     with pytest.raises(ValueError, match="cannot be used together"):
         update(op("add", "/dns", value={"@type": "dnsData", "records": [glue]}))
+
+
+def test_a_patch_naming_ok_works_when_the_ok_of_the_read_has_a_reason():
+    result = update(
+        op("replace", "/status", value=[{"@type": "domainStatus", "label": "ok"}, STATUS]),
+        status_reasons={"ok": "No changes pending"},
+    )
+
+    assert result.add.status == ["clientHold"]
+
+
+def test_add_of_a_status_without_a_reason_keeps_the_stored_reason():
+    result = update(op("add", "/status", value=STATUS), status=["clientHold"], status_reasons={"clientHold": "Unpaid"})
+
+    assert result.add is None and result.remove is None
+
+
+def test_stored_glue_out_of_the_zone_does_not_block_a_patch_that_leaves_dns_alone():
+    ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.bar.example", ipv4=["192.0.2.1"])])
+
+    result = update(op("add", "/status", value=STATUS), ns=ns)
+
+    assert result.add.status == ["clientHold"] and result.remove is None

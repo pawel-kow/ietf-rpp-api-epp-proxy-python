@@ -135,3 +135,11 @@ def test_a_change_of_nothing_by_a_client_that_is_not_the_sponsor_is_refused(run)
     assert isinstance(result, ErrorResponse)
     assert result.code == ResultCode.AUTHORIZATION_ERROR
     assert len(epp.sent) == 1
+
+
+def test_a_sponsor_is_known_whatever_the_case_of_its_id():
+    epp = client(info("ns1.foo.example"), username="FOO")
+
+    result = replace_domain(epp, NAME, lambda domain: DomainUpdate(name=NAME), "cl-1")
+
+    assert not isinstance(result, ErrorResponse)

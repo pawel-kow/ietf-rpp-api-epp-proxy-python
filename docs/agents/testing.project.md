@@ -43,8 +43,8 @@ object, so a domain created with glue reads back with `nameservers`. Removing a 
 A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
 `serverApproved`. The domain Info returns no status reason, so a domain PUT with a `reason` is a remove and add each time. A registrar that is not
 the sponsor gets `2201` from the Info itself, so the refusal of a change of nothing by a non-sponsor is tested only in unit tests
-(`domain_update/test30` and `test31` pass on the backend's `2201`). A domain PUT without `registrant` removes it, the backend answers 200
-(`domain_update/test32`, absence not asserted). A domain create with `hostAttr` and no address is refused with `2003`, so the host
+(`domain_update/test30` and `test31` pass on the backend's `2201`). A domain PUT without `registrant` removes it, the backend answers 200. Absence of the registrant is shown
+by a PATCH that removes it and `/status`, which forces the read path: 422 `02308` without a registrant, 200 with one (`domain_update/test32`). A domain create with `hostAttr` and no address is refused with `2003`, so the host
 objects are created with `nameservers` and a PUT with `ns` records follows (`domain_update/test29`).
 
 Info does not show `pendingTransfer` (#64), a completed transfer cannot be

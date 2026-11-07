@@ -186,13 +186,14 @@ def test_host_objects_to_records_of_other_hosts_are_replaced():
     assert ids(result.remove.ns) == ["ns2.foo.example"]
 
 
-def test_records_to_host_objects_of_other_hosts_are_replaced():
+def test_records_to_other_host_objects_swap_the_whole_delegation():
+    """EPP takes one form or the other, and a registry that shows host attributes stores them."""
     current_ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.foo.example"), HostAttr(id="ns2.foo.example")])
 
     result = replace({**STAYS, "nameservers": [host("ns1.foo.example"), host("ns9.foo.example")]}, ns=current_ns)
 
-    assert ids(result.add.ns) == ["ns9.foo.example"]
-    assert [h.id for h in result.remove.ns.host_attrs] == ["ns2.foo.example"]
+    assert ids(result.add.ns) == ["ns1.foo.example", "ns9.foo.example"]
+    assert [h.id for h in result.remove.ns.host_attrs] == ["ns1.foo.example", "ns2.foo.example"]
 
 
 def test_records_with_addresses_over_host_objects_are_removed_and_added():
@@ -316,3 +317,18 @@ def test_ttl_is_unsupported():
 def test_an_unknown_contact_label_is_unsupported():
     with pytest.raises(NotSupportedByEpp):
         replace({**STAYS, "contacts": [contact("other", "REG-2")]})
+
+
+def test_a_repeated_reason_that_is_empty_changes_nothing():
+    result = replace({**STAYS, "status": [status("clientHold", reason="")]}, status=["clientHold"])
+
+    assert result.add is None and result.remove is None
+
+
+def test_stored_glue_out_of_the_zone_does_not_block_a_put_that_echoes_the_read():
+    current_ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.bar.example", ipv4=["192.0.2.1"])])
+    echo = {**WITHOUT_NAMESERVERS, "dns": current(ns=current_ns)["dns"]}
+
+    result = replace(echo, ns=current_ns)
+
+    assert result.add is None and result.remove is None

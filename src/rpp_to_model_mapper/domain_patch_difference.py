@@ -67,11 +67,11 @@ def _addresses(host: HostAttr) -> frozenset[str]:
 def _client_statuses(domain: dict) -> dict[str, str | None]:
     for status in domain.get("status") or []:
         reject_set(due=status.get("due"))
-    return {
-        status["label"]: status.get("reason")
-        for status in domain.get("status") or []
-        if is_client_label(status["label"])
-    }
+    reasons: dict[str, str | None] = {}
+    for status in domain.get("status") or []:
+        if is_client_label(status["label"]) and not reasons.get(status["label"]):
+            reasons[status["label"]] = status.get("reason") or None
+    return reasons
 
 
 def _dns_sec_items(dns_sec: DnsSec | None) -> list:
@@ -101,7 +101,8 @@ def _nameserver_changes(
     """What EPP adds and removes to turn the current delegation into the wanted one.
 
     A host is the same in both forms, whatever the case. The addresses of a host object live on the host, so a
-    host attribute with addresses is never the same as a host object: it is removed and added.
+    host attribute with addresses is never the same as a host object: it is removed and added. Current host
+    attributes against other wanted host objects are all removed and all added.
     """
     def by_name(attrs):
         return {host.id.lower(): host for host in attrs}
@@ -122,6 +123,9 @@ def _nameserver_changes(
         host for name, host in current_by_name.items()
         if (name not in wanted_by_name and (name not in wanted_obj_names or _addresses(host)))
     ] + [current_by_name[host.id.lower()] for host in changed_attrs]
+    if current_by_name and wanted_objs and not current_objs and current_by_name.keys() != wanted_obj_names:
+        # EPP takes host objects or host attributes, not both: a registry that shows attributes stores them.
+        return _missing_from(wanted_objs, [], str.lower), [], [], list(current_by_name.values())
     add_hosts = _missing_from(wanted_objs, current_objs, str.lower)
     add_hosts = [name for name in add_hosts if name.lower() not in current_by_name or _addresses(current_by_name[name.lower()])]
     remove_hosts = _missing_from(current_objs, wanted_objs, str.lower)
@@ -134,7 +138,7 @@ def difference(domain_name: str, current: dict, patched: dict) -> DomainUpdate:
     _reject_other_changes(current, patched)
     _reject_nameservers_with_records(patched)
     current_attrs, current_sec = _delegation(current, checked=False)
-    patched_attrs, patched_sec = _delegation(patched)
+    patched_attrs, patched_sec = _delegation(patched, checked=patched.get("dns") != current.get("dns"))
     add_hosts, remove_hosts, add_attrs, remove_attrs = _nameserver_changes(
         _host_names(current), current_attrs, _host_names(patched), patched_attrs,
     )

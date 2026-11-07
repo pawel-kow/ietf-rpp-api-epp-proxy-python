@@ -29,7 +29,11 @@
         "status": 201,
         "content_type": "application/rpp+json",
         "body": {
-          "@type": "domainName"
+          "@type": "domainName",
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
+          }
         },
         "headers": {
           "RPP-Code": "01000"
@@ -58,6 +62,38 @@
         },
         "headers": {
           "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/put32-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/registrant"
+          },
+          {
+            "op": "remove",
+            "path": "/status"
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02308"
         }
       }
     }

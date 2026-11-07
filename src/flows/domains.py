@@ -26,8 +26,8 @@ def _changes_nothing(update: DomainUpdate) -> bool:
 
 def _unchanged(epp_client: EPPClient, current: DomainInfoResponse, client_transaction_id) -> DomainMutationResult | ErrorResponse:
     """The answer to an update that changes nothing, which sends no EPP command. Only the sponsor may update
-    (data-objects §11.3.4), and EPP would have said so."""
-    if current.domain.clID != epp_client.username:
+    (data-objects §11.3.4), and EPP would have said so. The login id is taken to be the `clID`, whatever its case."""
+    if (current.domain.clID or "").lower() != epp_client.username.lower():
         return ErrorResponse(
             code=ResultCode.AUTHORIZATION_ERROR,
             msg="Only the sponsoring client can update the domain",
