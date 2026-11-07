@@ -32,13 +32,12 @@ Auth uses HTTP Basic, and the username and password are passed straight through 
 the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and `baz`
 (contact prefixes `FO-` and `BZ-`), and transfer cases set `Authorization` per step.
 
-The backend hangs on a repeated clTRID, so every EPP command needs a new one. It drops
-addresses given when creating an external host, so tests of addresses at create use an
-internal host, which needs its domain to exist first. Its other host defects are
-#49, #50, #51, #52 and #54. It rejects non-ASCII contact data, also in `postalInfo
-type="loc"` (#55), so non-ASCII localizations are tested only in unit tests. Info returns no
-`secDNS:infData` (#60) and no `domain:upID` or `domain:upDate` (#61), so reading
-DNSSEC and `upClientId` is tested only in unit tests. It stores `domain:hostAttr` as a host
+The backend refuses a repeated clTRID with `2400`, also across sessions, so every EPP command
+needs a new one. It drops addresses given when creating an external host, so tests of addresses
+at create use an internal host, which needs its domain to exist first. Its other host defects are
+#49, #50 and #54. Info returns no `domain:upID` or `domain:upDate` (#61), so reading `upClientId`
+is tested only in unit tests. It refuses the secDNS key data interface with `2306`, and a digest it
+already holds even under another keyTag (pawel-kow/epp#20). It stores `domain:hostAttr` as a host
 object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.
 
 A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
@@ -73,9 +72,13 @@ update → verify) run against a Flask test client.
 - Every step asserts the headers of core §6.2: `RPP-Svtrid`, a 5-digit `RPP-Code`, and
   `RPP-Cltrid` echoed.
 - Response body comparison is **subset + case-insensitive**
-  (`recusive_compare_existing`) and lists match unordered, because EPP servers may
+  (`recusive_compare_existing`) and lists match unordered, each expected element pairing
+  with an actual element of its own, because EPP servers may
   uppercase domain/host names and reorder list entries (see
   [RPP_IMPLEMENTATION_NOTES.md](../../RPP_IMPLEMENTATION_NOTES.md)).
+- A step's `response` can be `{"any_of": [...]}`, a list of responses of which one must match,
+  for behaviour the protocol leaves to the server. A create that may be refused, or may keep
+  the data in another form, lists each outcome, see `domain_create/test16` to `test18`.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.

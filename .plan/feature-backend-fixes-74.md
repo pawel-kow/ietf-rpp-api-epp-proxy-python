@@ -11,8 +11,8 @@ start after its numbers (`domain_update` 16, `host_update` 32).
 - [x] 3. `contact_create/test20`: renamed, 201 with the localization read back
 - [x] 4. New integration cases: `replace /dns` with `ds`, duplicate host address, unknown user, repeated `RPP-Cltrid`
 - [x] 5. Remove workarounds: `_addresses`, `errors='replace'`
-- [~] 6. Docs: `testing.project.md`, `RPP_IMPLEMENTATION_NOTES.md`, docstring, `spec-issues.md` (#75, #76)
-- [ ] 7. Full `pytest`, draft PR closing #74, #75, #76
+- [x] 6. Docs: `testing.project.md`, `RPP_IMPLEMENTATION_NOTES.md`, docstring, `spec-issues.md` (#75, #76)
+- [~] 7. Full `pytest`, draft PR closing #74, #75, #76
 
 ## Decisions
 

@@ -3,7 +3,7 @@
 - server changing caps of the domain name/host name -> make comparisons case-insensitive
 - server changing order of entries in lists (contacts, IPs) -> list shall be treated unordered
 - servers actually enforce unique clTRID
-- test EPP server is hanging if clTRID is duplicated (TODO: implement timeout?)
+- test EPP server answers 2400 if clTRID is duplicated
 
 ## RPP design notes
 
