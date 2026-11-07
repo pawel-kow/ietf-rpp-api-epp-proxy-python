@@ -29,4 +29,4 @@ Base: `main` at 5258d2b. Independent of PRs #81, #83 and #86 as far as the plan 
 
 1. Absent `expiryDate`: read the domain (Info) for `exDate` and use its date, or 501?
 2. Present `expiryDate`: EPP carries a date only; the time of day has no element.
-3. Response: `expiryDate` only (no `renewalPeriod`, no `processId`, no Location), 201 or 200?
+3. Response: `expiryDate` only (no `renewalPeriod`, no `processId`, no Location). 200 or 201? The OpenAPI POST has both; core §16.9.4 pairs 201 with Location "if the server exposes the process resource", and the draft example test10 expects 201. Transfers answer 200 when EPP exposes no process (core §16.1.4).
