@@ -1,7 +1,38 @@
 {
   "test_id": "test8-update",
-  "skip": "#28",
   "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "ex8-{random_name}.example",
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2fooBAR"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
     {
       "request": {
         "method": "PUT",
@@ -16,7 +47,7 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "SH-8013"
+            "id": "FO-TEST2"
           },
           "authInfo": {
             "@type": "authInfo",
@@ -32,7 +63,7 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "SH-8013"
+            "id": "FO-TEST2"
           }
         }
       }

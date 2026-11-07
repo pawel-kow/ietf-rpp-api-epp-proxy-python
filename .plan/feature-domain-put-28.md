@@ -3,13 +3,14 @@
 ## Tasks
 
 - [x] Plan accepted by the maintainer
-- [~] Resolve the nameservers plus DNSSEC difference between PATCH and create (blocked, asked the maintainer)
-- [ ] Tests first: integration cases in `tests/integration/test_case_data/domain_update/` (PUT adds and removes nameservers, contacts, registrant, client status; clears what is omitted; replaces `dns` records and DS; authInfo; no change; missing domain; server status in body; invalid body) and unit tests for the new mapper and flow
-- [ ] `rpp_to_model_mapper/domain_replacement.py`: `rpp_to_model` (validates `domainName.update`, returns the wanted representation)
-- [ ] `flows/domains.py`: `replace_domain`
-- [ ] `controller/domains.py`: `domainNames_update`
-- [ ] `.spec/spec-issues.md` entry, `docs/agents/architecture.project.md` and `testing.project.md`
-- [ ] Full `pytest`, draft PR
+- [x] Resolve the nameservers plus DNSSEC difference between PATCH and create (decision 7)
+- [x] Tests first: integration cases in `tests/integration/test_case_data/domain_update/` (PUT adds and removes nameservers, contacts, registrant, client status; clears what is omitted; replaces `dns` records and DS; authInfo; no change; missing domain; server status in body; invalid body) and unit tests for the new mapper and flow
+- [x] `rpp_to_model_mapper/domain_replacement.py`: `rpp_to_model` (validates `domainName.update`, returns the wanted representation)
+- [x] `flows/domains.py`: `replace_domain`
+- [x] `controller/domains.py`: `domainNames_update`
+- [x] `.spec/spec-issues.md` entry, `docs/agents/architecture.project.md` and `testing.project.md`
+- [x] Full `pytest`
+- [~] Draft PR, review
 
 ## Findings
 
@@ -41,6 +42,9 @@
 4. `status` is a set replace: omitted clears all client statuses, a changed reason is remove plus add, server statuses are kept. `ok` or a server status in the body is 400 (the PATCH exception for `ok` does not apply). The wanted object must validate as `domainName.read` also with an empty status array (test).
 5. The path name is the only identity, a body `name` is 400 (3).
 6. Same `dns`/`nameservers` checks as create, reusing the create code. Add the consequence to spec-issues "DNSSEC with `nameservers`". Unskip `draft_domain/test8-update`.
+
+7. nameservers plus DNSSEC: PUT follows the PATCH rule (only `nameservers` with `ns` records or glue conflict), create stays as is, no issue. spec-issues "DNSSEC with `nameservers`" updated. Covered by `put_nameservers_and_ds`, `put_omitted_dns_removes_ds` and unit tests.
+8. Host PUT and read-only members: checked, it does not ignore them (`provMetadata` is a 400, undeclared property), so no issue.
 
 ## Findings (2)
 

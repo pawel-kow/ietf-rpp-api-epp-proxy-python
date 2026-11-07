@@ -231,7 +231,7 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 ## DNSSEC with `nameservers`
 
 - Data-objects §11.2 forbids `nameservers` together with DNS Data entries, without excepting `ds` and `dnskey`. Read literally, a domain delegated through host objects cannot have DNSSEC, and a client has to give its delegation as `ns` records. Should the rule be limited to `ns`, `a` and `aaaa`?
-- **Proxy:** a create with `nameservers` and any `dns` record is a 400. A read of such a domain returns both, because it would otherwise lose data.
+- **Proxy:** a create with `nameservers` and any `dns` record is a 400, while PATCH and PUT reject only `ns` records and their glue (`a`, `aaaa`) with `nameservers`. A read of such a domain returns both, because it would otherwise lose data, and a full replacement of an existing object has to be able to express what a read returns. A PUT that omits `dns` removes the DNSSEC data, so a domain with host objects and a DS has to be sent with both.
 
 ## `ds` with `dnskey`
 
@@ -278,6 +278,14 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - The same applies to domain create.
 - **Proxy:** 501 (`02102`).
 
+## Full update of a domain
+
+- Core §16.8 clears what a PUT omits, "subject to server policy". Data-objects §11.3.4 says the Authorisation Information MAY be removed, and json §4.9.3 says a client MUST NOT send `authInfo` in a request body and a server MUST reject it. Yet `domainName.create` and `domainName.update` both carry `authInfo`, and a read can return it (see `authdata` in read responses). A client that follows §4.9.3 and PUTs back what it read would wipe the password on every PUT.
+- **Proxy:** an omitted `authInfo` leaves the password alone, a present one replaces it (EPP `chg`, without comparing to the current value), and §4.9.3 is not applied to `authInfo` in the body, as on create. A wipe cannot be undone, which makes it the worse mistake, and §16.8 leaves the policy to the server.
+- Json §4.4 requires a server to reject a data element that is not allowed in a request, and `status` accepts only client statuses (`domainStatus.create`).
+- **Proxy:** a PUT with a member outside `domainName.update` (`name`, `provMetadata`, `expiryDate`, `subordinateHosts`, `uName`, `lgr`, `processes`) is a 400 (`02001`), and so is `ok` or another server status in `status`, unlike a PATCH, which accepts `ok` (see the `ok` entry). `status` is a set: client statuses not listed are removed (an omitted `status` removes them all), a changed reason is a remove and an add, and server statuses stay. The path name is the only identity. The registry sets `ok` when no status is left.
+- A full update has no EPP command, so the proxy reads the domain, takes the difference and sends one update, as for a PATCH that needs the current state. The read and the update are not atomic. The `dns` and `nameservers` checks of a create apply (`ttl` 501, `ds` with `dnskey` 501), except as in "DNSSEC with `nameservers`".
+
 ## Host transfer
 
 - Data-objects §13.4 gives the host a Transfer Process and the OpenAPI has the operations. RFC 5732 defines no host transfer: subordinate hosts move with their domain, and data-objects §11.4.2 disallows anything that breaks that relationship.
@@ -286,7 +294,8 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 ## Full update without a change
 
 - A host update must provide at least one change (data-objects §13.3.4), but a PUT repeating the stored state is a valid full update (core §16.8) and PUT is idempotent in HTTP.
-- **Proxy:** passes the empty update on, the backend answers `2003` (400).
+- Data-objects §11.3.4 has the same "at least one change" rule for domains, while core §16.8 requires a 200 with the object.
+- **Proxy:** differs by object. A domain PUT that changes nothing is a 200 with the current domain and no EPP update, as a domain PATCH that changes nothing. A host PUT passes the empty update on, the backend answers `2003` (400).
 
 ## Transfer process
 

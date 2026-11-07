@@ -1,6 +1,6 @@
 import pytest
 
-from flows import patch_domain
+from flows import patch_domain, replace_domain
 from models import Domain, DomainUpdate, DomainUpdateRemove, ErrorResponse, HostObj, NS
 from tests.helper.fake_epp_client import FakeEppClient
 
@@ -99,3 +99,25 @@ def test_error_of_the_patch_propagates():
 
     with pytest.raises(ValueError):
         patch_domain(client(info()), NAME, None, conflict, "cl-1")
+
+
+def test_a_replacement_reads_updates_and_reads_back():
+    epp = client(info("ns1.foo.example"), DONE, info())
+
+    result = replace_domain(epp, NAME, lambda domain: REMOVE_NS1, "cl-1")
+
+    assert [("domain:info" in m, "domain:update" in m) for m in epp.sent] == [(True, False), (False, True), (True, False)]
+    assert result.domain is not None
+
+
+def test_a_replacement_that_changes_nothing_sends_no_update():
+    epp = client(info("ns1.foo.example"))
+
+    result = replace_domain(epp, NAME, lambda domain: DomainUpdate(name=NAME), "cl-1")
+
+    assert len(epp.sent) == 1
+    assert result.domain.name.lower() == NAME
+
+
+def test_a_replacement_of_a_missing_domain_is_the_read_error():
+    assert isinstance(replace_domain(client(MISSING), NAME, never_called, "cl-1"), ErrorResponse)

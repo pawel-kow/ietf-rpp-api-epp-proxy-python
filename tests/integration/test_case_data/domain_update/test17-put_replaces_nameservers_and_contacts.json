@@ -1,0 +1,238 @@
+{
+  "test_id": "test17-put_replaces_nameservers_and_contacts",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "put17-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
+          },
+          "contacts": [
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/domainNames/put17-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
+          },
+          "contacts": [
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
+            }
+          ],
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "ns1.bar.example"
+            },
+            {
+              "@type": "host",
+              "hostName": "ns2.bar.example"
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST1"
+          },
+          "contacts": [
+            {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST2"
+              }
+            }
+          ],
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS1.BAR.EXAMPLE"
+            },
+            {
+              "@type": "host",
+              "hostName": "NS2.BAR.EXAMPLE"
+            }
+          ]
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/domainNames/put17-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST2"
+          },
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "ns2.bar.example"
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "registrant": {
+            "@type": "contact",
+            "id": "FO-TEST2"
+          },
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS2.BAR.EXAMPLE"
+            }
+          ]
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/put17-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/nameservers",
+            "match": {
+              "hostName": "ns1.bar.example"
+            },
+            "value": {
+              "@type": "host",
+              "hostName": "ns3.bar.example"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02308"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/put17-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/contacts",
+            "match": {
+              "label": "tech"
+            },
+            "value": {
+              "label": "tech",
+              "object": {
+                "@type": "contact",
+                "id": "FO-TEST1"
+              }
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02308"
+        }
+      }
+    }
+  ]
+}

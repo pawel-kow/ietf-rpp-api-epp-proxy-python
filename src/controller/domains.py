@@ -78,3 +78,21 @@ def domainNames_updatePartial(name, body):
     if result.domain is None:
         return None, 202, headers
     return rpp_mapper.domains.model_to_rpp(result.domain), 200, headers
+
+
+@rpp_operation
+def domainNames_update(name, body):
+    replacement = map_request(rpp_mapper.domain_replacement.rpp_to_model, body)
+
+    def update_from_current(current):
+        return map_request(
+            rpp_mapper.domain_replacement.rpp_to_model_with_current, name, replacement, rpp_mapper.domains.model_to_rpp(current),
+        )
+
+    result = flows.replace_domain(get_epp_client(), name, update_from_current, client_transaction_id())
+    if isinstance(result, ErrorResponse):
+        raise_epp_error(result)
+    headers = generate_rpp_response_headers(result.mutation)
+    if result.domain is None:
+        return None, 202, headers
+    return rpp_mapper.domains.model_to_rpp(result.domain), 200, headers

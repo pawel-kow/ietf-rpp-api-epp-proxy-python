@@ -44,3 +44,14 @@ def patch_domain(
     if isinstance(updated, ErrorResponse):
         return updated
     return _read_back(epp_client, domain_name, updated)
+
+
+def replace_domain(
+    epp_client: EPPClient,
+    domain_name: str,
+    update_from_current: Callable[[Domain], DomainUpdate],
+    client_transaction_id,
+) -> DomainMutationResult | ErrorResponse:
+    """A full update: EPP has none, so it reads the domain and sends the difference. A replacement that changes
+    nothing sends no update (core §16.8 asks for a 200)."""
+    return patch_domain(epp_client, domain_name, None, update_from_current, client_transaction_id)

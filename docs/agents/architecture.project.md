@@ -37,6 +37,10 @@ single feature (e.g. "domain update") touches every layer:
    update. A patch that matches no element, or matches several for a `replace`, is
    `PatchNotApplicable` (`02308`, 422). `host_patch.py` does the same for hosts: its
    `rpp_to_model_with_current` returns the wanted `Host`, and the flow takes the difference.
+   `domain_replacement.py` does the same for a domain PUT: it rejects members outside `domainName.update`, keeps
+   the read-only members and server statuses of the read, takes only the replaceable members from the body (an
+   omitted one is cleared) and lets `domain_patch_difference.py` produce the update. A present `authInfo` always
+   goes as `chg`, an omitted one is left alone, see [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-domain).
    `patch_statuses.py` hides server statuses from a patch, on hosts and domains, see
    [spec-issues.md](../../.spec/spec-issues.md#status-in-json-patch).
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
@@ -56,7 +60,8 @@ single feature (e.g. "domain update") touches every layer:
    typed result or an `ErrorResponse`, and the handler renders it. `flows/hosts.py`
    holds mutate-then-Info, and PUT as Info, difference, update and Info. `patch_host` in
    `flows/hosts.py` and `patch_domain` in `flows/domains.py` hold PATCH: update and Info for a patch
-   that maps directly, and Info, update and Info for one that needs the current state. The read and
+   that maps directly, and Info, update and Info for one that needs the current state. `replace_domain`
+   is a domain PUT: it takes the second path, and a PUT that changes nothing sends no update. The read and
    the update are not atomic.
 7. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
    inbound EPP XML into models. `epp_model/` holds xsdata-generated dataclasses for

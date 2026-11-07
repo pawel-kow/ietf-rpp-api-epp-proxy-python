@@ -106,6 +106,9 @@ afterwards.
 
 ## Isolating cases
 
+Absence cannot be asserted, because the body comparison is a subset. A case shows that something was removed with a later
+`replace` with `match` on it, which reads the domain and answers 422 `02308` (see `domain_update/test17`).
+
 Isolate one update facet per file (authInfo-only, hostObj add/remove,
 contacts+registrant, …). `domainNames_create` and `domainNames_updatePartial` build their
 success body from a follow-up EPP **Info** call, so a passing update test also transitively
