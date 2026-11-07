@@ -1,0 +1,21 @@
+from models import DomainCheckResponseSingle, ResultCode
+from rpp_to_model_mapper import domain_availability
+
+
+def availability(available, reason):
+    return DomainCheckResponseSingle(
+        domain_name="foo.example", available=available, reason=reason, code=ResultCode.COMMAND_COMPLETED_SUCCESSFULLY,
+        msg="ok", server_transaction_id="sv", client_transaction_id=None,
+    )
+
+
+def test_taken_domain_gives_the_reason():
+    assert domain_availability.model_to_rpp(availability(False, "In use")) == {
+        "@type": "domainNameAvailability", "available": False, "reason": "In use",
+    }
+
+
+def test_available_domain_has_no_reason_even_if_the_server_sends_one():
+    assert domain_availability.model_to_rpp(availability(True, "In use")) == {
+        "@type": "domainNameAvailability", "available": True,
+    }
