@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 
 from models import (
@@ -100,7 +102,28 @@ def test_mapping_that_fails_validation_falls_back_to_a_service_notice():
     validate_schema("message.read", rpp)
 
 
-def test_bad_creation_date_still_gives_a_valid_message():
-    rpp = messages.model_to_rpp(message(creationDate="not a date"))
-    assert rpp["id"] == "42"
+def test_missing_creation_date_is_the_request_date_of_a_transfer():
+    rpp = messages.model_to_rpp(message(transfer(), creationDate=None))
+    assert rpp["creationDate"] == DATE
+
+
+def test_missing_creation_date_is_the_completion_date_of_a_pending_action():
+    event = PendingActionEvent(
+        objectType="domainName", objectId="FOO.EXAMPLE", approved=True, clientTransactionId=None,
+        serverTransactionId="sv-9", completionDate="2026-11-06T10:00:00.000000Z",
+    )
+    assert messages.model_to_rpp(message(event, creationDate=None))["creationDate"] == "2026-11-06T10:00:00.000000Z"
+
+
+def test_missing_creation_date_without_an_event_date_is_the_time_of_the_read():
+    rpp = messages.model_to_rpp(message(creationDate=None))
+    assert rpp["creationDate"].endswith("Z") and rpp["creationDate"] != DATE
     validate_schema("message.read", rpp)
+
+
+def test_validation_fallback_names_the_data_and_logs_it_without_content(caplog):
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        data = messages.model_to_rpp(message(transfer("weird"), data_name="{urn:x}trnData"))["data"]
+    assert "{urn:x}trnData" in data["message"]
+    assert "{urn:x}trnData" in caplog.text
+    assert "FOO.EXAMPLE" not in caplog.text

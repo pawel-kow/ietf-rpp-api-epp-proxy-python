@@ -1,20 +1,28 @@
 import logging
+import re
 
+from lxml import etree
+from xsdata.models.datatype import XmlDateTime
+
+from helpers import decode_xml
 from models import (
-    AckResponse, ContactTransferProcess, DomainTransferProcess, PendingActionEvent, PollResponse, QueueMessage,
-    ResultCode, TransferEvent,
+    AckResponse, ContactTransferProcess, DomainTransferProcess, ErrorResponse, PendingActionEvent, PollResponse,
+    QueueMessage, ResultCode, TransferEvent,
 )
 from .commands.helper import epp_to_str, str_to_epp
 from .commands.messages import poll_ack, poll_request
+from .epp_core import map_epp_code
 from .epp_model import contact_1_0, domain_1_0, host_1_0
 from .epp_model.epp_1_0 import Epp
 from .epp_response import cl_trid, epp_datetime, parse_epp_response_header
 
 logger = logging.getLogger("uvicorn.error")
 
+EPP_NS = {"epp": "urn:ietf:params:xml:ns:epp-1.0"}
 DOMAIN_NAME = "domainName"
 CONTACT = "contact"
 HOST = "host"
+UNREADABLE = "The reply of the EPP server cannot be read, so the message cannot be acknowledged"
 
 
 def poll_request_xml(client_request_id=None) -> str:
@@ -25,23 +33,47 @@ def poll_ack_xml(message_id: str, client_request_id=None) -> str:
     return epp_to_str(poll_ack(message_id, cl_trid(client_request_id)))
 
 
-def _text(msg) -> str:
-    """The text of a message, which EPP allows to hold markup: its text nodes, in order."""
-    if msg is None:
-        return ""
-    return " ".join(part.strip() for part in _text_nodes(msg.content) if part.strip())
+def _describe(item) -> str:
+    """The qualified name of an element the proxy does not translate. Never its content."""
+    qname = getattr(item, "qname", None)
+    if qname:
+        return qname
+    name = getattr(getattr(item, "Meta", None), "name", None)
+    namespace = getattr(getattr(item, "Meta", None), "namespace", None)
+    return f"{{{namespace}}}{name}" if namespace else type(item).__name__
 
 
-def _text_nodes(content):
+def _text_nodes(content, lost):
     for item in content:
         if isinstance(item, str):
             yield item
-        else:
-            if getattr(item, "text", None):
-                yield item.text
-            yield from _text_nodes(getattr(item, "children", None) or [])
-            if getattr(item, "tail", None):
-                yield item.tail
+            continue
+        if getattr(item, "attributes", None) or getattr(item, "qname", None) is None:
+            lost.append(_describe(item))  # an attribute or a typed object has no place in plain text
+        if getattr(item, "text", None):
+            yield item.text
+        yield from _text_nodes(getattr(item, "children", None) or [], lost)
+        if getattr(item, "tail", None):
+            yield item.tail
+
+
+def _text(msg) -> tuple[str, list[str]]:
+    """The text of a message, which EPP allows to hold markup, and the markup that has no place in it."""
+    if msg is None:
+        return "", []
+    lost: list[str] = []
+    return "".join(_text_nodes(msg.content, lost)).strip(), lost
+
+
+def _safe_datetime(value) -> str | None:
+    """EPP leaves qDate optional and a server may send a value that is no date. Both count as missing."""
+    if value is None:
+        return None
+    try:
+        return epp_datetime(value)
+    except Exception as e:
+        logger.warning("Poll message has a date the proxy cannot read: %s", type(e).__name__)
+        return None
 
 
 def _domain_process(data) -> DomainTransferProcess:
@@ -67,10 +99,17 @@ def _contact_process(data) -> ContactTransferProcess:
     )
 
 
+def _object_id(value) -> str:
+    """Data-objects §9.19.1: objectType is only used with an objectId."""
+    if not isinstance(value, str) or not value:
+        raise ValueError("The message has no object id")
+    return value
+
+
 def _transfer_event(object_type, object_id, process, data) -> TransferEvent:
     return TransferEvent(
         objectType=object_type,
-        objectId=object_id,
+        objectId=_object_id(object_id),
         trStatus=data.tr_status.value,
         requestDate=epp_datetime(data.re_date),
         actionDate=epp_datetime(data.ac_date),
@@ -80,10 +119,12 @@ def _transfer_event(object_type, object_id, process, data) -> TransferEvent:
 
 
 def _pending_action_event(object_type, id_element, data) -> PendingActionEvent:
+    if not isinstance(id_element.pa_result, bool):
+        raise ValueError("paResult is not a boolean")
     return PendingActionEvent(
         objectType=object_type,
-        objectId=id_element.value,
-        approved=bool(id_element.pa_result),
+        objectId=_object_id(id_element.value),
+        approved=id_element.pa_result,
         clientTransactionId=data.pa_trid.cl_trid,
         serverTransactionId=data.pa_trid.sv_trid,
         completionDate=epp_datetime(data.pa_date),
@@ -105,61 +146,190 @@ def _event(data):
     return None
 
 
-def _describe(item) -> str:
-    """The qualified name of an element the proxy does not translate. Never its content."""
-    qname = getattr(item, "qname", None)
-    if qname:
-        return qname
-    name = getattr(getattr(item, "Meta", None), "name", None)
-    namespace = getattr(getattr(item, "Meta", None), "namespace", None)
-    return f"{{{namespace}}}{name}" if namespace else type(item).__name__
-
-
-def _translate(epp: Epp):
-    """The event of a message and what was left out: (event, unmapped), at most one of them set."""
+def _translate(epp: Epp, message_id: str):
+    """The event of a message, what was left out, and the name of the data: (event, unmapped, data_name)."""
     response = epp.response
     res_data = list(response.res_data.other_element) if response.res_data is not None else []
     extension = list(response.extension.other_element) if response.extension is not None else []
     if not res_data and not extension:
-        return None, None
+        return None, None, None
     left_out = [_describe(item) for item in res_data + extension]
     if len(res_data) != 1 or extension:
-        return None, ", ".join(left_out)
+        logger.warning("Poll message %s has data the proxy does not translate: %s", message_id, ", ".join(left_out))
+        return None, ", ".join(left_out), None
     try:
         event = _event(res_data[0])
     except Exception as e:  # a malformed element must not keep the message from being read
-        logger.warning("Poll message data %s is not translated: %s", left_out[0], type(e).__name__)
-        return None, left_out[0]
-    return (event, None) if event is not None else (None, left_out[0])
+        logger.warning("Poll message %s has data that does not map: %s, %s", message_id, left_out[0], type(e).__name__)
+        return None, left_out[0], None
+    if event is None:
+        logger.warning("Poll message %s has data the proxy does not translate: %s", message_id, left_out[0])
+        return None, left_out[0], None
+    return event, None, left_out[0]
 
 
-def parse_poll_response(xml_string: str, client_transaction_id: str | None) -> PollResponse:
-    """Parses the reply to poll req: 1300 has no message, 1301 has the head of the queue."""
-    epp = str_to_epp(xml_string)
-    header = parse_epp_response_header(epp)
-    if client_transaction_id is None:
-        header["client_transaction_id"] = None
-    msg_q = epp.response.msg_q
-    if msg_q is None or msg_q.id is None:
-        empty = msg_q is None and header["code"] == ResultCode.COMMAND_COMPLETED_NO_MESSAGES
-        return PollResponse(queue_size=0 if empty else (msg_q.count if msg_q else None), message=None, **header)
-    event, unmapped = _translate(epp)
-    message = QueueMessage(
-        id=msg_q.id,
-        creationDate=epp_datetime(msg_q.q_date),
-        lang=msg_q.msg.lang if msg_q.msg is not None else None,
-        text=_text(msg_q.msg),
-        event=event,
-        unmapped=unmapped,
+def _result_code(code: str | None, default: ResultCode) -> ResultCode:
+    """A code the proxy has no name for counts as the plain outcome of its class."""
+    try:
+        return map_epp_code(code)
+    except KeyError:
+        logger.warning("The EPP server sent the result code %s, which the proxy does not know", code)
+        return ResultCode.COMMAND_COMPLETED_SUCCESSFULLY if str(code).startswith("1") else default
+
+
+def _decode(xml_string: str):
+    """The reply as markup, or None when it is not even that."""
+    try:
+        return decode_xml(xml_string)
+    except Exception:
+        return None
+
+
+def _drop_bad_dates(xml_string: str):
+    """The reply without the qDate it cannot read, or None when there is none."""
+    root = _decode(xml_string)
+    if root is None:
+        return None
+    dropped = False
+    for q_date in root.iterfind(".//epp:qDate", EPP_NS):
+        try:
+            XmlDateTime.from_string((q_date.text or "").strip()).to_datetime()
+        except Exception:
+            q_date.getparent().remove(q_date)
+            dropped = True
+    return etree.tostring(root).decode() if dropped else None
+
+
+def _parse(xml_string: str) -> Epp:
+    try:
+        return str_to_epp(xml_string)
+    except Exception:
+        without = _drop_bad_dates(xml_string)
+        if without is None:
+            raise
+        logger.warning("Poll message has a date the proxy cannot read")
+        return str_to_epp(without)
+
+
+def _raw_header(root, client_transaction_id, default=ResultCode.COMMAND_FAILED) -> dict:
+    result = root.find("./epp:response/epp:result", EPP_NS) if root is not None else None
+    msg = root.find("./epp:response/epp:result/epp:msg", EPP_NS) if result is not None else None
+    sv_trid = root.find(".//epp:svTRID", EPP_NS) if root is not None else None
+    return {
+        "code": _result_code(None if result is None else result.get("code"), default) if result is not None else default,
+        "msg": (msg.text or "") if msg is not None else "",
+        "server_transaction_id": sv_trid.text if sv_trid is not None else None,
+        "client_transaction_id": client_transaction_id,
+    }
+
+
+def _count(msg_q) -> int | None:
+    try:
+        return int(msg_q.get("count"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _qnames(root, parent: str) -> list[str]:
+    element = root.find(f"./epp:response/epp:{parent}", EPP_NS)
+    return [] if element is None else [child.tag for child in element if isinstance(child.tag, str)]
+
+
+def _no_message(header, size) -> PollResponse:
+    return PollResponse(queue_size=size, message=None, **header)
+
+
+def _unusable(header) -> ErrorResponse:
+    """1301 promises a message to acknowledge, so a reply without its id is not an empty queue."""
+    logger.warning("The EPP server sent a message without an id, which cannot be acknowledged")
+    return ErrorResponse(code=ResultCode.COMMAND_FAILED, msg=UNREADABLE, **{
+        k: header[k] for k in ("server_transaction_id", "client_transaction_id")
+    })
+
+
+def _poll_from_markup(xml_string: str, client_transaction_id) -> PollResponse | ErrorResponse:
+    """What can be read of a reply the typed parser rejects: the message as a notice that names its data."""
+    root = _decode(xml_string)
+    header = _raw_header(root, client_transaction_id)
+    msg_q = root.find("./epp:response/epp:msgQ", EPP_NS) if root is not None else None
+    if root is None or root.find("./epp:response/epp:result", EPP_NS) is None:
+        return _unusable(header)
+    if msg_q is None or not msg_q.get("id"):
+        if header["code"] == ResultCode.COMMAND_COMPLETED_ACK_TO_DEQUEUE:
+            return _unusable(header)
+        return _no_message(header, 0 if header["code"] == ResultCode.COMMAND_COMPLETED_NO_MESSAGES else None)
+    left_out = _qnames(root, "resData") + _qnames(root, "extension")
+    msg = msg_q.find("epp:msg", EPP_NS)
+    q_date = msg_q.find("epp:qDate", EPP_NS)
+    try:
+        created = _safe_datetime(XmlDateTime.from_string((q_date.text or "").strip())) if q_date is not None else None
+    except Exception:
+        created = None
+    logger.warning(
+        "Poll message %s was not read as typed data, its data is not translated: %s", msg_q.get("id"), ", ".join(left_out),
     )
-    return PollResponse(queue_size=msg_q.count, message=message, **header)
+    message = QueueMessage(
+        id=msg_q.get("id"),
+        creationDate=created,
+        lang=(msg.get("lang") or "en") if msg is not None else None,
+        text="".join(msg.itertext()).strip() if msg is not None else "",
+        unmapped=", ".join(left_out) or "the reply, which does not follow the EPP schema",
+    )
+    return PollResponse(queue_size=_count(msg_q), message=message, **header)
+
+
+def parse_poll_response(xml_string: str, client_transaction_id: str | None) -> PollResponse | ErrorResponse:
+    """Parses the reply to poll req: 1300 has no message, 1301 has the head of the queue.
+
+    A reply that does not follow the EPP schema still gives its message, as a notice, because a
+    message that cannot be read cannot be acknowledged, and the queue would stay blocked behind it.
+    """
+    try:
+        epp = _parse(xml_string)
+        header = parse_epp_response_header(epp)
+        if client_transaction_id is None:
+            header["client_transaction_id"] = None
+        msg_q = epp.response.msg_q
+        if msg_q is None or not msg_q.id:
+            if header["code"] == ResultCode.COMMAND_COMPLETED_ACK_TO_DEQUEUE:
+                return _unusable(header)
+            empty = msg_q is None and header["code"] == ResultCode.COMMAND_COMPLETED_NO_MESSAGES
+            return _no_message(header, 0 if empty else (msg_q.count if msg_q else None))
+        event, unmapped, data_name = _translate(epp, msg_q.id)
+        text, lost = _text(msg_q.msg)
+        if lost:
+            logger.warning("Poll message %s has markup in its text: %s", msg_q.id, ", ".join(lost))
+            unmapped = ", ".join(filter(None, [unmapped, *lost]))
+        message = QueueMessage(
+            id=msg_q.id,
+            creationDate=_safe_datetime(msg_q.q_date),
+            lang=msg_q.msg.lang if msg_q.msg is not None else None,
+            text=text,
+            event=event,
+            unmapped=unmapped,
+            data_name=data_name,
+        )
+        return PollResponse(queue_size=msg_q.count, message=message, **header)
+    except Exception as e:
+        logger.warning("Poll reply does not follow the EPP schema: %s", type(e).__name__)
+        return _poll_from_markup(xml_string, client_transaction_id)
 
 
 def parse_ack_response(xml_string: str, client_transaction_id: str | None) -> AckResponse:
-    """Parses the reply to poll ack, whose msgQ, when present, counts what is left."""
-    epp = str_to_epp(xml_string)
-    header = parse_epp_response_header(epp)
-    if client_transaction_id is None:
-        header["client_transaction_id"] = None
-    msg_q = epp.response.msg_q
-    return AckResponse(queue_size=None if msg_q is None else msg_q.count, **header)
+    """Parses the reply to poll ack, whose msgQ, when present, counts what is left.
+
+    The acknowledgement has happened at EPP, so whatever the reply looks like, it is not an error.
+    """
+    try:
+        epp = _parse(xml_string)
+        header = parse_epp_response_header(epp)
+        if client_transaction_id is None:
+            header["client_transaction_id"] = None
+        msg_q = epp.response.msg_q
+        return AckResponse(queue_size=None if msg_q is None else msg_q.count, **header)
+    except Exception as e:
+        logger.warning("Poll ack reply does not follow the EPP schema: %s", type(e).__name__)
+        root = _decode(xml_string)
+        header = _raw_header(root, client_transaction_id, ResultCode.COMMAND_COMPLETED_SUCCESSFULLY)
+        msg_q = root.find("./epp:response/epp:msgQ", EPP_NS) if root is not None else None
+        return AckResponse(queue_size=None if msg_q is None else _count(msg_q), **header)

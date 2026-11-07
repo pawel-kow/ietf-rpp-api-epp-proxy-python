@@ -1,4 +1,5 @@
 import logging
+from dataclasses import replace
 from datetime import datetime, timezone
 
 from models import ContactTransferProcess, PendingActionEvent, QueueMessage, TransferEvent
@@ -54,28 +55,35 @@ def _notice(message: QueueMessage, unmapped: str | None) -> RPPServiceNoticeMess
     return RPPServiceNoticeMessage(message=text)
 
 
-def _envelope(message: QueueMessage, data) -> dict:
-    # EPP leaves qDate optional and RPP requires creationDate: the time of the read stands in.
-    created = message.creationDate or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+def _created(message: QueueMessage) -> str:
+    """creationDate is required in RPP and qDate optional in EPP. The date of the event stands in, else the
+    time of the read, so without a qDate the value can differ between two reads of the message."""
+    if message.creationDate:
+        return message.creationDate
+    if isinstance(message.event, TransferEvent):
+        return message.event.requestDate
+    if isinstance(message.event, PendingActionEvent):
+        return message.event.completionDate
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def _envelope(message: QueueMessage, created: str, data) -> dict:
     return RPPMessage(id=message.id, creationDate=created, status=QUEUED, data=data.to_rpp()).to_rpp()
 
 
 def model_to_rpp(message: QueueMessage) -> dict:
     """A message that cannot become a valid typed message becomes a service notice, so that it can
     still be read and acknowledged, which a client cannot do past a message that fails."""
+    created = _created(message)
     if message.event is not None:
         try:
-            rpp = _envelope(message, _typed(message))
+            rpp = _envelope(message, created, _typed(message))
             validate_schema("message.read", rpp)
             return rpp
         except Exception as e:
-            logger.warning("Poll message %s is a service notice, its data does not map: %s", message.id, type(e).__name__)
-            message = QueueMessage(**{**message.__dict__, "event": None, "unmapped": "data that failed validation"})
-    for candidate in (message, QueueMessage(**{**message.__dict__, "creationDate": None})):
-        rpp = _envelope(candidate, _notice(candidate, candidate.unmapped))
-        try:
-            validate_schema("message.read", rpp)
-            return rpp
-        except Exception:
-            continue
-    raise ValueError("The message cannot be represented")
+            name = message.data_name or "data"
+            logger.warning("Poll message %s is a service notice, its data %s does not map: %s", message.id, name, type(e).__name__)
+            message = replace(message, event=None, unmapped=f"{name}, which failed validation")
+    rpp = _envelope(message, created, _notice(message, message.unmapped))
+    validate_schema("message.read", rpp)
+    return rpp

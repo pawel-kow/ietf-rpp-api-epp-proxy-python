@@ -64,3 +64,13 @@ Modules (one class per file): `models/queue_message.py`, `transfer_event.py`, `p
 5. `includeElements` and `type` on `GET /messages`: `type` ignored by the profile; `includeElements` ignored as elsewhere.
 6. DELETE needs the `require_empty_body` fix of #90 (stack on #90).
 7. Integration cases cannot capture an id between steps, so the ack of a real head is covered by wire tests only.
+
+## Review of a4dea20 (decisions)
+
+- No message gives a 500: a reply the typed parser rejects is read with lxml and becomes a notice with the id, count, `qDate`, `msg` text and the qNames of `resData` and `extension` children. `fail_on_unknown_properties` stays strict. A bad `qDate` is dropped and the rest stays typed.
+- An ack that succeeded at EPP is never an error. Unknown success codes count as `01000`; unknown error codes are `02400`.
+- `1301` without a usable message id is a 500 (`02400`), the one exception (spec-issues).
+- The `creationDate` substitute is the event date, else the read time, so it can differ between reads (spec-issues).
+- `Content-Language` only when it is a language tag, `en` when `lang` is absent. `RPP-Queue-Size` only as an integer >= 0, also on the read 404 and 501 (`MessageErrorResponse`).
+- Successful DELETE returns a Flask `Response` without `Content-Type`. HEAD handlers keep their `del`, cause noted on #87.
+- Ids with control characters: 400 `02005` on GET and DELETE. A path that is `\r\n` alone never reaches the handler (framework-level 500, as for every route).

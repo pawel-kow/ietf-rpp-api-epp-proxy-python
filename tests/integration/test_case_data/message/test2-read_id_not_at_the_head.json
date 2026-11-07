@@ -12,14 +12,28 @@
         }
       },
       "response": {
-        "status": 501,
-        "content_type": "application/problem+json",
-        "body": {
-          "type": "urn:ietf:params:rpp:error"
-        },
-        "headers": {
-          "RPP-Code": "02102"
-        }
+        "any_of": [
+          {
+            "status": 501,
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            },
+            "headers": {
+              "RPP-Code": "02102"
+            }
+          },
+          {
+            "status": 404,
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            },
+            "headers": {
+              "RPP-Code": "02303"
+            }
+          }
+        ]
       }
     },
     {

@@ -1,8 +1,10 @@
+import logging
+
 import pytest
 from lxml import etree
 
 from epp_to_model_mapper.messages import parse_ack_response, parse_poll_response, poll_ack_xml, poll_request_xml
-from models import PendingActionEvent, ResultCode, TransferEvent
+from models import ErrorResponse, PendingActionEvent, ResultCode, TransferEvent
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
 NS = {"epp": EPP}
@@ -167,7 +169,7 @@ def test_transfer_with_unknown_status_is_unmapped_not_an_error():
 def test_message_text_with_mixed_content():
     q = '<msgQ count="1" id="7"><qDate>2026-11-05T16:49:34.0Z</qDate><msg>Hello <b>big</b> world</msg></msgQ>'
     message = parse(reply(1301, q)).message
-    assert "Hello" in message.text and "world" in message.text
+    assert message.text == "Hello big world"
     assert message.lang == "en"
 
 
@@ -179,3 +181,157 @@ def test_ack_reply_with_queue_size():
 
 def test_ack_reply_without_msg_q_has_no_queue_size():
     assert parse_ack_response(reply(1000), "msg-cl-1").queue_size is None
+
+
+def test_text_is_joined_and_then_trimmed():
+    assert parse(reply(1301, msg_q("  Pay<b>load</b>.  "))).message.text == "Payload."
+
+
+def test_markup_with_attributes_is_named_as_unmapped():
+    q = '<msgQ count="1" id="7"><qDate>2026-11-05T16:49:34.0Z</qDate><msg><field name="x" value="y"/></msg></msgQ>'
+    message = parse(reply(1301, q)).message
+    assert message.text == ""
+    assert "field" in message.unmapped
+
+
+@pytest.mark.parametrize("bad", ["garbage", "2026-13-45T00:00:00Z", "2026-01-01T23:59:60Z", "", "2026-01-01T24:00:00Z", "2026-01-01T00:00:00+99:00"])
+def test_a_bad_q_date_is_missing_and_the_message_is_still_mapped(bad, caplog):
+    q = f'<msgQ count="1" id="7"><qDate>{bad}</qDate><msg>Hi</msg></msgQ>'
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        message = parse(reply(1301, q, domain_trn("pending"))).message
+    assert message.creationDate is None
+    assert isinstance(message.event, TransferEvent)
+    assert "date" in caplog.text
+
+
+def test_message_without_q_date():
+    q = '<msgQ count="1" id="7"><msg>Hi</msg></msgQ>'
+    assert parse(reply(1301, q)).message.creationDate is None
+
+
+@pytest.mark.parametrize("res_data", [
+    domain_trn("pending").replace("</domain:trnData>", "<domain:extra>SECRET</domain:extra></domain:trnData>"),
+    domain_trn("pending").replace("<domain:trStatus>pending</domain:trStatus>", "<domain:trStatus>pending</domain:trStatus>" * 2),
+    '<resData><other xmlns="">SECRET</other></resData>',
+    '<resData><foo>SECRET</foo></resData>',
+])
+def test_a_reply_that_does_not_follow_the_schema_is_still_a_message(res_data, caplog):
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        resp = parse(reply(1301, msg_q("Odd."), res_data))
+    assert resp.message.id == "42"
+    assert resp.message.text == "Odd."
+    assert resp.message.event is None
+    assert resp.message.unmapped
+    assert resp.queue_size == 3
+    assert resp.server_transaction_id == "sv-1"
+    assert "SECRET" not in caplog.text and "SECRET" not in resp.message.unmapped
+
+
+@pytest.mark.parametrize("q", [
+    '<msgQ count="3" id="42"><qDate>2026-11-05T16:49:34.0Z</qDate><msg>One</msg><msg>Two</msg></msgQ>',
+    '<msgQ count="3" id="42"><qDate>2026-11-05T16:49:34.0Z</qDate><qDate>2026-11-05T16:49:34.0Z</qDate><msg>One</msg></msgQ>',
+    '<msgQ count="3" id="42"><qDate>2026-11-05T16:49:34.0Z</qDate><unknown/><msg>One</msg></msgQ>',
+])
+def test_a_msg_q_that_does_not_follow_the_schema_keeps_id_and_count(q):
+    message = parse(reply(1301, q)).message
+    assert message.id == "42"
+    assert message.creationDate
+
+
+def test_unknown_child_in_a_known_extension_is_still_a_message(caplog):
+    ext = '<extension><rgp:infData xmlns:rgp="urn:ietf:params:xml:ns:rgp-1.0"><rgp:bogus>SECRET</rgp:bogus></rgp:infData></extension>'
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        message = parse(reply(1301, msg_q(), "", ext)).message
+    assert message.id == "42"
+    assert "rgp-1.0" in message.unmapped
+    assert "SECRET" not in caplog.text
+
+
+@pytest.mark.parametrize("res_data,names", [
+    ('<resData><x:other xmlns:x="urn:example:x">SECRET</x:other></resData>', ["urn:example:x", "other"]),
+    (domain_trn("pending").replace("</resData>", '<x:other xmlns:x="urn:example:x">SECRET</x:other></resData>'), ["urn:example:x"]),
+])
+def test_untranslated_data_is_logged_by_name_and_never_by_content(res_data, names, caplog):
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        parse(reply(1301, msg_q(), res_data))
+    for name in names:
+        assert name in caplog.text
+    assert "SECRET" not in caplog.text
+
+
+def test_extension_is_logged_by_name(caplog):
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        parse(reply(1301, msg_q(), "", '<extension><x:ext xmlns:x="urn:example:ext">SECRET</x:ext></extension>'))
+    assert "urn:example:ext" in caplog.text and "SECRET" not in caplog.text
+
+
+def test_pa_result_that_is_no_boolean_is_not_an_approval():
+    message = parse(reply(1301, msg_q(), pan("domain", DOMAIN, "name", "maybe"))).message
+    assert message.event is None
+    assert message.unmapped
+
+
+def test_pa_result_is_read_as_a_boolean_without_a_server_transaction_id_too():
+    res = pan("domain", DOMAIN, "name", "1").replace("<svTRID>sv-9</svTRID>", "")
+    assert parse(reply(1301, msg_q(), res)).message.event.serverTransactionId is None
+
+
+@pytest.mark.parametrize("res_data", [
+    domain_trn("pending").replace("<domain:name>FOO.EXAMPLE</domain:name>", ""),
+    contact_trn("pending").replace("<contact:id>FO-1</contact:id>", ""),
+    pan("domain", DOMAIN, "name", "1").replace(">X-1<", "><"),
+])
+def test_object_without_an_id_is_unmapped(res_data):
+    message = parse(reply(1301, msg_q(), res_data)).message
+    assert message.event is None
+    assert message.unmapped
+
+
+def test_data_name_is_carried_for_a_mapped_event():
+    assert "trnData" in parse(reply(1301, msg_q(), domain_trn("pending"))).message.data_name
+
+
+@pytest.mark.parametrize("q", ["", '<msgQ count="3"/>', '<msgQ count="3" id=""/>'])
+def test_1301_without_a_message_id_is_not_an_empty_queue(q, caplog):
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        resp = parse(reply(1301, q))
+    assert isinstance(resp, ErrorResponse)
+    assert resp.code == ResultCode.COMMAND_FAILED
+    assert resp.server_transaction_id == "sv-1"
+    assert "without an id" in caplog.text
+
+
+def test_reply_without_tr_id_is_still_read():
+    xml = reply(1301, msg_q()).replace('<trID><clTRID>msg-cl-1</clTRID><svTRID>sv-1</svTRID></trID>', "")
+    resp = parse(xml)
+    assert resp.message.id == "42"
+    assert resp.server_transaction_id is None
+
+
+def test_unknown_success_code_is_a_plain_success():
+    resp = parse(reply(1302, msg_q(), domain_trn("pending")))
+    assert resp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
+    assert resp.message.id == "42"
+
+
+def test_ack_without_tr_id_and_with_unknown_code_is_not_an_error():
+    xml = reply(1302, '<msgQ count="4" id="43"/>').replace('<trID><clTRID>msg-cl-1</clTRID><svTRID>sv-1</svTRID></trID>', "")
+    resp = parse_ack_response(xml, "msg-cl-1")
+    assert resp.queue_size == 4
+    assert resp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
+
+
+@pytest.mark.parametrize("xml", ["not xml at all", "", "<epp/>"])
+def test_ack_that_succeeded_is_never_an_error_whatever_the_reply(xml):
+    resp = parse_ack_response(xml, "msg-cl-1")
+    assert resp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
+
+
+def test_ack_with_a_msg_q_that_does_not_follow_the_schema():
+    resp = parse_ack_response(reply(1000, '<msgQ count="2" id="43"><unknown/></msgQ>'), "msg-cl-1")
+    assert resp.queue_size == 2
+
+
+@pytest.mark.parametrize("xml", ["not xml at all", "<epp/>"])
+def test_unreadable_poll_reply_is_an_error(xml):
+    assert isinstance(parse(xml), ErrorResponse)
