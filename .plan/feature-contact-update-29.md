@@ -1,6 +1,6 @@
 # Contact update, PUT and PATCH (#29)
 
-Base: `main` at 5258d2b. Not stacked on #81 (see Decisions on shared code).
+Base: stacked on #81 (`feature/domain-put-28`); PR targets `main`, #81 merges first.
 
 ## Tasks
 
@@ -37,8 +37,14 @@ No change: 200 with the current contact and no EPP update, 403 (`02201`) for a n
 
 ## Decisions
 
-(none yet)
+- Stack on #81. Extract the no-change sponsor check into a shared `flows` module and make domains use it in this PR. Use the shared `status_reasons` from `epp_response.py`.
+- K: an omitted `name`, address, email or `loc` form is kept on PUT; `org`, `voice`, `fax` are cleared; a sent address replaces the whole one. A PATCH that explicitly removes what EPP cannot clear is 501 (`02102`). spec-issues entry: core §16.8 against the json §8.2.4 response (which keeps `organizations`; we clear it). Rewrite `draft_contact/test5` and say why it differs.
+- Every `/contactInfo` PATCH operation reads first. Present `disclose` is 501 (`02102`), omitted left alone. `remove /authInfo` is 501 (`02102`), noted in spec-issues.
+- Path id is used as is (as Info and Delete); check a lowercase id on the backend.
+- Absence proof: twin contact answers 200 to the same PATCH first.
+- PATCH `kind`: unless the patch names `/contactInfo/kind`, `kind` is derived again from the end state (so removing the org does not leave `kind: org`). PUT follows create. Add to spec-issues "Individual contact with an organisation".
+- sp/pc defect: note in `testing.project.md`, no issue filed.
 
 ## Open questions
 
-See the Plan report.
+(none)
