@@ -41,7 +41,7 @@ already holds even under another keyTag (pawel-kow/epp#20). It stores `domain:ho
 object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.
 
 A contact `chg` of a `postalInfo` form replaces it: the address members not sent again (`sp`, `pc`) are wiped, also when
-only `name` or `org` is sent, so the proxy sends every changed form complete. A `chg` of a form the contact does not have
+only `name` or `org` is sent, so the proxy sends every changed form complete (pawel-kow/epp#22). A `chg` of a form the contact does not have
 is ignored, so a localization cannot be added by an update, and cases only change an existing one (`contact_update/test8`).
 An empty `org`, `voice` or `fax` clears it and reads back as an empty element. Contact cases prove absence with a PATCH
 `remove` that answers 422 (`02308`) because the property is gone, after the same removal answered 200 on a twin contact.
