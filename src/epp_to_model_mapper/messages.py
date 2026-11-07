@@ -154,15 +154,15 @@ def _translate(epp: Epp, message_id: str):
         return None, None, None
     left_out = [_describe(item) for item in res_data + extension]
     if len(res_data) != 1 or extension:
-        logger.warning("Poll message %s has data the proxy does not translate: %s", message_id, ", ".join(left_out))
+        logger.warning("Poll message %r has data the proxy does not translate: %s", message_id, ", ".join(left_out))
         return None, ", ".join(left_out), None
     try:
         event = _event(res_data[0])
     except Exception as e:  # a malformed element must not keep the message from being read
-        logger.warning("Poll message %s has data that does not map: %s, %s", message_id, left_out[0], type(e).__name__)
+        logger.warning("Poll message %r has data that does not map: %s, %s", message_id, left_out[0], type(e).__name__)
         return None, left_out[0], None
     if event is None:
-        logger.warning("Poll message %s has data the proxy does not translate: %s", message_id, left_out[0])
+        logger.warning("Poll message %r has data the proxy does not translate: %s", message_id, left_out[0])
         return None, left_out[0], None
     return event, None, left_out[0]
 
@@ -262,7 +262,7 @@ def _poll_from_markup(xml_string: str, client_transaction_id) -> PollResponse | 
     if msg is not None:
         left_out += [child.tag for child in msg.iter() if child is not msg and isinstance(child.tag, str) and child.attrib]
     logger.warning(
-        "Poll message %s was not read as typed data, its data is not translated: %s", msg_q.get("id"), ", ".join(left_out),
+        "Poll message %r was not read as typed data, its data is not translated: %s", msg_q.get("id"), ", ".join(left_out),
     )
     message = QueueMessage(
         id=msg_q.get("id"),
@@ -294,7 +294,7 @@ def parse_poll_response(xml_string: str, client_transaction_id: str | None) -> P
         event, unmapped, data_name = _translate(epp, msg_q.id)
         text, lost = _text(msg_q.msg)
         if lost:
-            logger.warning("Poll message %s has markup in its text: %s", msg_q.id, ", ".join(lost))
+            logger.warning("Poll message %r has markup in its text: %s", msg_q.id, ", ".join(lost))
             unmapped = ", ".join(filter(None, [unmapped, *lost]))
         message = QueueMessage(
             id=msg_q.id,

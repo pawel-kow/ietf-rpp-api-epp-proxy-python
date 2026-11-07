@@ -146,3 +146,10 @@ def test_a_pending_action_without_any_date_still_gives_a_message():
     rpp = messages.model_to_rpp(message(event, creationDate=None))
     assert rpp["creationDate"]
     validate_schema("message.read", rpp)
+
+
+def test_the_validation_fallback_cannot_inject_a_log_line(log=None):
+    from tests.helper.captured_log import capture_log
+    with capture_log() as captured:
+        messages.model_to_rpp(message(transfer("weird"), id="4\nFAKE LOG LINE", data_name="{urn:x}trnData"))
+    assert captured.lines and all("\n" not in line for line in captured.lines)

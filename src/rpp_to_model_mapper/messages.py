@@ -82,7 +82,7 @@ def model_to_rpp(message: QueueMessage) -> dict:
             return rpp
         except Exception as e:
             name = message.data_name or "data"
-            logger.warning("Poll message %s is a service notice, its data %s does not map: %s", message.id, name, type(e).__name__)
+            logger.warning("Poll message %r is a service notice, its data %s does not map: %s", message.id, name, type(e).__name__)
             message = replace(message, event=None, unmapped=f"{name}, which failed validation")
     rpp = _envelope(message, created, _notice(message, message.unmapped))
     validate_schema("message.read", rpp)

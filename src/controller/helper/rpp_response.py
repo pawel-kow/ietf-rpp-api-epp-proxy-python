@@ -63,8 +63,9 @@ def server_transaction_id_of(value: str | None) -> str:
 
     The id comes from the backend, and a value with other than printable ASCII cannot be a header value.
     """
-    if value and PRINTABLE_ASCII.fullmatch(value):
-        return value
+    stripped = (value or "").strip()  # a header value cannot start or end with a space
+    if stripped and PRINTABLE_ASCII.fullmatch(stripped):
+        return stripped
     if value:
         logger.warning("The server transaction id of the EPP reply is not printable ASCII, and is replaced")
     return str(uuid.uuid4())

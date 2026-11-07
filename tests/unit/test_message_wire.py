@@ -217,7 +217,7 @@ def test_ack_whose_reply_cannot_be_read_is_a_500(http):
     assert response.headers["RPP-Code"] == "02400"
 
 
-ODD_SVTRIDS = ["日本", "a&#10;b", "a&#13;&#10;b", "a\u00e9b"]
+ODD_SVTRIDS = [" sv-1", "sv-1 ", "  ", "日本", "a&#10;b", "a&#13;&#10;b", "a\u00e9b"]
 
 
 def with_sv_trid(xml, value):
@@ -378,3 +378,10 @@ def test_create_with_an_invalid_body_is_a_400(http):
     assert response.status_code == 400
 
 
+
+
+def test_a_server_transaction_id_with_spaces_around_it_is_stripped(http):
+    response = answer(http, "get", "/messages", ok(1301, with_sv_trid(reply(1301, msg_q()), " sv-7 ")))
+    assert response.headers["RPP-Svtrid"] == "sv-7"
+    failed = answer(http, "delete", "/messages/42", (False, "2303", with_sv_trid(reply(2303), " sv-8 ")))
+    assert failed.headers["RPP-Svtrid"] == "sv-8"

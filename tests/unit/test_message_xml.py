@@ -397,3 +397,39 @@ def test_a_message_without_an_id_is_logged_on_the_raw_path_too(log):
     with log() as captured:
         parse(reply(1301, '<msgQ count="3"/>' + '<unknown/>'))
     assert "without a message id" in captured.text
+
+
+def test_text_after_a_comment_is_kept():
+    assert parse(reply(1301, msg_q("Queue<!-- c --> text."))).message.text == "Queue text."
+
+
+def test_text_after_a_comment_is_kept_on_every_operation():
+    from epp_to_model_mapper import parse_domain_check_response_single
+    xml = reply(1000, (
+        f'<resData><domain:chkData xmlns:domain="{DOMAIN}"><domain:cd><domain:name avail="1">exa<!-- c -->mple.test'
+        '</domain:name></domain:cd></domain:chkData></resData>'
+    ))
+    assert parse_domain_check_response_single(xml, "example.test", "msg-cl-1").available is True
+
+
+def test_a_bare_doctype_is_refused_on_the_typed_path():
+    from epp_to_model_mapper.commands.helper import str_to_epp
+    with pytest.raises(ValueError):
+        str_to_epp('<!DOCTYPE epp>' + reply(1300))
+
+
+def test_a_message_id_cannot_inject_a_log_line(log):
+    evil = "4&#10;FAKE LOG LINE"
+    q = f'<msgQ count="1" id="{evil}"><qDate>2026-11-05T16:49:34.0Z</qDate><msg><field a="b"/></msg></msgQ>'
+    xmls = [
+        reply(1301, q, '<resData><x:other xmlns:x="urn:example:x"/></resData>'),
+        reply(1301, q, domain_trn("pending") + '<x:other xmlns:x="urn:example:x"/>'.join(["", ""]), '<extension><x:e xmlns:x="urn:example:x"/></extension>'),
+        reply(1301, q, pan("domain", DOMAIN, "name", "maybe")),
+        reply(1301, q),
+        reply(1301, q, "<resData><foo/></resData>"),
+    ]
+    with log() as captured:
+        for xml in xmls:
+            parse(xml)
+    assert len(captured.lines) >= 5
+    assert all("\n" not in line for line in captured.lines)

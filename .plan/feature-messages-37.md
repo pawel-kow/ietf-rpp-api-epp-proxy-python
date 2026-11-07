@@ -73,7 +73,7 @@ Modules (one class per file): `models/queue_message.py`, `transfer_event.py`, `p
 - The `creationDate` substitute is the event date, else the read time, so it can differ between reads (spec-issues).
 - `Content-Language` only when it is a language tag, `en` when `lang` is absent. `RPP-Queue-Size` only as an integer >= 0, also on the read 404 and 501 (`MessageErrorResponse`).
 - Successful DELETE returns a Flask `Response` without `Content-Type`. HEAD handlers keep their `del`, cause noted on #87.
-- Ids with control characters: 400 `02005` on GET and DELETE. A path that is `\r\n` alone never reaches the handler (framework-level 500, as for every route).
+- Ids with control characters: 400 `02005` on GET and DELETE. Any line feed in a path id (`%0A`, also `/hosts/a%0Ab`) never reaches the handler (framework-level 500, #98), so a message whose id has an LF can be read but not acked.
 
 ## Review round 2 (decisions)
 
@@ -81,4 +81,10 @@ Modules (one class per file): `models/queue_message.py`, `transfer_event.py`, `p
 - XML parses in `src/`: `commands/helper.py` `str_to_epp` (every operation), `helpers/xml_helper.py` `decode_xml` (greeting, every reply's result code, error replies, the raw message paths). `eppclient.py` imports `xml.etree.ElementTree` and does not use it.
 - `RPP-Svtrid` is passed on only as printable ASCII, in `generate_rpp_response_headers` and `problem_headers`, so every operation benefits.
 - Unknown codes: `UnknownResultCode` carries the number, Table 10 gives the status. An ack or poll reply without a readable result is a 500 (`02400`).
-- Ids: only what XML 1.0 forbids is 400 (tab, LF and CR are allowed). `_drop_bad_dates` removed: xsdata keeps a bad `qDate` as a string, which `_safe_datetime` handles.
+- Ids: only what XML 1.0 forbids is 400 (tab, LF and CR are allowed by XML, but an LF in a path never arrives, #98). `_drop_bad_dates` removed: xsdata keeps a bad `qDate` as a string, which `_safe_datetime` handles.
+
+## Review round 3 (decisions)
+
+- `str_to_epp` removes comments (`remove_comments=True`), as the old path did. It also drops lxml's `recover`, so a reply that is not well-formed (`<msg>a & b</msg>`, trailing junk) now fails typed parsing on every operation; messages go to the notice path.
+- Server-sent message ids are logged with `%r`. An svTRID is stripped before the printable-ASCII check.
+- #98: path ids with a line feed.
