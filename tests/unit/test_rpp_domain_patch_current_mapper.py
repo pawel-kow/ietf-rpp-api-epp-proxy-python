@@ -1,3 +1,4 @@
+import jsonschema
 import pytest
 from connexion import ProblemException
 
@@ -103,6 +104,63 @@ def test_replace_status_keeps_the_ones_of_the_server():
 def test_server_status_cannot_be_set():
     with pytest.raises(ValueError, match="serverHold"):
         update(op("add", "/status", value={"@type": "domainStatus", "label": "serverHold"}))
+
+
+@pytest.mark.parametrize("operation", [op("replace", "/status", value=[]), op("remove", "/status")])
+def test_clearing_status_removes_the_client_ones_only(operation):
+    result = update(operation, status=["clientHold", "clientUpdateProhibited", "serverHold"])
+
+    assert result.remove.status == ["clientHold", "clientUpdateProhibited"]
+    assert result.add is None
+
+
+@pytest.mark.parametrize("operation", [op("replace", "/status", value=[]), op("remove", "/status")])
+def test_clearing_status_without_client_ones_changes_nothing(operation):
+    result = update(operation, status=["ok"])
+
+    assert result.add is None and result.remove is None
+
+
+def test_a_server_status_cannot_be_named_even_if_the_domain_has_it():
+    server_hold = {"@type": "domainStatus", "label": "serverHold"}
+
+    with pytest.raises(ValueError, match="serverHold"):
+        update(op("replace", "/status", value=[server_hold]), status=["serverHold"])
+
+
+def test_a_server_status_matches_nothing():
+    with pytest.raises(PatchNotApplicable):
+        update(op("remove", "/status", match={"label": "serverHold"}), status=["serverHold"])
+
+
+def test_replacing_ok_stays_possible():
+    assert update(op("replace", "/status", match={"label": "ok"}, value=STATUS)).add.status == ["clientHold"]
+
+
+def test_a_status_that_is_no_object_is_rejected():
+    with pytest.raises(jsonschema.ValidationError):
+        update(op("add", "/status", value="clientHold"))
+
+
+def test_records_can_be_added_to_a_domain_without_dns():
+    ds = {"@type": "dnsRecord", "name": "@", "type": "ds", "rdata": {
+        "keyTag": "1", "algorithm": "8", "digestType": "2", "digest": "AB",
+    }}
+
+    assert update(op("add", "/dns/records", value=ds)).add.dnsSEC.ds_data == [
+        DsData(keyTag=1, algorithm=8, digestType=2, digest="AB")
+    ]
+
+
+def test_replace_records_of_a_domain_without_dns_changes_nothing():
+    result = update(op("replace", "/dns/records", value=[]))
+
+    assert result.add is None and result.remove is None
+
+
+def test_ttl_in_dns_controls_is_not_supported():
+    with pytest.raises(NotSupportedByProxy):
+        update(op("replace", "/dns/controls", value={"@type": "dnsControls", "ttl": {"a": 3600}}))
 
 
 def test_remove_status_by_match():

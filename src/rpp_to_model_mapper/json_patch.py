@@ -96,12 +96,16 @@ def _apply_to_property(parent: dict, key: str, operation: RPPPatchOperation):
         parent[key] = _required_value(operation)
 
 
-def _apply(document: dict, operation: RPPPatchOperation, array_paths: tuple[str, ...]):
+def _apply(document: dict, operation: RPPPatchOperation, array_paths: tuple[str, ...], absent_parents: dict[str, dict]):
     if operation.op not in OPERATIONS:
         raise ValueError(f"Operation '{operation.op}' is not allowed")
     keys = _pointer(operation.path)
     parent = document
+    walked = ""
     for key in keys[:-1]:
+        walked += f"/{key}"
+        if isinstance(parent, dict) and key not in parent and walked in absent_parents:
+            parent[key] = copy.deepcopy(absent_parents[walked])
         if not isinstance(parent, dict) or key not in parent:
             raise ValueError(f"Path '{operation.path}' does not exist")
         parent = parent[key]
@@ -115,11 +119,16 @@ def _apply(document: dict, operation: RPPPatchOperation, array_paths: tuple[str,
 
 
 def apply(
-    document: dict, operations: list[RPPPatchOperation], array_paths: tuple[str, ...], ignored_path: str | None = None,
+    document: dict,
+    operations: list[RPPPatchOperation],
+    array_paths: tuple[str, ...],
+    ignored_path: str | None = None,
+    absent_parents: dict[str, dict] | None = None,
 ) -> dict:
     """Applies a patch (json draft §5.2.2, steps 1 to 5) to a copy of the document, in order.
 
     `array_paths` are the properties that are arrays even when absent. Operations on `ignored_path` are left to the caller.
+    `absent_parents` gives the objects the schema allows on a path (step 2), to use when the document does not have them.
     A failure names the operation by its position.
     """
     patched = copy.deepcopy(document)
@@ -127,7 +136,7 @@ def apply(
         if operation.path == ignored_path:
             continue
         try:
-            _apply(patched, operation, array_paths)
+            _apply(patched, operation, array_paths, absent_parents or {})
         except (ValueError, PatchNotApplicable) as e:
             raise type(e)(f"Operation {number} ('{operation.op}' on '{operation.path}'): {e}") from e
     return patched

@@ -69,12 +69,6 @@ NOT_IN_PROXY = [
     (contacts.rpp_to_model, contact(disclose={"@type": "disclose"})),
 ]
 
-NOT_IN_PROXY_PATCH = [
-    (host_patch.rpp_to_model, "ns1.foo.example", op("replace", "/status", value=[])),
-    (host_patch.rpp_to_model, "ns1.foo.example", op("replace", "/dns", value=dns())),
-    (host_patch.rpp_to_model, "ns1.foo.example", op("remove", "/status", match={"other": "x"})),
-]
-
 NOT_IN_EPP_PATCH = [
     (host_patch.rpp_to_model, "ns1.foo.example", op("remove", "/hostName")),
     (host_patch.rpp_to_model, "ns1.foo.example", op(
@@ -104,7 +98,7 @@ def test_what_epp_cannot_hold_is_unimplemented_option(case):
     assert "cannot be expressed in EPP" in problem.detail
 
 
-@pytest.mark.parametrize("case", NOT_IN_PROXY + NOT_IN_PROXY_PATCH)
+@pytest.mark.parametrize("case", NOT_IN_PROXY)
 def test_what_only_the_proxy_lacks_is_unimplemented_option(case):
     assert isinstance(raised_by(*case), NotSupportedByProxy)
     problem = rejection(*case)

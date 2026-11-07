@@ -1,4 +1,5 @@
 import ipaddress
+from typing import Callable
 
 from eppclient.epp_hosts import epp_hosts_Create, epp_hosts_Info, epp_hosts_Update
 from eppclient.eppclient import EPPClient
@@ -74,6 +75,29 @@ def _difference(host_name: str, current: Host, wanted: Host) -> HostUpdate:
         add=add or None,
         remove=remove or None,
     )
+
+
+def _changes_nothing(update: HostUpdate) -> bool:
+    return update.new_name is None and update.add is None and update.remove is None
+
+
+def patch_host(
+    epp_client: EPPClient,
+    host_name: str,
+    update: HostUpdate | None,
+    wanted_from_current: Callable[[Host], Host],
+    client_transaction_id,
+) -> HostMutationResult | ErrorResponse:
+    """A partial update. Without an `update` the patch needs the current host (#71): it is read,
+    `wanted_from_current` applies the patch, and the difference is sent. The read and the update are not atomic."""
+    if update is None:
+        current = epp_hosts_Info(epp_client, host_name)
+        if isinstance(current, ErrorResponse):
+            return current
+        update = _difference(host_name, current.host, wanted_from_current(current.host))
+        if _changes_nothing(update):
+            return HostMutationResult(mutation=current, host=current.host)
+    return update_host(epp_client, update, client_transaction_id)
 
 
 def replace_host(epp_client: EPPClient, host_name: str, wanted: Host, client_transaction_id) -> HostMutationResult | ErrorResponse:

@@ -62,9 +62,13 @@ def test_remove_status():
     )
 
 
-def test_remove_status_needs_the_label():
-    with pytest.raises(UnsupportedRppFeature):
-        update(remove("/status", {"reason": "x"}))
+@pytest.mark.parametrize("match", [
+    {"reason": "x"},
+    {"label": "clientUpdateProhibited", "reason": "x"},
+    {"label": "linked"},
+])
+def test_remove_status_with_more_than_a_client_label_needs_the_current_host(match):
+    assert update(remove("/status", match)) is None
 
 
 def test_add_records():
@@ -95,10 +99,13 @@ def test_remove_record_with_a_full_match():
     assert update(remove("/dns/records", A)).remove == HostUpdateChanges(ipv4=["192.0.2.1"])
 
 
-@pytest.mark.parametrize("match", [{"type": "a"}, {"rdata": {"address": "192.0.2.1"}}])
-def test_remove_record_needs_type_and_rdata(match):
-    with pytest.raises(UnsupportedRppFeature):
-        update(remove("/dns/records", match))
+@pytest.mark.parametrize("match", [
+    {"type": "a"},
+    {"rdata": {"address": "192.0.2.1"}},
+    {"type": "ns", "rdata": {"nsdname": f"{NAME}."}},
+])
+def test_remove_record_by_a_partial_match_needs_the_current_host(match):
+    assert update(remove("/dns/records", match)) is None
 
 
 @pytest.mark.parametrize("path", ["/status", "/dns/records"])
@@ -109,22 +116,18 @@ def test_add_cannot_use_match(path):
         update({"op": "add", "path": path, "value": value, "match": {"label": "x"}})
 
 
-@pytest.mark.parametrize("path", ["/status", "/dns/records"])
-def test_replace_needs_the_current_object(path):
-    with pytest.raises(UnsupportedRppFeature):
-        update({"op": "replace", "path": path, "value": []})
-
-
-@pytest.mark.parametrize("path", ["/status", "/dns/records"])
-def test_remove_without_match_needs_the_current_object(path):
-    with pytest.raises(UnsupportedRppFeature):
-        update({"op": "remove", "path": path})
-
-
-@pytest.mark.parametrize("path", ["/dns", "/dns/controls"])
-def test_dns_as_a_whole_is_unsupported(path):
-    with pytest.raises(UnsupportedRppFeature):
-        update({"op": "replace", "path": path, "value": {}})
+@pytest.mark.parametrize("operation", [
+    {"op": "replace", "path": "/status", "value": []},
+    {"op": "replace", "path": "/dns/records", "value": []},
+    {"op": "remove", "path": "/status"},
+    {"op": "remove", "path": "/dns/records"},
+    {"op": "replace", "path": "/status", "match": {"label": "ok"}, "value": STATUS},
+    {"op": "replace", "path": "/dns", "value": {"@type": "dnsData"}},
+    {"op": "remove", "path": "/dns"},
+    {"op": "remove", "path": "/dns/controls"},
+])
+def test_operations_needing_the_current_host_have_no_direct_update(operation):
+    assert update(operation) is None
 
 
 def test_other_paths_cannot_be_changed():

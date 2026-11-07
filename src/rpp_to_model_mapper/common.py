@@ -1,9 +1,7 @@
 from dataclasses_json.undefined import UndefinedParameterError
 
 from .not_supported_by_epp import NotSupportedByEpp
-from .not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPPatchOperation, RPPPeriod
-from .unsupported_rpp_feature import UnsupportedRppFeature
 
 
 def parse_rpp(rpp_class, rpp: dict):
@@ -26,6 +24,6 @@ def reject_set(**members):
             raise NotSupportedByEpp(f"'{name}'")
 
 
-def reject_operation(operation: RPPPatchOperation, rejection: type[UnsupportedRppFeature] = NotSupportedByProxy):
-    """By default an operation EPP could do, but the proxy only with the current state of the object (#27)."""
-    raise rejection(f"'{operation.op}' on '{operation.path}'")
+def reject_operation(operation: RPPPatchOperation):
+    """An operation EPP has no place for."""
+    raise NotSupportedByEpp(f"'{operation.op}' on '{operation.path}'")

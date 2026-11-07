@@ -1,15 +1,27 @@
-from models import HostUpdate, HostUpdateChanges
+from models import Host, HostUpdate, HostUpdateChanges
 from rpp_schema_validator import validate_schema
-from . import host_dns
+from . import host_dns, json_patch, patch_statuses
 from .common import parse_rpp, reject_operation
-from .hosts import add_rpp_status
-from .not_supported_by_epp import NotSupportedByEpp
-from .rpp_models import RPPDnsRecord, RPPPatchOperation, RPPStatus
+from .dns_records import ADDRESS_RECORDS, DNS_PARENTS
+from .hosts import add_rpp_status, rpp_host_with_status_to_model
+from .needs_current_state import NeedsCurrentState
+from .rpp_models import RPPDnsRecord, RPPHost, RPPPatchOperation, RPPStatus
 
 HOST_NAME_PATH = "/hostName"
 STATUS_PATH = "/status"
 RECORDS_PATH = "/dns/records"
-UNSUPPORTED_PATHS = ("/dns", "/dns/controls")
+ARRAY_PATHS = (STATUS_PATH, RECORDS_PATH)
+STATE_PATHS = ("/dns", "/dns/controls")
+READ_ONLY_MEMBER = "provMetadata"
+
+
+def _check(operation: RPPPatchOperation):
+    if operation.op not in ("add", "remove", "replace"):
+        raise ValueError(f"Operation '{operation.op}' is not allowed")
+    if operation.path not in (HOST_NAME_PATH, *ARRAY_PATHS, *STATE_PATHS):
+        raise ValueError(f"Path '{operation.path}' cannot be changed")
+    if operation.path == HOST_NAME_PATH and operation.op == "remove":
+        reject_operation(operation)
 
 
 class _PatchedHostUpdate:
@@ -22,22 +34,17 @@ class _PatchedHostUpdate:
         self.remove = HostUpdateChanges()
 
     def apply(self, operation: RPPPatchOperation):
-        if operation.op not in ("add", "remove", "replace"):
-            raise ValueError(f"Operation '{operation.op}' is not allowed")
-        if operation.path in UNSUPPORTED_PATHS:
-            reject_operation(operation)
+        _check(operation)
+        if operation.path in STATE_PATHS:
+            raise NeedsCurrentState()
         if operation.path == HOST_NAME_PATH:
             self._apply_to_host_name(operation)
-        elif operation.path in (STATUS_PATH, RECORDS_PATH):
-            self._apply_to_array(operation)
         else:
-            raise ValueError(f"Path '{operation.path}' cannot be changed")
+            self._apply_to_array(operation)
 
     def _apply_to_host_name(self, operation: RPPPatchOperation):
         if operation.match is not None:
             raise ValueError("'match' can only be used on an array")
-        if operation.op == "remove":
-            reject_operation(operation, NotSupportedByEpp)
         validate_schema("host.update", {"@type": "host", "hostName": operation.value})
         self.new_name = operation.value
 
@@ -49,17 +56,17 @@ class _PatchedHostUpdate:
         elif operation.op == "remove" and operation.match is not None:
             self._remove_element(operation)
         else:
-            reject_operation(operation)
+            raise NeedsCurrentState()
 
     def _remove_element(self, operation: RPPPatchOperation):
         match = operation.match
         if operation.path == STATUS_PATH:
-            if "label" not in match:
-                reject_operation(operation)
+            if match.keys() != {"label"} or not patch_statuses.is_client_label(match["label"]):
+                raise NeedsCurrentState()
             self.remove.status.append(match["label"])
         else:
-            if "type" not in match or "rdata" not in match:
-                reject_operation(operation)
+            if "rdata" not in match or str(match.get("type")).lower() not in ADDRESS_RECORDS:
+                raise NeedsCurrentState()
             self._change(operation, {"@type": "dnsRecord", "name": "@", **match}, self.remove)
 
     def _change(self, operation: RPPPatchOperation, element: dict, changes: HostUpdateChanges):
@@ -70,7 +77,7 @@ class _PatchedHostUpdate:
         validate_schema("dnsRecord.create", element)
         address = host_dns.rpp_to_model(self.host_name, parse_rpp(RPPDnsRecord, element))
         if address is None:
-            reject_operation(operation, NotSupportedByEpp)
+            reject_operation(operation)
         family, value = address
         getattr(changes, family).append(value)
 
@@ -83,9 +90,38 @@ class _PatchedHostUpdate:
         )
 
 
-def rpp_to_model(host_name: str, rpp: list) -> HostUpdate:
-    """Converts a partial update (JSON Patch, json draft §5.2) to a HostUpdate."""
+def _operations(rpp: list) -> list[RPPPatchOperation]:
+    return [parse_rpp(RPPPatchOperation, operation) for operation in rpp]
+
+
+def rpp_to_model(host_name: str, rpp: list) -> HostUpdate | None:
+    """Converts a partial update (JSON Patch, json draft §5.2) to a HostUpdate.
+
+    None when an operation needs the current host, then `rpp_to_model_with_current` converts it.
+    """
     update = _PatchedHostUpdate(host_name)
-    for operation in rpp:
-        update.apply(parse_rpp(RPPPatchOperation, operation))
+    try:
+        for operation in _operations(rpp):
+            update.apply(operation)
+    except NeedsCurrentState:
+        return None
     return update.to_host_update()
+
+
+def rpp_to_model_with_current(host_name: str, rpp: list, current: dict) -> Host:
+    """Applies the patch to the current host (its read representation) and returns the Host it asks for.
+
+    The records of the host stay under the name it has now, also when the patch renames it.
+    """
+    operations = _operations(rpp)
+    for operation in operations:
+        _check(operation)
+    patched = json_patch.apply(
+        patch_statuses.without_server_statuses(current), operations, ARRAY_PATHS, absent_parents=DNS_PARENTS,
+    )
+    patched = patch_statuses.with_server_statuses(patched, current, "hostStatus")
+    validate_schema("host.read", patched)
+    requested = {member: value for member, value in patched.items() if member != READ_ONLY_MEMBER}
+    host = rpp_host_with_status_to_model(parse_rpp(RPPHost, {**requested, "hostName": current["hostName"]}))
+    host.name = patched["hostName"]
+    return host

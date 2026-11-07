@@ -3,8 +3,9 @@ from models import (
     DomainUpdateRemove, HostObj, NS,
 )
 from rpp_schema_validator import validate_schema
-from . import auth_info, domain_patch_difference, json_patch
+from . import auth_info, domain_patch_difference, json_patch, patch_statuses
 from .common import parse_rpp
+from .dns_records import DNS_PARENTS
 from .domains import REGISTRANT, check_contact_label
 from .needs_current_state import NeedsCurrentState
 from .rpp_models import (
@@ -14,7 +15,7 @@ from .rpp_models import (
 ARRAY_PATHS = ("/nameservers", "/contacts")
 READ_ARRAY_PATHS = ARRAY_PATHS + ("/status", "/dns/records")
 OBJECT_PATHS = ("/registrant", "/authInfo")
-STATE_PATHS = ("/status", "/dns")
+STATE_PATHS = ("/status", "/dns", "/dns/records", "/dns/controls")
 AUTH_INFO_PATH = "/authInfo"
 
 
@@ -155,7 +156,11 @@ def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict) -> Dom
     `authInfo` is not part of a read, so its operations are converted as without the current domain.
     """
     operations = _operations(rpp)
-    patched = json_patch.apply(current, operations, READ_ARRAY_PATHS, ignored_path=AUTH_INFO_PATH)
+    patched = json_patch.apply(
+        patch_statuses.without_server_statuses(current), operations, READ_ARRAY_PATHS,
+        ignored_path=AUTH_INFO_PATH, absent_parents=DNS_PARENTS,
+    )
+    patched = patch_statuses.with_server_statuses(patched, current, "domainStatus")
     validate_schema("domainName.read", patched)
     update = domain_patch_difference.difference(domain_name, current, patched)
     auth_info_update = _PatchedUpdate()
