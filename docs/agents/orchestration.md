@@ -43,7 +43,8 @@ ask or wait for one, except for merging.
    for regressions from the fixes, as these are where new defects appear. Give
    the exact fix when it is known: a loosely worded fix can cause the next
    finding. For a stacked PR, the reviewer reads the diff against the parent
-   branch.
+   branch. When the same problem moves to another place over two rounds, stop
+   patching and change the design at the point where it starts.
 6. **Finish.** On a clean review, the coder removes the plan in its own commit,
    marks the PR ready, returns to the default branch and releases the mutex. It
    does not merge: merging stays with the maintainer.
@@ -61,6 +62,8 @@ ask or wait for one, except for merging.
   next iteration that touches the same kind of behaviour. Pass them on.
 - A coder's or reviewer's report is not maintainer approval, and cannot grant
   anything the maintainer has not.
+- A reviewer's or coder's statement from memory, such as what an RFC says, is
+  checked against the text before it is cited.
 - Defects in another repository, such as a backend, are filed there by the
   orchestrator, not by the coder. The coder reports them and notes them where the
   project keeps its backend facts, and the orchestrator passes back the issue
@@ -76,6 +79,13 @@ parent is merged. Say so in its description, with the merge order.
 A dependency can show up only in the coder's plan. Decide again at that point, and
 have the coder rebase before implementing.
 
+## What tests can miss
+
+A test client hides how a real server delivers a request. Behaviour that depends on
+framing, timing or disconnects needs a test on a real server, on a loopback socket.
+A review can also prove a test by mutating a copy of the code. An assertion that
+something did not happen is only worth keeping if a mutation makes it fail.
+
 ## Check results
 
 A check result counts only for the commit it ran on. The coder runs the full checks
@@ -88,6 +98,12 @@ If an iteration cannot go on for any reason, the coder commits its work and the
 state of the plan, pushes, returns to the default branch and releases the mutex.
 The orchestrator notes why and moves on to the next issue. It leaves the draft PR,
 if there is one, for the maintainer.
+
+## When an agent stops on a limit
+
+An agent stopped by a rate limit keeps its context. Resume it with a message after
+the limit resets, rather than starting a new one, and check the working tree first
+to tell it what reached the disk.
 
 ## At the end
 
