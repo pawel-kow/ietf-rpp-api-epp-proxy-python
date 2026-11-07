@@ -45,6 +45,12 @@ def shared():
     return setup()
 
 
+def forget(clients):
+    """The authenticator keeps one session per user, so keep the client and clear what it recorded."""
+    for client in clients:
+        client.sent.clear()
+
+
 def sent_any(clients):
     return any(client.sent for client in clients)
 
@@ -53,7 +59,7 @@ def sent_any(clients):
 @pytest.mark.parametrize("body", BODIES)
 def test_delete_with_a_body_is_a_400_without_epp(shared, url, body):
     app, clients = shared
-    clients.clear()
+    forget(clients)
     response = app.test_client().request("DELETE", url, content=body, headers=HEADERS)
     assert response.status_code == 400
     assert response.headers["RPP-Code"] == "02001"
@@ -63,7 +69,7 @@ def test_delete_with_a_body_is_a_400_without_epp(shared, url, body):
 @pytest.mark.parametrize("url", DELETES)
 def test_delete_with_a_form_body_is_a_400_without_epp(shared, url):
     app, clients = shared
-    clients.clear()
+    forget(clients)
     headers = {k: v for k, v in HEADERS.items() if k != "Content-Type"}
     response = app.test_client().request("DELETE", url, data={"a": "b"}, headers=headers)
     assert response.status_code == 400
@@ -73,7 +79,7 @@ def test_delete_with_a_form_body_is_a_400_without_epp(shared, url):
 @pytest.mark.parametrize("url", DELETES)
 def test_delete_without_a_body_is_not_rejected(shared, url):
     app, clients = shared
-    clients.clear()
+    forget(clients)
     headers = {k: v for k, v in HEADERS.items() if k != "Content-Type"}
     response = app.test_client().delete(url, headers=headers)
     assert response.status_code == (200 if "processes" not in url else 202)
@@ -152,11 +158,14 @@ def live_cases():
     reject = {"contact": f"{CONTACT_LATEST}/transferReject", "domain": f"{DOMAIN_LATEST}/transferReject"}
     cancel = {"contact": CONTACT_LATEST, "domain": DOMAIN_LATEST}
     types = {"contact": "transferProcess", "domain": "domainTransferProcess"}
+    create = {"contact": CONTACT_LATEST.rsplit("/", 1)[0], "domain": DOMAIN_LATEST.rsplit("/", 1)[0]}
     cases = []
     for kind in ("contact", "domain"):
         type_only = ('{"@type": "%s"}' % types[kind]).encode()
+        create_body = ('{"@type": "%s", "transferDir": "pull"}' % types[kind]).encode()
         with_reason = ('{"@type": "%s", "reason": "ok"}' % types[kind]).encode()
         cases += [
+            (f"{kind}-create", "POST", create[kind], create_body, MEDIA_TYPE, 202),
             (f"{kind}-approve-reason", "POST", approve[kind], with_reason, MEDIA_TYPE, 501),
             (f"{kind}-approve-unknown", "POST", approve[kind], b'{"x": 1}', MEDIA_TYPE, 400),
             (f"{kind}-approve-null", "POST", approve[kind], b"null", MEDIA_TYPE, 400),
@@ -189,7 +198,7 @@ def test_content_is_seen_whatever_its_framing(live, case, chunked):
     """An approve, cancel or reject that is not valid never reaches EPP, as it does not through the test client."""
     _, method, path, body, content_type, status = case
     server, clients = live
-    clients.clear()
+    forget(clients)
     line = server.request(method, path, body, content_type, chunked, delay=0)
     assert line is not None, "the request hung"
     expected = status if isinstance(status, tuple) else (status,)
@@ -211,3 +220,43 @@ def test_a_body_that_arrives_after_the_headers_does_not_hang(live, path, body, s
         line = server.request(method, path, body)
         assert line is not None, "the request hung"
         assert f" {status} " in line
+
+
+def abort_cases():
+    cases = []
+    for kind, type_name in (("contact", "transferProcess"), ("domain", "domainTransferProcess")):
+        latest = CONTACT_LATEST if kind == "contact" else DOMAIN_LATEST
+        for op, method, path in (("approve", "POST", f"{latest}/transferApprove"),
+                                 ("cancel", "DELETE", latest),
+                                 ("reject", "POST", f"{latest}/transferReject")):
+            cases.append((f"{kind}-{op}", method, path, ('{"@type": "%s"}' % type_name).encode()))
+    return cases
+
+
+def abort(server, method, path, body, mode):
+    """Sends part of a request and closes the connection."""
+    lines = [f"{method} {path} HTTP/1.1", f"Host: 127.0.0.1:{server.port}", f"Authorization: {CREDENTIALS}",
+             f"Accept: {MEDIA_TYPE}", "RPP-Cltrid: cl-1", f"Content-Type: {MEDIA_TYPE}"]
+    if mode == "short":
+        lines.append("Content-Length: 200")
+    else:
+        lines.append("Transfer-Encoding: chunked")
+    with socket.create_connection(("127.0.0.1", server.port), timeout=5) as connection:
+        connection.sendall(("\r\n".join(lines) + "\r\n\r\n").encode())
+        if mode == "short":
+            connection.sendall(body)
+        elif mode == "unterminated":
+            connection.sendall(f"{len(body):x}\r\n".encode() + body + b"\r\n")
+    time.sleep(0.3)  # the server sees the disconnect, and would run the command if it took it for the end
+
+
+@pytest.mark.parametrize("mode", ["short", "headers-only", "unterminated"])
+@pytest.mark.parametrize("case", abort_cases(), ids=lambda case: case[0] if isinstance(case, tuple) else None)
+def test_an_aborted_upload_runs_nothing(live, case, mode):
+    """An approve cannot be undone, so a request that did not arrive whole is dropped."""
+    _, method, path, body = case
+    server, clients = live
+    forget(clients)
+    abort(server, method, path, body, mode)
+    assert not sent_any(clients)
+    forget(clients)

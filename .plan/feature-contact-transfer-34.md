@@ -54,6 +54,13 @@ Carried over from #33: query with nothing pending 409 (02301); approve takes an 
 
 - `test_empty_body_wire.py` builds the app once and starts uvicorn once per module. A case cost 1 to 3 s because every one built the app from the OpenAPI and started and stopped a server. The file now takes 8 s, with the same 183 live cases and all body cases.
 
+## Review round 4 (PR #90)
+
+- The `before_request` hook is replaced by `BodyBufferingMiddleware` (ASGI, outermost, added first at `BEFORE_EXCEPTION` in `create_app`, so Connexion's validators, `run.py` and the test client all go through it). With the input terminated, an aborted upload ran the command.
+- Live abort cases (`Content-Length` short, chunked with headers only, chunked unterminated, approve, cancel and reject, both kinds) assert nothing was sent. 14 of 18 failed before the middleware.
+- The "nothing sent" assertions were vacuous after the first test, since `clients.clear()` dropped the only session. They now clear `client.sent`. With `require_empty_body` sending to EPP before rejecting, 82 cases fail.
+- A valid chunked create now works (live case added), which was #93.
+
 ## Backend notes
 
 - A completed contact transfer cannot be queried (2301), like #65. Cancel by the non-requester is 2201, also with nothing pending, like #66.

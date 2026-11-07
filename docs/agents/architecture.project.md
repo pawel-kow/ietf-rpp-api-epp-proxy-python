@@ -77,6 +77,11 @@ the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer
 `epp_contacts_Transfer` run all five operations, chosen by the model's `operation`. EPP has no process ids, so only
 `latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process).
 
+`BodyBufferingMiddleware` in `controller/body_buffering_middleware.py` is the outermost middleware that `create_app`
+adds. It reads the whole body of a request that has one before anything else runs, drops the request if the client
+disconnects first, and passes on a complete request with a `content-length`. So chunked bodies, late bodies and
+aborted uploads reach no handler half-received. It has no size limit (#93).
+
 `RppRequestBodyValidator` and `RppResponseBodyValidator` let a body be absent where the
 OpenAPI allows it, which Connexion's validators do not. The handler then gets an empty dict.
 

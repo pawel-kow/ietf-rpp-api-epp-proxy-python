@@ -1,4 +1,3 @@
-import flask
 from connexion import FlaskApp
 from connexion.datastructures import MediaTypeDict
 from connexion.exceptions import ProblemException
@@ -10,6 +9,7 @@ from connexion.validators import VALIDATOR_MAP
 from starlette.middleware.cors import CORSMiddleware
 from controller import *
 from controller.helper.rpp_response import RPP_ERROR_TYPE, problem_headers
+from controller.body_buffering_middleware import BodyBufferingMiddleware
 from controller.rpp_request_body_validator import RppRequestBodyValidator
 from controller.rpp_response_body_validator import RppResponseBodyValidator
 from controller.epp_basic_security_handler import EppBasicSecurityHandler
@@ -54,6 +54,7 @@ def create_app(authenticator):
         __name__,
         security_map={"basic": lambda: EppBasicSecurityHandler(authenticator.authenticate)},
     )
+    app.add_middleware(BodyBufferingMiddleware, position=MiddlewarePosition.BEFORE_EXCEPTION)
     app.add_middleware(
         CORSMiddleware,
         position=MiddlewarePosition.BEFORE_EXCEPTION,
@@ -69,13 +70,5 @@ def create_app(authenticator):
                     "response": MediaTypeDict({"*/*json": RppResponseBodyValidator}),
                 })
     app.add_error_handler(ProblemException, handle_rpp_error)
-
-    @app.app.before_request
-    def _chunked_bodies():
-        # a2wsgi gives a chunked body no Content-Length and does not mark the stream as terminated,
-        # so Flask would read it as empty and a handler would not see its content.
-        flask.request.environ["wsgi.input_terminated"] = True
-        # Keep the raw bytes before anything parses a form from them and leaves none for a handler.
-        flask.request.get_data(cache=True)
 
     return app
