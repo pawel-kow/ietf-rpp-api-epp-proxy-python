@@ -105,6 +105,13 @@ Example 3, no atomicity. Client A sends example 1. Between the `info` and the `u
 - Should the EPP Compatibility Profile say that a patch of `status` covers only the statuses a client owns?
 - **Proxy:** a patch of `/status` applies as if the object had no server statuses, on hosts and domains. `remove /status` and `replace /status []` clear the client statuses (a deviation from Figure 3), and server statuses are left alone. A value that names a server status is 400 (`02001`), even if the object has it, and a `match` that names one finds no element (422, `02308`). `ok` is the exception, it stays visible because the draft's example in §5.3.1 replaces it.
 
+## `ok` in the partial update example
+
+- json §5.3.1 changes a domain "from `ok` to `clientUpdateProhibited`" with a `replace` that matches `{"label": "ok"}`. Data-objects §9.3.1 and §9.4.1 say a client MUST NOT alter status values set by the server, and that `ok` is set and removed by the server.
+- `ok` also cannot be combined with other statuses (§9.3.4, §9.4.4), so adding a client status is enough: the registry drops `ok` by itself. The `match` makes the patch fail on an object that has any other status instead of `ok`, although the client only wants to add its own status.
+- Suggested: change the example to an `add` of `clientUpdateProhibited` on `/status`. If matching `ok` is meant to stay allowed, the draft should state it as an exception to §9.3.1.
+- **Proxy:** follows the example, `ok` is the one server status a patch can see. The `replace` only adds the client status, and `ok` is left to the registry.
+
 ## EPP operations that RPP PATCH cannot express without a read by the client
 
 - EPP changes one part of an element by `rem` and `add` of values the client names. JSON Patch has no such step: `match` does not reach nested data (§5.2.1), and `replace` takes the complete element. To change one address of a nameserver, one field of a DS, or a flag of a status, the client has to read the element and send it back whole, or use an index path (`/nameservers/1/addresses/0`), which needs the current array and shifts when someone else changes it. §5.2.2 step 2 does not say whether index paths are allowed.
@@ -230,6 +237,9 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 
 - The EPP Compatibility Profile (data-objects §13.2) limits the entries of `dns` to A and AAAA, but the host examples (json §8.3.2 to §8.3.4) include an `ns` record.
 - The same section allows entries subordinate to the host name, but EPP has one address list per host, so a record for another name has no place in EPP.
+- A record of the host can name its owner in two forms, `@` and the absolute name, and the examples (json §8.3.2 to §8.3.4) use both in one `records` array: `@` for the `ns` record, `ns1.example.example.` for the addresses. A `match` on `name` then depends on which form the server returns, and a host rename (data-objects §13.3.4) leaves every record with an absolute name pointing at the old name, while `@` follows the host.
+- Suggested: allow only one form for the records of a host, preferably `@`, which also survives a rename. Otherwise the draft should say whether a server normalizes the name, and which name applies in a patch that renames the host.
+- **Proxy:** a patch that renames the host and changes records in one request takes `@` or the old name, and a record under the new name answers 501 (`02102`). A read emits both forms, as the examples do.
 - **Proxy:** follows the examples. An `ns` record is accepted only as the self-reference (`@` with the host as `nsdname`), and A and AAAA records must name the host itself (`@` or its name), anything else is 501 (`02102`). A read emits the `ns` record plus A and AAAA records when the host has addresses, and no `dns` when it has none.
 
 ## Data the EPP Compatibility Profile cannot hold
