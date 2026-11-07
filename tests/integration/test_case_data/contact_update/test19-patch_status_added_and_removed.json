@@ -186,6 +186,38 @@
           "type": "urn:ietf:params:rpp:error"
         }
       }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/FO-{random_id_10}19A",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/status",
+            "match": {
+              "label": "clientDeleteProhibited"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}19A"
+        }
+      }
     }
   ]
 }

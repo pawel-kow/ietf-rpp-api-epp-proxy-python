@@ -1,6 +1,6 @@
 from dataclasses import replace
 
-from models import Contact, ContactUpdate
+from models import Contact, ContactUpdate, LocalizedPostalInfo
 from rpp_schema_validator import validate_schema
 from . import auth_info, contact_difference, contacts
 from .common import parse_rpp, reject_set
@@ -19,17 +19,40 @@ def wanted_statuses(contact: Contact, contact_rpp: RPPContact) -> Contact:
     return contact
 
 
+def _kept_localization(wanted: Contact, current: Contact) -> LocalizedPostalInfo | None:
+    """The localization of a replacement that has none: the current one stays, with the organisation it shared
+    with the card, because EPP can clear that."""
+    kept = current.localizedPostalInfo
+    if contact_difference.loc_matches_card(current):
+        return None
+    if kept and kept.organisationName == current.organisationName:
+        return replace(kept, organisationName=wanted.organisationName)
+    return kept
+
+
+def _complete_localization(localization: LocalizedPostalInfo, merged: Contact, before: LocalizedPostalInfo | None) -> LocalizedPostalInfo:
+    """EPP needs a complete form, so what the localization leaves out comes from the card, then from the stored form."""
+    return replace(
+        localization,
+        name=localization.name or merged.name or (before.name if before else None),
+        address=localization.address or merged.address or (before.address if before else None),
+    )
+
+
 def _keeping_what_epp_cannot_clear(wanted: Contact, current: Contact) -> Contact:
     """core §16.8 clears what a full update omits, subject to server policy. EPP cannot clear these, so they stay."""
-    return replace(
+    merged = replace(
         wanted,
         name=wanted.name or current.name,
         address=wanted.address or current.address,
         email=wanted.email or current.email,
-        localizedPostalInfo=wanted.localizedPostalInfo or (
-            None if contact_difference.loc_matches_card(current) else current.localizedPostalInfo
-        ),
     )
+    localization = wanted.localizedPostalInfo
+    merged.localizedPostalInfo = (
+        _complete_localization(localization, merged, current.localizedPostalInfo)
+        if localization else _kept_localization(wanted, current)
+    )
+    return contact_difference.with_stored_localization(merged, current)
 
 
 def _wanted(contact_rpp: RPPContact) -> Contact:

@@ -204,3 +204,72 @@ def test_auth_info_operations_are_applied_with_a_read_too():
 
 def test_an_unchanged_auth_info_is_not_sent():
     assert with_current(op("replace", "/contactInfo/emails/email/address", value="b@example.example")).change.authInfo is None
+
+
+def test_a_localization_cannot_lose_its_name_or_address_on_a_contact_with_only_that_form():
+    current = current_contact(name=None, address=None, localizedPostalInfo=localized(name="Jörg", address=ADDRESS))
+
+    assert status_of(op("remove", "/contactInfo/localizations/und/name"), current=current) == 501
+    assert status_of(op("remove", "/contactInfo/localizations/und/addresses"), current=current) == 501
+
+
+def test_a_localization_the_read_hides_in_part_is_left_alone():
+    """The loc has no organisation, the card has one, and the read shows nothing of it."""
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.", localizedPostalInfo=localized(name="John Doe", address=ADDRESS),
+    )
+
+    update = with_current(op("replace", "/contactInfo/emails/email/address", value="b@example.example"), current=current)
+
+    assert update.change.postal_info == []
+
+
+def test_a_localization_the_read_shows_in_part_is_not_given_the_organisation_of_the_card():
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.", localizedPostalInfo=localized(name="Yohn", address=ADDRESS),
+    )
+
+    update = with_current(op("replace", "/contactInfo/emails/email/address", value="b@example.example"), current=current)
+
+    assert update.change.postal_info == []
+
+
+STORED = dict(status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "why"})
+
+
+def test_a_stored_status_reason_is_not_changed_by_another_patch():
+    update = with_current(op("replace", "/contactInfo/emails/email/address", value="b@example.example"), current=current_contact(**STORED))
+
+    assert update.add is None and update.remove is None
+
+
+def test_replacing_a_status_with_its_stored_reason_changes_nothing():
+    value = [{**STATUS, "reason": "why"}]
+
+    update = with_current(op("replace", "/status", value=value), current=current_contact(**STORED))
+
+    assert update.add is None and update.remove is None
+
+
+def test_a_server_status_with_a_stored_text_is_not_touched():
+    current = current_contact(status=["ok"], status_reasons={"ok": "all fine"})
+
+    update = with_current(op("replace", "/contactInfo/emails/email/address", value="b@example.example"), current=current)
+
+    assert update.add is None and update.remove is None
+
+
+@pytest.mark.parametrize("operations", [
+    [op("add", "/status", value=STATUS), op("remove", "/status", match={"label": "clientUpdateProhibited"})],
+    [op("remove", "/status", match={"label": "clientUpdateProhibited"}), op("add", "/status", value=STATUS)],
+])
+def test_two_operations_on_one_status_need_the_current_contact_to_keep_their_order(operations):
+    assert direct(*operations) is None
+
+
+def test_an_added_status_that_is_removed_again_is_no_change():
+    update = with_current(
+        op("add", "/status", value=STATUS), op("remove", "/status", match={"label": "clientUpdateProhibited"}),
+    )
+
+    assert update.add is None and update.remove is None

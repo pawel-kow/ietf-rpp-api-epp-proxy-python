@@ -49,6 +49,16 @@ No change: 200 with the current contact and no EPP update, 403 (`02201`) for a n
 
 (none)
 
+## Review round 1 (PR #83), decisions
+
+- 1: a form in `update.change.postal_info` that `current` lacks and the read-back still lacks (checked on the `Contact` model, presence only) answers 500 (`02400`) naming the form. No split update, no refusal up front. spec-issues: other members of the update may be applied and cannot be undone. Backend defect is pawel-kow/epp#23.
+- 2: a wanted `loc` is completed after the keep merge (`after.name or merged.name`, `after.address or merged.address`, then `before`).
+- 3: `_loc_change` refuses to clear a name or address of the localization (501).
+- 4: the unpatched read goes through `contact_from_rpp` as a baseline; a wanted `loc` equal to the baseline's is replaced by `current.localizedPostalInfo`, unless the `loc` equals the card exactly (follow-the-card). Same for PUT.
+- 5: a kept `loc` whose org equals the current card org takes the wanted org.
+- 6: direct PATCH raises `NeedsCurrentState` when a status label is already in add or remove. `host_patch` checked, not fixed here.
+- 7, 8: tests and docs as listed by the reviewer.
+
 ## Corrections
 
-- The probe note that a `chg` of `loc` adds the form was wrong: the backend ignores a `chg` of a form the contact does not have (Info shows no `loc`). A localization cannot be added by an update there; `contact_update/test8` changes an existing one. Noted in spec-issues and testing.project.md.
+- The probe note that a `chg` of `loc` adds the form was wrong: the backend ignores a `chg` of a form the contact does not have (Info shows no `loc`). A localization cannot be added by an update there; `contact_update/test8` changes an existing one. Filed as pawel-kow/epp#23; noted in spec-issues and testing.project.md. The proxy answers 500 (`02400`), see review round 1.

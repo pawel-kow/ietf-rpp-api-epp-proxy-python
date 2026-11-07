@@ -58,6 +58,7 @@ class _PatchedUpdate:
             validate_schema("contactStatus.create", operation.value)
             status = parse_rpp(RPPStatus, operation.value)
             reject_set(due=status.due)
+            self._require_one_operation_on(status.label)
             self.add.status.append(status.label)
             if status.reason:
                 self.add.status_reasons[status.label] = status.reason
@@ -65,8 +66,14 @@ class _PatchedUpdate:
             match = operation.match
             if match.keys() != {"label"} or not patch_statuses.is_client_label(match["label"]):
                 raise NeedsCurrentState()
+            self._require_one_operation_on(match["label"])
             self.remove.status.append(match["label"])
         else:
+            raise NeedsCurrentState()
+
+    def _require_one_operation_on(self, label: str):
+        """An add and a remove of one status are not sent together: their order would be lost."""
+        if label in self.add.status or label in self.remove.status:
             raise NeedsCurrentState()
 
     def to_contact_update(self, contact_id: str) -> ContactUpdate:
@@ -132,4 +139,4 @@ def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> C
         if operation.path == AUTH_INFO_PATH:
             auth_info_update.apply(operation)
     wanted.authInfo = auth_info_update.auth_info
-    return contact_difference.difference(contact_id, current, wanted)
+    return contact_difference.difference(contact_id, current, contact_difference.with_stored_localization(wanted, current))

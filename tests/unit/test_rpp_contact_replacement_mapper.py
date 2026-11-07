@@ -3,7 +3,7 @@ from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
 from models import Address, Contact, ContactType
-from rpp_to_model_mapper import contact_replacement
+from rpp_to_model_mapper import contact_patch, contact_replacement
 from tests.helper.contact_fixtures import ADDRESS, card, current_contact, localized, put_body
 
 ID = "JD-1234"
@@ -139,7 +139,7 @@ def test_a_changed_reason_is_a_remove_and_an_add():
     assert result.add.status_reasons == {"clientUpdateProhibited": "new"}
 
 
-def test_an_empty_reason_counts_as_none():
+def test_an_empty_reason_counts_as_none_when_none_is_stored():
     current = current_contact(status=["clientUpdateProhibited"])
     body = put_body(status=[{"@type": "contactStatus", "label": "clientUpdateProhibited", "reason": ""}])
 
@@ -198,3 +198,108 @@ def test_what_create_refuses_is_refused():
 
 def test_kind_org_without_an_organisation_is_a_400():
     assert rejected(put_body(card(kind="org"))) == 400
+
+
+B_ADDRESS = {"addr": {"components": [{"kind": "locality", "value": "Bonn"}], "countryCode": "DE"}}
+LOC_ONLY = dict(name=None, address=None)
+
+
+def with_loc(loc_name="Yohn", **members):
+    return current_contact(localizedPostalInfo=localized(name=loc_name, address=ADDRESS, **members))
+
+
+def test_a_localization_without_an_address_is_completed_from_the_kept_card():
+    body = put_body(card(localizations={"und": {"name": {"full": "Yohn"}}}, **{}))
+    body["contactInfo"].pop("addresses")
+
+    assert update(body, with_loc()).change is None
+
+
+def test_a_localization_without_a_name_is_completed_from_the_kept_card():
+    body = put_body(without(card(localizations={"und": {"addresses": B_ADDRESS}}), "name"))
+
+    (form,) = update(body, with_loc()).change.postal_info
+
+    assert (form.form, form.name, form.address) == ("loc", "John Doe", Address(street=None, city="Bonn", country="DE"))
+
+
+def test_a_repeated_put_with_a_completed_localization_sends_nothing():
+    body = put_body(without(card(localizations={"und": {"addresses": B_ADDRESS}}), "name"))
+    settled = current_contact(localizedPostalInfo=localized(
+        name="John Doe", address=Address(street=None, city="Bonn", country="DE"),
+    ))
+
+    assert update(body, settled).change is None
+
+
+def test_a_localization_the_read_shows_in_part_is_not_rewritten_by_a_repeated_put():
+    """The loc has no organisation, the card has one: the read shows only the name, and the PUT inherits the rest."""
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.", localizedPostalInfo=localized(name="Yohn", address=ADDRESS),
+    )
+    body = put_body(card(
+        kind="org", organizations={"org": {"name": "ACME Inc."}}, localizations={"und": {"name": {"full": "Yohn"}}},
+    ))
+
+    assert update(body, current).change is None
+
+
+def test_a_cleared_organisation_is_cleared_in_a_kept_localization_that_shared_it():
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.",
+        localizedPostalInfo=localized(name="Yohn", organisationName="ACME Inc.", address=ADDRESS),
+    )
+
+    forms = {f.form: f for f in update(put_body(), current).change.postal_info}
+
+    assert forms["int"].organisationName == "" and forms["loc"].organisationName == ""
+    assert forms["loc"].name == "Yohn"
+
+
+def test_put_and_patch_agree_on_a_cleared_organisation():
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.",
+        localizedPostalInfo=localized(name="Yohn", organisationName="ACME Inc.", address=ADDRESS),
+    )
+
+    patched = map_request(
+        contact_patch.rpp_to_model_with_current, ID, [{"op": "remove", "path": "/contactInfo/organizations/org"}], current,
+    )
+
+    assert patched == update(put_body(), current)
+
+
+def test_a_localization_of_another_organisation_is_kept_as_it_is():
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.",
+        localizedPostalInfo=localized(name="Yohn", organisationName="ACME GmbH", address=ADDRESS),
+    )
+
+    forms = {f.form: f for f in update(put_body(), current).change.postal_info}
+
+    assert "loc" not in forms
+
+
+STORED = dict(status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "why"})
+SAME = {"@type": "contactStatus", "label": "clientUpdateProhibited", "reason": "why"}
+
+
+def test_a_repeated_put_with_a_stored_reason_changes_nothing():
+    assert update(put_body(status=[SAME]), current_contact(**STORED)).change is None
+    result = update(put_body(status=[SAME]), current_contact(**STORED))
+    assert result.add is None and result.remove is None
+
+
+def test_an_empty_reason_drops_a_stored_reason():
+    result = update(put_body(status=[{**SAME, "reason": ""}]), current_contact(**STORED))
+
+    assert result.remove.status == ["clientUpdateProhibited"]
+    assert result.add.status == ["clientUpdateProhibited"] and result.add.status_reasons == {}
+
+
+def test_a_server_status_with_a_stored_text_is_left_alone():
+    current = current_contact(status=["ok"], status_reasons={"ok": "all fine"})
+
+    result = update(put_body(), current)
+
+    assert result.add is None and result.remove is None

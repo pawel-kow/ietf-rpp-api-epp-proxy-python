@@ -1,5 +1,6 @@
 {
   "test_id": "test7-put_status_with_reason",
+  "description": "The backend accepts a status with a reason and repeats the label as its text (#54), so the reason is not read back: this case proves the update with a reason is accepted and the status is set and cleared, not that the reason is stored. The reason itself is covered by unit tests.",
   "steps": [
     {
       "request": {

@@ -1,8 +1,13 @@
+from dataclasses import replace
+
 from models import (
     Contact, ContactUpdate, ContactUpdateChange, ContactUpdateChanges, LocalizedPostalInfo, PostalInfoChange,
 )
+from . import contacts
+from .common import parse_rpp
 from .not_supported_by_epp import NotSupportedByEpp
 from .patch_statuses import is_client_label
+from .rpp_models import RPPContact
 
 INT = "int"
 LOC = "loc"
@@ -37,6 +42,21 @@ def loc_matches_card(current: Contact) -> bool:
     )
 
 
+def _read_localization(current: Contact) -> LocalizedPostalInfo | None:
+    """The localization a request that repeats the read of the contact asks for: members the read leaves out are
+    inherited from the card, which is not always what the registry holds."""
+    read = {member: value for member, value in contacts.model_to_rpp(current).items() if member not in ("provMetadata", "processes")}
+    return contacts.contact_from_rpp(parse_rpp(RPPContact, read)).localizedPostalInfo
+
+
+def with_stored_localization(wanted: Contact, current: Contact) -> Contact:
+    """A wanted localization that is what a read of the current one gives is the current one, unless that is
+    equal to the card, which has to follow the card (`_loc_change`)."""
+    if wanted.localizedPostalInfo == _read_localization(current) and not loc_matches_card(current):
+        return replace(wanted, localizedPostalInfo=current.localizedPostalInfo)
+    return wanted
+
+
 def _int_change(current: Contact, wanted: Contact) -> PostalInfoChange | None:
     if current.name and not wanted.name:
         raise NotSupportedByEpp("Removing the name")
@@ -57,6 +77,10 @@ def _loc_change(current: Contact, wanted: Contact) -> PostalInfoChange | None:
         after = LocalizedPostalInfo(name=wanted.name, organisationName=wanted.organisationName, address=wanted.address)
     if after is None or after == before:
         return None
+    if before and before.name and not after.name:
+        raise NotSupportedByEpp("Removing the name of the localization")
+    if before and before.address and not after.address:
+        raise NotSupportedByEpp("Removing the address of the localization")
     organisation = after.organisationName or (CLEAR if before and before.organisationName else None)
     return PostalInfoChange(form=LOC, name=after.name, organisationName=organisation, address=after.address)
 

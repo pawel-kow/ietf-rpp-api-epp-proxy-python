@@ -148,3 +148,12 @@ def test_patch_that_removes_the_name_is_a_501():
     response = patch(info(), body=[{"op": "remove", "path": "/contactInfo/name"}])
 
     assert response.status_code == 501 and response.headers["RPP-Code"] == "02102"
+
+
+def test_put_adding_a_localization_the_registry_ignores_is_a_500_with_02400():
+    body = put_body(card(localizations={"und": {"name": {"full": "Jörg"}}}))
+
+    response = put(info(), DONE, info(), body=body)
+
+    assert response.status_code == 500 and response.headers["RPP-Code"] == "02400"
+    assert "loc" in response.json()["detail"]

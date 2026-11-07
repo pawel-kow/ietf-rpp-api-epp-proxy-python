@@ -123,7 +123,25 @@
             },
             "addresses": {
               "addr": {
-                "countryCode": "US"
+                "countryCode": "US",
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ]
               }
             },
             "phones": {
