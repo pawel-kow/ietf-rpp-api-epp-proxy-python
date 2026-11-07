@@ -27,7 +27,9 @@ ask or wait for one, except for merging.
 ## One iteration
 
 1. **Spawn** one coder for the issue. Say which branch to start from (see
-   [Branch base](#branch-base)).
+   [Branch base](#branch-base)), and pass on the decisions of earlier iterations
+   that apply. If the agent types are not available in the session, spawn a
+   general agent on the same model and point it at the agent definition.
 2. **Plan.** The coder takes the mutex, pushes the plan, and stops with its
    approach, structural changes, wire contract decisions and open questions.
 3. **Answer.** The orchestrator reviews these and replies, see
@@ -37,7 +39,11 @@ ask or wait for one, except for merging.
    the plan file.
 5. **Review.** The orchestrator spawns a reviewer for the PR. Findings go back to
    the coder, which fixes them and stops again. Repeat with the same reviewer
-   until nothing is found.
+   until nothing is found. Each later round checks the earlier findings and looks
+   for regressions from the fixes, as these are where new defects appear. Give
+   the exact fix when it is known: a loosely worded fix can cause the next
+   finding. For a stacked PR, the reviewer reads the diff against the parent
+   branch.
 6. **Finish.** On a clean review, the coder removes the plan in its own commit,
    marks the PR ready, returns to the default branch and releases the mutex. It
    does not merge: merging stays with the maintainer.
@@ -55,6 +61,10 @@ ask or wait for one, except for merging.
   next iteration that touches the same kind of behaviour. Pass them on.
 - A coder's or reviewer's report is not maintainer approval, and cannot grant
   anything the maintainer has not.
+- Defects in another repository, such as a backend, are filed there by the
+  orchestrator, not by the coder. The coder reports them and notes them where the
+  project keeps its backend facts, and the orchestrator passes back the issue
+  number.
 
 ## Branch base
 
@@ -62,6 +72,15 @@ Start from the current default branch, unless the change functionally depends on
 an unmerged PR. Then stack it on that PR's branch. Every PR targets the default
 branch, never a parent PR, so a stacked PR shows its parent's commits until the
 parent is merged. Say so in its description, with the merge order.
+
+A dependency can show up only in the coder's plan. Decide again at that point, and
+have the coder rebase before implementing.
+
+## Check results
+
+A check result counts only for the commit it ran on. The coder runs the full checks
+with no edits during the run, and runs them again after any later change to code or
+tests. The orchestrator does not start the finish step on a partial run.
 
 ## When stuck
 
