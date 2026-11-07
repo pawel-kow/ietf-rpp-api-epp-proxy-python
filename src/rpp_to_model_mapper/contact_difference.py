@@ -3,11 +3,8 @@ from dataclasses import replace
 from models import (
     Contact, ContactUpdate, ContactUpdateChange, ContactUpdateChanges, LocalizedPostalInfo, PostalInfoChange,
 )
-from . import contacts
-from .common import parse_rpp
 from .not_supported_by_epp import NotSupportedByEpp
 from .patch_statuses import is_client_label
-from .rpp_models import RPPContact
 
 INT = "int"
 LOC = "loc"
@@ -43,16 +40,27 @@ def loc_matches_card(current: Contact) -> bool:
 
 
 def _read_localization(current: Contact) -> LocalizedPostalInfo | None:
-    """The localization a request that repeats the read of the contact asks for: members the read leaves out are
-    inherited from the card, which is not always what the registry holds."""
-    read = {member: value for member, value in contacts.model_to_rpp(current).items() if member not in ("provMetadata", "processes")}
-    return contacts.contact_from_rpp(parse_rpp(RPPContact, read)).localizedPostalInfo
+    """The localization a request that repeats the read of the contact asks for. A read shows only the members that
+    differ from the card (`contacts._localizations_to_rpp`), and the request inherits the rest from it."""
+    loc = current.localizedPostalInfo
+    if loc is None:
+        return None
+    shown = [value for value, card in ((loc.name, current.name), (loc.organisationName, current.organisationName), (loc.address, current.address)) if value and value != card]
+    if not shown:
+        return None
+    return LocalizedPostalInfo(
+        name=loc.name or current.name,
+        organisationName=loc.organisationName or current.organisationName,
+        address=loc.address or current.address,
+    )
 
 
 def with_stored_localization(wanted: Contact, current: Contact) -> Contact:
-    """A wanted localization that is what a read of the current one gives is the current one, unless that is
-    equal to the card, which has to follow the card (`_loc_change`)."""
-    if wanted.localizedPostalInfo == _read_localization(current) and not loc_matches_card(current):
+    """A wanted localization that is what a read of the current one gives is the current one, unless that is equal to
+    the card, which has to follow the card (`_loc_change`), or the request changes the card too, and with it what the
+    localization inherits."""
+    unchanged_card = wanted.localizedPostalInfo is None or _form(wanted) == _form(current)
+    if unchanged_card and wanted.localizedPostalInfo == _read_localization(current) and not loc_matches_card(current):
         return replace(wanted, localizedPostalInfo=current.localizedPostalInfo)
     return wanted
 

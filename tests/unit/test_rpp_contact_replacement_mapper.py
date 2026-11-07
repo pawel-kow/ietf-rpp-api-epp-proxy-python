@@ -303,3 +303,22 @@ def test_a_server_status_with_a_stored_text_is_left_alone():
     result = update(put_body(), current)
 
     assert result.add is None and result.remove is None
+
+
+def test_a_stored_non_ascii_name_does_not_stop_a_put_that_repairs_it():
+    current = current_contact(name="Jörg", localizedPostalInfo=localized(name="Jörg", address=ADDRESS))
+
+    forms = {f.form: f for f in update(put_body(), current).change.postal_info}
+
+    assert forms["int"].name == "John Doe" and "loc" in forms
+
+
+def test_moving_the_organisation_to_the_localization_by_a_put():
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.", localizedPostalInfo=localized(name="Yohn", address=ADDRESS),
+    )
+    body = put_body(card(kind="org", localizations={"und": {"name": {"full": "Yohn"}, "organizations": {"org": {"name": "ACME Inc."}}}}))
+
+    forms = {f.form: f for f in update(body, current).change.postal_info}
+
+    assert forms["int"].organisationName == "" and forms["loc"].organisationName == "ACME Inc."

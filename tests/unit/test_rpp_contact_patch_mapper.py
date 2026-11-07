@@ -273,3 +273,48 @@ def test_an_added_status_that_is_removed_again_is_no_change():
     )
 
     assert update.add is None and update.remove is None
+
+
+def test_a_stored_non_ascii_name_does_not_stop_a_patch_that_repairs_it():
+    current = current_contact(name="Jörg", localizedPostalInfo=localized(name="Jörg", address=ADDRESS))
+
+    update = with_current(op("replace", "/contactInfo/name/full", value="Joerg"), current=current)
+
+    assert {f.form: f.name for f in update.change.postal_info} == {"int": "Joerg", "loc": "Joerg"}
+
+
+ORG_CURRENT = dict(
+    type=ContactType.ORG, organisationName="ACME Inc.", localizedPostalInfo=localized(name="Yohn", address=ADDRESS),
+)
+
+
+def test_moving_the_organisation_to_the_localization_is_not_undone_by_the_stored_form():
+    update = with_current(
+        op("remove", "/contactInfo/organizations/org"),
+        op("add", "/contactInfo/localizations/und/organizations", value={"org": {"name": "ACME Inc."}}),
+        current=current_contact(**ORG_CURRENT),
+    )
+
+    forms = {f.form: f for f in update.change.postal_info}
+    assert forms["int"].organisationName == "" and forms["loc"].organisationName == "ACME Inc."
+
+
+def test_a_status_added_without_a_reason_next_to_a_read_operation_keeps_the_stored_reason():
+    update = with_current(
+        op("replace", "/contactInfo/emails/email/address", value="b@example.example"),
+        op("add", "/status", value=STATUS),
+        current=current_contact(**STORED),
+    )
+
+    assert update.add is None and update.remove is None and update.change.email == "b@example.example"
+
+
+def test_a_name_patch_leaves_a_hidden_localization_that_differs_from_the_card():
+    current = current_contact(
+        type=ContactType.ORG, organisationName="ACME Inc.",
+        localizedPostalInfo=localized(name="John Doe", address=ADDRESS),
+    )
+
+    update = with_current(op("replace", "/contactInfo/name/full", value="Jane Doe"), current=current)
+
+    assert [f.form for f in update.change.postal_info] == ["int"]
