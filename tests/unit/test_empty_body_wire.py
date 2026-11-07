@@ -260,3 +260,17 @@ def test_an_aborted_upload_runs_nothing(live, case, mode):
     abort(server, method, path, body, mode)
     assert not sent_any(clients)
     forget(clients)
+
+
+def test_an_unauthenticated_request_gets_its_401_before_its_body(live):
+    """Security runs before the body is buffered, so an anonymous client cannot make the proxy wait for one."""
+    server, clients = live
+    forget(clients)
+    lines = [f"POST {CONTACT_LATEST}/transferApprove HTTP/1.1", f"Host: 127.0.0.1:{server.port}",
+             f"Accept: {MEDIA_TYPE}", "RPP-Cltrid: cl-1", f"Content-Type: {MEDIA_TYPE}", "Content-Length: 1000",
+             "Connection: close"]
+    with socket.create_connection(("127.0.0.1", server.port), timeout=3) as connection:
+        connection.sendall(("\r\n".join(lines) + "\r\n\r\n").encode())  # and no body
+        reply = connection.recv(4096)
+    assert reply.split(b"\r\n")[0] == b"HTTP/1.1 401 Unauthorized"
+    assert not sent_any(clients)

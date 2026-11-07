@@ -54,7 +54,7 @@ def create_app(authenticator):
         __name__,
         security_map={"basic": lambda: EppBasicSecurityHandler(authenticator.authenticate)},
     )
-    app.add_middleware(BodyBufferingMiddleware, position=MiddlewarePosition.BEFORE_EXCEPTION)
+    app.add_middleware(BodyBufferingMiddleware, position=MiddlewarePosition.BEFORE_VALIDATION)
     app.add_middleware(
         CORSMiddleware,
         position=MiddlewarePosition.BEFORE_EXCEPTION,

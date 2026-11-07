@@ -56,10 +56,12 @@ Carried over from #33: query with nothing pending 409 (02301); approve takes an 
 
 ## Review round 4 (PR #90)
 
-- The `before_request` hook is replaced by `BodyBufferingMiddleware` (ASGI, outermost, added first at `BEFORE_EXCEPTION` in `create_app`, so Connexion's validators, `run.py` and the test client all go through it). With the input terminated, an aborted upload ran the command.
+- The `before_request` hook is replaced by `BodyBufferingMiddleware` (ASGI, added at `BEFORE_VALIDATION` in `create_app`, after security, so Connexion's validators, `run.py` and the test client all go through it). With the input terminated, an aborted upload ran the command.
 - Live abort cases (`Content-Length` short, chunked with headers only, chunked unterminated, approve, cancel and reject, both kinds) assert nothing was sent. 14 of 18 failed before the middleware.
 - The "nothing sent" assertions were vacuous after the first test, since `clients.clear()` dropped the only session. They now clear `client.sent`. With `require_empty_body` sending to EPP before rejecting, 82 cases fail.
 - A valid chunked create now works (live case added), which was #93.
+
+- Round 5: it first sat at `BEFORE_EXCEPTION`, outside security, so an anonymous client could make the proxy buffer a body before its 401. A live test (no `Authorization`, `Content-Length: 1000`, no body) failed with a timeout and passes at `BEFORE_VALIDATION`.
 
 ## Backend notes
 
