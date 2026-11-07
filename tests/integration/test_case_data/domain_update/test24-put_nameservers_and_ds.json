@@ -1,0 +1,121 @@
+{
+  "test_id": "test24-put_nameservers_and_ds",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "put24-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ds",
+                "rdata": {
+                  "keyTag": "12345",
+                  "algorithm": "8",
+                  "digestType": "2",
+                  "digest": "49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC1234"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/domainNames/put24-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "ns1.bar.example"
+            }
+          ],
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ds",
+                "rdata": {
+                  "keyTag": "12345",
+                  "algorithm": "8",
+                  "digestType": "2",
+                  "digest": "49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC1234"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "NS1.BAR.EXAMPLE"
+            }
+          ],
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ds",
+                "rdata": {
+                  "keyTag": "12345",
+                  "algorithm": "8",
+                  "digestType": "2",
+                  "digest": "49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC1234"
+                }
+              }
+            ]
+          }
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    }
+  ]
+}

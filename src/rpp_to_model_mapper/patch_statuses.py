@@ -24,10 +24,10 @@ def with_server_statuses(patched: dict, current: dict, status_type: str) -> dict
     A client cannot name a server status, whether or not the object has it.
     """
     statuses = patched.get("status") or []
-    visible = without_server_statuses(current)["status"]
+    visible_labels = {status["label"] for status in without_server_statuses(current)["status"]}
     for status in statuses:
         validate_schema(f"{status_type}.read", status)
-        if not is_client_label(status["label"]) and status not in visible:
+        if not is_client_label(status["label"]) and status["label"] not in visible_labels:
             raise ValueError(f"Status '{status['label']}' can only be set by the server")
     server = [status for status in current.get("status") or [] if not _visible(status)]
     return {**patched, "status": statuses + server or [{"@type": status_type, "label": OK}]}
