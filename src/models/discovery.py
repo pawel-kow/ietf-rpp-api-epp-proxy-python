@@ -9,4 +9,5 @@ class Discovery:
     environment_name: str
     environment_status: str
     objects: list[str]
+    profiles: list[str]
     datetime: str

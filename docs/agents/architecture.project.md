@@ -139,8 +139,8 @@ turns both checks off, for test backends only.
 `rpp_base_url`, `rpp_tlds`, `rpp_environment_name` and `rpp_environment_status` are what the
 discovery document (`GET /.well-known/rpp`, no authentication, no EPP) states. `controller/discovery.py`
 adds the RPP version and the supported objects, which are constants. Without all four, it answers
-500 (`02400`) and logs the missing keys. The base URL is never taken from the request. The proxy does not
-check the `version` parameter of the media type, so core §12's 406 is not enforced. See
+500 (`02400`) and logs the keys, never the values. A setting is also missing when it has the wrong shape: `rpp_base_url` must be an absolute `https` URL, `rpp_tlds` a non-empty list of non-empty strings. `profiles` is the constant `epp-compatibility`, though `GET /profiles/{name}` is 501. The base URL is never taken from the request. The proxy does not
+check the `version` parameter of the media type, so core §12's 406 is not enforced (#41). See
 [spec-issues.md](../../.spec/spec-issues.md#discovery).
 
 ## Composition

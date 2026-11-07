@@ -14,22 +14,18 @@ logger = logging.getLogger(__name__)
 # The RPP version of core §12, and the data objects (data-objects §17.2) the proxy implements.
 RPP_VERSION = "1.0"
 OBJECTS = ["domainName", "host", "contact"]
+# The profile the proxy follows (core §12.4, data-objects §19.13). Its read, GET /profiles/{name}, is 501.
+PROFILES = ["urn:ietf:params:rpp:profile:epp-compatibility"]
 
-# The settings the document is built from.
-_SETTINGS = ("rpp_base_url", "rpp_tlds", "rpp_environment_name", "rpp_environment_status")
-
-
-def _missing_settings(settings) -> list[str]:
-    return [key for key in _SETTINGS if not getattr(settings, key, None)]
 
 
 @rpp_operation
 def discovery_read():
     """The Discovery Data Object: no authentication and no EPP, it comes from configuration and the proxy itself."""
     settings = current_app.config.get("RPP_DISCOVERY_SETTINGS")
-    missing = _missing_settings(settings)
+    missing = rpp_mapper.discovery.invalid_settings(settings)
     if missing:
-        logger.warning("Discovery is not configured, missing: %s", ", ".join(missing))
+        logger.warning("Discovery is not configured, missing or invalid: %s", ", ".join(missing))
         raise ProblemException(
             status=500, title=ResultCode.COMMAND_FAILED.value[1], detail="The server is not configured to describe itself",
             headers=problem_headers(ResultCode.COMMAND_FAILED),
@@ -41,6 +37,7 @@ def discovery_read():
         environment_name=settings.rpp_environment_name,
         environment_status=settings.rpp_environment_status,
         objects=OBJECTS,
+        profiles=PROFILES,
         datetime=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
     headers = {

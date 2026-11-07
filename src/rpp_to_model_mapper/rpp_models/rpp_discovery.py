@@ -14,5 +14,6 @@ class RPPDiscovery(RPPObject):
     versions: list[RPPDiscoveryVersion]
     environment: RPPDiscoveryEnvironment
     tlds: list[str]
+    profiles: list[str]
     objects: list[str]
     datetime: str

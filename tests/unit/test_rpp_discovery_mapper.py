@@ -9,6 +9,7 @@ def a_discovery(**changes):
     values = dict(
         version="1.0", base_url="https://rpp.example/rpp", tlds=["example"], environment_name="rpp.example",
         environment_status="test", objects=["domainName", "host", "contact"], datetime="2026-05-31T12:30:00Z",
+        profiles=["urn:ietf:params:rpp:profile:epp-compatibility"],
     )
     return Discovery(**{**values, **changes})
 
@@ -19,6 +20,7 @@ def test_all_required_members():
         "versions": [{"@type": "discoveryVersion", "version": "1.0", "baseUrl": "https://rpp.example/rpp"}],
         "environment": {"@type": "discoveryEnvironment", "name": "rpp.example", "status": "test"},
         "tlds": ["example"],
+        "profiles": ["urn:ietf:params:rpp:profile:epp-compatibility"],
         "objects": ["domainName", "host", "contact"],
         "datetime": "2026-05-31T12:30:00Z",
     }

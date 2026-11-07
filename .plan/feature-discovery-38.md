@@ -40,3 +40,11 @@
 ## Open questions
 
 See the Plan report.
+
+## Review of PR #100 at 9167ce8: decisions
+
+- Shape check replaces truthiness (`invalid_settings` in the mapper): tlds non-empty list of non-empty strings, environment non-empty strings, base URL absolute https with host. Failure takes the fixed 500 (02400), log names keys only.
+- `profiles` is advertised as the constant `urn:ietf:params:rpp:profile:epp-compatibility` (core §12.4, json §8.7.1, data-objects §19.13). `GET /profiles/{name}` stays 501. `links` omitted (SHOULD only).
+- Draft case `draft_discovery/test1-read.json` with the configured values. `datetime` is checked as not empty there, because the runner's UTC helper expects fractional seconds. The unit tests check the format and the time.
+- Mutants killed (PYTHONDONTWRITEBYTECODE=1): run.py without config, local clock under TZ=Asia/Tokyo, constant datetime, `@rpp_operation` removed, log naming all keys, 500 title.
+- Spec entry reworded (items 6, 7), #41 cited (item 8), config.yaml placeholders (item 9). Issue for the 405 headers filed.
