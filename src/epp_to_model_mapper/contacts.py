@@ -1,9 +1,9 @@
 from models import *
 from typing import Union
 from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header
-from .commands.contacts import contact_create, contact_delete, contact_info
+from .commands.contacts import contact_check, contact_create, contact_delete, contact_info
 from .commands.helper import epp_to_str, str_to_epp
-from .epp_model.contact_1_0 import CreData, InfData, PostalInfoEnumType
+from .epp_model.contact_1_0 import ChkData, CreData, InfData, PostalInfoEnumType
 from .epp_model.epp_1_0 import Epp
 
 
@@ -29,6 +29,10 @@ def _address(postal) -> Address | None:
 
 def create_contact_xml(contact: Contact, client_request_id=None) -> str:
     return epp_to_str(contact_create(contact, cl_trid(client_request_id)))
+
+
+def contact_check_xml(id: str, client_request_id=None) -> str:
+    return epp_to_str(contact_check(id, cl_trid(client_request_id)))
 
 
 def info_contact_xml(id: str, client_request_id=None) -> str:
@@ -105,3 +109,18 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
     )
 
     return ContactCreateResponse(contact=contact, **header)
+
+
+def parse_contact_check_response(xml_string: str, contact_id: str, client_transaction_id: str | None) -> ContactCheckResponse:
+    """Parses the answer to a single-id check. The backend can change the case of the id."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    result = find_res_data(epp, ChkData).cd[0]
+    return ContactCheckResponse(
+        contact_id=contact_id,
+        available=result.id.avail,
+        reason=result.reason.value if result.reason else None,
+        **header,
+    )

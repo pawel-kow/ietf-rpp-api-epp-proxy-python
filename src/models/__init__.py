@@ -2,6 +2,7 @@ from .domains import *
 from .common import *
 from .address import Address
 from .contacts import *
+from .contact_check_response import ContactCheckResponse
 from .dns_sec import DnsSec
 from .ds_data import DsData
 from .key_data import KeyData
