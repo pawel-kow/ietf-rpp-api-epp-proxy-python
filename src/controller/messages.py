@@ -1,6 +1,5 @@
 import logging
 import re
-import unicodedata
 
 from connexion import ProblemException
 from flask import Response
@@ -17,6 +16,7 @@ from .helper.rpp_response import (
 
 logger = logging.getLogger("uvicorn.error")
 
+XML_FORBIDDEN = re.compile("[^\u0009\u000a\u000d\u0020-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]")
 LANGUAGE_TAG = re.compile(r"[A-Za-z]{1,8}(-[A-Za-z0-9]{1,8})*")
 
 
@@ -40,8 +40,6 @@ def _language(value) -> str | None:
 def _headers(resp, language=None) -> dict:
     """Core §6.2: RPP-Queue-Size is the size of the queue the reply reported, and the language is the message's."""
     headers = generate_rpp_response_headers(resp)
-    if not headers.get("RPP-Svtrid"):
-        headers["RPP-Svtrid"] = problem_headers(resp.code)["RPP-Svtrid"]  # a reply without a trID has none to pass on
     size = _queue_size(resp.queue_size)
     if size is not None:
         headers["RPP-Queue-Size"] = size
@@ -62,8 +60,8 @@ def _raise(resp: ErrorResponse):
 
 
 def _require_valid_id(id: str):
-    """The id goes into XML, where control characters, surrogates and non-characters have no place."""
-    if not id or any(unicodedata.category(c).startswith("C") for c in id):
+    """The id goes into XML, so it must be text XML 1.0 allows (its Char production), which a lone surrogate, U+FFFE and most control characters are not."""
+    if not id or XML_FORBIDDEN.search(id):
         raise ProblemException(
             status=400, title=ResultCode.PARAMETER_VALUE_SYNTAX_ERROR.value[1], detail="The message id is not valid",
             headers=problem_headers(ResultCode.PARAMETER_VALUE_SYNTAX_ERROR),

@@ -30,3 +30,4 @@ from .poll_response import PollResponse
 from .queue_message import QueueMessage
 from .transfer_event import TransferEvent
 from .message_error_response import MessageErrorResponse
+from .unknown_result_code import UnknownResultCode

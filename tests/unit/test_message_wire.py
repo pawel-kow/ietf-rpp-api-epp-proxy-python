@@ -4,6 +4,11 @@ import pytest
 from tests.helper.captured_log import capture_log
 
 from app import create_app
+from connexion import ProblemException
+from controller.helper.rpp_response import problem_headers
+from controller.messages import _require_valid_id
+from models import ResultCode
+from tests.helper.captured_log import capture_log
 from controller.epp_session_authenticator import EppSessionAuthenticator
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.unit.test_message_xml import DOMAIN, contact_trn, domain_trn, msg_q, pan, reply
@@ -182,20 +187,110 @@ def test_1301_without_a_message_id_is_a_500_and_not_an_empty_queue(http):
     assert response.json()["detail"] == "The reply of the EPP server cannot be read, so the message cannot be acknowledged"
 
 
-def test_an_error_code_the_proxy_does_not_know_is_a_500(http):
-    response = answer(http, "get", "/messages", (False, "2999", reply(2999)))
+@pytest.mark.parametrize("code,status", [("2309", 400), ("2409", 500), ("2105", 409)])
+def test_an_error_code_not_in_table_9_uses_table_10_and_keeps_the_reply(http, code, status):
+    """Core §18.1: Table 10 maps by class, and RPP-Code is the EPP code with a leading 0."""
+    response = answer(http, "get", "/messages", (False, code, reply(code, msg="Odd failure")))
+    assert response.status_code == status
+    assert response.headers["RPP-Code"] == "0" + code
+    assert response.headers["RPP-Svtrid"] == "sv-1"
+    assert response.json()["detail"] == "Odd failure"
+
+
+def test_an_unknown_success_code_is_200_with_its_own_code(http):
+    response = answer(http, "get", "/messages", ok(1302, reply(1302, msg_q(), domain_trn("pending"))))
+    assert response.status_code == 200
+    assert response.headers["RPP-Code"] == "01302"
+    assert response.json()[0]["id"] == "42"
+
+
+def test_an_error_reply_without_a_result_is_a_500(http):
+    response = answer(http, "get", "/messages", (False, "", "<epp/>"))
+    assert response.status_code == 500
+    assert response.headers["RPP-Code"] == "02400"
+    assert response.json()["detail"] == "The reply of the EPP server cannot be read"
+
+
+def test_ack_whose_reply_cannot_be_read_is_a_500(http):
+    response = answer(http, "delete", "/messages/42", ok(1000, "not xml"))
     assert response.status_code == 500
     assert response.headers["RPP-Code"] == "02400"
 
 
-def test_ack_whose_reply_cannot_be_read_is_still_a_success(http):
-    response = answer(http, "delete", "/messages/42", ok(1000, "not xml"))
+ODD_SVTRIDS = ["日本", "a&#10;b", "a&#13;&#10;b", "a\u00e9b"]
+
+
+def with_sv_trid(xml, value):
+    return xml.replace("<svTRID>sv-1</svTRID>", f"<svTRID>{value}</svTRID>")
+
+
+def assert_sane_headers(response):
+    sv = response.headers["RPP-Svtrid"]
+    assert sv and all(" " <= c <= "~" for c in sv)
+    assert response.headers["RPP-Code"]
+    assert response.headers["RPP-Cltrid"] == "msg-cl-1"
+
+
+@pytest.mark.parametrize("value", ODD_SVTRIDS)
+def test_an_odd_server_transaction_id_is_replaced_on_every_message_path(http, value):
+    typed = ok(1301, with_sv_trid(reply(1301, msg_q(), domain_trn("pending")), value))
+    raw = ok(1301, with_sv_trid(reply(1301, msg_q(), "<resData><foo/></resData>"), value))
+    for reply_ in (typed, raw):
+        response = answer(http, "get", "/messages", reply_)
+        assert response.status_code == 200
+        assert_sane_headers(response)
+    ack = answer(http, "delete", "/messages/42", ok(1000, with_sv_trid(reply(1000, '<msgQ count="1" id="43"/>'), value)))
+    assert ack.status_code == 200
+    assert_sane_headers(ack)
+    failed = answer(http, "delete", "/messages/42", (False, "2303", with_sv_trid(reply(2303), value)))
+    assert failed.status_code == 404
+    assert_sane_headers(failed)
+    missing = answer(http, "get", "/messages/42", ok(1300, with_sv_trid(reply(1300), value)))
+    assert missing.status_code == 404
+    assert_sane_headers(missing)
+
+
+def test_an_odd_server_transaction_id_is_logged_without_its_value(http):
+    with capture_log() as captured:
+        answer(http, "get", "/messages", ok(1301, with_sv_trid(reply(1301, msg_q()), "日本")))
+    assert "transaction id" in captured.text
+    assert "日本" not in captured.text
+
+
+NO_DATE = '<msgQ count="1" id="9"><msg>Hi</msg></msgQ>'
+
+
+@pytest.mark.parametrize("res_data,q", [
+    (domain_trn("pending").replace("<domain:reDate>2026-11-05T16:49:34.0Z</domain:reDate>", ""), NO_DATE),
+    (pan("domain", DOMAIN, "name", "1").replace("<domain:paDate>2026-11-06T10:00:00.0Z</domain:paDate>", ""), NO_DATE),
+    (domain_trn("pending").replace("<domain:reDate>2026-11-05T16:49:34.0Z</domain:reDate>", ""),
+     '<msgQ count="1" id="9"><qDate>garbage</qDate><msg>Hi</msg></msgQ>'),
+])
+def test_a_message_with_no_date_at_all_is_not_a_500(http, res_data, q):
+    response = answer(http, "get", "/messages", ok(1301, reply(1301, q, res_data)))
     assert response.status_code == 200
-    assert response.headers["RPP-Code"] == "01000"
-    assert response.headers["RPP-Svtrid"]
+    assert response.json()[0]["creationDate"]
 
 
-@pytest.mark.parametrize("id", ["%00", "%01", "%EF%BF%BE", "a%09b"])
+def test_an_id_that_xml_allows_can_be_read_and_acked(http):
+    zwj = "a%E2%80%8Db"
+    assert answer(http, "delete", f"/messages/{zwj}", ok(1000, reply(1000, '<msgQ count="0"/>'))).status_code == 200
+    xml = reply(1301, '<msgQ count="1" id="a&#8205;b"><qDate>2026-11-05T16:49:34.0Z</qDate><msg>Hi</msg></msgQ>')
+    assert answer(http, "get", f"/messages/{zwj}", ok(1301, xml)).status_code == 200
+
+
+def test_a_lone_surrogate_is_not_a_valid_id():
+    with pytest.raises(ProblemException) as raised:
+        _require_valid_id("a\ud800b")
+    assert raised.value.status == 400
+
+
+def test_problem_headers_replace_an_odd_server_transaction_id():
+    assert problem_headers(ResultCode.OBJECT_DOES_NOT_EXIST, "日本")["RPP-Svtrid"] != "日本"
+    assert problem_headers(ResultCode.OBJECT_DOES_NOT_EXIST, "ok-1")["RPP-Svtrid"] == "ok-1"
+
+
+@pytest.mark.parametrize("id", ["%00", "%01", "%EF%BF%BE", "a%00b"])
 @pytest.mark.parametrize("method", ["get", "delete"])
 def test_an_id_with_control_characters_is_a_400_without_epp(http, id, method):
     response = answer(http, method, f"/messages/{id}")

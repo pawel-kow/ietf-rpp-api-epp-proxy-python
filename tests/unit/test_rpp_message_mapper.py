@@ -127,3 +127,22 @@ def test_validation_fallback_names_the_data_and_logs_it_without_content():
     assert "{urn:x}trnData" in data["message"]
     assert "{urn:x}trnData" in caplog.text
     assert "FOO.EXAMPLE" not in caplog.text
+
+
+def test_a_transfer_without_any_date_still_gives_a_message():
+    event = transfer(process=None)
+    event.requestDate = None
+    rpp = messages.model_to_rpp(message(event, creationDate=None))
+    assert rpp["data"]["@type"] == "serviceNoticeMessage"
+    assert rpp["creationDate"]
+    validate_schema("message.read", rpp)
+
+
+def test_a_pending_action_without_any_date_still_gives_a_message():
+    event = PendingActionEvent(
+        objectType="domainName", objectId="FOO.EXAMPLE", approved=True, clientTransactionId=None,
+        serverTransactionId="sv-9", completionDate=None,
+    )
+    rpp = messages.model_to_rpp(message(event, creationDate=None))
+    assert rpp["creationDate"]
+    validate_schema("message.read", rpp)

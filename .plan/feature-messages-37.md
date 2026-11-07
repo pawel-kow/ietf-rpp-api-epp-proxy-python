@@ -74,3 +74,11 @@ Modules (one class per file): `models/queue_message.py`, `transfer_event.py`, `p
 - `Content-Language` only when it is a language tag, `en` when `lang` is absent. `RPP-Queue-Size` only as an integer >= 0, also on the read 404 and 501 (`MessageErrorResponse`).
 - Successful DELETE returns a Flask `Response` without `Content-Type`. HEAD handlers keep their `del`, cause noted on #87.
 - Ids with control characters: 400 `02005` on GET and DELETE. A path that is `\r\n` alone never reaches the handler (framework-level 500, as for every route).
+
+## Review round 2 (decisions)
+
+- A message with no date at all falls through to the read time. `str_to_epp` and `decode_xml` parse without entities, DTD or network; a DOCTYPE is a parse failure, so a message reaches the raw path and an ordinary command fails with a 500.
+- XML parses in `src/`: `commands/helper.py` `str_to_epp` (every operation), `helpers/xml_helper.py` `decode_xml` (greeting, every reply's result code, error replies, the raw message paths). `eppclient.py` imports `xml.etree.ElementTree` and does not use it.
+- `RPP-Svtrid` is passed on only as printable ASCII, in `generate_rpp_response_headers` and `problem_headers`, so every operation benefits.
+- Unknown codes: `UnknownResultCode` carries the number, Table 10 gives the status. An ack or poll reply without a readable result is a 500 (`02400`).
+- Ids: only what XML 1.0 forbids is 400 (tab, LF and CR are allowed). `_drop_bad_dates` removed: xsdata keeps a bad `qDate` as a string, which `_safe_datetime` handles.

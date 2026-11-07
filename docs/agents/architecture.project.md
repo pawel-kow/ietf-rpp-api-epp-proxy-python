@@ -79,12 +79,12 @@ the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer
 
 Messages are in `controller/messages.py`. `GET /messages` is EPP `poll req`, `DELETE /messages/{id}` is
 `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in `flows/messages.py`,
-because EPP cannot read past the head. `epp_to_model_mapper/messages.py` turns the reply into a `QueueMessage`
+because EPP cannot read past the head. `str_to_epp` and `decode_xml` read EPP replies without entities or a DTD, and a DOCTYPE is refused. `epp_to_model_mapper/messages.py` turns the reply into a `QueueMessage`
 whose `event` is a `TransferEvent` (domain and contact `trnData`) or a `PendingActionEvent` (`panData`), and
 `rpp_to_model_mapper/messages.py` renders it. Anything the proxy cannot translate, or that fails the `.read`
 schema, or a reply that does not follow the EPP schema, becomes a `serviceNoticeMessage` that names the elements
 (never their content), so a client can always read and acknowledge it. The one exception is a `1301` without a
-message id, which is a 500. `Content-Language` is the `lang` of the `msg` (`en` when absent), see
+message id or an unreadable result, which is a 500. A code the proxy has no name for is an `UnknownResultCode`, which answers by Table 10. `Content-Language` is the `lang` of the `msg` (`en` when absent), see
 [spec-issues.md](../../.spec/spec-issues.md#messages).
 
 `BodyBufferingMiddleware` in `controller/body_buffering_middleware.py` is the middleware that `create_app`

@@ -298,7 +298,7 @@ def test_1301_without_a_message_id_is_not_an_empty_queue(q):
     assert isinstance(resp, ErrorResponse)
     assert resp.code == ResultCode.COMMAND_FAILED
     assert resp.server_transaction_id == "sv-1"
-    assert "without an id" in caplog.text
+    assert "without a message id" in caplog.text
 
 
 def test_reply_without_tr_id_is_still_read():
@@ -308,23 +308,31 @@ def test_reply_without_tr_id_is_still_read():
     assert resp.server_transaction_id is None
 
 
-def test_unknown_success_code_is_a_plain_success():
+def test_unknown_success_code_is_carried_as_it_is():
+    """Core §18.1: a code not in Table 9 is mapped by Table 10, and RPP-Code stays the EPP code with a leading 0."""
     resp = parse(reply(1302, msg_q(), domain_trn("pending")))
-    assert resp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
+    assert resp.code.value[0] == "1302"
     assert resp.message.id == "42"
+
+
+def test_unknown_code_is_logged_by_number(log):
+    with log() as captured:
+        parse(reply(1302, msg_q()))
+    assert "1302" in captured.text
 
 
 def test_ack_without_tr_id_and_with_unknown_code_is_not_an_error():
     xml = reply(1302, '<msgQ count="4" id="43"/>').replace('<trID><clTRID>msg-cl-1</clTRID><svTRID>sv-1</svTRID></trID>', "")
     resp = parse_ack_response(xml, "msg-cl-1")
     assert resp.queue_size == 4
-    assert resp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
+    assert resp.code.value[0] == "1302"
 
 
 @pytest.mark.parametrize("xml", ["not xml at all", "", "<epp/>"])
-def test_ack_that_succeeded_is_never_an_error_whatever_the_reply(xml):
+def test_ack_reply_without_a_readable_result_is_an_error(xml):
     resp = parse_ack_response(xml, "msg-cl-1")
-    assert resp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
+    assert isinstance(resp, ErrorResponse)
+    assert resp.code == ResultCode.COMMAND_FAILED
 
 
 def test_ack_with_a_msg_q_that_does_not_follow_the_schema():
@@ -335,3 +343,57 @@ def test_ack_with_a_msg_q_that_does_not_follow_the_schema():
 @pytest.mark.parametrize("xml", ["not xml at all", "<epp/>"])
 def test_unreadable_poll_reply_is_an_error(xml):
     assert isinstance(parse(xml), ErrorResponse)
+
+
+@pytest.fixture
+def log():
+    return capture_log
+
+
+def test_the_server_transaction_id_is_the_one_of_the_reply_and_not_of_a_pending_action():
+    res = pan("domain", DOMAIN, "name", "1") + '<unknown/>'  # makes the typed parser fail
+    resp = parse(reply(1301, msg_q(), res))
+    assert resp.server_transaction_id == "sv-1"
+
+
+def test_markup_with_attributes_in_msg_is_named_on_the_raw_path_too():
+    q = '<msgQ count="1" id="7"><msg><field name="x" value="y"/></msg><unknown/></msgQ>'
+    message = parse(reply(1301, q)).message
+    assert "field" in message.unmapped
+
+
+def test_data_that_does_not_map_is_logged_by_name_and_not_by_content(log):
+    res = pan("domain", DOMAIN, "name", "maybe").replace(">X-1<", ">SECRET<")
+    with log() as captured:
+        parse(reply(1301, msg_q(), res))
+    assert "panData" in captured.text
+    assert "SECRET" not in captured.text
+
+
+def test_markup_in_the_text_is_logged_by_name_and_not_by_content(log):
+    q = '<msgQ count="1" id="7"><msg><field name="SECRET" value="SECRET"/></msg></msgQ>'
+    with log() as captured:
+        parse(reply(1301, q))
+    assert "field" in captured.text
+    assert "SECRET" not in captured.text
+
+
+def test_reply_that_does_not_follow_the_schema_is_logged_by_name_and_not_by_content(log):
+    res = '<resData><foo>SECRET</foo></resData>'
+    with log() as captured:
+        parse(reply(1301, msg_q("SECRET text"), res))
+    assert "does not follow" in captured.text
+    assert "foo" in captured.text
+    assert "SECRET" not in captured.text
+
+
+def test_ack_reply_that_does_not_follow_the_schema_is_logged(log):
+    with log() as captured:
+        parse_ack_response(reply(1000, '<msgQ count="2" id="43"><unknown/></msgQ>'), "msg-cl-1")
+    assert "does not follow" in captured.text
+
+
+def test_a_message_without_an_id_is_logged_on_the_raw_path_too(log):
+    with log() as captured:
+        parse(reply(1301, '<msgQ count="3"/>' + '<unknown/>'))
+    assert "without a message id" in captured.text

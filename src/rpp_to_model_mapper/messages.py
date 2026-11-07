@@ -60,9 +60,9 @@ def _created(message: QueueMessage) -> str:
     time of the read, so without a qDate the value can differ between two reads of the message."""
     if message.creationDate:
         return message.creationDate
-    if isinstance(message.event, TransferEvent):
+    if isinstance(message.event, TransferEvent) and message.event.requestDate:
         return message.event.requestDate
-    if isinstance(message.event, PendingActionEvent):
+    if isinstance(message.event, PendingActionEvent) and message.event.completionDate:
         return message.event.completionDate
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
