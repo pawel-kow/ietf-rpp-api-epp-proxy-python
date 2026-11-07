@@ -6,11 +6,11 @@ start after its numbers (`domain_update` 16, `host_update` 32).
 
 ## Tasks
 
-- [~] 1. Harness: `any_of` alternatives in a step's `response`, list comparison that does not depend on sort order, unit tests
-- [ ] 2. Cases using it: `domain_create/test16`, `test17`, `test18`
-- [ ] 3. `contact_create/test20`: renamed, 201 with the localization read back
-- [ ] 4. New integration cases: `replace /dns` with `ds`, duplicate host address, unknown user, repeated `RPP-Cltrid`
-- [ ] 5. Remove workarounds: `_addresses`, `errors='replace'`
+- [x] 1. Harness: `any_of` alternatives in a step's `response`, list comparison that does not depend on sort order, unit tests
+- [x] 2. Cases using it: `domain_create/test16`, `test17`, `test18`
+- [x] 3. `contact_create/test20`: renamed, 201 with the localization read back
+- [x] 4. New integration cases: `replace /dns` with `ds`, duplicate host address, unknown user, repeated `RPP-Cltrid`
+- [~] 5. Remove workarounds: `_addresses`, `errors='replace'`
 - [ ] 6. Docs: `testing.project.md`, `RPP_IMPLEMENTATION_NOTES.md`, docstring, `spec-issues.md` (#75, #76)
 - [ ] 7. Full `pytest`, draft PR closing #74, #75, #76
 

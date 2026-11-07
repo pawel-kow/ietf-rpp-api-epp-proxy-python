@@ -43,31 +43,66 @@
         }
       },
       "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName",
-          "nameservers": [
-            {
-              "@type": "host",
-              "hostName": "ns1.t18-{random_name}.example"
+        "any_of": [
+          {
+            "status": 201,
+            "content_type": "application/rpp+json",
+            "body": {
+              "@type": "domainName",
+              "dns": {
+                "@type": "dnsData",
+                "records": [
+                  {
+                    "@type": "dnsRecord",
+                    "name": "@",
+                    "type": "ns",
+                    "rdata": {
+                      "nsdname": "ns1.t18-{random_name}.example."
+                    }
+                  },
+                  {
+                    "@type": "dnsRecord",
+                    "name": "ns1.t18-{random_name}.example.",
+                    "type": "a",
+                    "rdata": {
+                      "address": "192.0.2.1"
+                    }
+                  }
+                ]
+              }
+            },
+            "headers": {
+              "RPP-Code": "01000"
             }
-          ],
-          "subordinateHosts": [
-            {
-              "@type": "host",
-              "hostName": "ns1.t18-{random_name}.example"
+          },
+          {
+            "status": 201,
+            "content_type": "application/rpp+json",
+            "body": {
+              "@type": "domainName",
+              "nameservers": [
+                {
+                  "@type": "host",
+                  "hostName": "ns1.t18-{random_name}.example"
+                }
+              ],
+              "subordinateHosts": [
+                {
+                  "@type": "host",
+                  "hostName": "ns1.t18-{random_name}.example"
+                }
+              ]
+            },
+            "fields": {
+              "provMetadata.repositoryId": {
+                "type": "not_null"
+              }
+            },
+            "headers": {
+              "RPP-Code": "01000"
             }
-          ]
-        },
-        "fields": {
-          "provMetadata.repositoryId": {
-            "type": "not_null"
           }
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+        ]
       }
     }
   ]

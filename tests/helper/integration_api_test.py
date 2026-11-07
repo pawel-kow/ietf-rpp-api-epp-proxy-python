@@ -46,6 +46,50 @@ def assert_headers(expected_headers, response, test_name):
         else:
             raise ValueError(f"Header '{header}' has unexpected type or value for test case: {test_name}")
 
+def assert_response(expected, response, test_name):
+    # 1. Check the HTTP status code
+    if isinstance(expected["status"], list):
+        # Check if the response status code is in the list of expected status codes
+        assert response.status_code in expected["status"], f"Unexpected status code for test case: {test_name}"
+    else:
+        assert response.status_code == expected["status"]
+
+    if "content_type" in expected:
+        # Check the Content-Type header
+        assert response.headers["Content-Type"].lower() == expected["content_type"].lower(), f"Content-Type mismatch for test case: {test_name}"
+
+    # 2. Check the response body (if one is expected)
+    if "body" in expected:
+        # For JSON responses, compare the parsed JSON
+        try:
+            response_json = json.loads(response.text)
+        except json.JSONDecodeError:
+            # If JSON decoding fails, log the response text for debugging
+            assert False, f"Failed to decode JSON for test case: {test_name} Response Text: {response.text}"
+        assert response_json is not None, f"Response body was not valid JSON for test case: {test_name}"
+        # Check if the response JSON matches the expected structure
+        recusive_compare_existing(test_name, "$", response_json, expected["body"], case_sensitive=False)
+        # Check for expected fields in the response
+        # Ensure that the expected fields are present and not null
+        for field, test in expected.get("fields", {}).items():
+            assert evaluate_condition(field_value(response_json, field), test), f"Field '{field}' does not meet the condition {test['type']} for test case: {test_name}"
+    else:
+        # For responses expected to have no body (like 100, 204)
+        assert not response.content, "Response data not expected" # Check if data attribute is empty
+
+    assert_headers(expected.get("headers", {}), response, test_name)
+
+def assert_any_response(alternatives, response, test_name):
+    """Passes when one alternative matches, for behaviour the protocol leaves to the server."""
+    failures = []
+    for i, expected in enumerate(alternatives):
+        try:
+            assert_response(expected, response, test_name)
+            return
+        except AssertionError as failure:
+            failures.append(f"[{i}] {failure}")
+    assert False, "No alternative matches:\n" + "\n".join(failures)
+
 def endpoint_test(client, case_sequence):
     """
     Tests the POST /domains endpoint using the Flask test client.
@@ -74,37 +118,9 @@ def endpoint_test(client, case_sequence):
                                     headers=case["request"]["headers"])
         print(f"Test case: {case_sequence['test_id']}[{i}]: {response.status_code} - {response.headers} - {response.text}")
 
-        # --- Assertions ---
-        # 1. Check the HTTP status code
-        if isinstance(case["response"]["status"], list):
-            # Check if the response status code is in the list of expected status codes
-            assert response.status_code in case["response"]["status"], f"Unexpected status code for test case: {case_sequence['test_id']}[{i}]"
-        else:
-            assert response.status_code == case["response"]["status"]
-
-        if "content_type" in case["response"]:
-            # Check the Content-Type header
-            assert response.headers["Content-Type"].lower() == case["response"]["content_type"].lower(), f"Content-Type mismatch for test case: {case_sequence['test_id']}[{i}]"
-
-        # 2. Check the response body (if one is expected)
-        if "body" in case["response"]:
-            # For JSON responses, compare the parsed JSON
-            try:
-                response_json = json.loads(response.text)
-            except json.JSONDecodeError:
-                # If JSON decoding fails, log the response text for debugging
-                assert False, f"Failed to decode JSON for test case: {case_sequence['test_id']}[{i}] Response Text: {response.text}"
-            assert response_json is not None, f"Response body was not valid JSON for test case: {case_sequence['test_id']}[{i}]"
-            # Check if the response JSON matches the expected structure
-            recusive_compare_existing(f"{case_sequence['test_id']}[{i}]", "$", response_json, case["response"]["body"], case_sensitive=False)
-            # Check for expected fields in the response
-            # Ensure that the expected fields are present and not null
-            for field, test in case["response"].get("fields", {}).items():
-                assert evaluate_condition(field_value(response_json, field), test), f"Field '{field}' does not meet the condition {test['type']} for test case: {case_sequence['test_id']}[{i}]"
-        else:
-            # For responses expected to have no body (like 100, 204)
-            assert not response.content, "Response data not expected" # Check if data attribute is empty
-
         test_name = f"{case_sequence['test_id']}[{i}]"
         assert_rpp_headers(case["request"]["headers"], response, test_name)
-        assert_headers(case["response"].get("headers", {}), response, test_name)
+        if "any_of" in case["response"]:
+            assert_any_response(case["response"]["any_of"], response, test_name)
+        else:
+            assert_response(case["response"], response, test_name)
