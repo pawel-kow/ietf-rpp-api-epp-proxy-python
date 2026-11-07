@@ -158,6 +158,8 @@ def parse_domain_transfer_response(xml_string: str, client_transaction_id: str |
     if client_transaction_id is None:
         header["client_transaction_id"] = None
     data = find_res_data(epp, TrnData)
+    if data is None:  # applied, but EPP gave no state
+        return DomainTransferResponse(transfer=None, **header)
     return DomainTransferResponse(
         transfer=DomainTransferProcess(
             name=data.name,

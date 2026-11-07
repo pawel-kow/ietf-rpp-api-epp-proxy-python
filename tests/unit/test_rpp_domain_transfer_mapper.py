@@ -2,7 +2,7 @@ import pytest
 from jsonschema import ValidationError
 
 from models import AuthInfo, DomainTransfer, DomainTransferProcess, TransferOperation
-from rpp_to_model_mapper import NotSupportedByEpp, domain_transfer_process, domain_transfer_reject
+from rpp_to_model_mapper import NotSupportedByEpp, domain_transfer_approve, domain_transfer_process, domain_transfer_reject
 
 PROCESS = {"@type": "domainTransferProcess"}
 
@@ -74,3 +74,30 @@ def test_read_is_the_draft_example():
 
 def test_read_leaves_out_an_unknown_expiry_date():
     assert "expiryDate" not in domain_transfer_process.model_to_rpp(process())
+
+
+@pytest.mark.parametrize("member", ["trStatus", "reqClientId", "actClientId", "requestDate", "actionDate", "expiryDate", "processId"])
+def test_request_with_a_read_only_member_is_rejected(member):
+    """Json §4.4."""
+    with pytest.raises(ValueError):
+        domain_transfer_process.rpp_to_model("foo.example", {**PROCESS, member: "x"}, None)
+
+
+def test_approve_body_is_optional():
+    transfer = domain_transfer_approve.rpp_to_model("foo.example", None, "authinfo value=MmZvb0JBUg==")
+    assert transfer == DomainTransfer(name="foo.example", operation=TransferOperation.APPROVE, authInfo=AuthInfo(pw="2fooBAR"))
+
+
+def test_approve_takes_the_type_only():
+    assert domain_transfer_approve.rpp_to_model("foo.example", PROCESS, None).operation == TransferOperation.APPROVE
+
+
+@pytest.mark.parametrize("body", [{}, [], {"x": 1}, {"@type": "nonsense"}, {**PROCESS, "unknown": 1}])
+def test_approve_body_is_validated(body):
+    with pytest.raises((ValidationError, ValueError)):
+        domain_transfer_approve.rpp_to_model("foo.example", body, None)
+
+
+def test_approve_reason_is_not_allowed_in_the_epp_profile():
+    with pytest.raises(NotSupportedByEpp, match="reason"):
+        domain_transfer_approve.rpp_to_model("foo.example", {**PROCESS, "reason": "ok"}, None)

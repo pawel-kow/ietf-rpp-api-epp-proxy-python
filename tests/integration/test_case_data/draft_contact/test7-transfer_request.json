@@ -1,13 +1,65 @@
 {
   "test_id": "test7-transfer_request",
-  "skip": "#34",
   "steps": [
     {
       "request": {
         "method": "POST",
-        "url": "/contacts/JD-1234/processes/transferProcesses",
+        "url": "/contacts",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}D7",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "2fooBAR"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}D7"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts/FO-{random_id_10}D7/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json",
@@ -24,7 +76,29 @@
         "body": {
           "@type": "transferProcess",
           "trStatus": "pending",
-          "transferDir": "pull"
+          "transferDir": "pull",
+          "reqClientId": "baz",
+          "actClientId": "foo"
+        },
+        "headers": {
+          "RPP-Code": "01001",
+          "Location": {
+            "type": "not_empty_string"
+          }
+        },
+        "fields": {
+          "reqClientId": {
+            "type": "not_empty_string"
+          },
+          "requestDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": -60,
+            "max_delta": 120
+          },
+          "actionDate": {
+            "type": "not_null"
+          }
         }
       }
     }

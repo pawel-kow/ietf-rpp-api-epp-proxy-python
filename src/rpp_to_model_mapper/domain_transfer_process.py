@@ -1,25 +1,20 @@
 from models import DomainTransfer, DomainTransferProcess, TransferOperation
 from rpp_schema_validator import validate_schema
 from . import rpp_authorization
-from .common import parse_rpp, period_duration, reject_set
-from .not_supported_by_epp import NotSupportedByEpp
-from .rpp_models import RPPDomainTransferProcess
-
-PULL = "pull"
+from .common import PULL, parse_rpp, period_duration, reject_push
+from .rpp_models import RPPDomainTransferProcess, RPPDomainTransferRequest
 
 
 def rpp_to_model(name: str, rpp: dict, authorization: str | None) -> DomainTransfer:
     """Converts a transfer request, with the value of its RPP-Authorization header."""
     validate_schema("domainTransferProcess.create", rpp)
-    process_rpp = parse_rpp(RPPDomainTransferProcess, rpp)
-    if process_rpp.transferDir not in (None, PULL):
-        raise NotSupportedByEpp(f"Transfer direction '{process_rpp.transferDir}'")
-    reject_set(gainingClientId=process_rpp.gainingClientId)
+    request_rpp = parse_rpp(RPPDomainTransferRequest, rpp)
+    reject_push(request_rpp.transferDir, request_rpp.gainingClientId)
     return DomainTransfer(
         name=name,
         operation=TransferOperation.REQUEST,
         authInfo=rpp_authorization.rpp_to_model(authorization),
-        duration=period_duration(process_rpp.transferPeriod),
+        duration=period_duration(request_rpp.transferPeriod),
     )
 
 

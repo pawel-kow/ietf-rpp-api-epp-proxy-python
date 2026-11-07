@@ -43,7 +43,7 @@ object, so a domain created with glue reads back with `nameservers`. Removing a 
 A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
 `serverApproved`. Info does not show `pendingTransfer` (#64), a completed transfer cannot be
 queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in
-unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67).
+unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67). Contact transfers behave the same, except that Info does show the sponsor changing, so `contact_transfer` cases read it back.
 
 ## Tests without the backend
 

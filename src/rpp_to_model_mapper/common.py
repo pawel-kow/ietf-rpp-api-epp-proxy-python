@@ -1,5 +1,6 @@
 from dataclasses_json.undefined import UndefinedParameterError
 
+from rpp_schema_validator import validate_schema
 from .not_supported_by_epp import NotSupportedByEpp
 from .rpp_models import RPPPatchOperation, RPPPeriod
 
@@ -27,3 +28,19 @@ def reject_set(**members):
 def reject_operation(operation: RPPPatchOperation):
     """An operation EPP has no place for."""
     raise NotSupportedByEpp(f"'{operation.op}' on '{operation.path}'")
+
+
+PULL = "pull"
+
+
+def reject_push(transfer_dir: str | None, gaining_client_id: str | None):
+    """EPP knows only pull transfers, and has no place for the gaining client."""
+    if transfer_dir not in (None, PULL):
+        raise NotSupportedByEpp(f"Transfer direction '{transfer_dir}'")
+    reject_set(gainingClientId=gaining_client_id)
+
+
+def reject_reason(schema: str, rpp_class, rpp: dict):
+    """Validates the content of an approve or a reject, which EPP gives no reason (data-objects §10.1.1.5)."""
+    validate_schema(schema, rpp)
+    reject_set(reason=parse_rpp(rpp_class, rpp).reason)

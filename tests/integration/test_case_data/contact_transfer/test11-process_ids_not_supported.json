@@ -1,0 +1,47 @@
+{
+  "test_id": "test11-process_ids_not_supported",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}C11/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02101"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}C11/processes/transferProcesses/XYZ-12345",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02101"
+        }
+      }
+    }
+  ]
+}

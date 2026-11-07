@@ -1,5 +1,5 @@
 from . import (
-    auth_info, contacts, domain_availability, domain_dns, domain_patch, domain_transfer_process, domain_transfer_reject,
+    auth_info, contact_transfer_approve, contact_transfer_process, contact_transfer_reject, contacts, domain_availability, domain_dns, domain_patch, domain_transfer_approve, domain_transfer_process, domain_transfer_reject,
     domains, host_availability, host_dns, json_patch,
     host_patch, host_replacement, hosts, patch_statuses, phones, prov_metadata, rpp_authorization, statuses,
 )
