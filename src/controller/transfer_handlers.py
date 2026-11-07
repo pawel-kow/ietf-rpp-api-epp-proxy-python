@@ -1,11 +1,12 @@
 import json
 
-from connexion import ProblemException, request
+from connexion import request
 from flask import request as flask_request
 from models import ErrorResponse, ResultCode, TransferOperation
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import (
-    client_transaction_id, generate_rpp_response_headers, map_request, raise_epp_error, require_empty_body,
+    client_transaction_id, generate_rpp_response_headers, map_request, raise_epp_error, request_has_content,
+    require_empty_body,
 )
 from .auth import get_epp_client
 
@@ -74,14 +75,22 @@ class TransferHandlers:
 
     @staticmethod
     def _optional_body():
-        """The OpenAPI declares no body for approve, so Connexion does not read it: None for none."""
+        """The OpenAPI declares no body for approve, so Connexion does not read it: None for none.
+
+        Content is not none because it parses to nothing (`null`) or leaves no raw bytes (a form).
+        """
+        if not request_has_content():
+            return None
         raw = flask_request.get_data()
-        return json.loads(raw) if raw else None
+        if not raw:
+            raise ValueError("Request body must be JSON")
+        body = json.loads(raw)
+        if body is None:
+            raise ValueError("Request body must be an object")
+        return body
 
     def approve(self, id):
         body = map_request(self._optional_body)
-        if body is None and flask_request.get_data():  # `null` is content, no content is no body
-            raise ProblemException(status=400, title="Bad Request", detail="Request body must be an object")
         return self._process(map_request(self._approve_mapper, id, body, self._authorization()))
 
     def reject(self, id, body):

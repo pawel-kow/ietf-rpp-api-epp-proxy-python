@@ -45,6 +45,13 @@ Carried over from #33: query with nothing pending 409 (02301); approve takes an 
 - A query without `trnData` is 500 (02400) with a fixed detail, since it applied nothing. Create, cancel, approve and reject stay 202.
 - `contact_transfer/test17` reads `C17`.
 
+## Review round 3 (PR #90)
+
+- `create_app` sets `wsgi.input_terminated` for every request and reads the raw bytes with `get_data(cache=True)` in a `before_request` hook, so chunked bodies are seen and a form parsed later leaves them for the handlers.
+- One helper, `request_has_content` (`content_length`, raw bytes, `form` or `files`), serves `require_empty_body` and approve's `_optional_body`. Content without raw bytes is 400 (02001). Reject was checked with forms too and already refuses them (400 or 415).
+- Live cases run every approve, cancel and reject variant with `Content-Length` and chunked, for both kinds (183 cases). Against 972f154, 58 of them failed.
+- A valid chunked create stays 400 (`RequestBody is required`, Connexion's validator), reported in the issue filed for the rest.
+
 ## Backend notes
 
 - A completed contact transfer cannot be queried (2301), like #65. Cancel by the non-requester is 2201, also with nothing pending, like #66.

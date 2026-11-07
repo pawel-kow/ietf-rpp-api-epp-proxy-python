@@ -67,16 +67,17 @@ def test_delete_without_a_body_is_not_rejected(url):
     app, clients = setup()
     headers = {k: v for k, v in HEADERS.items() if k != "Content-Type"}
     response = app.test_client().delete(url, headers=headers)
-    assert response.status_code != 400
+    assert response.status_code == (200 if "processes" not in url else 202)
 
 
 class LiveServer:
-    """The app under uvicorn on 127.0.0.1, as in production, for requests whose body comes late."""
+    """The app under uvicorn on 127.0.0.1, as in production, for requests with a late or chunked body."""
 
     def __init__(self, app):
         self.listener = socket.create_server(("127.0.0.1", 0))
         self.port = self.listener.getsockname()[1]
         self.server = uvicorn.Server(uvicorn.Config(app, log_level="warning"))
+        self.server.force_exit = True
         self.thread = threading.Thread(target=self.server.run, kwargs={"sockets": [self.listener]}, daemon=True)
 
     def __enter__(self):
@@ -91,15 +92,25 @@ class LiveServer:
         self.thread.join(10)
         self.listener.close()
 
-    def request(self, method, path, body, delay=0.3, timeout=5):
+    def request(self, method, path, body, content_type=MEDIA_TYPE, chunked=False, delay=0.3, timeout=5):
         """Sends the headers, waits, then sends the body. Returns the status line, or None on a timeout."""
         lines = [f"{method} {path} HTTP/1.1", f"Host: 127.0.0.1:{self.port}", f"Authorization: {CREDENTIALS}",
-                 f"Accept: {MEDIA_TYPE}", "RPP-Cltrid: cl-1", f"Content-Type: {MEDIA_TYPE}",
-                 f"Content-Length: {len(body)}", "Connection: close"]
+                 f"Accept: {MEDIA_TYPE}", "RPP-Cltrid: cl-1", "Connection: close"]
+        if content_type:
+            lines.append(f"Content-Type: {content_type}")
+        lines.append("Transfer-Encoding: chunked" if chunked else f"Content-Length: {len(body)}")
         with socket.create_connection(("127.0.0.1", self.port), timeout=timeout) as connection:
             connection.sendall(("\r\n".join(lines) + "\r\n\r\n").encode())
             time.sleep(delay)
-            connection.sendall(body)
+            try:
+                if chunked:
+                    if body:
+                        connection.sendall(f"{len(body):x}\r\n".encode() + body + b"\r\n")
+                    connection.sendall(b"0\r\n\r\n")
+                else:
+                    connection.sendall(body)
+            except (BrokenPipeError, ConnectionResetError):
+                pass  # the server answered before the end of the body
             try:
                 reply = b""
                 while b"\r\n" not in reply:
@@ -110,6 +121,64 @@ class LiveServer:
             except socket.timeout:
                 return None
         return reply.split(b"\r\n")[0].decode()
+
+
+CONTACT_LATEST = "/contacts/FO-1/processes/transferProcesses/latest"
+DOMAIN_LATEST = "/domainNames/foo.example/processes/transferProcesses/latest"
+URLENCODED = "application/x-www-form-urlencoded"
+BOUNDARY = "xyz"
+MULTIPART = f"multipart/form-data; boundary={BOUNDARY}"
+FIELD = f'--{BOUNDARY}\r\nContent-Disposition: form-data; name="a"\r\n\r\n1\r\n--{BOUNDARY}--\r\n'.encode()
+FILE = (f'--{BOUNDARY}\r\nContent-Disposition: form-data; name="f"; filename="f.txt"\r\n'
+        f'Content-Type: text/plain\r\n\r\nhello\r\n--{BOUNDARY}--\r\n').encode()
+FORMS = [
+    (URLENCODED, b"a=1"), (URLENCODED, b"="), (URLENCODED, b"a"), (URLENCODED, b"&"),
+    (MULTIPART, FIELD), (MULTIPART, FILE), (MULTIPART, b"garbage"),
+]
+
+
+def live_cases():
+    """(id, method, path, body, content_type, status): content the proxy must see before it sends to EPP."""
+    approve = {"contact": f"{CONTACT_LATEST}/transferApprove", "domain": f"{DOMAIN_LATEST}/transferApprove"}
+    reject = {"contact": f"{CONTACT_LATEST}/transferReject", "domain": f"{DOMAIN_LATEST}/transferReject"}
+    cancel = {"contact": CONTACT_LATEST, "domain": DOMAIN_LATEST}
+    types = {"contact": "transferProcess", "domain": "domainTransferProcess"}
+    cases = []
+    for kind in ("contact", "domain"):
+        type_only = ('{"@type": "%s"}' % types[kind]).encode()
+        with_reason = ('{"@type": "%s", "reason": "ok"}' % types[kind]).encode()
+        cases += [
+            (f"{kind}-approve-reason", "POST", approve[kind], with_reason, MEDIA_TYPE, 501),
+            (f"{kind}-approve-unknown", "POST", approve[kind], b'{"x": 1}', MEDIA_TYPE, 400),
+            (f"{kind}-approve-null", "POST", approve[kind], b"null", MEDIA_TYPE, 400),
+            (f"{kind}-approve-type-only", "POST", approve[kind], type_only, MEDIA_TYPE, 202),
+            (f"{kind}-approve-empty", "POST", approve[kind], b"", None, 202),
+            (f"{kind}-cancel-json", "DELETE", cancel[kind], b"{}", MEDIA_TYPE, 400),
+            (f"{kind}-cancel-empty", "DELETE", cancel[kind], b"", None, 202),
+            (f"{kind}-reject-reason", "POST", reject[kind], with_reason, MEDIA_TYPE, 501),
+            (f"{kind}-reject-type-only", "POST", reject[kind], type_only, MEDIA_TYPE, 202),
+            (f"{kind}-reject-empty", "POST", reject[kind], b"", None, 202),
+        ]
+        for n, (content_type, body) in enumerate(FORMS):
+            cases.append((f"{kind}-approve-form{n}", "POST", approve[kind], body, content_type, 400))
+            cases.append((f"{kind}-cancel-form{n}", "DELETE", cancel[kind], body, content_type, 400))
+            cases.append((f"{kind}-reject-form{n}", "POST", reject[kind], body, content_type, (400, 415)))
+    return cases
+
+
+@pytest.mark.parametrize("chunked", [False, True], ids=["length", "chunked"])
+@pytest.mark.parametrize("case", live_cases(), ids=lambda case: case[0] if isinstance(case, tuple) else None)
+def test_content_is_seen_whatever_its_framing(case, chunked):
+    """An approve, cancel or reject that is not valid never reaches EPP, as it does not through the test client."""
+    _, method, path, body, content_type, status = case
+    app, clients = setup()
+    with LiveServer(app) as server:
+        line = server.request(method, path, body, content_type, chunked, delay=0.05)
+    assert line is not None, "the request hung"
+    expected = status if isinstance(status, tuple) else (status,)
+    assert any(f" {code} " in line for code in expected), line
+    if max(expected) >= 400:
+        assert not sent_any(clients)
 
 
 @pytest.mark.parametrize("path,body,status", [
