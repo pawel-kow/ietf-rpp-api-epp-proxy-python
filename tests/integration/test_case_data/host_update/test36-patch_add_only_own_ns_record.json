@@ -1,5 +1,5 @@
 {
-  "test_id": "test9-patch_replace_records_without_dns",
+  "test_id": "test36-patch_add_only_own_ns_record",
   "steps": [
     {
       "request": {
@@ -13,7 +13,20 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "t9.{random_name}.net"
+          "hostName": "t36.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t36.{random_name}.net."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {
@@ -29,7 +42,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/hosts/t9.{random_name}.net",
+        "url": "/hosts/t36.{random_name}.net",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -38,46 +51,28 @@
         },
         "body_json": [
           {
-            "op": "replace",
+            "op": "add",
             "path": "/dns/records",
-            "value": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "a",
-                "rdata": {
-                  "address": "192.0.2.9"
-                }
+            "value": {
+              "@type": "dnsRecord",
+              "name": "@",
+              "type": "ns",
+              "rdata": {
+                "nsdname": "t36.{random_name}.net."
               }
-            ]
+            }
           }
         ]
       },
       "response": {
-        "status": 200,
+        "status": 400,
         "headers": {
-          "RPP-Code": "01000"
+          "RPP-Code": "02003"
         },
         "body": {
-          "@type": "host",
-          "dns": {
-            "records": [
-              {
-                "type": "ns",
-                "@type": "dnsRecord",
-                "name": "@"
-              },
-              {
-                "type": "a",
-                "rdata": {
-                  "address": "192.0.2.9"
-                },
-                "@type": "dnsRecord",
-                "name": "t9.{random_name}.net."
-              }
-            ]
-          }
-        }
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
       }
     }
   ]

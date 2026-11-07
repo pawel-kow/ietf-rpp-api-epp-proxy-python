@@ -1,0 +1,75 @@
+{
+  "test_id": "test3-without_addresses",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "g3.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "g3.{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "host"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/hosts/g3.{random_name}.net",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "host",
+          "dns": {
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "g3.{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

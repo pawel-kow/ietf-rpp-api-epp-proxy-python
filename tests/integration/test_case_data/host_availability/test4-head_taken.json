@@ -13,7 +13,20 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "t4.{random_name}.net"
+          "hostName": "t4.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t4.{random_name}.net."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {

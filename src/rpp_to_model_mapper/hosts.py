@@ -22,6 +22,18 @@ def _reject_controls(controls: dict | None):
         raise NotSupportedByEpp("'dns.controls' on a host")
 
 
+def has_own_ns(host_rpp: RPPHost) -> bool:
+    """Whether the host has its self-referencing `ns` record, which `host_dns` maps to nothing."""
+    records = host_rpp.dns.records if host_rpp.dns else None
+    return any(host_dns.rpp_to_model(host_rpp.hostName, record) is None for record in records or [])
+
+
+def require_own_ns(host_rpp: RPPHost):
+    """A request has to state the `ns` record every read gives, see spec-issues.md."""
+    if not has_own_ns(host_rpp):
+        raise ValueError(f"The 'ns' record of '{host_rpp.hostName}' is required")
+
+
 def rpp_host_to_model(host_rpp: RPPHost) -> Host:
     """The Host of a parsed request, without its status."""
     if host_rpp.provMetadata:
@@ -50,12 +62,12 @@ def rpp_to_model(rpp: dict) -> Host:
     validate_schema("host.create", rpp)
     host_rpp = parse_rpp(RPPHost, rpp)
     reject_set(status=host_rpp.status)
-    return rpp_host_to_model(host_rpp)
+    host = rpp_host_to_model(host_rpp)
+    require_own_ns(host_rpp)
+    return host
 
 
-def _dns_to_rpp(host: Host) -> RPPDnsData | None:
-    if not host.ipv4 and not host.ipv6:
-        return None
+def _dns_to_rpp(host: Host) -> RPPDnsData:
     return RPPDnsData(records=nameserver_records(host.name, host.ipv4, host.ipv6))
 
 

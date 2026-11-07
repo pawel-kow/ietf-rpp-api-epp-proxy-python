@@ -13,7 +13,20 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "t10.{random_name}.net"
+          "hostName": "t10.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t10.{random_name}.net."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {
@@ -48,6 +61,14 @@
           "dns": {
             "@type": "dnsData",
             "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t10.{random_name}.net."
+                }
+              },
               {
                 "@type": "dnsRecord",
                 "name": "t10.{random_name}.net.",

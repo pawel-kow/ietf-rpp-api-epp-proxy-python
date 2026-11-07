@@ -13,7 +13,20 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "t20.{random_name}.net"
+          "hostName": "t20.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t20.{random_name}.net."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {
@@ -77,7 +90,20 @@
               "label": "clientDeleteProhibited",
               "reason": "Another reason"
             }
-          ]
+          ],
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t20.{random_name}.net."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {

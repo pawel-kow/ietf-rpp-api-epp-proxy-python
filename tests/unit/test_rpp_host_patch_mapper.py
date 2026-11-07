@@ -7,6 +7,7 @@ from rpp_to_model_mapper import UnsupportedRppFeature, host_patch
 NAME = "ns1.example.example"
 A = {"@type": "dnsRecord", "name": f"{NAME}.", "type": "a", "rdata": {"address": "192.0.2.1"}}
 AAAA = {"@type": "dnsRecord", "name": "@", "type": "aaaa", "rdata": {"address": "2001:db8::1"}}
+NS = {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": f"{NAME}."}}
 STATUS = {"@type": "hostStatus", "label": "clientUpdateProhibited"}
 
 
@@ -82,11 +83,17 @@ def test_add_record_for_another_name_is_unsupported():
         update(add("/dns/records", {**A, "name": "www"}))
 
 
-def test_add_ns_record_is_unsupported():
-    ns = {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": f"{NAME}."}}
+def test_add_own_ns_record_changes_nothing():
+    assert update(add("/dns/records", NS)) == HostUpdate(name=NAME)
 
+
+def test_add_own_ns_record_keeps_the_rest_of_the_patch():
+    assert update(add("/dns/records", NS), add("/dns/records", A)).add == HostUpdateChanges(ipv4=["192.0.2.1"])
+
+
+def test_add_ns_record_of_another_host_is_unsupported():
     with pytest.raises(UnsupportedRppFeature):
-        update(add("/dns/records", ns))
+        update(add("/dns/records", {**NS, "rdata": {"nsdname": "ns2.example.example."}}))
 
 
 def test_remove_record_by_type_and_rdata():

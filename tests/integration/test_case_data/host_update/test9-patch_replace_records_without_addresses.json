@@ -1,0 +1,105 @@
+{
+  "test_id": "test9-patch_replace_records_without_addresses",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t9.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t9.{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "host"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/hosts/t9.{random_name}.net",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/dns/records",
+            "value": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t9.{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.9"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "host",
+          "dns": {
+            "records": [
+              {
+                "type": "ns",
+                "@type": "dnsRecord",
+                "name": "@"
+              },
+              {
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.9"
+                },
+                "@type": "dnsRecord",
+                "name": "t9.{random_name}.net."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

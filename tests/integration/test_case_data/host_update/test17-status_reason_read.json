@@ -14,7 +14,20 @@
         },
         "body_json": {
           "@type": "host",
-          "hostName": "t17.{random_name}.net"
+          "hostName": "t17.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "t17.{random_name}.net."
+                }
+              }
+            ]
+          }
         }
       },
       "response": {

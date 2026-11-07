@@ -11,20 +11,52 @@ def record(record_type, rdata, name=f"{NAME}."):
     return {"@type": "dnsRecord", "name": name, "type": record_type, "rdata": rdata}
 
 
-def host(*records, **members):
-    body = {"@type": "host", "hostName": NAME, **members}
-    if records:
-        body["dns"] = {"@type": "dnsData", "records": list(records)}
-    return body
-
-
 A = record("a", {"address": "192.0.2.1"})
 AAAA = record("aaaa", {"address": "2001:db8::1"})
 NS = record("ns", {"nsdname": f"{NAME}."}, name="@")
 
 
-def test_host_without_dns_has_no_addresses():
+def without_own_ns(*records, **members):
+    return {"@type": "host", "hostName": NAME, "dns": {"@type": "dnsData", "records": list(records)}, **members}
+
+
+def host(*records, **members):
+    return without_own_ns(NS, *records, **members)
+
+
+def test_host_with_only_its_ns_record_has_no_addresses():
     assert hosts.rpp_to_model(host()) == Host(name=NAME)
+
+
+@pytest.mark.parametrize("mapper", [hosts.rpp_to_model, host_replacement.rpp_to_model])
+@pytest.mark.parametrize("body", [
+    {"@type": "host", "hostName": NAME},
+    without_own_ns(),
+    without_own_ns(A),
+])
+def test_request_without_the_own_ns_record_is_a_client_error(mapper, body):
+    with pytest.raises(ValueError):
+        mapper(body)
+
+
+@pytest.mark.parametrize("mapper", [hosts.rpp_to_model, host_replacement.rpp_to_model])
+def test_a_record_epp_cannot_hold_comes_before_the_missing_ns_record(mapper):
+    with pytest.raises(UnsupportedRppFeature):
+        mapper(without_own_ns(record("a", {"address": "192.0.2.1"}, name="www")))
+
+
+def test_status_on_create_comes_before_the_missing_ns_record():
+    with pytest.raises(UnsupportedRppFeature):
+        hosts.rpp_to_model({"@type": "host", "hostName": NAME, "status": [
+            {"@type": "hostStatus", "label": "clientUpdateProhibited"},
+        ]})
+
+
+def test_a_status_epp_cannot_hold_comes_before_the_missing_ns_record_on_a_replacement():
+    with pytest.raises(UnsupportedRppFeature):
+        host_replacement.rpp_to_model({"@type": "host", "hostName": NAME, "status": [
+            {"@type": "hostStatus", "label": "clientUpdateProhibited", "due": "2030-01-01T00:00:00Z"},
+        ]})
 
 
 def test_record_type_is_converted_to_lowercase():
@@ -32,7 +64,7 @@ def test_record_type_is_converted_to_lowercase():
 
 
 def test_a_and_aaaa_records_become_addresses():
-    mapped = hosts.rpp_to_model(host(NS, A, AAAA))
+    mapped = hosts.rpp_to_model(host(A, AAAA))
 
     assert mapped.ipv4 == ["192.0.2.1"]
     assert mapped.ipv6 == ["2001:db8::1"]
@@ -51,7 +83,7 @@ def test_a_record_for_another_name_is_unsupported(name):
 
 @pytest.mark.parametrize("nsdname", [NAME, f"{NAME}.", f"{NAME.upper()}."])
 def test_self_referencing_ns_record_adds_nothing(nsdname):
-    assert hosts.rpp_to_model(host(record("ns", {"nsdname": nsdname}, name="@"))) == Host(name=NAME)
+    assert hosts.rpp_to_model(without_own_ns(record("ns", {"nsdname": nsdname}, name="@"))) == Host(name=NAME)
 
 
 def test_ns_record_for_another_host_is_unsupported():
@@ -161,8 +193,10 @@ def test_read_gives_a_status_reason():
     assert rpp["status"] == [{"@type": "hostStatus", "label": "clientDeleteProhibited", "reason": "x"}]
 
 
-def test_host_without_addresses_has_no_dns():
-    assert "dns" not in hosts.model_to_rpp(stored())
+def test_host_without_addresses_has_its_ns_record():
+    assert hosts.model_to_rpp(stored())["dns"]["records"] == [
+        {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": "NS1.EXAMPLE.EXAMPLE."}},
+    ]
 
 
 def availability(available, reason=None):

@@ -45,7 +45,8 @@ CREATED = (True, "1000", epp_reply(1000, (
     f'<resData><host:creData {HOST_NS}><host:name>NS1.EXAMPLE.EXAMPLE</host:name>'
     '<host:crDate>2026-11-04T10:00:00.0Z</host:crDate></host:creData></resData>'
 )))
-CREATE_BODY = {"@type": "host", "hostName": NAME}
+OWN_NS = {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": f"{NAME}."}}
+CREATE_BODY = {"@type": "host", "hostName": NAME, "dns": {"@type": "dnsData", "records": [OWN_NS]}}
 PATCH_BODY = [{"op": "add", "path": "/status", "value": {"@type": "hostStatus", "label": "clientUpdateProhibited"}}]
 
 
@@ -105,9 +106,31 @@ def test_unsupported_input_is_a_501():
 def test_invalid_input_is_a_400():
     record = {"@type": "dnsRecord", "name": "@", "type": "a", "rdata": {"address": "nope"}}
 
-    response = post(client_with(), {**CREATE_BODY, "dns": {"@type": "dnsData", "records": [record]}})
+    response = post(client_with(), {**CREATE_BODY, "dns": {"@type": "dnsData", "records": [OWN_NS, record]}})
 
     assert response.status_code == 400
+
+
+@pytest.mark.parametrize("send", [post, put])
+def test_request_without_the_own_ns_record_is_a_400(send):
+    response = send(client_with(), {"@type": "host", "hostName": NAME})
+
+    assert response.status_code == 400
+    assert response.headers["RPP-Code"] == "02001"
+
+
+def test_removing_the_own_ns_record_is_a_501():
+    response = patch(client_with(info()), [{"op": "remove", "path": "/dns/records", "match": {"type": "ns"}}])
+
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02102"
+
+
+def test_patch_adding_only_the_own_ns_record_is_refused_by_the_backend():
+    response = patch(client_with(error(2003)), [{"op": "add", "path": "/dns/records", "value": OWN_NS}])
+
+    assert response.status_code == 400
+    assert response.headers["RPP-Code"] == "02003"
 
 
 def test_read():

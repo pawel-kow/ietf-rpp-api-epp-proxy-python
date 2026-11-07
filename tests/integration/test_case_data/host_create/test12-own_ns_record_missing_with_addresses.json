@@ -1,0 +1,44 @@
+{
+  "test_id": "test12-own_ns_record_missing_with_addresses",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "t12.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.1"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02001"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
+      }
+    }
+  ]
+}

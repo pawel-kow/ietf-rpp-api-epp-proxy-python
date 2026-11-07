@@ -72,7 +72,7 @@ NOT_IN_PROXY = [
 NOT_IN_EPP_PATCH = [
     (host_patch.rpp_to_model, "ns1.foo.example", op("remove", "/hostName")),
     (host_patch.rpp_to_model, "ns1.foo.example", op(
-        "add", "/dns/records", value=record("ns", {"nsdname": "ns1.foo.example."}),
+        "add", "/dns/records", value=record("ns", {"nsdname": "other.example."}),
     )),
 ]
 
