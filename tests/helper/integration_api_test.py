@@ -90,22 +90,31 @@ def assert_any_response(alternatives, response, test_name):
             failures.append(f"[{i}] {failure}")
     assert False, "No alternative matches:\n" + "\n".join(failures)
 
-CAPTURE = re.compile(r"\{capture:([A-Za-z_]+)(?:\+([0-9]+)y)?\}")
+CAPTURE = re.compile(r"\{capture:[^}]*\}")
+CAPTURE_FORM = re.compile(r"\{capture:([A-Za-z_]+)(?:\+([0-9]+)y)?\}")
 
 def substitute_captures(value, captures):
     """Replaces {capture:name} with a value an earlier step captured, and {capture:name+Ny} with that
-    timestamp N years later."""
+    timestamp N years later. Anything else that looks like a capture fails the test."""
     if isinstance(value, dict):
         return {k: substitute_captures(v, captures) for k, v in value.items()}
     if isinstance(value, list):
         return [substitute_captures(v, captures) for v in value]
     if isinstance(value, str):
         def replace(match):
-            captured = captures[match.group(1)]
-            if match.group(2) is None:
-                return captured
-            later = datetime.fromisoformat(captured.replace("Z", "+00:00"))
-            return later.replace(year=later.year + int(match.group(2))).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            form = CAPTURE_FORM.fullmatch(match.group(0))
+            if form is None:
+                pytest.fail(f"Malformed capture {match.group(0)}, expected {{capture:name}} or {{capture:name+Ny}}")
+            name, years = form.groups()
+            if not isinstance(captures.get(name), str):
+                pytest.fail(f"Capture '{name}' of {match.group(0)} is not a string captured by an earlier step")
+            if years is None:
+                return captures[name]
+            later = datetime.fromisoformat(captures[name].replace("Z", "+00:00"))
+            try:
+                return later.replace(year=later.year + int(years)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            except ValueError:
+                pytest.fail(f"{match.group(0)}: {years} years after {captures[name]} is not a valid date")
         return CAPTURE.sub(replace, value)
     return value
 

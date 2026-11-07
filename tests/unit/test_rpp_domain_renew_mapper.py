@@ -75,3 +75,9 @@ def test_authorization_cannot_reach_epp():
     """RFC 5731 domain:renew has no authInfo."""
     with pytest.raises(NotSupportedByEpp):
         domain_renew_process.rpp_to_model("foo.example", REQUEST, "authinfo value=MmZvb0JBUg==")
+
+
+def test_invalid_expiry_date_is_refused_before_the_authorization():
+    with pytest.raises(ValueError) as error:
+        domain_renew_process.rpp_to_model("foo.example", {**REQUEST, "expiryDate": "tomorrow"}, "authinfo value=MmZvb0JBUg==")
+    assert not isinstance(error.value, NotSupportedByEpp)

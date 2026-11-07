@@ -28,10 +28,11 @@ def rpp_to_model(name: str, rpp: dict, authorization: str | None) -> DomainRenew
     EPP's renew has no authInfo, so the value of the RPP-Authorization header is refused."""
     validate_schema("renewProcess.create", rpp)
     process_rpp = parse_rpp(RPPDomainRenewProcess, rpp)
+    cur_exp_date = _utc_date(process_rpp.expiryDate) if process_rpp.expiryDate is not None else None
     reject_set(**{"RPP-Authorization": authorization})
     return DomainRenew(
         name=name,
-        curExpDate=_utc_date(process_rpp.expiryDate) if process_rpp.expiryDate is not None else None,
+        curExpDate=cur_exp_date,
         duration=period_duration(process_rpp.renewalPeriod),
     )
 

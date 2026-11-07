@@ -170,11 +170,21 @@ def test_authorization_header_is_a_501_without_epp():
     assert not any(client.sent for client in clients)
 
 
+def test_invalid_expiry_date_with_authorization_is_a_400():
+    http, clients = setup()
+    headers = {**BODY_HEADERS, "RPP-Authorization": "authinfo value=MmZvb0JBUg=="}
+    response = http.post(PROCESSES, json={"@type": "renewProcess", "expiryDate": "tomorrow"}, headers=headers)
+    assert response.status_code == 400
+    assert response.headers["RPP-Code"] == "02001"
+
+
 def test_info_without_expiry_date_is_a_500_and_nothing_is_renewed():
     http, clients = setup(info_reply(ex_date=None), renew_reply())
     response = post(http, {"@type": "renewProcess"})
     assert response.status_code == 500
     assert response.headers["RPP-Code"] == "02400"
+    assert response.headers["RPP-Svtrid"] == "sv-1"
+    assert "no expiry date" in response.json()["detail"]
     assert len(clients[-1].sent) == 1
 
 

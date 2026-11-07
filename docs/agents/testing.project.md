@@ -46,7 +46,7 @@ queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is te
 unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67).
 
 The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
-`expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was.
+`expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
 
 ## Tests without the backend
 
