@@ -35,3 +35,4 @@ touches:
 | Testing | Writing or running tests | [testing.md](docs/agents/testing.md) | [testing.project.md](docs/agents/testing.project.md) |
 | Security | Touching input handling, credentials, logging or error output | [security.md](docs/agents/security.md) | [security.project.md](docs/agents/security.project.md) |
 | Documentation | Changing these docs, or anything they describe | [documentation.md](docs/agents/documentation.md) | — |
+| Orchestration | Working through a series of issues with coding and review agents | [orchestration.md](docs/agents/orchestration.md) | — |
