@@ -1,0 +1,37 @@
+{
+  "test_id": "test7-undeclared_member",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rn7-{random_name}.example/processes/renewProcesses",
+        "body_json": {
+          "@type": "renewProcess",
+          "unknown": 1
+        },
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02001",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

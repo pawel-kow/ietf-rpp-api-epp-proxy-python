@@ -300,3 +300,22 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - **Proxy:** 501 (`02101`), and responses have no `processId`.
 - EPP has no push transfer, and its response does not say the direction.
 - **Proxy:** `transferDir: push` and `gainingClientId` are 501 (`02102`), and responses always have `transferDir: pull`.
+
+## Renew process
+
+- Json §8.1.7 and data-objects §10.3 make `expiryDate` optional, and call it the client's guard against duplicate renewals. EPP requires `curExpDate` (RFC 5731 §3.2.3), as an `xs:date`.
+- **Proxy:** without `expiryDate` it reads the domain and uses the date of its `exDate`. The read and the renew are not atomic, and the client gave up the guard, so a client that retries without `expiryDate` after a lost response renews twice (see "Repeated `RPP-Cltrid`"). With `expiryDate` it sends no read.
+- EPP holds only a date, so the time of day of `expiryDate` has no element. The json §8.1.7 example has `22:00:00Z`.
+- **Proxy:** sends the date in UTC, after converting any offset, and does not check the time. A date that does not match is EPP's `2306`, so 422.
+- Core §16.9.4 shows a 201 with a `Location`, which assumes an exposed process resource. EPP has no process, and the OpenAPI has no `latest` or `{processId}` path for renew. Core §16.1.4 requires a 200 from a server without a persistent process resource.
+- **Proxy:** 200, no `Location`, no `processId`. The body is `@type` and the new `expiryDate` from `renData`, with no `renewalPeriod` (EPP does not echo it). A `1001` is a 200 with `01001` and no `expiryDate`, as is a `1000` without `renData`.
+- Data-objects §10.3 allows the period to default by server policy.
+- **Proxy:** sends no `period` when `renewalPeriod` is absent, and leaves the default to the registry. The test backend answers `1000` without extending the expiry (pawel-kow/epp#25).
+- EPP's renew (RFC 5731 §3.2.3) has no authInfo, so an `RPP-Authorization` header on a renew has nowhere to go.
+- **Proxy:** 501 (`02102`).
+- A `1001` has not completed, and data-objects §10.3 ties the new expiry date to a completed renewal.
+- **Proxy:** `expiryDate` is left out of a `1001`, even when the registry sends `renData`.
+- `expiryDate` must be an RFC 3339 date-time. The schema `format` is not enforced (json §4.9.1's `unevaluatedProperties` is a separate gap, see "Undeclared properties").
+- **Proxy:** checks the RFC 3339 §5.6 form itself, with `T` and `Z` in either case. A leap second (`:60`) is a 400.
+- EPP has no process list or process ids.
+- **Proxy:** `GET .../renewProcesses` is 501 (`02101`).

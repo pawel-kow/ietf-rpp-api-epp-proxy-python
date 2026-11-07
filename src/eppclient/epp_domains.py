@@ -136,3 +136,20 @@ def epp_domains_Transfer(epp_client: EPPClient, transfer: DomainTransfer, client
         return parse_domain_transfer_response(response, client_transaction_id=client_transaction_id)
     else:
         return get_epp_error_response(response, client_transaction_id=client_transaction_id)
+def epp_domains_Renew(epp_client: EPPClient, renew: DomainRenew, client_transaction_id=None) -> Union[DomainRenewResponse, ErrorResponse]:
+    """
+    Renews a domain using the EPP renew command.
+    Args:
+        epp_client (EPPClient): The EPP client instance.
+        renew (DomainRenew): The renewal, with the current expiry date.
+        client_transaction_id (str): The client transaction ID for the request.
+    Returns:
+        DomainRenewResponse: The new expiry date, when the registry reports it.
+    """
+    eppxml = renew_domain_xml(renew, client_request_id=client_transaction_id)
+    success, code, response = epp_client.send_and_get_response(eppxml)
+
+    if success == True:
+        return parse_domain_renew_response(response, client_transaction_id=client_transaction_id)
+    else:
+        return get_epp_error_response(response, client_transaction_id=client_transaction_id)

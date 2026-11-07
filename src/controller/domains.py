@@ -78,3 +78,12 @@ def domainNames_updatePartial(name, body):
     if result.domain is None:
         return None, 202, headers
     return rpp_mapper.domains.model_to_rpp(result.domain), 200, headers
+
+@rpp_operation
+def domainNameRenewProcesses_renewCreate(name, body):
+    """EPP exposes no renew process, so the answer is a 200 with no Location (core §16.1.4)."""
+    renew = map_request(rpp_mapper.domain_renew_process.rpp_to_model, name, body, request.headers.get("RPP-Authorization"))
+    resp = flows.renew_domain(get_epp_client(), renew, client_transaction_id())
+    if isinstance(resp, ErrorResponse):
+        raise_epp_error(resp)
+    return rpp_mapper.domain_renew_process.model_to_rpp(resp.renewal), 200, generate_rpp_response_headers(resp)

@@ -1,7 +1,34 @@
 {
   "test_id": "test10-renew",
-  "skip": "#32",
   "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "ex10-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
     {
       "request": {
         "method": "POST",
@@ -14,7 +41,6 @@
         },
         "body_json": {
           "@type": "renewProcess",
-          "expiryDate": "2005-04-03T22:00:00.0Z",
           "renewalPeriod": {
             "@type": "period",
             "value": 5,
@@ -23,11 +49,27 @@
         }
       },
       "response": {
-        "status": 201,
+        "status": 200,
         "content_type": "application/rpp+json",
         "body": {
-          "@type": "renewProcess",
-          "expiryDate": "2010-04-03T22:00:00.0Z"
+          "@type": "renewProcess"
+        },
+        "fields": {
+          "expiryDate": {
+            "type": "datetime_format_utc_and_delta",
+            "reference": "{test_start}",
+            "min_delta": 189215940,
+            "max_delta": 189388860
+          }
+        },
+        "headers": {
+          "RPP-Code": "01000",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
         }
       }
     }
