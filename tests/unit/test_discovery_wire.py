@@ -157,7 +157,7 @@ BAD = [
 GOOD_BASE_URLS = [
     "https://rpp.example", "https://rpp.example/", "https://rpp.example/rpp/v1/", "https://rpp.example:8443/rpp",
     "https://xn--80aswg.xn--p1ai/rpp", "https://[2001:db8::1]/rpp", "https://[2001:db8::1]:8443/rpp",
-    "https://192.0.2.1/rpp", "https://rpp.example/a%20b/c~d_e-f.g", "https://rpp.example/a;b=c,d+e*f(g)!$&'",
+    "https://192.0.2.1/rpp", "https://RPP.EXAMPLE/a%2Fb", "https://rpp.example/a%20b/c~d_e-f.g", "https://rpp.example/a;b=c,d+e*f(g)!$&'",
 ]
 
 
