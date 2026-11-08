@@ -19,6 +19,10 @@ def model_to_rpp(discovery: Discovery) -> dict:
     return rpp
 
 
+# The characters a URI may have (RFC 3986), without `?` and `#`, which the base URL may not have anyway.
+_URI_CHARACTERS = re.compile(r"[A-Za-z0-9\-._~:/\[\]@!$&'()*+,;=%]+")
+
+
 def _text(value) -> bool:
     """A non-empty string with no control characters and no padding."""
     return isinstance(value, str) and bool(value) and value == value.strip() and not any(ord(c) < 32 or ord(c) == 127 for c in value)
@@ -30,7 +34,7 @@ def _tld(value) -> bool:
 
 def _https_url(value) -> bool:
     """An absolute https URL with a host, usable as a prefix: no userinfo, query or fragment, and no malformed escape."""
-    if not _text(value) or any(c.isspace() or c == "\\" for c in value) or re.search(r"%(?![0-9A-Fa-f]{2})", value):
+    if not _text(value) or not _URI_CHARACTERS.fullmatch(value) or any(c.isspace() or c == "\\" for c in value) or re.search(r"%(?![0-9A-Fa-f]{2})", value):
         return False
     try:
         parts = urlsplit(value)

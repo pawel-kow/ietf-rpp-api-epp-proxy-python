@@ -136,6 +136,11 @@ BAD = [
     ("rpp_base_url", "https://rpp.example/\x00x"), ("rpp_base_url", "https://a\\b"), ("rpp_base_url", "https://%zz/"),
     ("rpp_base_url", "https://rpp.example/%2"), ("rpp_base_url", "https://a b"), ("rpp_base_url", "https://[::1"),
     ("rpp_base_url", " https://rpp.example/rpp"), ("rpp_base_url", "   "), ("rpp_base_url", "https://rpp.example/\x7f"),
+    ("rpp_base_url", "https://ex\u00e4mple.test"), ("rpp_base_url", "https://rpp.example/\u00e9"),
+    ("rpp_base_url", "https://rpp.example/<x>"), ("rpp_base_url", 'https://rpp.example/"'),
+    ("rpp_base_url", "https://rpp.example/{}"), ("rpp_base_url", "https://rpp.example/|"),
+    ("rpp_base_url", "https://rpp.example/^"), ("rpp_base_url", "https://rpp.example/`"),
+    ("rpp_base_url", "https://rpp.example/\u200bx"), ("rpp_base_url", "https://rpp.example/\u202ex"),
     ("rpp_base_url", "https://"), ("rpp_base_url", "https:///rpp"), ("rpp_base_url", "ftp://rpp.example"),
     ("rpp_tlds", None), ("rpp_tlds", []), ("rpp_tlds", "example"), ("rpp_tlds", 5), ("rpp_tlds", {"a": LEAK}),
     ("rpp_tlds", [""]), ("rpp_tlds", ["\t"]), ("rpp_tlds", ["   "]), ("rpp_tlds", [" example"]), ("rpp_tlds", ["example "]),
@@ -147,6 +152,27 @@ BAD = [
     ("rpp_environment_status", "test "), ("rpp_environment_status", "te\nst"), ("rpp_environment_status", 5),
     ("rpp_environment_status", {"a": LEAK}), ("rpp_environment_status", [LEAK]),
 ]
+
+
+GOOD_BASE_URLS = [
+    "https://rpp.example", "https://rpp.example/", "https://rpp.example/rpp/v1/", "https://rpp.example:8443/rpp",
+    "https://xn--80aswg.xn--p1ai/rpp", "https://[2001:db8::1]/rpp", "https://[2001:db8::1]:8443/rpp",
+    "https://192.0.2.1/rpp", "https://rpp.example/a%20b/c~d_e-f.g", "https://rpp.example/a;b=c,d+e*f(g)!$&'",
+]
+
+
+@pytest.mark.parametrize("url", GOOD_BASE_URLS)
+def test_legitimate_base_urls_are_published_as_given(url):
+    body = app_with(SimpleNamespace(**{**vars(SETTINGS), "rpp_base_url": url})).get("/.well-known/rpp", headers=HEADERS).json()
+
+    assert body["versions"][0]["baseUrl"] == url
+
+
+@pytest.mark.parametrize("tld", ["co.uk", "xn--p1ai", "example", "COM"])
+def test_legitimate_tlds_are_published_as_given(tld):
+    body = app_with(SimpleNamespace(**{**vars(SETTINGS), "rpp_tlds": [tld]})).get("/.well-known/rpp", headers=HEADERS).json()
+
+    assert body["tlds"] == [tld]
 
 
 @pytest.mark.parametrize("key, value", BAD, ids=[f"{k}={v!r}" for k, v in BAD])

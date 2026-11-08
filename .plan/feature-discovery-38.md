@@ -53,3 +53,7 @@ See the Plan report.
 
 - Base URL: also no userinfo, query, fragment, backslash, whitespace, control characters or malformed `%`; port read inside the `try`. Strings: no padding, no control characters. TLDs: no whitespace at all.
 - The profile is defined in data-objects §2.8; §19.13 only creates the registry. Spec entry and `PROFILES` comment corrected; profile error tied to #41.
+
+## Round 3 decisions
+
+- The base URL must also fullmatch the RFC 3986 character set (no `?`, `#`), so non-ASCII, `<>"{}|^`, backtick, zero-width and bidi characters are refused. Legitimate URLs and TLDs have a positive test.
