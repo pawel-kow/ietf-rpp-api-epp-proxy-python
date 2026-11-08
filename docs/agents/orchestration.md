@@ -99,6 +99,20 @@ state of the plan, pushes, returns to the default branch and releases the mutex.
 The orchestrator notes why and moves on to the next issue. It leaves the draft PR,
 if there is one, for the maintainer.
 
+## Agents that start processes
+
+A reviewer that starts servers or long runs in the background can end its turn
+without a report while they run. Tell it to use only short-lived processes it stops
+itself, and not to end its turn while anything it started is running. When an agent
+goes quiet, check for leftover processes and resume it.
+
+## Cost of a review loop
+
+A finding fixed in one place can move to the next: request bodies took five rounds
+across handlers, hooks and middleware. A last finding that is a single test value
+the reviewer gave exactly can be applied without another round, and the report
+says so.
+
 ## When an agent stops on a limit
 
 An agent stopped by a rate limit keeps its context. Resume it with a message after
