@@ -48,3 +48,8 @@ See the Plan report.
 - Draft case `draft_discovery/test1-read.json` with the configured values. `datetime` is checked as not empty there, because the runner's UTC helper expects fractional seconds. The unit tests check the format and the time.
 - Mutants killed (PYTHONDONTWRITEBYTECODE=1): run.py without config, local clock under TZ=Asia/Tokyo, constant datetime, `@rpp_operation` removed, log naming all keys, 500 title.
 - Spec entry reworded (items 6, 7), #41 cited (item 8), config.yaml placeholders (item 9). Issue for the 405 headers filed.
+
+## Round 2 decisions
+
+- Base URL: also no userinfo, query, fragment, backslash, whitespace, control characters or malformed `%`; port read inside the `try`. Strings: no padding, no control characters. TLDs: no whitespace at all.
+- The profile is defined in data-objects §2.8; §19.13 only creates the registry. Spec entry and `PROFILES` comment corrected; profile error tied to #41.

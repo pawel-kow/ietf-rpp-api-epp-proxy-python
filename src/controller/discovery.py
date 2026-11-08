@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # The RPP version of core §12, and the data objects (data-objects §17.2) the proxy implements.
 RPP_VERSION = "1.0"
 OBJECTS = ["domainName", "host", "contact"]
-# The profile the proxy follows (core §12.4, data-objects §19.13). Its read, GET /profiles/{name}, is 501.
+# The profile the proxy follows (core §12.4, data-objects §2.8, json §8.7.1). Its read, GET /profiles/{name}, is 501.
 PROFILES = ["urn:ietf:params:rpp:profile:epp-compatibility"]
 
 

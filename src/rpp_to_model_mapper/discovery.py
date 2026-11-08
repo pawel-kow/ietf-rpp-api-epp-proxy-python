@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlsplit
 
 from models import Discovery
@@ -19,15 +20,25 @@ def model_to_rpp(discovery: Discovery) -> dict:
 
 
 def _text(value) -> bool:
-    return isinstance(value, str) and bool(value.strip())
+    """A non-empty string with no control characters and no padding."""
+    return isinstance(value, str) and bool(value) and value == value.strip() and not any(ord(c) < 32 or ord(c) == 127 for c in value)
+
+
+def _tld(value) -> bool:
+    return _text(value) and not any(c.isspace() for c in value)
 
 
 def _https_url(value) -> bool:
-    if not _text(value):
+    """An absolute https URL with a host, usable as a prefix: no userinfo, query or fragment, and no malformed escape."""
+    if not _text(value) or any(c.isspace() or c == "\\" for c in value) or re.search(r"%(?![0-9A-Fa-f]{2})", value):
         return False
     try:
         parts = urlsplit(value)
-        return parts.scheme == "https" and bool(parts.hostname) and not any(c.isspace() for c in value)
+        parts.port  # raises ValueError for a port that is not a number or out of range
+        return (
+            parts.scheme == "https" and bool(parts.hostname) and "@" not in parts.netloc
+            and "?" not in value and "#" not in value
+        )
     except ValueError:
         return False
 
@@ -35,13 +46,13 @@ def _https_url(value) -> bool:
 def invalid_settings(settings) -> list[str]:
     """The names of the settings of the discovery document that are absent or of the wrong shape, never their values.
 
-    `rpp_base_url` must be an absolute https URL (core §22), `rpp_tlds` a non-empty list of non-empty strings and the
-    environment values non-empty strings.
+    `rpp_base_url` must be an absolute https URL (core §22), `rpp_tlds` a non-empty list of strings without whitespace and the
+    environment values non-empty strings, none of them padded or with control characters.
     """
     tlds = getattr(settings, "rpp_tlds", None)
     checks = {
         "rpp_base_url": _https_url(getattr(settings, "rpp_base_url", None)),
-        "rpp_tlds": isinstance(tlds, list) and bool(tlds) and all(_text(tld) for tld in tlds),
+        "rpp_tlds": isinstance(tlds, list) and bool(tlds) and all(_tld(tld) for tld in tlds),
         "rpp_environment_name": _text(getattr(settings, "rpp_environment_name", None)),
         "rpp_environment_status": _text(getattr(settings, "rpp_environment_status", None)),
     }
