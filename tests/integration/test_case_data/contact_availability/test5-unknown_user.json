@@ -1,0 +1,26 @@
+{
+  "test_id": "test5-unknown_user",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}-a5/availability",
+        "headers": {
+          "Authorization": "Basic Z2hvc3Q6bm9wZQ==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 401,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02200"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

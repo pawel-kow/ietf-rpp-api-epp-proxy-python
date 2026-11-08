@@ -1,5 +1,5 @@
 from models import Address, Contact, ContactType, LocalizedPostalInfo
-from epp_to_model_mapper import create_contact_xml, parse_contact_response
+from epp_to_model_mapper import contact_check_xml, create_contact_xml, parse_contact_check_response, parse_contact_response
 
 CONTACT_NS = 'xmlns:contact="urn:ietf:params:xml:ns:contact-1.0"'
 
@@ -97,3 +97,37 @@ def test_parse_reads_the_update_client():
     xml = info_reply().replace("</contact:crDate>", "</contact:crDate><contact:upID>ClientY</contact:upID>")
 
     assert parse_contact_response(xml, "cl-1").contact.upID == "ClientY"
+
+
+def check_reply(avail, reason=""):
+    return (
+        '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><response>'
+        '<result code="1000"><msg>Command completed successfully</msg></result>'
+        f'<resData><contact:chkData {CONTACT_NS}><contact:cd><contact:id avail="{avail}">JD-1</contact:id>{reason}'
+        '</contact:cd></contact:chkData></resData>'
+        '<trID><clTRID>cl-1</clTRID><svTRID>sv-1</svTRID></trID></response></epp>'
+    )
+
+
+def test_check_xml():
+    xml = contact_check_xml("jd-1", client_request_id="cl-1")
+
+    assert "<contact:check" in xml
+    assert "<contact:id>JD-1</contact:id>" in xml
+    assert "cl-1" in xml
+
+
+def test_parse_check_available():
+    response = parse_contact_check_response(check_reply(1), "jd-1", "cl-1")
+
+    assert response.available is True
+    assert response.reason is None
+    assert response.contact_id == "jd-1"
+    assert response.server_transaction_id == "sv-1"
+
+
+def test_parse_check_taken_gives_the_reason():
+    response = parse_contact_check_response(check_reply(0, "<contact:reason>In use</contact:reason>"), "jd-1", "cl-1")
+
+    assert response.available is False
+    assert response.reason == "In use"

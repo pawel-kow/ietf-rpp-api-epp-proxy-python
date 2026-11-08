@@ -35,7 +35,7 @@ the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and
 The backend refuses a repeated clTRID with `2400`, also across sessions, so every EPP command
 needs a new one. It drops addresses given when creating an external host, so tests of addresses
 at create use an internal host, which needs its domain to exist first. Its other host defects are
-#49, #50 and #54. Info returns no `domain:upID` or `domain:upDate` (#61), so reading `upClientId`
+#49, #50 and #54. A contact check of an id outside 3 to 16 characters answers available (pawel-kow/epp#24). Info returns no `domain:upID` or `domain:upDate` (#61), so reading `upClientId`
 is tested only in unit tests. It refuses the secDNS key data interface with `2306`, and a digest it
 already holds even under another keyTag (pawel-kow/epp#20). It stores `domain:hostAttr` as a host
 object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.

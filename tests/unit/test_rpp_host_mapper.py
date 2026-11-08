@@ -214,3 +214,7 @@ def test_taken_host_gives_the_reason():
     assert host_availability.model_to_rpp(availability(False, "In use")) == {
         "@type": "hostAvailability", "available": False, "reason": "In use",
     }
+
+
+def test_available_host_has_no_reason_even_if_the_server_sends_one():
+    assert host_availability.model_to_rpp(availability(True, "In use")) == {"@type": "hostAvailability", "available": True}

@@ -1,0 +1,76 @@
+{
+  "test_id": "test4-head_taken",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}-a4",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "url": "/contacts/FO-{random_id_10}-a4/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    }
+  ]
+}
