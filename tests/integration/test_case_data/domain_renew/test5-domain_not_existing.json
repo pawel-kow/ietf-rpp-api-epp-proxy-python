@@ -1,0 +1,36 @@
+{
+  "test_id": "test5-domain_not_existing",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rn5-{random_name}.example/processes/renewProcesses",
+        "body_json": {
+          "@type": "renewProcess"
+        },
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02303",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

@@ -51,6 +51,9 @@ Info does not show `pendingTransfer` (#64), a completed transfer cannot be
 queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in
 unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67).
 
+The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
+`expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
+
 ## Tests without the backend
 
 Unit tests in `tests/unit/` inject test doubles through constructors:
@@ -85,6 +88,9 @@ update → verify) run against a Flask test client.
 - A step's `response` can be `{"any_of": [...]}`, a list of responses of which one must match,
   for behaviour the protocol leaves to the server. A create that may be refused, or may keep
   the data in another form, lists each outcome, see `domain_create/test16` to `test18`.
+- A step's `capture` maps a name to a dotted field of its response body. Later steps write `{capture:name}`
+  in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
+  a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.

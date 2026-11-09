@@ -44,7 +44,8 @@ single feature (e.g. "domain update") touches every layer:
    `patch_statuses.py` hides server statuses from a patch, on hosts and domains, see
    [spec-issues.md](../../.spec/spec-issues.md#status-in-json-patch).
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
-   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a transfer.
+   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a transfer, and
+   `domain_renew_process.py` a renewal.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
@@ -79,6 +80,11 @@ Transfer handlers are in `controller/domain_transfers.py`. An EPP `<transfer>` r
 the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer` runs all
 five operations, chosen by `DomainTransfer.operation`. EPP has no process ids, so only
 `latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process).
+
+The renew handler is `domainNameRenewProcesses_renewCreate` in `controller/domains.py`, and `renew_domain` in
+`flows/domains.py` runs it. EPP needs `curExpDate`, so a request without `expiryDate` first has the domain read.
+The EPP renew reply carries the new expiry date, so there is no read-back, and the answer is a 200 without
+`Location`, see [spec-issues.md](../../.spec/spec-issues.md#renew-process).
 
 `RppRequestBodyValidator` and `RppResponseBodyValidator` let a body be absent where the
 OpenAPI allows it, which Connexion's validators do not. The handler then gets an empty dict.
