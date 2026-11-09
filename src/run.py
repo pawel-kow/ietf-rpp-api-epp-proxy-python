@@ -19,4 +19,4 @@ def new_epp_client(username, password):
     return EPPClient(TCPClient(config.rpp_epp_host, config.rpp_epp_port, tls_context), username, password)
 
 
-app = create_app(EppSessionAuthenticator(new_epp_client))
+app = create_app(EppSessionAuthenticator(new_epp_client), config)

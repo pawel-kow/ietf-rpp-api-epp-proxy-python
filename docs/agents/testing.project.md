@@ -94,8 +94,8 @@ update → verify) run against a Flask test client.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.
-- `draft_domain/`, `draft_contact/`, `draft_host/` and `draft_patch/` hold the examples
-  of the JSON draft (§8.1, §8.2, §8.3, §5.3.1). Examples for operations not implemented yet have the
+- `draft_domain/`, `draft_contact/`, `draft_host/`, `draft_patch/` and `draft_discovery/` hold the examples
+  of the JSON draft (§8.1, §8.2, §8.3, §5.3.1, §8.7.1; the discovery one has the configured values). Examples for operations not implemented yet have the
   expected result written down and `"skip": "#<issue>"`.
 
 To add a case, drop a new JSON file in the appropriate group dir. No Python changes

@@ -334,3 +334,14 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - **Proxy:** checks the RFC 3339 §5.6 form itself, with `T` and `Z` in either case. A leap second (`:60`) is a 400.
 - EPP has no process list or process ids.
 - **Proxy:** `GET .../renewProcesses` is 501 (`02101`).
+
+## Discovery
+
+- Core §11 and data-objects §17.3.1 require the document without authentication. The drafts give no caching rule, and `datetime` is the current time, so a cached document goes stale.
+- Json §6.10 and data-objects §17.2 say the same about `objects`: each value MUST be a valid object identifier of the RPP Data Object Registry. In data-objects §17.2 that rule sits in a stray description and constraint after Notices, detached from `Objects`, whose own constraint says "(None)". The description of `Objects` ("The list of identifiers of data objects supported by the server") covers `message`, which is not a provisioning object, so it is unclear whether `message` belongs in `objects` (#99).
+- Json §5.2.1 shows `idnLgr` elements without `url` and `default`, which `discoveryIdnLgr.read` requires.
+- No RPP extension identifier exists for secDNS, so `extensions` has nothing true to say about DNSSEC.
+- Core §12.4 says the server MUST provide its supported profiles in `profiles`, and json §8.7.1 shows `urn:ietf:params:rpp:profile:epp-compatibility`, and data-objects §2.8 defines the EPP Compatibility Profile. Data-objects §19.13 only creates the RPP Profiles registry, with that URN as an example, so the draft registers no profile name. `GET /profiles/{name}` is still 501, and the proxy does not process the profile parameters of a client (core §14.2, §14.3), so a client can read the name in discovery but not the profile. Core §14.2 requires an error for an unsupported profile, while `RPP-Profile: profile=urn:bogus;version=9.9` gives 200 (#41). Core §12.4 tells clients to use the profile "version information", but discovery `profiles` is a list of strings with no version.
+- `links` is omitted because the proxy has no such documents. Data-objects §17.2 only says a server SHOULD provide privacy-policy and terms-of-service links.
+- The 400 without `RPP-Cltrid` follows core §6.1 and the OpenAPI, but sits awkwardly with data-objects §17.3.1 ("Input: (None)") and an anonymous read.
+- **Proxy:** answers 200 from configuration and constants, without EPP: `versions` (`1.0`), `environment`, `tlds`, `profiles` (`epp-compatibility`), `objects` (`domainName`, `host`, `contact`) and `datetime`. It omits `extensions`, `links`, `idnLgr` and `notices`, and sends no `Cache-Control`. The media type is not negotiated (#41): `version` is ignored and `Accept` is not checked. Configuration that is missing or of the wrong shape, or a base URL that is not `https`, is 500 (`02400`) (#38).
