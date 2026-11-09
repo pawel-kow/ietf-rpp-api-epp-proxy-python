@@ -1,0 +1,24 @@
+{
+  "test_id": "test3-a_label",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/{alabel:bücher-a1}.example/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainNameAvailability",
+          "available": true
+        }
+      }
+    }
+  ]
+}

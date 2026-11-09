@@ -1,11 +1,40 @@
 {
   "test_id": "test7-read_idn",
-  "skip": "#58",
   "steps": [
     {
       "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "{alabel:bücher-d7}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "uName": "{ulabel:bücher-d7}.example",
+          "lgr": "latn-1.0"
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
         "method": "GET",
-        "url": "/domainNames/xn--bcher-kva.example",
+        "url": "/domainNames/{alabel:bücher-d7}.example",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -17,8 +46,8 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "xn--bcher-kva.example",
-          "uName": "bücher.example",
+          "name": "{alabel:bücher-d7}.example",
+          "uName": "{ulabel:bücher-d7}.example",
           "lgr": "latn-1.0"
         }
       }

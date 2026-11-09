@@ -43,8 +43,6 @@ def op(operation, path, **members):
 
 NOT_IN_EPP = [
     (domains.rpp_to_model, {**DOMAIN, "status": DOMAIN_STATUS}),
-    (domains.rpp_to_model, {**DOMAIN, "uName": "foo.example"}),
-    (domains.rpp_to_model, {**DOMAIN, "lgr": "und-Latn"}),
     (domains.rpp_to_model, {**DOMAIN, "contacts": [{"label": "reseller", "object": {"@type": "contact", "id": "c1"}}]}),
     (domains.rpp_to_model, {**DOMAIN, "authInfo": {"@type": "authInfo", "method": "other", "authdata": "x"}}),
     (domains.rpp_to_model, {**DOMAIN, "dns": dns(record("mx", {"exchange": "a.", "preference": "1"}))}),

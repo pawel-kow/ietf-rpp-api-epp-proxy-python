@@ -16,6 +16,7 @@ from .commands.domains import (
 from .commands.helper import epp_to_str, str_to_epp
 from .epp_model.domain_1_0 import CreData, InfData, RenData, TrnData
 from .epp_model.epp_1_0 import Epp
+from .epp_model.idn_1_0 import Data as IdnData
 from .epp_model.sec_dns_1_1 import InfData as SecDnsInfData
 
 
@@ -88,6 +89,14 @@ def _dns_sec_from_epp(epp: Epp) -> Union[DnsSec, None]:
     )
 
 
+def _idn_from_epp(epp: Epp) -> Union[DomainIdn, None]:
+    """The IDN data of an Info response (draft-obispo-epp-idn-04)."""
+    data = find_extension(epp, IdnData)
+    if data is None:
+        return None
+    return DomainIdn(table=data.table, uname=data.uname)
+
+
 def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[DomainCreateResponse, ErrorResponse]:
     """Parses an EPP domain create/info response into a DomainCreateResponse."""
     epp = str_to_epp(xml_string)
@@ -134,6 +143,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
         authInfo=authInfo,
         contacts=contacts,
         dnsSEC=_dns_sec_from_epp(epp),
+        idn=_idn_from_epp(epp),
         subordinateHosts=(getattr(data, "host", None) or None) if data else None,
     )
     return DomainCreateResponse(domain=domain, **header)

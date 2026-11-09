@@ -4,6 +4,7 @@ from typing import List, Optional, Dict
 from models.contacts import ContactMinimal
 from .common import AuthInfo, Process, ProvisioningObject
 from .dns_sec import DnsSec
+from .domain_idn import DomainIdn
 from .response import OperationResponse
 
 @dataclass(kw_only=True)
@@ -41,6 +42,7 @@ class Domain(ProvisioningObject):
     ns: Optional[NS] = None
     contacts: Optional[List[ContactReference]] = None
     dnsSEC: Optional[DnsSec] = None
+    idn: Optional[DomainIdn] = None
     subordinateHosts: Optional[List[str]] = None
     processes: Optional[Dict[str, Process]] = None
     status_reasons: Dict[str, str] = field(default_factory=dict)

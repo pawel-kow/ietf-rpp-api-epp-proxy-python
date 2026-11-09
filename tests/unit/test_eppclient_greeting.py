@@ -1,6 +1,6 @@
 import pytest
 
-from eppclient.eppclient import EPPClient, SEC_DNS_EXTENSION
+from eppclient.eppclient import EPPClient, IDN_EXTENSION, SEC_DNS_EXTENSION
 from eppclient.tcpclient import ConnectionException
 
 OTHER_EXTENSION = "urn:ietf:params:xml:ns:rgp-1.0"
@@ -68,6 +68,12 @@ def test_login_takes_only_what_the_proxy_uses_and_the_server_offers():
 
     assert f"<extURI>{SEC_DNS_EXTENSION}</extURI>" in transport.sent[0]
     assert OTHER_EXTENSION not in transport.sent[0]
+
+
+def test_login_takes_the_idn_extension_the_server_offers():
+    _, transport = connected_client(SEC_DNS_EXTENSION, IDN_EXTENSION)
+
+    assert f"<extURI>{IDN_EXTENSION}</extURI>" in transport.sent[0]
 
 
 @pytest.mark.parametrize("extensions", [(), (OTHER_EXTENSION,)])

@@ -1,10 +1,19 @@
 from connexion import request
+from flask import current_app
 from eppclient.epp_domains import *
 from models import *
 import flows
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import *
 from .auth import get_epp_client
+
+def _idn_tables():
+    return current_app.config["RPP_IDN_TABLES"]
+
+
+def _domain_to_rpp(domain):
+    return rpp_mapper.domains.model_to_rpp(domain, _idn_tables())
+
 
 def _domain_after_mutation(domain_name, mutation_resp, success_status, extra_headers=None):
     """Reads the domain back after a mutation the registry has already applied.
@@ -16,11 +25,13 @@ def _domain_after_mutation(domain_name, mutation_resp, success_status, extra_hea
         inforesp = epp_domains_Info(get_epp_client(), domain_name)
         if isinstance(inforesp, ErrorResponse):
             return None, 202, headers
-        return rpp_mapper.domains.model_to_rpp(inforesp.domain), success_status, headers
+        return _domain_to_rpp(inforesp.domain), success_status, headers
     except Exception:
         return None, 202, headers
 
-def _availability(name):
+def _availability(name, u_name, lgr):
+    """EPP check has no place for `uName` and `lgr` (draft-obispo-epp-idn-04 adds nothing to it)."""
+    map_request(rpp_mapper.domain_availability.rpp_to_model, u_name, lgr)
     ret = epp_domains_Check(get_epp_client(), name, client_transaction_id=client_transaction_id())
     if isinstance(ret, ErrorResponse):
         raise_epp_error(ret)
@@ -33,24 +44,24 @@ def _updated_domain(result):
     headers = generate_rpp_response_headers(result.mutation)
     if result.domain is None:
         return None, 202, headers
-    return rpp_mapper.domains.model_to_rpp(result.domain), 200, headers
+    return _domain_to_rpp(result.domain), 200, headers
 
 
 @rpp_operation
-def domainNames_availabilityHead(name):
-    ret = _availability(name)
+def domainNames_availabilityHead(name, uName=None, lgr=None):
+    ret = _availability(name, uName, lgr)
     headers = generate_rpp_response_headers(ret)
     del headers["Content-Type"]  # the OpenAPI defines no content for HEAD
     return None, 200 if ret.available else 404, headers
 
 @rpp_operation
-def domainNames_availability(name):
-    ret = _availability(name)
+def domainNames_availability(name, uName=None, lgr=None):
+    ret = _availability(name, uName, lgr)
     return rpp_mapper.domain_availability.model_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)
 
 @rpp_operation
 def domainNames_create(body):
-    domain = map_request(rpp_mapper.domains.rpp_to_model, body)
+    domain = map_request(rpp_mapper.domains.rpp_to_model, body, _idn_tables())
     domainresp = epp_domains_Create(get_epp_client(), domain, client_transaction_id=client_transaction_id())
     if isinstance(domainresp, ErrorResponse):
         raise_epp_error(domainresp)
@@ -70,7 +81,7 @@ def domainNames_read(name):
     domainresp = epp_domains_Info(get_epp_client(), name, client_transaction_id=client_transaction_id())
     if isinstance(domainresp, ErrorResponse):
         raise_epp_error(domainresp)
-    return rpp_mapper.domains.model_to_rpp(domainresp.domain), 200, generate_rpp_response_headers(domainresp)
+    return _domain_to_rpp(domainresp.domain), 200, generate_rpp_response_headers(domainresp)
 
 @rpp_operation
 def domainNames_updatePartial(name, body):
@@ -78,7 +89,7 @@ def domainNames_updatePartial(name, body):
 
     def update_from_current(current):
         return map_request(
-            rpp_mapper.domain_patch.rpp_to_model_with_current, name, body, rpp_mapper.domains.model_to_rpp(current),
+            rpp_mapper.domain_patch.rpp_to_model_with_current, name, body, _domain_to_rpp(current),
         )
 
     result = flows.patch_domain(get_epp_client(), name, update, update_from_current, client_transaction_id())
@@ -91,7 +102,7 @@ def domainNames_update(name, body):
 
     def update_from_current(current):
         return map_request(
-            rpp_mapper.domain_replacement.rpp_to_model_with_current, name, replacement, rpp_mapper.domains.model_to_rpp(current),
+            rpp_mapper.domain_replacement.rpp_to_model_with_current, name, replacement, _domain_to_rpp(current),
         )
 
     result = flows.replace_domain(get_epp_client(), name, update_from_current, client_transaction_id())

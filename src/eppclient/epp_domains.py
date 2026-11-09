@@ -1,8 +1,20 @@
 from models import *
 from epp_to_model_mapper import *
-from .eppclient import EPPClient, SEC_DNS_EXTENSION
+from .eppclient import EPPClient, IDN_EXTENSION, SEC_DNS_EXTENSION
 import os
 from typing import Union
+
+def _missing_extension(epp_client: EPPClient, uri: str, feature: str, data, client_transaction_id) -> ErrorResponse | None:
+    """The error for data that needs an extension the server does not offer, or None."""
+    if not data or epp_client.supports_extension(uri):
+        return None
+    return ErrorResponse(
+        code=ResultCode.UNIMPLEMENTED_EXTENSION,
+        msg=f"{feature} needs {uri}, which the EPP server does not offer",
+        server_transaction_id=None,
+        client_transaction_id=client_transaction_id,
+    )
+
 
 def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction_id=None) -> Union[DomainCreateResponse, ErrorResponse]:
     """
@@ -14,13 +26,12 @@ def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction
     Returns:
         DomainCreateResponse: The response from the EPP server.
     """
-    if domain.dnsSEC and not epp_client.supports_extension(SEC_DNS_EXTENSION):
-        return ErrorResponse(
-            code=ResultCode.UNIMPLEMENTED_EXTENSION,
-            msg=f"DNSSEC needs {SEC_DNS_EXTENSION}, which the EPP server does not offer",
-            server_transaction_id=None,
-            client_transaction_id=client_transaction_id,
-        )
+    missing = (
+        _missing_extension(epp_client, SEC_DNS_EXTENSION, "DNSSEC", domain.dnsSEC, client_transaction_id)
+        or _missing_extension(epp_client, IDN_EXTENSION, "An IDN", domain.idn, client_transaction_id)
+    )
+    if missing:
+        return missing
     eppxml = create_domain_xml(domain, client_request_id=client_transaction_id)
     success, code, response = epp_client.send_and_get_response(eppxml)
     
@@ -102,13 +113,9 @@ def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, clien
         DomainCreateResponse: The response from the EPP server.
     """
     dns_sec = (domain_update.add and domain_update.add.dnsSEC) or (domain_update.remove and domain_update.remove.dnsSEC)
-    if dns_sec and not epp_client.supports_extension(SEC_DNS_EXTENSION):
-        return ErrorResponse(
-            code=ResultCode.UNIMPLEMENTED_EXTENSION,
-            msg=f"DNSSEC needs {SEC_DNS_EXTENSION}, which the EPP server does not offer",
-            server_transaction_id=None,
-            client_transaction_id=client_transaction_id,
-        )
+    missing = _missing_extension(epp_client, SEC_DNS_EXTENSION, "DNSSEC", dns_sec, client_transaction_id)
+    if missing:
+        return missing
     eppxml = create_domain_update_xml(domain_update, client_request_id=client_transaction_id)
     success, code, response = epp_client.send_and_get_response(eppxml)
     
