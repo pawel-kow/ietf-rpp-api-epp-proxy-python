@@ -43,3 +43,8 @@ def epp_datetime(value):
     if value is None:
         return None
     return value.to_datetime().astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def status_reasons(data) -> dict[str, str]:
+    """The status texts of an Info that say something: the backend repeats the label there (#54)."""
+    return {s.s.value: s.value for s in getattr(data, "status", []) if s.value and s.value != s.s.value}

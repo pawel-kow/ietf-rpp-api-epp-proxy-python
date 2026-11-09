@@ -99,3 +99,12 @@ def test_info_ignores_other_extensions():
     )
 
     assert parse_domain_response(info(extension=extension), "cl-1").domain.dnsSEC is None
+
+
+def test_info_reads_the_status_reason_and_not_the_repeated_label():
+    xml = info().replace(
+        '<domain:status s="ok"/>',
+        '<domain:status s="clientHold">Unpaid</domain:status><domain:status s="clientUpdateProhibited">clientUpdateProhibited</domain:status>',
+    )
+
+    assert parse_domain_response(xml, "cl-1").domain.status_reasons == {"clientHold": "Unpaid"}

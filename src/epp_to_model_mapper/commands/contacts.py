@@ -5,6 +5,7 @@ from models import Address, AuthInfo, Contact, ContactTransfer, ContactType
 from ..epp_model.contact_1_0 import (
     AddrType,
     AuthInfoType,
+    Check,
     Create,
     Delete,
     E164Type,
@@ -115,3 +116,6 @@ def contact_transfer(transfer: ContactTransfer, rpp_cl_trid: str) -> Epp:
             cl_trid=rpp_cl_trid,
         )
     )
+
+def contact_check(contact_id: str, rpp_cl_trid: str) -> Epp:
+    return Epp(command=CommandType(check=ReadWriteType(other_element=Check(id=[contact_id.upper()])), cl_trid=rpp_cl_trid))

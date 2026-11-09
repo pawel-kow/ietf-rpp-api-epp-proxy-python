@@ -1,0 +1,42 @@
+{
+  "test_id": "test8-undeclared_member_in_period",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rn8-{random_name}.example/processes/renewProcesses",
+        "body_json": {
+          "@type": "renewProcess",
+          "renewalPeriod": {
+            "@type": "period",
+            "value": 1,
+            "unit": "y",
+            "unknown": 1
+          }
+        },
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02001",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

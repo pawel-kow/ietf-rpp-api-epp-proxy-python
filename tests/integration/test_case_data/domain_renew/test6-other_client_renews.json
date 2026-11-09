@@ -1,0 +1,96 @@
+{
+  "test_id": "test6-other_client_renews",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "rn6-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rn6-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        },
+        "fields": {
+          "expiryDate": {
+            "type": "not_null"
+          }
+        }
+      },
+      "capture": {
+        "expiry": "expiryDate"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rn6-{random_name}.example/processes/renewProcesses",
+        "body_json": {
+          "@type": "renewProcess",
+          "expiryDate": "{capture:expiry}",
+          "renewalPeriod": {
+            "@type": "period",
+            "value": 1,
+            "unit": "y"
+          }
+        },
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 403,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02201",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

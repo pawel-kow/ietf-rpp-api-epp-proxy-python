@@ -1,0 +1,36 @@
+{
+  "test_id": "test21-put_with_server_status",
+  "steps": [
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/domainNames/put21-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02001"
+        }
+      }
+    }
+  ]
+}

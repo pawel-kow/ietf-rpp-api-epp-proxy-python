@@ -9,12 +9,14 @@ from .rpp_card_organization import RPPCardOrganization
 from .rpp_card_phone import RPPCardPhone
 from .rpp_contact import RPPContact
 from .rpp_contact_reference import RPPContactReference
+from .rpp_contact_availability import RPPContactAvailability
 from .rpp_dns_data import RPPDnsData
 from .rpp_dns_record import RPPDnsRecord
 from .rpp_domain import RPPDomain
 from .rpp_domain_create_process import RPPDomainCreateProcess
 from .rpp_domain_name_availability import RPPDomainNameAvailability
 from .rpp_domain_transfer_request import RPPDomainTransferRequest
+from .rpp_domain_renew_process import RPPDomainRenewProcess
 from .rpp_domain_transfer_process import RPPDomainTransferProcess
 from .rpp_domain_transfer_reject import RPPDomainTransferReject
 from .rpp_host import RPPHost
