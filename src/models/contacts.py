@@ -26,7 +26,8 @@ class Contact(ProvisioningObject, ContactMinimal):
     fax: Optional[List[str]] = None;
     address: Optional[Address] = None;
     localizedPostalInfo: Optional[LocalizedPostalInfo] = None
-    
+    status_reasons: Dict[str, str] = field(default_factory=dict)
+
     def __post_init__(self):
         localized = self.localizedPostalInfo
         if self.type == ContactType.ORG and not (self.organisationName or (localized and localized.organisationName)):

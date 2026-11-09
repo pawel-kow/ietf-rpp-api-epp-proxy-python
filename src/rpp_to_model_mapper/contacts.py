@@ -122,13 +122,11 @@ def _rpp_to_localized(card: RPPCard) -> LocalizedPostalInfo | None:
     )
 
 
-def rpp_to_model(rpp: dict) -> Contact:
-    """Converts a create request to a Contact."""
-    validate_schema("contact.create", rpp)
-    contact_rpp = parse_rpp(RPPContact, rpp)
+def contact_from_rpp(contact_rpp: RPPContact) -> Contact:
+    """The Contact a create, a full update or a patched contact asks for. Its status and `authInfo` are the caller's."""
     card = contact_rpp.contactInfo
     _check_profile(card)
-    reject_set(status=contact_rpp.status, links=card.links)
+    reject_set(links=card.links)
     if contact_rpp.disclose:
         raise NotSupportedByProxy("'disclose'")
     _reject_additional(card.emails, "emails")
@@ -145,8 +143,17 @@ def rpp_to_model(rpp: dict) -> Contact:
         fax=_rpp_to_phone(card, PHONE_FAX),
         address=_rpp_to_address(card.addresses),
         localizedPostalInfo=_rpp_to_localized(card),
-        authInfo=auth_info.rpp_to_model(contact_rpp.authInfo),
     )
+
+
+def rpp_to_model(rpp: dict) -> Contact:
+    """Converts a create request to a Contact."""
+    validate_schema("contact.create", rpp)
+    contact_rpp = parse_rpp(RPPContact, rpp)
+    contact = contact_from_rpp(contact_rpp)
+    reject_set(status=contact_rpp.status)
+    contact.authInfo = auth_info.rpp_to_model(contact_rpp.authInfo)
+    return contact
 
 
 def _address_to_rpp(address: Address | None) -> dict[str, RPPCardAddress] | None:

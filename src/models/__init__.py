@@ -2,6 +2,11 @@ from .domains import *
 from .common import *
 from .address import Address
 from .contacts import *
+from .postal_info_change import PostalInfoChange
+from .contact_update_changes import ContactUpdateChanges
+from .contact_update_change import ContactUpdateChange
+from .contact_update import ContactUpdate
+from .contact_update_response import ContactUpdateResponse
 from .contact_check_response import ContactCheckResponse
 from .dns_sec import DnsSec
 from .ds_data import DsData
