@@ -27,7 +27,9 @@ ask or wait for one, except for merging.
 ## One iteration
 
 1. **Spawn** one coder for the issue. Say which branch to start from (see
-   [Branch base](#branch-base)).
+   [Branch base](#branch-base)), and pass on the decisions of earlier iterations
+   that apply. If the agent types are not available in the session, spawn a
+   general agent on the same model and point it at the agent definition.
 2. **Plan.** The coder takes the mutex, pushes the plan, and stops with its
    approach, structural changes, wire contract decisions and open questions.
 3. **Answer.** The orchestrator reviews these and replies, see
@@ -37,7 +39,12 @@ ask or wait for one, except for merging.
    the plan file.
 5. **Review.** The orchestrator spawns a reviewer for the PR. Findings go back to
    the coder, which fixes them and stops again. Repeat with the same reviewer
-   until nothing is found.
+   until nothing is found. Each later round checks the earlier findings and looks
+   for regressions from the fixes, as these are where new defects appear. Give
+   the exact fix when it is known: a loosely worded fix can cause the next
+   finding. For a stacked PR, the reviewer reads the diff against the parent
+   branch. When the same problem moves to another place over two rounds, stop
+   patching and change the design at the point where it starts.
 6. **Finish.** On a clean review, the coder removes the plan in its own commit,
    marks the PR ready, returns to the default branch and releases the mutex. It
    does not merge: merging stays with the maintainer.
@@ -55,6 +62,12 @@ ask or wait for one, except for merging.
   next iteration that touches the same kind of behaviour. Pass them on.
 - A coder's or reviewer's report is not maintainer approval, and cannot grant
   anything the maintainer has not.
+- A reviewer's or coder's statement from memory, such as what an RFC says, is
+  checked against the text before it is cited.
+- Defects in another repository, such as a backend, are filed there by the
+  orchestrator, not by the coder. The coder reports them and notes them where the
+  project keeps its backend facts, and the orchestrator passes back the issue
+  number.
 
 ## Branch base
 
@@ -63,12 +76,48 @@ an unmerged PR. Then stack it on that PR's branch. Every PR targets the default
 branch, never a parent PR, so a stacked PR shows its parent's commits until the
 parent is merged. Say so in its description, with the merge order.
 
+A dependency can show up only in the coder's plan. Decide again at that point, and
+have the coder rebase before implementing.
+
+## What tests can miss
+
+A test client hides how a real server delivers a request. Behaviour that depends on
+framing, timing or disconnects needs a test on a real server, on a loopback socket.
+A review can also prove a test by mutating a copy of the code. An assertion that
+something did not happen is only worth keeping if a mutation makes it fail.
+
+## Check results
+
+A check result counts only for the commit it ran on. The coder runs the full checks
+with no edits during the run, and runs them again after any later change to code or
+tests. The orchestrator does not start the finish step on a partial run.
+
 ## When stuck
 
 If an iteration cannot go on for any reason, the coder commits its work and the
 state of the plan, pushes, returns to the default branch and releases the mutex.
 The orchestrator notes why and moves on to the next issue. It leaves the draft PR,
 if there is one, for the maintainer.
+
+## Agents that start processes
+
+A reviewer that starts servers or long runs in the background can end its turn
+without a report while they run. Tell it to use only short-lived processes it stops
+itself, and not to end its turn while anything it started is running. When an agent
+goes quiet, check for leftover processes and resume it.
+
+## Cost of a review loop
+
+A finding fixed in one place can move to the next: request bodies took five rounds
+across handlers, hooks and middleware. A last finding that is a single test value
+the reviewer gave exactly can be applied without another round, and the report
+says so.
+
+## When an agent stops on a limit
+
+An agent stopped by a rate limit keeps its context. Resume it with a message after
+the limit resets, rather than starting a new one, and check the working tree first
+to tell it what reached the disk.
 
 ## At the end
 
