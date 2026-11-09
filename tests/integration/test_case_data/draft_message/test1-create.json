@@ -1,0 +1,48 @@
+{
+  "test_id": "test1-create",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/messages",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "message",
+          "data": {
+            "@type": "transferRequestMessage",
+            "objectType": "domainName",
+            "objectId": "transfer-test.example",
+            "process": {
+              "@type": "domainTransferProcess",
+              "processId": "TRF-1001",
+              "trStatus": "pending",
+              "transferDir": "pull",
+              "reqClientId": "ClientX",
+              "requestDate": "2026-09-17T09:00:00.0Z",
+              "actClientId": "ClientY",
+              "actionDate": "2026-09-22T09:00:00.0Z"
+            },
+            "status": "pending",
+            "requestDate": "2026-09-17T09:00:00.0Z",
+            "actionDate": "2026-09-22T09:00:00.0Z"
+          }
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02101"
+        }
+      }
+    }
+  ]
+}

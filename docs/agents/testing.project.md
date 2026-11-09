@@ -40,6 +40,11 @@ is tested only in unit tests. It refuses the secDNS key data interface with `230
 already holds even under another keyTag (pawel-kow/epp#20). It stores `domain:hostAttr` as a host
 object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.
 
+The message queue is shared per registrar, and other cases add to it (every transfer request queues a message for the
+losing registrar), so `message/` cases assert only the shape of the head and use `any_of` where the queue may be empty.
+Acking a real head is tested in `tests/unit/test_message_wire.py`, as the integration runner cannot carry an id from
+one step to the next. The backend returns the id of the acknowledged message in the `msgQ` of an ack reply.
+
 A contact `chg` of a `postalInfo` form replaces it: the address members not sent again (`sp`, `pc`) are wiped, also when
 only `name` or `org` is sent, so the proxy sends every changed form complete (pawel-kow/epp#22). A `chg` of a form the contact does not have
 is ignored although the reply is 1000 (pawel-kow/epp#23), so the proxy answers 500 (`02400`) for it (`contact_update/test33` and `test34`), and the cases that change a localization change an existing one (`test8`). Removing a status the contact does not have succeeds, so `test6` and `test19` end on a direct `remove` of an absent label that answers 200.

@@ -1,0 +1,85 @@
+{
+  "test_id": "test1-query_head",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/messages",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "any_of": [
+          {
+            "status": 200,
+            "content_type": "application/rpp+json",
+            "body": [],
+            "headers": {
+              "RPP-Code": "01300",
+              "RPP-Queue-Size": "0"
+            }
+          },
+          {
+            "status": 200,
+            "content_type": "application/rpp+json",
+            "body": [
+              {
+                "@type": "message",
+                "status": "queued"
+              }
+            ],
+            "headers": {
+              "RPP-Code": "01301",
+              "RPP-Queue-Size": {
+                "type": "not_null"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/messages?type=transferRequestMessage",
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "any_of": [
+          {
+            "status": 200,
+            "content_type": "application/rpp+json",
+            "body": [],
+            "headers": {
+              "RPP-Code": "01300",
+              "RPP-Queue-Size": "0"
+            }
+          },
+          {
+            "status": 200,
+            "content_type": "application/rpp+json",
+            "body": [
+              {
+                "@type": "message",
+                "status": "queued"
+              }
+            ],
+            "headers": {
+              "RPP-Code": "01301",
+              "RPP-Queue-Size": {
+                "type": "not_null"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

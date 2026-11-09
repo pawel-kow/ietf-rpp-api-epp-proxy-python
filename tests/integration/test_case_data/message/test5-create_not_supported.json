@@ -1,0 +1,34 @@
+{
+  "test_id": "test5-create_not_supported",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/messages",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "message",
+          "data": {
+            "@type": "serviceNoticeMessage",
+            "message": "Case 37 notice {random_id_10}"
+          }
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02101"
+        }
+      }
+    }
+  ]
+}

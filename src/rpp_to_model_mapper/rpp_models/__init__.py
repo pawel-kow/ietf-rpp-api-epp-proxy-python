@@ -34,3 +34,8 @@ from .rpp_discovery_version import RPPDiscoveryVersion
 from .rpp_transfer_process import RPPTransferProcess
 from .rpp_transfer_request import RPPTransferRequest
 from .rpp_transfer_reject import RPPTransferReject
+from .rpp_message import RPPMessage
+from .rpp_review_response_message import RPPReviewResponseMessage
+from .rpp_service_notice_message import RPPServiceNoticeMessage
+from .rpp_transfer_outcome_message import RPPTransferOutcomeMessage
+from .rpp_transfer_request_message import RPPTransferRequestMessage

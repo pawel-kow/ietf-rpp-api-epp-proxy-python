@@ -3,7 +3,7 @@ from . import (
     contact_transfer_reject, contacts, discovery, domain_availability, domain_dns, domain_patch, domain_renew_process,
     domain_replacement, domain_transfer_approve, domain_transfer_process, domain_transfer_reject, domains, host_availability,
     host_dns, json_patch,
-    host_patch, host_replacement, hosts, patch_statuses, phones, prov_metadata, rpp_authorization, statuses,
+    host_patch, host_replacement, hosts, messages, patch_statuses, phones, prov_metadata, rpp_authorization, statuses,
 )
 from .not_supported_by_epp import NotSupportedByEpp
 from .not_supported_by_proxy import NotSupportedByProxy
