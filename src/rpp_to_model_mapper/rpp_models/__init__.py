@@ -15,6 +15,8 @@ from .rpp_dns_record import RPPDnsRecord
 from .rpp_domain import RPPDomain
 from .rpp_domain_create_process import RPPDomainCreateProcess
 from .rpp_domain_name_availability import RPPDomainNameAvailability
+from .rpp_domain_transfer_request import RPPDomainTransferRequest
+from .rpp_domain_renew_process import RPPDomainRenewProcess
 from .rpp_domain_transfer_process import RPPDomainTransferProcess
 from .rpp_domain_transfer_reject import RPPDomainTransferReject
 from .rpp_host import RPPHost
@@ -29,3 +31,6 @@ from .rpp_status import RPPStatus
 from .rpp_discovery import RPPDiscovery
 from .rpp_discovery_environment import RPPDiscoveryEnvironment
 from .rpp_discovery_version import RPPDiscoveryVersion
+from .rpp_transfer_process import RPPTransferProcess
+from .rpp_transfer_request import RPPTransferRequest
+from .rpp_transfer_reject import RPPTransferReject

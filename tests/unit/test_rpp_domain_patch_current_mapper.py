@@ -4,7 +4,7 @@ from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
 from models import ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS
-from rpp_to_model_mapper import NotSupportedByProxy, PatchNotApplicable, domain_patch, domains
+from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, PatchNotApplicable, domain_patch, domains
 
 NAME = "foo.example"
 HOST = {"@type": "host", "hostName": "ns3.foo.example"}
@@ -249,3 +249,69 @@ def test_no_matching_element_is_a_422_data_management_policy_violation():
     assert problem.value.status == 422
     assert problem.value.headers["RPP-Code"] == "02308"
     assert "Operation 1" in problem.value.detail
+
+
+def test_a_status_with_a_due_date_is_unsupported():
+    with pytest.raises(NotSupportedByEpp, match="due"):
+        update(op("add", "/status", value={**STATUS, "due": "2027-01-01T00:00:00Z"}))
+
+
+def test_patching_a_status_with_the_reason_it_has_changes_nothing():
+    result = update(op("replace", "/status", value=[{**STATUS, "reason": "Same"}]), status=["clientHold"], status_reasons={"clientHold": "Same"})
+
+    assert result.add is None and result.remove is None
+
+
+def test_replacing_the_reason_of_a_status_is_remove_and_add():
+    result = update(op("replace", "/status", value=[{**STATUS, "reason": "New"}]), status=["clientHold"], status_reasons={"clientHold": "Old"})
+
+    assert result.add.status_reasons == {"clientHold": "New"} and result.remove.status == ["clientHold"]
+
+
+def test_records_of_the_hosts_a_domain_has_as_objects_change_nothing():
+    records = [
+        {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": "NS1.foo.example."}},
+        {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": "ns2.foo.example."}},
+    ]
+
+    result = update(op("remove", "/nameservers"), op("add", "/dns", value={"@type": "dnsData", "records": records}))
+
+    assert result.add is None and result.remove is None
+
+
+def test_nameservers_with_glue_are_rejected():
+    glue = {"@type": "dnsRecord", "name": "ns1.foo.example.", "type": "a", "rdata": {"address": "192.0.2.1"}}
+
+    with pytest.raises(ValueError, match="cannot be used together"):
+        update(op("add", "/dns", value={"@type": "dnsData", "records": [glue]}))
+
+
+def test_a_patch_naming_ok_works_when_the_ok_of_the_read_has_a_reason():
+    result = update(
+        op("replace", "/status", value=[{"@type": "domainStatus", "label": "ok"}, STATUS]),
+        status_reasons={"ok": "No changes pending"},
+    )
+
+    assert result.add.status == ["clientHold"]
+
+
+def test_add_of_a_status_without_a_reason_keeps_the_stored_reason():
+    result = update(op("add", "/status", value=STATUS), status=["clientHold"], status_reasons={"clientHold": "Unpaid"})
+
+    assert result.add is None and result.remove is None
+
+
+def test_add_of_a_status_with_a_new_reason_replaces_the_stored_one():
+    result = update(
+        op("add", "/status", value={**STATUS, "reason": "New"}), status=["clientHold"], status_reasons={"clientHold": "Unpaid"},
+    )
+
+    assert result.add.status_reasons == {"clientHold": "New"} and result.remove.status == ["clientHold"]
+
+
+def test_stored_glue_out_of_the_zone_does_not_block_a_patch_that_leaves_dns_alone():
+    ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.bar.example", ipv4=["192.0.2.1"])])
+
+    result = update(op("add", "/status", value=STATUS), ns=ns)
+
+    assert result.add.status == ["clientHold"] and result.remove is None

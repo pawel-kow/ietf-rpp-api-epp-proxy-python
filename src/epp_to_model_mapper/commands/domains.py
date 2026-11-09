@@ -3,7 +3,7 @@ import re
 
 from xsdata.models.datatype import XmlDate
 
-from models import AuthInfo, DnsSec, Domain, DomainTransfer, DomainUpdate
+from models import AuthInfo, DnsSec, Domain, DomainRenew, DomainTransfer, DomainUpdate
 
 from ..epp_model.domain_1_0 import (
     AddRemType,
@@ -151,6 +151,21 @@ def domain_transfer(transfer: DomainTransfer, rpp_cl_trid: str) -> Epp:
                     name=transfer.name,
                     period=_period(transfer.duration) if transfer.duration else None,
                     auth_info=_transfer_auth_info(transfer.authInfo) if transfer.authInfo else None,
+                ),
+            ),
+            cl_trid=rpp_cl_trid,
+        )
+    )
+
+
+def domain_renew(renew: DomainRenew, rpp_cl_trid: str) -> Epp:
+    return Epp(
+        command=CommandType(
+            renew=ReadWriteType(
+                other_element=Renew(
+                    name=renew.name,
+                    cur_exp_date=XmlDate.from_string(renew.curExpDate),
+                    period=_period(renew.duration) if renew.duration else None,
                 ),
             ),
             cl_trid=rpp_cl_trid,

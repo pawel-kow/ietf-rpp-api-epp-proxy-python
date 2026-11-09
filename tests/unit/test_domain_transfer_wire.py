@@ -148,9 +148,10 @@ def test_approve_without_a_body():
 
 def test_approve_with_the_type_only_body():
     """Json §8.1.10."""
-    http = client_with(transfer_reply(1000, "clientApproved"))
+    http, clients = setup(transfer_reply(1000, "clientApproved"))
     response = http.post(f"{LATEST}/transferApprove", json=TYPE_ONLY, headers=BODY_HEADERS)
     assert response.status_code == 200
+    assert 'op="approve"' in clients[-1].sent[-1]
 
 
 def test_reject_without_a_body():
@@ -214,3 +215,89 @@ def test_what_needs_process_ids_is_a_501(method, url):
     response = client_with().request(method, url, headers=HEADERS)
     assert response.status_code == 501
     assert response.headers["RPP-Code"] == "02101"
+
+
+def approve(http, **kwargs):
+    return http.post(f"{LATEST}/transferApprove", headers=BODY_HEADERS, **kwargs)
+
+
+@pytest.mark.parametrize("body", [
+    {"x": 1},
+    {"@type": "nonsense"},
+    {},
+    [],
+    "text",
+    {**TYPE_ONLY, "unknown": 1},
+])
+def test_approve_with_an_invalid_body_is_a_400_without_epp(body):
+    """Approve cannot be undone, so nothing is sent for a body the schema does not allow. Json §4.4."""
+    http, clients = setup()
+    response = approve(http, json=body)
+    assert response.status_code == 400
+    assert response.headers["RPP-Code"] == "02001"
+    assert not any("transfer" in sent for client in clients for sent in client.sent)
+
+
+@pytest.mark.parametrize("content_type,data", [(MEDIA_TYPE, "{not json"), ("text/plain", "hello")])
+def test_approve_with_a_body_that_is_not_json_is_a_400_without_epp(content_type, data):
+    http, clients = setup()
+    response = http.post(f"{LATEST}/transferApprove", data=data, headers={**HEADERS, "Content-Type": content_type})
+    assert response.status_code == 400
+    assert response.headers["RPP-Code"] == "02001"
+    assert not any("transfer" in sent for client in clients for sent in client.sent)
+
+
+def test_approve_with_a_reason_is_a_501_without_epp():
+    """Data-objects §10.1.1.5: not in the EPP Compatibility Profile."""
+    http, clients = setup()
+    response = approve(http, json={**TYPE_ONLY, "reason": "ok"})
+    assert response.status_code == 501
+    assert response.headers["RPP-Code"] == "02102"
+    assert not any("transfer" in sent for client in clients for sent in client.sent)
+
+
+def test_create_with_a_read_only_member_is_a_400_without_epp():
+    """Json §4.4: a server MUST reject members that are not writable."""
+    for member in ("trStatus", "reqClientId", "actClientId", "requestDate", "actionDate", "processId"):
+        http, clients = setup()
+        response = http.post(
+            PROCESSES, json={**CREATE_BODY, member: "pending"}, headers=BODY_HEADERS)
+        assert response.status_code == 400, member
+        assert response.headers["RPP-Code"] == "02001"
+        assert not any("transfer" in sent for client in clients for sent in client.sent)
+
+
+@pytest.mark.parametrize("method,url", [
+    ("POST", PROCESSES),
+    ("DELETE", LATEST),
+    ("POST", f"{LATEST}/transferApprove"),
+    ("POST", f"{LATEST}/transferReject"),
+])
+def test_mutation_without_trn_data_is_a_202_without_body(method, url):
+    """The transfer was applied, but EPP gave no state to show."""
+    no_data = (True, "1000", epp_reply(1000))
+    kwargs = {"json": CREATE_BODY} if url == PROCESSES else {}
+    response = client_with(no_data).request(method, url, headers=BODY_HEADERS if kwargs else HEADERS, **kwargs)
+    assert response.status_code == 202
+    assert response.headers["RPP-Code"] == "01000"
+    assert response.headers["RPP-Svtrid"] == "sv-1"
+    assert response.content == b""
+
+
+def test_query_without_trn_data_is_a_500_with_a_clean_detail():
+    """A query applied nothing, so there is nothing to confirm."""
+    response = client_with((True, "1000", epp_reply(1000))).get(LATEST, headers=HEADERS)
+    assert response.status_code == 500
+    assert response.headers["RPP-Code"] == "02400"
+    assert response.headers["RPP-Svtrid"] == "sv-1"
+    assert "Error" not in response.json()["detail"] and "object" not in response.json()["detail"]
+
+
+@pytest.mark.parametrize("data", [b"null", b" ", b"\n"])
+def test_approve_with_a_body_of_null_or_whitespace_is_a_400_without_epp(data):
+    """Bytes are content, even when they parse to nothing."""
+    http, clients = setup()
+    response = http.post(f"{LATEST}/transferApprove", content=data, headers=BODY_HEADERS)
+    assert response.status_code == 400
+    assert response.headers["RPP-Code"] == "02001"
+    assert not any("transfer" in sent for client in clients for sent in client.sent)

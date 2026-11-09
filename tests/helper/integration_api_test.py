@@ -90,6 +90,34 @@ def assert_any_response(alternatives, response, test_name):
             failures.append(f"[{i}] {failure}")
     assert False, "No alternative matches:\n" + "\n".join(failures)
 
+CAPTURE = re.compile(r"\{capture:[^}]*\}")
+CAPTURE_FORM = re.compile(r"\{capture:([A-Za-z_]+)(?:\+([0-9]+)y)?\}")
+
+def substitute_captures(value, captures):
+    """Replaces {capture:name} with a value an earlier step captured, and {capture:name+Ny} with that
+    timestamp N years later. Anything else that looks like a capture fails the test."""
+    if isinstance(value, dict):
+        return {k: substitute_captures(v, captures) for k, v in value.items()}
+    if isinstance(value, list):
+        return [substitute_captures(v, captures) for v in value]
+    if isinstance(value, str):
+        def replace(match):
+            form = CAPTURE_FORM.fullmatch(match.group(0))
+            if form is None:
+                pytest.fail(f"Malformed capture {match.group(0)}, expected {{capture:name}} or {{capture:name+Ny}}")
+            name, years = form.groups()
+            if not isinstance(captures.get(name), str):
+                pytest.fail(f"Capture '{name}' of {match.group(0)} is not a string captured by an earlier step")
+            if years is None:
+                return captures[name]
+            later = datetime.fromisoformat(captures[name].replace("Z", "+00:00"))
+            try:
+                return later.replace(year=later.year + int(years)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            except ValueError:
+                pytest.fail(f"{match.group(0)}: {years} years after {captures[name]} is not a valid date")
+        return CAPTURE.sub(replace, value)
+    return value
+
 def endpoint_test(client, case_sequence):
     """
     Tests the POST /domains endpoint using the Flask test client.
@@ -100,7 +128,9 @@ def endpoint_test(client, case_sequence):
     """
     if "skip" in case_sequence:
         pytest.skip(reason=f"Skipping test case: {case_sequence['test_id']} - {case_sequence['skip']}")
+    captures = {}
     for i, case in enumerate(case_sequence["steps"]):
+        case = substitute_captures(case, captures)
         # --- Make HTTP Request ---
         if "body_json" in case["request"]:
             response = client.request(case["request"]["method"],
@@ -124,3 +154,7 @@ def endpoint_test(client, case_sequence):
             assert_any_response(case["response"]["any_of"], response, test_name)
         else:
             assert_response(case["response"], response, test_name)
+
+        # A step's "capture" maps a name to a dotted field of its response body, for {capture:name} in later steps.
+        for name, path in case.get("capture", {}).items():
+            captures[name] = field_value(response.json(), path)

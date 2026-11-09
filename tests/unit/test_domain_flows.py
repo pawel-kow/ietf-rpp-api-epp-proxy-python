@@ -1,7 +1,7 @@
 import pytest
 
-from flows import patch_domain
-from models import Domain, DomainUpdate, DomainUpdateRemove, ErrorResponse, HostObj, NS
+from flows import patch_domain, replace_domain
+from models import Domain, DomainUpdate, DomainUpdateRemove, ErrorResponse, HostObj, NS, ResultCode
 from tests.helper.fake_epp_client import FakeEppClient
 
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'
@@ -30,8 +30,8 @@ MISSING = (False, "2303", epp_reply(2303))
 REMOVE_NS1 = DomainUpdate(name=NAME, remove=DomainUpdateRemove(ns=NS(host_objs=[HostObj(id="ns1.foo.example")], host_attrs=None)))
 
 
-def client(*replies):
-    return FakeEppClient("u", "p", replies=replies)
+def client(*replies, username="foo"):
+    return FakeEppClient(username, "p", replies=replies)
 
 
 def never_called(domain: Domain):
@@ -99,3 +99,47 @@ def test_error_of_the_patch_propagates():
 
     with pytest.raises(ValueError):
         patch_domain(client(info()), NAME, None, conflict, "cl-1")
+
+
+def test_a_replacement_reads_updates_and_reads_back():
+    epp = client(info("ns1.foo.example"), DONE, info())
+
+    result = replace_domain(epp, NAME, lambda domain: REMOVE_NS1, "cl-1")
+
+    assert [("domain:info" in m, "domain:update" in m) for m in epp.sent] == [(True, False), (False, True), (True, False)]
+    assert result.domain is not None
+
+
+def test_a_replacement_that_changes_nothing_sends_no_update():
+    epp = client(info("ns1.foo.example"))
+
+    result = replace_domain(epp, NAME, lambda domain: DomainUpdate(name=NAME), "cl-1")
+
+    assert len(epp.sent) == 1
+    assert result.domain.name.lower() == NAME
+
+
+def test_a_replacement_of_a_missing_domain_is_the_read_error():
+    assert isinstance(replace_domain(client(MISSING), NAME, never_called, "cl-1"), ErrorResponse)
+
+
+@pytest.mark.parametrize("run", [
+    lambda epp: replace_domain(epp, NAME, lambda domain: DomainUpdate(name=NAME), "cl-1"),
+    lambda epp: patch_domain(epp, NAME, None, lambda domain: DomainUpdate(name=NAME), "cl-1"),
+])
+def test_a_change_of_nothing_by_a_client_that_is_not_the_sponsor_is_refused(run):
+    epp = client(info("ns1.foo.example"), username="baz")
+
+    result = run(epp)
+
+    assert isinstance(result, ErrorResponse)
+    assert result.code == ResultCode.AUTHORIZATION_ERROR
+    assert len(epp.sent) == 1
+
+
+def test_a_sponsor_is_known_whatever_the_case_of_its_id():
+    epp = client(info("ns1.foo.example"), username="FOO")
+
+    result = replace_domain(epp, NAME, lambda domain: DomainUpdate(name=NAME), "cl-1")
+
+    assert not isinstance(result, ErrorResponse)

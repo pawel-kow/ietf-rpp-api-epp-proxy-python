@@ -227,11 +227,12 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - Nothing says how `dnsData` maps to EPP. Core §5 refers to a mapping document that does not exist yet ([TODO REF]).
 - **Proxy:** on create, `ns` records and their glue are `ns.hostAttr`, `ds` and `dnskey` records are secDNS. `ns`, `ds` and `dnskey` must be owned by the domain, and `a` and `aaaa` by a nameserver given in the same request and subordinate to the domain. Other records, and `ds` or `dnskey` below the domain, are 501 (`02102`). A read returns `ns.hostAttr` as `dns` and `ns.hostObj` as `nameservers`.
 - A registry can store `hostAttr` as host objects, as the test backend does. The create then reads back as `nameservers`, and the glue is at `GET /hosts/{name}`.
+- **Proxy:** a host is the same in both forms, whatever the case, so a PATCH or PUT with `ns` records of the hosts the domain has as host objects (and the reverse) changes nothing, which is what a repeated PUT does on such a registry. The addresses of a host object live on the host and cannot be compared, so a `hostAttr` with addresses over a host object (or the reverse) is a `rem` and an `add`. Current host attributes against wanted host objects are swapped whole when the set of names differs, or when any current host attribute has an address, all removed and all added, because EPP takes one form or the other and a registry that shows attributes stores them. The reverse, current host objects and wanted records with a partial overlap, only removes and adds the names that differ, because a registry that stores attributes as objects would refuse to add again a host that is still associated. A PUT that gives the delegation as records therefore needs a host with its own addresses to be an exact repeat, or the glue is sent again each time.
 
 ## DNSSEC with `nameservers`
 
 - Data-objects §11.2 forbids `nameservers` together with DNS Data entries, without excepting `ds` and `dnskey`. Read literally, a domain delegated through host objects cannot have DNSSEC, and a client has to give its delegation as `ns` records. Should the rule be limited to `ns`, `a` and `aaaa`?
-- **Proxy:** a create with `nameservers` and any `dns` record is a 400. A read of such a domain returns both, because it would otherwise lose data.
+- **Proxy:** a create with `nameservers` and any `dns` record is a 400, while PATCH and PUT reject only `ns` records and their glue (`a`, `aaaa`) with `nameservers`. A read of such a domain returns both, because it would otherwise lose data, and a full replacement of an existing object has to be able to express what a read returns. A PUT that omits `dns` removes the DNSSEC data, so a domain with host objects and a DS has to be sent with both. A glue record (`a`, `aaaa`) counts as an `ns` record here, so `nameservers` with glue is a 400 as well.
 
 ## `ds` with `dnskey`
 
@@ -278,6 +279,14 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - The same applies to domain create.
 - **Proxy:** 501 (`02102`).
 
+## Full update of a domain
+
+- Core §16.8 clears what a PUT omits, "subject to server policy". Data-objects §11.3.4 says the Authorisation Information MAY be removed, and json §4.9.3 says a client MUST NOT send `authInfo` in a request body and a server MUST reject it. Yet `domainName.create` and `domainName.update` both carry `authInfo`, and a read can return it (see `authdata` in read responses). A client that follows §4.9.3 and PUTs back what it read would wipe the password on every PUT.
+- **Proxy:** an omitted `authInfo` leaves the password alone, a present one replaces it (EPP `chg`, without comparing to the current value), and §4.9.3 is not applied to `authInfo` in the body, as on create. A wipe cannot be undone, which makes it the worse mistake, and §16.8 leaves the policy to the server.
+- Json §4.4 requires a server to reject a data element that is not allowed in a request, and `status` accepts only client statuses (`domainStatus.create`).
+- **Proxy:** a PUT with a member outside `domainName.update` (`name`, `provMetadata`, `expiryDate`, `subordinateHosts`, `uName`, `lgr`, `processes`) is a 400 (`02001`), and so is `ok` or another server status in `status`, unlike a PATCH, which accepts `ok` (see the `ok` entry). `status` is a set: client statuses not listed are removed (an omitted `status` removes them all), a changed reason is a remove and an add, and server statuses stay. The path name is the only identity. The registry sets `ok` when no status is left. A `due` date has no place in EPP and is 501 (`02102`), on a PUT and a PATCH. A domain read now carries the status `reason` when the registry gives one (the test backend does not), so a PUT or PATCH with the same reason changes nothing and one without it drops it. A member the schema does not declare is a 400 at any depth.
+- A full update has no EPP command, so the proxy reads the domain, takes the difference and sends one update, as for a PATCH that needs the current state. The read and the update are not atomic. The `dns` and `nameservers` checks of a create apply (`ttl` 501, `ds` with `dnskey` 501), except as in "DNSSEC with `nameservers`".
+
 ## Host transfer
 
 - Data-objects §13.4 gives the host a Transfer Process and the OpenAPI has the operations. RFC 5732 defines no host transfer: subordinate hosts move with their domain, and data-objects §11.4.2 disallows anything that breaks that relationship.
@@ -286,20 +295,45 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 ## Full update without a change
 
 - A host update must provide at least one change (data-objects §13.3.4), but a PUT repeating the stored state is a valid full update (core §16.8) and PUT is idempotent in HTTP.
-- **Proxy:** passes the empty update on, the backend answers `2003` (400).
+- Data-objects §11.3.4 has the same "at least one change" rule for domains, while core §16.8 requires a 200 with the object.
+- **Proxy:** differs by object. A domain PUT that changes nothing is a 200 with the current domain and no EPP update, as a domain PATCH that changes nothing, unless the client is not the sponsor (the `clID` of the read differs from the session's): then it is 403 (`02201`), because no EPP command runs to refuse it. The login id is assumed to equal the `clID` of the object, compared without regard to case. A host PUT passes the empty update on, the backend answers `2003` (400).
 
 ## Transfer process
 
 - `GET .../transferProcesses/latest` with nothing pending gets EPP `2301`. Table 9 maps `02301` to 409, but the OpenAPI has no 409 on that GET, and core §16.9.5.2 says the resource "may not exist", which suggests 404 (#68).
 - **Proxy:** 409 (`02301`).
 - Core §16.9.5.5 shows approve with no content and the OpenAPI declares no `requestBody`, but json §8.1.10 sends `{"@type": "domainTransferProcess"}`.
-- **Proxy:** accepts both.
+- **Proxy:** accepts both. Approve reads its body like reject does: `reason` is 501 (`02102`), anything else the schema does not allow is 400 (`02001`), and nothing is sent to EPP, because an approval cannot be undone.
 - Json §8.2.9 gives an example with `reason`, which data-objects §10.1.1.5 forbids in the EPP Compatibility Profile, without naming the rejection.
 - **Proxy:** 501 (`02102`).
 - EPP has no process ids and no transfer history, so the list and `/{processId}` operations have nothing to map to.
 - **Proxy:** 501 (`02101`), and responses have no `processId`.
 - EPP has no push transfer, and its response does not say the direction.
 - **Proxy:** `transferDir: push` and `gainingClientId` are 501 (`02102`), and responses always have `transferDir: pull`.
+- Contacts use the same mapping as domains (core §16.9.5, json §8.2.6 to §8.2.9) with `@type` `transferProcess`. RFC 5733 has no period and `contact:trnData` no expiry date, so a contact has neither, and a `transferPeriod` in a contact request is not in the schema (json §4.4).
+- **Proxy:** `transferPeriod` on a contact is 400 (`02001`). Json §8.2.9's reject example has `reason`, so the draft's own example is 501 (`02102`) and `draft_contact/test11` expects that.
+- The OpenAPI declares no 501 on the transfer operations, which the proxy answers for list, `/{processId}`, push, `gainingClientId` and `reason`.
+- `RPP-Authorization` can accompany query, cancel, approve and reject too. RFC 5730 §2.9.3.4 says authorization information MUST be provided to complete a transfer command, and RFC 5733 §3.2.4 gives `contact:authInfo` for every `op` without saying a server ignores it on any of them.
+- **Proxy:** forwards it on every operation. EPP has a place for it, so nothing is dropped, and refusing it would change the domain wire.
+
+## Renew process
+
+- Json §8.1.7 and data-objects §10.3 make `expiryDate` optional, and call it the client's guard against duplicate renewals. EPP requires `curExpDate` (RFC 5731 §3.2.3), as an `xs:date`.
+- **Proxy:** without `expiryDate` it reads the domain and uses the date of its `exDate`. The read and the renew are not atomic, and the client gave up the guard, so a client that retries without `expiryDate` after a lost response renews twice (see "Repeated `RPP-Cltrid`"). With `expiryDate` it sends no read.
+- EPP holds only a date, so the time of day of `expiryDate` has no element. The json §8.1.7 example has `22:00:00Z`.
+- **Proxy:** sends the date in UTC, after converting any offset, and does not check the time. A date that does not match is EPP's `2306`, so 422.
+- Core §16.9.4 shows a 201 with a `Location`, which assumes an exposed process resource. EPP has no process, and the OpenAPI has no `latest` or `{processId}` path for renew. Core §16.1.4 requires a 200 from a server without a persistent process resource.
+- **Proxy:** 200, no `Location`, no `processId`. The body is `@type` and the new `expiryDate` from `renData`, with no `renewalPeriod` (EPP does not echo it). A `1001` is a 200 with `01001` and no `expiryDate`, as is a `1000` without `renData`.
+- Data-objects §10.3 allows the period to default by server policy.
+- **Proxy:** sends no `period` when `renewalPeriod` is absent, and leaves the default to the registry. The test backend answers `1000` without extending the expiry (pawel-kow/epp#25).
+- EPP's renew (RFC 5731 §3.2.3) has no authInfo, so an `RPP-Authorization` header on a renew has nowhere to go.
+- **Proxy:** 501 (`02102`).
+- A `1001` has not completed, and data-objects §10.3 ties the new expiry date to a completed renewal.
+- **Proxy:** `expiryDate` is left out of a `1001`, even when the registry sends `renData`.
+- `expiryDate` must be an RFC 3339 date-time. The schema `format` is not enforced (json §4.9.1's `unevaluatedProperties` is a separate gap, see "Undeclared properties").
+- **Proxy:** checks the RFC 3339 §5.6 form itself, with `T` and `Z` in either case. A leap second (`:60`) is a 400.
+- EPP has no process list or process ids.
+- **Proxy:** `GET .../renewProcesses` is 501 (`02101`).
 
 ## Discovery
 
