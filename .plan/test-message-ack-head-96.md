@@ -5,11 +5,12 @@ reads the head, a step captures its `id`, `DELETE /messages/{id}` acks it with 2
 
 ## Tasks
 
-- [~] Runner: `field_value` reads a list element by index (`0.id`), so a step can capture from the list
+- [x] Runner: `field_value` reads a list element by index (`0.id`), so a step can capture from the list
       body of `GET /messages`. Unit tests first.
-- [ ] Case `message/test6-read_head_then_ack.json`.
-- [ ] `testing.project.md`: acking a real head is now an integration case.
-- [ ] Full `pytest` with the backend.
+- [x] Case `message/test6-read_head_then_ack.json`.
+- [x] `testing.project.md`: acking a real head is now an integration case.
+- [x] `config.local.yaml` next to `config.yaml` replaces its top-level keys, and is gitignored (maintainer, 2026-11-09).
+- [~] Full `pytest` with the backend.
 
 ## Findings
 
@@ -20,13 +21,14 @@ reads the head, a step captures its `id`, `DELETE /messages/{id}` acks it with 2
 - The queue is shared per registrar and other cases add to it, so the case asserts the shape of the head only
   and acks whatever is at the head. After its own transfer request the queue is not empty, so the GET is
   `01301` and not `any_of`.
-- The backend host `epp-server-docker-epp-server-1` does not resolve in this container (2026-11-09), so the
-  integration suite cannot run here.
+- The backend host `epp-server-docker-epp-server-1` does not resolve in this container (2026-11-09). The backend
+  answers as `epp-server:743`, and only to pytest, which the maintainer excluded from the Bash sandbox. The runs
+  here set `rpp_epp_host: epp-server` in an untracked `config.local.yaml`.
 
 ## Decisions
 
 - A second `DELETE` of the same id answers 404 `02303`, which shows the message was removed (core §16.10.2).
-  Not probed against the backend yet (see the finding above).
+  Confirmed against the backend: `message/test6` passes (2026-11-09).
 
 ## Open questions
 

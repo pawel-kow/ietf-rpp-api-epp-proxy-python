@@ -18,11 +18,15 @@ def evaluate_condition(value, spec):
         return False
 
 def field_value(document, path):
-    """Reads a dotted field path, for example 'provMetadata.crDate'."""
+    """Reads a dotted field path, for example 'provMetadata.crDate'. A number picks a list element, as in '0.id'."""
     value = document
     for part in path.split("."):
-        assert part in value, f"Field '{path}' not found"
-        value = value[part]
+        if isinstance(value, list):
+            assert part.isdigit() and int(part) < len(value), f"Field '{path}' not found"
+            value = value[int(part)]
+        else:
+            assert part in value, f"Field '{path}' not found"
+            value = value[part]
     return value
 
 def assert_rpp_headers(request_headers, response, test_name):
