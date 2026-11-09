@@ -132,3 +132,13 @@ def test_read_builds_repository_and_update_client():
 
     assert metadata["repositoryId"] == "D1-EX"
     assert metadata["upClientId"] == "ClientY"
+
+
+def test_read_has_the_status_reason():
+    domain = Domain(name="foo.example", roid="D1", status=["clientHold", "ok"], status_reasons={"clientHold": "Unpaid"},
+                    crDate="2026-11-04T10:00:00Z", clID="foo", crID="foo")
+
+    assert domains.model_to_rpp(domain)["status"] == [
+        {"@type": "domainStatus", "label": "clientHold", "reason": "Unpaid"},
+        {"@type": "domainStatus", "label": "ok"},
+    ]

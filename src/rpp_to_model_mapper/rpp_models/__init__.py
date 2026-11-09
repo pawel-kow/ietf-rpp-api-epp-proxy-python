@@ -9,6 +9,7 @@ from .rpp_card_organization import RPPCardOrganization
 from .rpp_card_phone import RPPCardPhone
 from .rpp_contact import RPPContact
 from .rpp_contact_reference import RPPContactReference
+from .rpp_contact_availability import RPPContactAvailability
 from .rpp_dns_data import RPPDnsData
 from .rpp_dns_record import RPPDnsRecord
 from .rpp_domain import RPPDomain

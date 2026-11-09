@@ -6,7 +6,7 @@ from .commands.helper import epp_to_str, str_to_epp
 from .commands.hosts import host_check, host_create, host_delete, host_info, host_update
 from .epp_model.epp_1_0 import Epp
 from .epp_model.host_1_0 import ChkData, CreData, InfData, IpType
-from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header
+from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header, status_reasons
 
 
 def create_host_xml(host: Host, client_request_id=None) -> str:
@@ -44,11 +44,6 @@ def _addresses(data: InfData) -> tuple[list[str] | None, list[str] | None]:
     return addresses[IpType.V4] or None, addresses[IpType.V6] or None
 
 
-def _status_reasons(data: InfData) -> dict[str, str]:
-    """The status texts that say something: the backend repeats the label there (#54)."""
-    return {s.s.value: s.value for s in data.status if s.value and s.value != s.s.value}
-
-
 def parse_host_response(xml_string: str, client_transaction_id: str | None) -> HostInfoResponse | ErrorResponse:
     """Parses an EPP host info response."""
     epp = str_to_epp(xml_string)
@@ -60,7 +55,7 @@ def parse_host_response(xml_string: str, client_transaction_id: str | None) -> H
         ipv4=ipv4,
         ipv6=ipv6,
         status=[s.s.value for s in data.status],
-        status_reasons=_status_reasons(data),
+        status_reasons=status_reasons(data),
         clID=data.cl_id,
         crID=data.cr_id,
         upID=data.up_id or None,

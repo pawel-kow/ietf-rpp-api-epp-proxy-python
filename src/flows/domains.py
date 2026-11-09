@@ -3,7 +3,7 @@ from typing import Callable
 
 from eppclient.epp_domains import epp_domains_Info, epp_domains_Renew, epp_domains_Update
 from eppclient.eppclient import EPPClient
-from models import Domain, DomainRenew, DomainRenewResponse, DomainUpdate, ErrorResponse, ResultCode
+from models import Domain, DomainInfoResponse, DomainRenew, DomainRenewResponse, DomainUpdate, ErrorResponse, ResultCode
 from .domain_mutation_result import DomainMutationResult
 
 
@@ -25,6 +25,19 @@ def _changes_nothing(update: DomainUpdate) -> bool:
     return update.add is None and update.remove is None and update.change is None
 
 
+def _unchanged(epp_client: EPPClient, current: DomainInfoResponse, client_transaction_id) -> DomainMutationResult | ErrorResponse:
+    """The answer to an update that changes nothing, which sends no EPP command. Only the sponsor may update
+    (data-objects §11.3.4), and EPP would have said so. The login id is taken to be the `clID`, whatever its case."""
+    if (current.domain.clID or "").lower() != epp_client.username.lower():
+        return ErrorResponse(
+            code=ResultCode.AUTHORIZATION_ERROR,
+            msg="Only the sponsoring client can update the domain",
+            server_transaction_id=current.server_transaction_id,
+            client_transaction_id=client_transaction_id,
+        )
+    return DomainMutationResult(mutation=current, domain=current.domain)
+
+
 def patch_domain(
     epp_client: EPPClient,
     domain_name: str,
@@ -40,11 +53,12 @@ def patch_domain(
             return current
         update = update_from_current(current.domain)
         if _changes_nothing(update):
-            return DomainMutationResult(mutation=current, domain=current.domain)
+            return _unchanged(epp_client, current, client_transaction_id)
     updated = epp_domains_Update(epp_client, update, client_transaction_id=client_transaction_id)
     if isinstance(updated, ErrorResponse):
         return updated
     return _read_back(epp_client, domain_name, updated)
+
 
 
 
@@ -64,3 +78,14 @@ def renew_domain(epp_client: EPPClient, renew: DomainRenew, client_transaction_i
             )
         renew = replace(renew, curExpDate=current.domain.exDate[:10])
     return epp_domains_Renew(epp_client, renew, client_transaction_id=client_transaction_id)
+
+
+def replace_domain(
+    epp_client: EPPClient,
+    domain_name: str,
+    update_from_current: Callable[[Domain], DomainUpdate],
+    client_transaction_id,
+) -> DomainMutationResult | ErrorResponse:
+    """A full update: EPP has none, so it reads the domain and sends the difference. A replacement that changes
+    nothing sends no update (core §16.8 asks for a 200)."""
+    return patch_domain(epp_client, domain_name, None, update_from_current, client_transaction_id)
