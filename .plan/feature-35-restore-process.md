@@ -36,4 +36,4 @@ Branch `feature/35-restore-process`.
 
 ## Open questions
 
-- Filing an EPP-server-docker issue for configurable RGP periods was refused by the permission classifier: maintainer to decide.
+- None. Backend request for configurable RGP periods: pawel-kow/EPP-server-docker#5.

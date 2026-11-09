@@ -1,6 +1,6 @@
 {
   "test_id": "test18-restore_report",
-  "skip": "The test backend cannot hold a domain in redemptionPeriod: its add grace period is 5 days, and a delete inside it purges the domain (testing.project.md)",
+  "skip": "pawel-kow/EPP-server-docker#5",
   "steps": [
     {
       "request": {

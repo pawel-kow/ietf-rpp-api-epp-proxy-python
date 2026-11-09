@@ -70,7 +70,7 @@ applied by hand.
 
 Its add grace period is 5 days, and a domain deleted inside it is purged at once (`1001`, then `2303`), so no case
 can hold a domain in `redemptionPeriod`. `domain_restore/` covers the refusals (`2304` on an active domain), and the
-draft examples of a restore request, report and query are skipped. A request, a report and a read of a restore under
+draft examples of a restore request, report and query are skipped (pawel-kow/EPP-server-docker#5). A request, a report and a read of a restore under
 way are tested only in unit tests.
 
 The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
