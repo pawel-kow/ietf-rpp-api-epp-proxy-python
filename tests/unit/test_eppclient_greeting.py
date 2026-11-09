@@ -1,9 +1,9 @@
 import pytest
 
-from eppclient.eppclient import EPPClient, IDN_EXTENSION, SEC_DNS_EXTENSION
+from eppclient.eppclient import EPPClient, IDN_EXTENSION, RGP_EXTENSION, SEC_DNS_EXTENSION
 from eppclient.tcpclient import ConnectionException
 
-OTHER_EXTENSION = "urn:ietf:params:xml:ns:rgp-1.0"
+OTHER_EXTENSION = "urn:ietf:params:xml:ns:launch-1.0"
 LOGIN_OK = (
     '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><response>'
     '<result code="1000"><msg>ok</msg></result></response></epp>'
@@ -74,6 +74,13 @@ def test_login_takes_the_idn_extension_the_server_offers():
     _, transport = connected_client(SEC_DNS_EXTENSION, IDN_EXTENSION)
 
     assert f"<extURI>{IDN_EXTENSION}</extURI>" in transport.sent[0]
+
+
+def test_login_takes_the_rgp_extension_the_server_offers():
+    """RFC 3915, for the restore process."""
+    _, transport = connected_client(SEC_DNS_EXTENSION, RGP_EXTENSION)
+
+    assert f"<extURI>{RGP_EXTENSION}</extURI>" in transport.sent[0]
 
 
 @pytest.mark.parametrize("extensions", [(), (OTHER_EXTENSION,)])

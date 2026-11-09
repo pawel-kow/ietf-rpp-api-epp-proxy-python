@@ -1,0 +1,29 @@
+{
+  "test_id": "test10-list_not_supported",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rs10-{random_name}.example/processes/restoreProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02101",
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

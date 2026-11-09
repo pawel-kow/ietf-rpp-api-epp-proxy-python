@@ -1,0 +1,64 @@
+{
+  "test_id": "test1-request_on_active_domain",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "rs1-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rs1-{random_name}.example/processes/restoreProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "restoreProcess"
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02304",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

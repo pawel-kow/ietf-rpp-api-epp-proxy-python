@@ -55,7 +55,9 @@ single feature (e.g. "domain update") touches every layer:
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
    `domain_transfer_process.py` and `domain_transfer_reject.py` convert a domain transfer,
    `contact_transfer_process.py` and `contact_transfer_reject.py` a contact transfer, and
-   `domain_renew_process.py` a renewal.
+   `domain_renew_process.py` a renewal. `domain_restore_process.py` converts a restore request and renders a restore,
+   `domain_restore_report.py` a report (PUT) and `domain_restore_patch.py` a report sent as a JSON Patch (PATCH).
+   `date_time.py` checks an RFC 3339 date-time.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
@@ -66,7 +68,7 @@ single feature (e.g. "domain update") touches every layer:
    [eppclient.py](../../src/eppclient/eppclient.py) is the raw TCP+XML client
    (login/logout, `_parse_epp_response` reads the `<result code>`; codes matching
    `1xxx` = success). It keeps the extensions of the greeting for
-   `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` the server offers.
+   `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` (secDNS, IDN and RGP) the server offers.
 6. **`flows/`:** multi-step operations, free of the web framework. A flow returns a
    typed result or an `ErrorResponse`, and the handler renders it. `flows/hosts.py`
    holds mutate-then-Info, and PUT as Info, difference, update and Info. `patch_host` in
@@ -107,6 +109,12 @@ message id or an unreadable result, which is a 500. A code the proxy has no name
 adds after security and before Connexion's validators, so an anonymous client gets its 401 before its body is read. It reads the whole body of a request that has one before anything else runs, drops the request if the client
 disconnects first, and passes on a complete request with a `content-length`. So chunked bodies, late bodies and
 aborted uploads reach no handler half-received. It has no size limit (#93).
+
+The restore handlers are `domainNameRestoreProcesses_create`, `_update`, `_updatePartial` and `_read` in
+`controller/domains.py`. A request and a report are a domain update with the RFC 3915 `rgp:restore` extension, sent by
+`epp_domains_Restore`, and answer 200 without `Location`. `read_domain_restore` in `flows/domains.py` reads the domain
+and answers 404 when its RGP statuses show no restore under way. Only domains have a restore, see
+[spec-issues.md](../../.spec/spec-issues.md#restore-process).
 
 The renew handler is `domainNameRenewProcesses_renewCreate` in `controller/domains.py`, and `renew_domain` in
 `flows/domains.py` runs it. EPP needs `curExpDate`, so a request without `expiryDate` first has the domain read.

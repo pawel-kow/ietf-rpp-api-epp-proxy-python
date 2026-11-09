@@ -351,6 +351,24 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - EPP has no process list or process ids.
 - **Proxy:** `GET .../renewProcesses` is 501 (`02101`).
 
+## Restore process
+
+- Core §16.9.3 and json §8.1.13 to §8.1.15 restore any object in the Redemption Grace Period, and json §8.3.6 to §8.3.8 give host examples. RFC 3915 defines RGP for domains only, and the OpenAPI has no host restore path.
+- **Proxy:** domains only. A host restore path answers 404, as for any path the OpenAPI does not have.
+- Core §16.9.3 shows a 201 with a `Location`, which assumes an exposed process resource. EPP has no restore process and no process ids.
+- **Proxy:** a request and a report are a 200 without `Location` and without `processId`, as for renew (core §16.1.4). The list and `/{processId}` operations are 501 (`02101`).
+- Json §8.1.13 allows a restore request with an inline report that restores the object at once. RFC 3915 restores in two commands, a request and then a report.
+- **Proxy:** a `restoreReport` in a POST is 501 (`02102`). The proxy does not send the two commands for it.
+- Json §6.2.10 makes only `@type` and `statements` (one or two) required, `restoreTime` and exactly two statements in the EPP Compatibility Profile. RFC 3915 §4.2.5 requires `preData`, `postData`, `delTime`, `resTime`, `resReason` and two statements.
+- **Proxy:** a report missing any of `preData`, `postData`, `deleteTime`, `restoreTime` and `restoreReason`, or without exactly two statements, is 400 (`02001`). `deleteTime` and `restoreTime` must be RFC 3339 date-times.
+- EPP returns neither the dates of the restore process (`requestDate`, `reportDate`, `reportDueDate`) nor the report.
+- **Proxy:** the body is `@type` and `restoreStatus` alone. After a request it is the `rgp:upData` status, `pendingRestore` without one. After a report it is the `rgp:upData` status, `restored` for a `1000` without one, `pendingRestore` for a `1001`.
+- A PATCH of a restore process has no stored report to apply to.
+- **Proxy:** applies the patch to `{"@type": "restoreProcess"}` and sends the result as a report, so a `remove` is 422 (`02308`).
+- EPP has no restore query. The RGP statuses of a domain Info (RFC 3915 §4.1.2) cannot tell a restored domain from one that was never deleted.
+- **Proxy:** `GET .../restoreProcesses/latest` reads the domain: `pendingRestore` is `pendingRestore`, `pendingDelete` is `rgpPendingDelete`, and anything else is 404 (`02303`), so `restored` is never read.
+- **Proxy:** the proxy logs in with `urn:ietf:params:xml:ns:rgp-1.0` when the server offers it. Without it every restore operation is 501 (`02103`). The RGP statuses are not yet part of the domain's `status` (#105).
+
 ## Discovery
 
 - Core §11 and data-objects §17.3.1 require the document without authentication. The drafts give no caching rule, and `datetime` is the current time, so a cached document goes stale.

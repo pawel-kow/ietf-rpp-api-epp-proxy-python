@@ -10,6 +10,7 @@ from .commands.domains import (
     domain_delete,
     domain_info,
     domain_renew,
+    domain_restore,
     domain_transfer,
     domain_update,
 )
@@ -17,6 +18,7 @@ from .commands.helper import epp_to_str, str_to_epp
 from .epp_model.domain_1_0 import CreData, InfData, RenData, TrnData
 from .epp_model.epp_1_0 import Epp
 from .epp_model.idn_1_0 import Data as IdnData
+from .epp_model.rgp_1_0 import InfData as RgpInfData, UpData as RgpUpData
 from .epp_model.sec_dns_1_1 import InfData as SecDnsInfData
 
 
@@ -46,6 +48,15 @@ def transfer_domain_xml(transfer: DomainTransfer, client_request_id=None) -> str
 
 def renew_domain_xml(renew: DomainRenew, client_request_id=None) -> str:
     return epp_to_str(domain_renew(renew, cl_trid(client_request_id)))
+
+
+def restore_domain_xml(restore: DomainRestore, client_request_id=None) -> str:
+    return epp_to_str(domain_restore(restore, cl_trid(client_request_id)))
+
+
+def _rgp_status(data) -> list[str]:
+    """The RGP statuses of rgp:infData or rgp:upData (RFC 3915 §4.1.2, §4.2.5)."""
+    return [status.s.value for status in data.rgp_status if status.s is not None] if data else []
 
 
 def _ns_from_epp(ns) -> Union[NS, None]:
@@ -144,6 +155,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
         contacts=contacts,
         dnsSEC=_dns_sec_from_epp(epp),
         idn=_idn_from_epp(epp),
+        rgpStatus=_rgp_status(find_extension(epp, RgpInfData)),
         subordinateHosts=(getattr(data, "host", None) or None) if data else None,
     )
     return DomainCreateResponse(domain=domain, **header)
@@ -205,6 +217,23 @@ def parse_domain_renew_response(xml_string: str, client_transaction_id: str | No
         ),
         **header,
     )
+
+
+def parse_domain_restore_response(xml_string: str, restore: DomainRestore, client_transaction_id: str | None) -> DomainRestoreResponse:
+    """Parses the reply to a restore. Without rgp:upData, an accepted request (RFC 3915 §3.2) and a pending report
+    leave the domain in pendingRestore, and a completed report restores it."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    up_data = find_extension(epp, RgpUpData)
+    if up_data is not None:
+        rgp_status = _rgp_status(up_data)
+    elif restore.report is None or header["code"] == ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
+        rgp_status = ["pendingRestore"]
+    else:
+        rgp_status = []
+    return DomainRestoreResponse(restore=DomainRestoreProcess(rgpStatus=rgp_status), **header)
 
 
 def parse_domain_check_response_single(xml_string: str, domain_name: str, client_transaction_id: str) -> Union[DomainCheckResponseSingle, ErrorResponse]:

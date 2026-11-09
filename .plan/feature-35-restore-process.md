@@ -4,16 +4,16 @@ Branch `feature/35-restore-process`.
 
 ## Tasks
 
-- [~] Unit tests first (mapper, XML, wire), with stubs
-- [ ] Models: `DomainRestore`, `RestoreReport`, `DomainRestoreProcess`, `DomainRestoreResponse`
-- [ ] `rpp_to_model_mapper/domain_restore_process.py`: create, update (PUT), patch, read
-- [ ] EPP: `domain_restore` command, `parse_domain_restore_response`, `epp_domains_Restore`, rgp in `LOGIN_EXTENSIONS`
-- [ ] Flows: `restore_domain`, `read_domain_restore`
-- [ ] Handlers: `domainNameRestoreProcesses_create`, `_read`, `_update`, `_updatePartial`
-- [ ] Integration cases `domain_restore/`
-- [ ] Docs: spec-issues "Restore process", architecture.project.md, testing.project.md
-- [ ] Follow-up issue: RGP state in the domain `status` (`rgpRedemptionPeriod`, ...)
-- [ ] Full pytest run, PR
+- [x] Unit tests first (mapper, XML, wire), with stubs
+- [x] Models: `DomainRestore`, `RestoreReport`, `DomainRestoreProcess`, `DomainRestoreResponse`
+- [x] `rpp_to_model_mapper/domain_restore_process.py`: create, update (PUT), patch, read
+- [x] EPP: `domain_restore` command, `parse_domain_restore_response`, `epp_domains_Restore`, rgp in `LOGIN_EXTENSIONS`
+- [x] Flows: `read_domain_restore` (request and report are one command each, no flow)
+- [x] Handlers: `domainNameRestoreProcesses_create`, `_read`, `_update`, `_updatePartial`
+- [x] Integration cases `domain_restore/`
+- [x] Docs: spec-issues "Restore process", architecture.project.md, testing.project.md
+- [x] Follow-up issue: RGP state in the domain `status` (#105)
+- [~] Full pytest run (2008 passed, 8 skipped), PR
 
 ## Decisions (maintainer, 2026-11-09)
 
@@ -31,8 +31,9 @@ Branch `feature/35-restore-process`.
 
 - Backend greeting offers `urn:ietf:params:xml:ns:rgp-1.0`. Logged in with it, domain Info carries `rgp:infData`; parsing unaffected (probed).
 - Backend: restore request on an active domain is `2304`; a delete inside the add grace period purges the domain (`1001`, then `2303`).
-- Backend source (pawel-kow/epp `command-delete.cgi`) has a 5-day add period; the maintainer recalls 1 minute on the deployed backend (being probed).
+- Backend add grace period is 5 days (pawel-kow/epp `command-delete.cgi`, `change-domain-status.pl`); EPP-server-docker shortens only `TRANSFER_WAITING_MINUTES`. Probed: still `addPeriod` after 75 s, and the delete purged the domain. So draft_domain test16, test18, test19 stay skipped.
+- `rpp_to_model_mapper/date_time.py` now holds the RFC 3339 check that renew had privately, shared with the report.
 
 ## Open questions
 
-- None.
+- Filing an EPP-server-docker issue for configurable RGP periods was refused by the permission classifier: maintainer to decide.

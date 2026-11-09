@@ -68,6 +68,11 @@ that does not match the name. Its IDN tables and the session table come from mig
 only when the database is first created: a database from before them answers `2306 Unknown idn:table` and needs them
 applied by hand.
 
+Its add grace period is 5 days, and a domain deleted inside it is purged at once (`1001`, then `2303`), so no case
+can hold a domain in `redemptionPeriod`. `domain_restore/` covers the refusals (`2304` on an active domain), and the
+draft examples of a restore request, report and query are skipped. A request, a report and a read of a restore under
+way are tested only in unit tests.
+
 The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
 `expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
 

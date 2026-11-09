@@ -1,6 +1,6 @@
 {
   "test_id": "test16-restore_request",
-  "skip": "#35",
+  "skip": "The test backend cannot hold a domain in redemptionPeriod: its add grace period is 5 days, and a delete inside it purges the domain (testing.project.md)",
   "steps": [
     {
       "request": {
@@ -17,7 +17,7 @@
         }
       },
       "response": {
-        "status": 201,
+        "status": 200,
         "content_type": "application/rpp+json",
         "body": {
           "@type": "restoreProcess",

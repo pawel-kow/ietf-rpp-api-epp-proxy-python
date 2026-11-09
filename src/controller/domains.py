@@ -117,3 +117,34 @@ def domainNameRenewProcesses_renewCreate(name, body):
     if isinstance(resp, ErrorResponse):
         raise_epp_error(resp)
     return rpp_mapper.domain_renew_process.model_to_rpp(resp.renewal), 200, generate_rpp_response_headers(resp)
+
+
+def _restore(restore):
+    resp = epp_domains_Restore(get_epp_client(), restore, client_transaction_id())
+    if isinstance(resp, ErrorResponse):
+        raise_epp_error(resp)
+    return rpp_mapper.domain_restore_process.model_to_rpp(resp.restore), 200, generate_rpp_response_headers(resp)
+
+
+@rpp_operation
+def domainNameRestoreProcesses_create(name, body):
+    """EPP exposes no restore process, so the answer is a 200 with no Location (core §16.1.4)."""
+    return _restore(map_request(rpp_mapper.domain_restore_process.rpp_to_model, name, body))
+
+
+@rpp_operation
+def domainNameRestoreProcesses_update(name, body):
+    return _restore(map_request(rpp_mapper.domain_restore_report.rpp_to_model, name, body))
+
+
+@rpp_operation
+def domainNameRestoreProcesses_updatePartial(name, body):
+    return _restore(map_request(rpp_mapper.domain_restore_patch.rpp_to_model, name, body))
+
+
+@rpp_operation
+def domainNameRestoreProcesses_read(name):
+    resp = flows.read_domain_restore(get_epp_client(), name, client_transaction_id())
+    if isinstance(resp, ErrorResponse):
+        raise_epp_error(resp)
+    return rpp_mapper.domain_restore_process.model_to_rpp(resp.restore), 200, generate_rpp_response_headers(resp)
