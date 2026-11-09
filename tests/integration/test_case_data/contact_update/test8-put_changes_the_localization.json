@@ -1,0 +1,349 @@
+{
+  "test_id": "test8-put_changes_the_localization",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}08A",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.123123123"
+              },
+              "fax": {
+                "number": "tel:+49.456456456",
+                "features": {
+                  "fax": true
+                }
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            },
+            "localizations": {
+              "und": {
+                "name": {
+                  "full": "Jörg Müller"
+                }
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}08A"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}08B",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.123123123"
+              },
+              "fax": {
+                "number": "tel:+49.456456456",
+                "features": {
+                  "fax": true
+                }
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            },
+            "localizations": {
+              "und": {
+                "name": {
+                  "full": "Jörg Müller"
+                },
+                "addresses": {
+                  "addr": {
+                    "components": [
+                      {
+                        "kind": "name",
+                        "value": "123 Main St"
+                      },
+                      {
+                        "kind": "locality",
+                        "value": "Munich"
+                      },
+                      {
+                        "kind": "region",
+                        "value": "PA"
+                      },
+                      {
+                        "kind": "postcode",
+                        "value": "12345"
+                      }
+                    ],
+                    "countryCode": "US"
+                  }
+                }
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}08B"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/FO-{random_id_10}08B",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/contactInfo/localizations/und/addresses"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}08B"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/contacts/FO-{random_id_10}08A",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.123123123"
+              },
+              "fax": {
+                "number": "tel:+49.456456456",
+                "features": {
+                  "fax": true
+                }
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            },
+            "localizations": {
+              "und": {
+                "name": {
+                  "full": "Jörg Schmidt"
+                }
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}08A",
+          "contactInfo": {
+            "name": {
+              "full": "John Doe"
+            },
+            "localizations": {
+              "und": {
+                "name": {
+                  "full": "Jörg Schmidt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/FO-{random_id_10}08A",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/contactInfo/localizations/und/addresses"
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "RPP-Code": "02308"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

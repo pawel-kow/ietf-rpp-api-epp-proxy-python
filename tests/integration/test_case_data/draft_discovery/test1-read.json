@@ -1,0 +1,52 @@
+{
+  "test_id": "test1-read",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/.well-known/rpp",
+        "headers": {
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "discovery",
+          "versions": [
+            {
+              "@type": "discoveryVersion",
+              "version": "1.0",
+              "baseUrl": "https://localhost:8000"
+            }
+          ],
+          "environment": {
+            "@type": "discoveryEnvironment",
+            "name": "rpp-epp-proxy.example",
+            "status": "test"
+          },
+          "tlds": [
+            "example"
+          ],
+          "profiles": [
+            "urn:ietf:params:rpp:profile:epp-compatibility"
+          ],
+          "objects": [
+            "domainName",
+            "host",
+            "contact"
+          ]
+        },
+        "fields": {
+          "datetime": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}

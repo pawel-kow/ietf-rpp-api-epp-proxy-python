@@ -56,6 +56,47 @@ def test_availability_head_has_the_status_of_get(available, status):
     assert response.text == ""
 
 
+def contact_check_reply(available, reason=""):
+    return (True, "1000", epp_reply(1000, (
+        '<resData><contact:chkData xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">'
+        f'<contact:cd><contact:id avail="{int(available)}">JD-1234</contact:id>{reason}</contact:cd>'
+        '</contact:chkData></resData>'
+    )))
+
+
+@pytest.mark.parametrize("available, status", [(True, 200), (False, 404)])
+def test_contact_availability_get(available, status):
+    response = client_with(contact_check_reply(available)).get("/contacts/JD-1234/availability", headers=HEADERS)
+
+    assert response.status_code == status
+    assert response.headers["Content-Type"] == MEDIA_TYPE
+    assert response.headers["RPP-Code"] == "01000"
+    assert response.json() == {"@type": "contactAvailability", "available": available}
+
+
+def test_contact_availability_gives_the_reason():
+    reply = contact_check_reply(False, "<contact:reason>In use</contact:reason>")
+
+    response = client_with(reply).get("/contacts/JD-1234/availability", headers=HEADERS)
+
+    assert response.json() == {"@type": "contactAvailability", "available": False, "reason": "In use"}
+
+
+@pytest.mark.parametrize("available, status", [(True, 200), (False, 404)])
+def test_contact_availability_head_has_the_status_of_get(available, status):
+    response = client_with(contact_check_reply(available)).head("/contacts/JD-1234/availability", headers=HEADERS)
+
+    assert response.status_code == status
+    assert response.text == ""
+
+
+def test_contact_availability_error_is_a_problem_detail():
+    response = client_with((False, "2400", epp_reply(2400))).get("/contacts/JD-1234/availability", headers=HEADERS)
+
+    assert response.status_code == 500
+    assert response.headers["RPP-Code"] == "02400"
+
+
 @pytest.mark.parametrize("epp_code, rpp_result", [(1000, "01000"), (1001, "01001")])
 def test_delete_is_a_200_without_content(epp_code, rpp_result):
     reply = (True, str(epp_code), epp_reply(epp_code))
@@ -114,9 +155,6 @@ def test_dnssec_on_a_server_without_the_extension_is_a_501_unimplemented_extensi
 
 @pytest.mark.parametrize("method, url", [
     ("get", "/hosts/ns1.foo.example/processes/transferProcesses/latest"),
-    ("put", "/domainNames/foo.example"),
-    ("get", "/contacts/JD-1234/availability"),
-    ("get", "/.well-known/rpp"),
 ])
 def test_unimplemented_operation_is_a_501_unimplemented_command(method, url):
     response = getattr(client_with(), method)(url, headers=HEADERS)

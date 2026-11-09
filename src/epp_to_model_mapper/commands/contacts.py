@@ -1,16 +1,23 @@
 import re
 
-from models import Address, AuthInfo, Contact, ContactTransfer, ContactType
+from models import Address, AuthInfo, Contact, ContactTransfer, ContactType, ContactUpdate, ContactUpdateChanges
 
 from ..epp_model.contact_1_0 import (
+    AddRemType,
     AddrType,
     AuthInfoType,
+    ChgPostalInfoType,
+    ChgType,
+    Check,
     Create,
     Delete,
     E164Type,
     Info,
     PostalInfoEnumType,
     PostalInfoType,
+    StatusType,
+    StatusValueType,
+    Update,
     Transfer,
 )
 from ..epp_model.epp_1_0 import CommandType, Epp, ReadWriteType, TransferOpType, TransferType
@@ -98,6 +105,46 @@ def contact_delete(contact_id: str, rpp_cl_trid: str) -> Epp:
     )
 
 
+def _address(address: Address) -> AddrType:
+    addr = AddrType(street=list(address.street or []), city=address.city, sp=address.stateProvince, pc=address.postalCode, cc=address.country)
+    return addr
+
+
+def _chg_postal_info(change) -> ChgPostalInfoType:
+    """A form of a change. `org` "" clears the organisation."""
+    return ChgPostalInfoType(
+        type_value=PostalInfoEnumType(change.form),
+        name=change.name,
+        org=change.organisationName,
+        addr=_address(change.address) if change.address else None,
+    )
+
+
+def _chg(change) -> ChgType | None:
+    if not change:
+        return None
+    return ChgType(
+        postal_info=[_chg_postal_info(form) for form in change.postal_info],
+        voice=_e164(change.voice) if change.voice is not None else None,
+        fax=_e164(change.fax) if change.fax is not None else None,
+        email=change.email,
+        auth_info=AuthInfoType(pw=PwAuthInfoType(value=change.authInfo.pw)) if change.authInfo else None,
+    )
+
+
+def _add_rem(changes: ContactUpdateChanges | None) -> AddRemType | None:
+    if not changes:
+        return None
+    return AddRemType(status=[
+        StatusType(s=StatusValueType(label), value=changes.status_reasons.get(label, "")) for label in changes.status
+    ])
+
+
+def contact_update(update: ContactUpdate, rpp_cl_trid: str) -> Epp:
+    body = Update(id=update.id, add=_add_rem(update.add), rem=_add_rem(update.remove), chg=_chg(update.change))
+    return Epp(command=CommandType(update=ReadWriteType(other_element=body), cl_trid=rpp_cl_trid))
+
+
 def _transfer_auth_info(auth_info: AuthInfo) -> AuthInfoType:
     return AuthInfoType(pw=PwAuthInfoType(value=auth_info.pw, roid=auth_info.roid))
 
@@ -115,3 +162,6 @@ def contact_transfer(transfer: ContactTransfer, rpp_cl_trid: str) -> Epp:
             cl_trid=rpp_cl_trid,
         )
     )
+
+def contact_check(contact_id: str, rpp_cl_trid: str) -> Epp:
+    return Epp(command=CommandType(check=ReadWriteType(other_element=Check(id=[contact_id.upper()])), cl_trid=rpp_cl_trid))

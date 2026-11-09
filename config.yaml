@@ -41,3 +41,16 @@ rpp_epp_ns_map:
   host: "urn:ietf:params:xml:ns:host-1.0"
   secDNS: "urn:ietf:params:xml:ns:secDNS-1.1"
   rgp: "urn:ietf:params:xml:ns:rgp-1.0"
+
+# What the discovery document (GET /.well-known/rpp) states. Without all four, or with a value of the wrong shape,
+# it answers 500. The values below are placeholders for the test deployment: an operator MUST replace them.
+# Public base URL of this proxy, which clients prefix to every path. It must be an absolute https URL (core §22)
+# and is never taken from the request. The proxy itself serves plain HTTP, so the https URL is that of the TLS
+# termination in front of it. The one below is a local placeholder.
+rpp_base_url: https://localhost:8000
+# TLDs served (placeholder)
+rpp_tlds:
+  - example
+# Name and operational status ("production", "test", "development") of this server (placeholders)
+rpp_environment_name: rpp-epp-proxy.example
+rpp_environment_status: test

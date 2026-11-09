@@ -2,6 +2,12 @@ from .domains import *
 from .common import *
 from .address import Address
 from .contacts import *
+from .postal_info_change import PostalInfoChange
+from .contact_update_changes import ContactUpdateChanges
+from .contact_update_change import ContactUpdateChange
+from .contact_update import ContactUpdate
+from .contact_update_response import ContactUpdateResponse
+from .contact_check_response import ContactCheckResponse
 from .dns_sec import DnsSec
 from .ds_data import DsData
 from .key_data import KeyData
@@ -19,6 +25,9 @@ from .host_update_response import HostUpdateResponse
 from .contact_transfer import ContactTransfer
 from .contact_transfer_process import ContactTransferProcess
 from .contact_transfer_response import ContactTransferResponse
+from .domain_renew import DomainRenew
+from .domain_renew_process import DomainRenewProcess
+from .domain_renew_response import DomainRenewResponse
 from .domain_transfer import DomainTransfer
 from .domain_transfer_process import DomainTransferProcess
 from .domain_transfer_response import DomainTransferResponse
@@ -31,3 +40,4 @@ from .queue_message import QueueMessage
 from .transfer_event import TransferEvent
 from .message_error_response import MessageErrorResponse
 from .unknown_result_code import UnknownResultCode
+from .discovery import Discovery

@@ -35,7 +35,7 @@ the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and
 The backend refuses a repeated clTRID with `2400`, also across sessions, so every EPP command
 needs a new one. It drops addresses given when creating an external host, so tests of addresses
 at create use an internal host, which needs its domain to exist first. Its other host defects are
-#49, #50 and #54. Info returns no `domain:upID` or `domain:upDate` (#61), so reading `upClientId`
+#49, #50 and #54. A contact check of an id outside 3 to 16 characters answers available (pawel-kow/epp#24). Info returns no `domain:upID` or `domain:upDate` (#61), so reading `upClientId`
 is tested only in unit tests. It refuses the secDNS key data interface with `2306`, and a digest it
 already holds even under another keyTag (pawel-kow/epp#20). It stores `domain:hostAttr` as a host
 object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.
@@ -45,10 +45,25 @@ losing registrar), so `message/` cases assert only the shape of the head and use
 Acking a real head is tested in `tests/unit/test_message_wire.py`, as the integration runner cannot carry an id from
 one step to the next. The backend returns the id of the acknowledged message in the `msgQ` of an ack reply.
 
+A contact `chg` of a `postalInfo` form replaces it: the address members not sent again (`sp`, `pc`) are wiped, also when
+only `name` or `org` is sent, so the proxy sends every changed form complete (pawel-kow/epp#22). A `chg` of a form the contact does not have
+is ignored although the reply is 1000 (pawel-kow/epp#23), so the proxy answers 500 (`02400`) for it (`contact_update/test33` and `test34`), and the cases that change a localization change an existing one (`test8`). Removing a status the contact does not have succeeds, so `test6` and `test19` end on a direct `remove` of an absent label that answers 200.
+An empty `org`, `voice` or `fax` clears it and reads back as an empty element. Contact cases prove absence with a PATCH
+`remove` that answers 422 (`02308`) because the property is gone, after the same removal answered 200 on a twin contact.
+
 A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
-`serverApproved`. Info does not show `pendingTransfer` (#64), a completed transfer cannot be
+`serverApproved`. The domain Info returns no status reason, so a domain PUT with a `reason` is a remove and add each time, and a contact PUT with one is too (the contact Info repeats the label, `contact_update/test7` proves only that the backend accepts it). A registrar that is not
+the sponsor gets `2201` from the Info itself, so the refusal of a change of nothing by a non-sponsor is tested only in unit tests
+(`domain_update/test30` and `test31` pass on the backend's `2201`). A domain PUT without `registrant` removes it, the backend answers 200. Absence of the registrant is shown
+by a PATCH that removes it and `/status`, which forces the read path: 422 `02308` without a registrant, 200 with one (`domain_update/test32`). A domain create with `hostAttr` and no address is refused with `2003`, so the host
+objects are created with `nameservers` and a PUT with `ns` records follows (`domain_update/test29`).
+
+Info does not show `pendingTransfer` (#64), a completed transfer cannot be
 queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in
 unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67). Contact transfers behave the same, except that Info does show the sponsor changing, so `contact_transfer` cases read it back.
+
+The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
+`expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
 
 ## Tests without the backend
 
@@ -84,11 +99,14 @@ update → verify) run against a Flask test client.
 - A step's `response` can be `{"any_of": [...]}`, a list of responses of which one must match,
   for behaviour the protocol leaves to the server. A create that may be refused, or may keep
   the data in another form, lists each outcome, see `domain_create/test16` to `test18`.
+- A step's `capture` maps a name to a dotted field of its response body. Later steps write `{capture:name}`
+  in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
+  a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.
-- `draft_domain/`, `draft_contact/`, `draft_host/` and `draft_patch/` hold the examples
-  of the JSON draft (§8.1, §8.2, §8.3, §5.3.1). Examples for operations not implemented yet have the
+- `draft_domain/`, `draft_contact/`, `draft_host/`, `draft_patch/` and `draft_discovery/` hold the examples
+  of the JSON draft (§8.1, §8.2, §8.3, §5.3.1, §8.7.1; the discovery one has the configured values). Examples for operations not implemented yet have the
   expected result written down and `"skip": "#<issue>"`.
 
 To add a case, drop a new JSON file in the appropriate group dir. No Python changes
@@ -111,7 +129,12 @@ afterwards.
 
 ## Isolating cases
 
+Absence cannot be asserted, because the body comparison is a subset. A case shows that something was removed with a
+`replace` with `match` on it, which reads the domain and answers 422 `02308`. The same `match`, in the form the
+registry stores (`NS1.BAR.EXAMPLE`, as a match is exact), must first answer 200 before the removal, or the 422 proves
+nothing (see `domain_update/test17`).
+
 Isolate one update facet per file (authInfo-only, hostObj add/remove,
-contacts+registrant, …). `domainNames_create` and `domainNames_updatePartial` build their
+contacts+registrant, …). `domainNames_create`, `domainNames_updatePartial` and `domainNames_update` build their
 success body from a follow-up EPP **Info** call, so a passing update test also transitively
 exercises Info and `domains.model_to_rpp`.

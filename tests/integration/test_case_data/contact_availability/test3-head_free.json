@@ -1,0 +1,22 @@
+{
+  "test_id": "test3-head_free",
+  "steps": [
+    {
+      "request": {
+        "method": "HEAD",
+        "url": "/contacts/FO-{random_id_10}-a3/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    }
+  ]
+}

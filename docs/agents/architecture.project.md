@@ -37,11 +37,22 @@ single feature (e.g. "domain update") touches every layer:
    update. A patch that matches no element, or matches several for a `replace`, is
    `PatchNotApplicable` (`02308`, 422). `host_patch.py` does the same for hosts: its
    `rpp_to_model_with_current` returns the wanted `Host`, and the flow takes the difference.
-   `patch_statuses.py` hides server statuses from a patch, on hosts and domains, see
+   `domain_replacement.py` does the same for a domain PUT: it rejects members outside `domainName.update`, keeps
+   the read-only members and server statuses of the read, takes only the replaceable members from the body (an
+   omitted one is cleared) and lets `domain_patch_difference.py` produce the update. A present `authInfo` always
+   goes as `chg`, an omitted one is left alone, see [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-domain).
+   `contacts.py` also holds `contact_from_rpp`, the Card conversion that create, PUT and PATCH share.
+   `contact_difference.py` turns a current and a wanted `Contact` into a `ContactUpdate`: every changed `postalInfo`
+   form is sent complete, the organisation and the numbers are cleared by an empty element, and what EPP cannot
+   clear is refused (`NotSupportedByEpp`). `contact_replacement.py` (PUT) keeps what EPP cannot clear when the body
+   omits it, and `contact_patch.py` sends `/status` and `/authInfo` without a read and reads for `/contactInfo`, see
+   [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-contact).
+   `patch_statuses.py` hides server statuses from a patch, on hosts, domains and contacts, see
    [spec-issues.md](../../.spec/spec-issues.md#status-in-json-patch).
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
-   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a domain transfer, and
-   `contact_transfer_process.py` and `contact_transfer_reject.py` a contact transfer.
+   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a domain transfer,
+   `contact_transfer_process.py` and `contact_transfer_reject.py` a contact transfer, and
+   `domain_renew_process.py` a renewal.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
@@ -57,14 +68,16 @@ single feature (e.g. "domain update") touches every layer:
    typed result or an `ErrorResponse`, and the handler renders it. `flows/hosts.py`
    holds mutate-then-Info, and PUT as Info, difference, update and Info. `patch_host` in
    `flows/hosts.py` and `patch_domain` in `flows/domains.py` hold PATCH: update and Info for a patch
-   that maps directly, and Info, update and Info for one that needs the current state. The read and
-   the update are not atomic.
+   that maps directly, and Info, update and Info for one that needs the current state. `replace_domain`
+   is a domain PUT: it takes the second path, and a PUT that changes nothing sends no update. `flows/contacts.py`
+   does the same for contacts. `flows/sponsor.py` holds the 403 for an update that changes nothing and is not the
+   sponsor's, which sends no EPP command to say so. The read and the update are not atomic.
 7. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
    inbound EPP XML into models. `epp_model/` holds xsdata-generated dataclasses for
    the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
    is dead code: ignore it.
 
-`domainNames_create`, `domainNames_updatePartial` and the host mutations do not build
+`domainNames_create`, `domainNames_updatePartial`, `domainNames_update` and the host mutations do not build
 their response from the create/update reply. They issue a **follow-up EPP Info** call and
 map that to RPP, because EPP mutation responses don't echo full object state. If that Info fails, the
 mutation has still been applied, so the handler answers **202** with no body and the
@@ -91,6 +104,11 @@ message id or an unreadable result, which is a 500. A code the proxy has no name
 adds after security and before Connexion's validators, so an anonymous client gets its 401 before its body is read. It reads the whole body of a request that has one before anything else runs, drops the request if the client
 disconnects first, and passes on a complete request with a `content-length`. So chunked bodies, late bodies and
 aborted uploads reach no handler half-received. It has no size limit (#93).
+
+The renew handler is `domainNameRenewProcesses_renewCreate` in `controller/domains.py`, and `renew_domain` in
+`flows/domains.py` runs it. EPP needs `curExpDate`, so a request without `expiryDate` first has the domain read.
+The EPP renew reply carries the new expiry date, so there is no read-back, and the answer is a 200 without
+`Location`, see [spec-issues.md](../../.spec/spec-issues.md#renew-process).
 
 `RppRequestBodyValidator` and `RppResponseBodyValidator` let a body be absent where the
 OpenAPI allows it, which Connexion's validators do not. The handler then gets an empty dict.
@@ -131,7 +149,7 @@ its own message:
 
 An extension the proxy does not know of cannot be told apart from no extension, so it
 counts as the first kind. A PATCH that EPP could do once the proxy has read the object
-is the second kind (#29 for contacts).
+is the second kind.
 
 The third kind is known only from the EPP greeting, which mappers cannot reach, so the
 `epp_*` function checks `supports_extension` and `raise_epp_error` renders the result.
@@ -153,12 +171,19 @@ open the connection. `rpp_epp_use_tls` (default `true`) connects over TLS with t
 certificate and hostname verified. `rpp_epp_tls_insecure_skip_verify` (default `false`)
 turns both checks off, for test backends only.
 
+`rpp_base_url`, `rpp_tlds`, `rpp_environment_name` and `rpp_environment_status` are what the
+discovery document (`GET /.well-known/rpp`, no authentication, no EPP) states. `controller/discovery.py`
+adds the RPP version and the supported objects, which are constants. Without all four, it answers
+500 (`02400`) and logs the keys, never the values. A setting is also missing when it has the wrong shape: `rpp_base_url` must be an absolute `https` URL, `rpp_tlds` a non-empty list of non-empty strings. `profiles` is the constant `epp-compatibility`, though `GET /profiles/{name}` is 501. The base URL is never taken from the request. The proxy does not
+check the `version` parameter of the media type, so core §12's 406 is not enforced (#41). See
+[spec-issues.md](../../.spec/spec-issues.md#discovery).
+
 ## Composition
 
 [src/run.py](../../src/run.py) is the composition root: it builds the default
 `EPPClient` factory and passes it to
 [`EppSessionAuthenticator`](../../src/controller/epp_session_authenticator.py), which
-goes to `create_app` in [src/app.py](../../src/app.py). `create_app` hands
+goes to `create_app` in [src/app.py](../../src/app.py), with `config` as the settings of the discovery document, which the handler reads from the app configuration. `create_app` hands
 `authenticate` to Connexion through `security_map`, because Connexion would otherwise
 resolve the function by name and it could not receive dependencies.
 

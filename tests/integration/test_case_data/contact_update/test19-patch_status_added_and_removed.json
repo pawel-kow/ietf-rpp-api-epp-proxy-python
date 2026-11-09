@@ -1,0 +1,223 @@
+{
+  "test_id": "test19-patch_status_added_and_removed",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}19A",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Main St"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  },
+                  {
+                    "kind": "region",
+                    "value": "PA"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "12345"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.123123123"
+              },
+              "fax": {
+                "number": "tel:+49.456456456",
+                "features": {
+                  "fax": true
+                }
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}19A"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/FO-{random_id_10}19A",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/status",
+            "value": {
+              "@type": "contactStatus",
+              "label": "clientDeleteProhibited"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}19A",
+          "status": [
+            {
+              "label": "clientDeleteProhibited"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/FO-{random_id_10}19A",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/status",
+            "match": {
+              "label": "clientDeleteProhibited"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}19A",
+          "status": [
+            {
+              "label": "ok"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/FO-{random_id_10}19A",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/status",
+            "match": {
+              "@type": "contactStatus",
+              "label": "clientDeleteProhibited"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "RPP-Code": "02308"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/FO-{random_id_10}19A",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/status",
+            "match": {
+              "label": "clientDeleteProhibited"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}19A"
+        }
+      }
+    }
+  ]
+}

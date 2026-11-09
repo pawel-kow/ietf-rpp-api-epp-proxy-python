@@ -1,0 +1,48 @@
+{
+  "test_id": "test6-repeated_cltrid",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}-a6/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "repcontact-{random_id_10}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contactAvailability",
+          "available": true
+        },
+        "content_type": "application/rpp+json"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}-a6/availability",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "repcontact-{random_id_10}"
+        }
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "RPP-Code": "02400"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "content_type": "application/problem+json"
+      }
+    }
+  ]
+}
