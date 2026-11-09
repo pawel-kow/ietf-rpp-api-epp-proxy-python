@@ -1,0 +1,121 @@
+{
+  "test_id": "test4-nothing_pending",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}C4",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}C4"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/FO-{random_id_10}C4/processes/transferProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02301"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts/FO-{random_id_10}C4/processes/transferProcesses/latest/transferApprove",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02301"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts/FO-{random_id_10}C4/processes/transferProcesses/latest/transferReject",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02301"
+        }
+      }
+    }
+  ]
+}

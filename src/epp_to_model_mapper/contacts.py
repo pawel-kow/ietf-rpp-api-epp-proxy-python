@@ -1,9 +1,9 @@
 from models import *
 from typing import Union
 from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header
-from .commands.contacts import contact_check, contact_create, contact_delete, contact_info
+from .commands.contacts import contact_check, contact_create, contact_delete, contact_info, contact_transfer
 from .commands.helper import epp_to_str, str_to_epp
-from .epp_model.contact_1_0 import ChkData, CreData, InfData, PostalInfoEnumType
+from .epp_model.contact_1_0 import ChkData, CreData, InfData, PostalInfoEnumType, TrnData
 from .epp_model.epp_1_0 import Epp
 
 
@@ -41,6 +41,32 @@ def info_contact_xml(id: str, client_request_id=None) -> str:
 
 def delete_contact_xml(id: str, client_request_id=None) -> str:
     return epp_to_str(contact_delete(id, cl_trid(client_request_id)))
+
+
+def transfer_contact_xml(transfer: ContactTransfer, client_request_id=None) -> str:
+    return epp_to_str(contact_transfer(transfer, cl_trid(client_request_id)))
+
+
+def parse_contact_transfer_response(xml_string: str, client_transaction_id: str | None) -> ContactTransferResponse:
+    """Parses an EPP contact transfer response, which is the same for every operation."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    data = find_res_data(epp, TrnData)
+    if data is None:  # applied, but EPP gave no state
+        return ContactTransferResponse(transfer=None, **header)
+    return ContactTransferResponse(
+        transfer=ContactTransferProcess(
+            id=data.id,
+            trStatus=data.tr_status.value,
+            reqClientId=data.re_id,
+            requestDate=epp_datetime(data.re_date),
+            actClientId=data.ac_id,
+            actionDate=epp_datetime(data.ac_date),
+        ),
+        **header,
+    )
 
 
 def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[ContactDeleteResponse, ErrorResponse]:
@@ -109,6 +135,7 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
     )
 
     return ContactCreateResponse(contact=contact, **header)
+
 
 
 def parse_contact_check_response(xml_string: str, contact_id: str, client_transaction_id: str | None) -> ContactCheckResponse:

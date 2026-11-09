@@ -303,13 +303,18 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - `GET .../transferProcesses/latest` with nothing pending gets EPP `2301`. Table 9 maps `02301` to 409, but the OpenAPI has no 409 on that GET, and core §16.9.5.2 says the resource "may not exist", which suggests 404 (#68).
 - **Proxy:** 409 (`02301`).
 - Core §16.9.5.5 shows approve with no content and the OpenAPI declares no `requestBody`, but json §8.1.10 sends `{"@type": "domainTransferProcess"}`.
-- **Proxy:** accepts both.
+- **Proxy:** accepts both. Approve reads its body like reject does: `reason` is 501 (`02102`), anything else the schema does not allow is 400 (`02001`), and nothing is sent to EPP, because an approval cannot be undone.
 - Json §8.2.9 gives an example with `reason`, which data-objects §10.1.1.5 forbids in the EPP Compatibility Profile, without naming the rejection.
 - **Proxy:** 501 (`02102`).
 - EPP has no process ids and no transfer history, so the list and `/{processId}` operations have nothing to map to.
 - **Proxy:** 501 (`02101`), and responses have no `processId`.
 - EPP has no push transfer, and its response does not say the direction.
 - **Proxy:** `transferDir: push` and `gainingClientId` are 501 (`02102`), and responses always have `transferDir: pull`.
+- Contacts use the same mapping as domains (core §16.9.5, json §8.2.6 to §8.2.9) with `@type` `transferProcess`. RFC 5733 has no period and `contact:trnData` no expiry date, so a contact has neither, and a `transferPeriod` in a contact request is not in the schema (json §4.4).
+- **Proxy:** `transferPeriod` on a contact is 400 (`02001`). Json §8.2.9's reject example has `reason`, so the draft's own example is 501 (`02102`) and `draft_contact/test11` expects that.
+- The OpenAPI declares no 501 on the transfer operations, which the proxy answers for list, `/{processId}`, push, `gainingClientId` and `reason`.
+- `RPP-Authorization` can accompany query, cancel, approve and reject too. RFC 5730 §2.9.3.4 says authorization information MUST be provided to complete a transfer command, and RFC 5733 §3.2.4 gives `contact:authInfo` for every `op` without saying a server ignores it on any of them.
+- **Proxy:** forwards it on every operation. EPP has a place for it, so nothing is dropped, and refusing it would change the domain wire.
 
 ## Renew process
 
