@@ -4,6 +4,43 @@
     {
       "request": {
         "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "ns1.u24-{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.u24-{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "host",
+          "hostName": "ns1.u24-{random_name}.net"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
         "url": "/domainNames",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
@@ -63,7 +100,7 @@
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "ns1.bar.example"
+              "hostName": "ns1.u24-{random_name}.net"
             }
           ],
           "dns": {
@@ -92,7 +129,7 @@
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "NS1.BAR.EXAMPLE"
+              "hostName": "{upper:ns1.u24-{random_name}.net}"
             }
           ],
           "dns": {

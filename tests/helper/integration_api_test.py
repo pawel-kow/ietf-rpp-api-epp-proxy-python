@@ -122,6 +122,12 @@ def substitute_captures(value, captures):
         return CAPTURE.sub(replace, value)
     return value
 
+UPPER = re.compile(r"\{upper:([^{}]*)\}")
+
+def replace_upper_placeholders(value: str) -> str:
+    """Replaces {upper:TEXT} by TEXT in upper case, the form the registry stores a name in, for an exact `match`."""
+    return UPPER.sub(lambda match: match.group(1).upper(), value)
+
 def endpoint_test(client, case_sequence):
     """
     Tests the POST /domains endpoint using the Flask test client.

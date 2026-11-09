@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from tests.helper.integration_api_test import endpoint_test, field_value, substitute_captures
+from tests.helper.integration_api_test import endpoint_test, field_value, replace_upper_placeholders, substitute_captures
 from tests.helper.recursive_compare_existing import recusive_compare_existing
 
 REQUEST = {"method": "GET", "url": "/x", "headers": {"RPP-Cltrid": "cl-1"}}
@@ -143,3 +143,11 @@ def test_capture_from_a_list_body_is_used_by_the_next_step():
     ]})
 
     assert sent == ["/x", "/messages/42"]
+
+
+def test_upper_placeholder_is_its_text_in_upper_case():
+    assert replace_upper_placeholders('"{upper:ns1.t1-ab.net}" and {upper:x}') == '"NS1.T1-AB.NET" and X'
+
+
+def test_text_without_upper_placeholder_is_unchanged():
+    assert replace_upper_placeholders("ns1.{random_name}.net") == "ns1.{random_name}.net"

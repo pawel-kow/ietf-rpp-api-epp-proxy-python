@@ -4,6 +4,186 @@
     {
       "request": {
         "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}uk1",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}uk1"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}uk2",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}uk2"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "ns1.u17-{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.u17-{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "host",
+          "hostName": "ns1.u17-{random_name}.net"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "ns2.u17-{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns2.u17-{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "host",
+          "hostName": "ns2.u17-{random_name}.net"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
         "url": "/domainNames",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
@@ -21,14 +201,14 @@
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-TEST1"
+            "id": "FO-{random_id_10}uk1"
           },
           "contacts": [
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-TEST1"
+                "id": "FO-{random_id_10}uk1"
               }
             }
           ]
@@ -59,25 +239,25 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-TEST1"
+            "id": "FO-{random_id_10}uk1"
           },
           "contacts": [
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-TEST2"
+                "id": "FO-{random_id_10}uk2"
               }
             }
           ],
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "ns1.bar.example"
+              "hostName": "ns1.u17-{random_name}.net"
             },
             {
               "@type": "host",
-              "hostName": "ns2.bar.example"
+              "hostName": "ns2.u17-{random_name}.net"
             }
           ]
         }
@@ -89,25 +269,25 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-TEST1"
+            "id": "FO-{random_id_10}uk1"
           },
           "contacts": [
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-TEST2"
+                "id": "FO-{random_id_10}uk2"
               }
             }
           ],
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "NS1.BAR.EXAMPLE"
+              "hostName": "{upper:ns1.u17-{random_name}.net}"
             },
             {
               "@type": "host",
-              "hostName": "NS2.BAR.EXAMPLE"
+              "hostName": "{upper:ns2.u17-{random_name}.net}"
             }
           ]
         },
@@ -131,11 +311,11 @@
             "op": "replace",
             "path": "/nameservers",
             "match": {
-              "hostName": "NS1.BAR.EXAMPLE"
+              "hostName": "{upper:ns1.u17-{random_name}.net}"
             },
             "value": {
               "@type": "host",
-              "hostName": "ns1.bar.example"
+              "hostName": "ns1.u17-{random_name}.net"
             }
           }
         ]
@@ -172,7 +352,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-TEST2"
+                "id": "FO-{random_id_10}uk2"
               }
             }
           }
@@ -203,12 +383,12 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-TEST2"
+            "id": "FO-{random_id_10}uk2"
           },
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "ns2.bar.example"
+              "hostName": "ns2.u17-{random_name}.net"
             }
           ]
         }
@@ -220,12 +400,12 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-TEST2"
+            "id": "FO-{random_id_10}uk2"
           },
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "NS2.BAR.EXAMPLE"
+              "hostName": "{upper:ns2.u17-{random_name}.net}"
             }
           ]
         },
@@ -249,11 +429,11 @@
             "op": "replace",
             "path": "/nameservers",
             "match": {
-              "hostName": "NS1.BAR.EXAMPLE"
+              "hostName": "{upper:ns1.u17-{random_name}.net}"
             },
             "value": {
               "@type": "host",
-              "hostName": "ns1.bar.example"
+              "hostName": "ns1.u17-{random_name}.net"
             }
           }
         ]
@@ -290,7 +470,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-TEST2"
+                "id": "FO-{random_id_10}uk2"
               }
             }
           }
