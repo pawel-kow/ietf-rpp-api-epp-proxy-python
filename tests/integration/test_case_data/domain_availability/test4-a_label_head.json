@@ -1,0 +1,22 @@
+{
+  "test_id": "test4-a_label_head",
+  "steps": [
+    {
+      "request": {
+        "method": "HEAD",
+        "url": "/domainNames/{alabel:bücher-a1}.example/availability?uName=b%C3%BCcher.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02102"
+        }
+      }
+    }
+  ]
+}

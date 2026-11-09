@@ -244,7 +244,10 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 ## IDN
 
 - json §6.4 requires `lgr` whenever `uName` is present, and core EPP has no element for either. So `uName` cannot be computed from the A-label on read without breaking that rule.
-- **Proxy:** both are 501 (`02102`) on create and are left out of a read (#58).
+- The EPP IDN extension (`urn:ietf:params:xml:ns:idn-1.0`, draft-obispo-epp-idn-04) carries an IDN table id (`de`) chosen by the registry, json §6.4 an LGR name from the IANA IDN tables registry (`latn-1.0`). Neither draft says how one maps to the other.
+- The extension adds nothing to check, so core's availability example with `uName` and `lgr` cannot be expressed in EPP.
+- draft-obispo-epp-idn-04 asks for 2005 when `uname` does not map to the name. The test backend answers 2306.
+- **Proxy:** `lgr` is the IDN table through the configured map `rpp_idn_lgr_tables` (LGR name to table id, one to one), `uName` is `idn:uname`. On create, an `lgr` not in the map, or a `uName` without `lgr`, is a 400 (`02001`). An `xn--` name without `lgr` goes to the server, which may refuse it. A server that does not offer the extension gives 501 (`02103`). A read gives `uName` and `lgr` from the Info reply, and leaves both out, with a warning in the log, when the table is not in the map. PUT and PATCH cannot change them (`domainName.update`). Availability with `uName` or `lgr` is 501 (`02102`), and an A-label alone is checked as any name.
 
 ## Disclose
 

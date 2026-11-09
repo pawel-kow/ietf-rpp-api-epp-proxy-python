@@ -38,6 +38,7 @@ from ..epp_model.epp_1_0 import (
 )
 from ..epp_model.eppcom_1_0 import PwAuthInfoType
 from ..epp_model.host_1_0 import AddrType, IpType
+from ..epp_model.idn_1_0 import Data as IdnData
 from ..epp_model.sec_dns_1_1 import Create as SecdnsCreateType
 from ..epp_model.sec_dns_1_1 import DsDataType, DsOrKeyType, KeyDataType, RemType as SecdnsRemType
 from ..epp_model.sec_dns_1_1 import Update as SecdnsUpdateType
@@ -199,10 +200,16 @@ def domain_create(domain: Domain, rpp_cl_trid: str) -> Epp:
     if domain.authInfo and domain.authInfo.pw:
         create.auth_info = AuthInfoType(pw=PwAuthInfoType(value=domain.authInfo.pw))
 
+    extensions = []
+    if domain.dnsSEC:
+        extensions.append(_sec_dns_create(domain.dnsSEC))
+    if domain.idn:
+        extensions.append(IdnData(table=domain.idn.table, uname=domain.idn.uname))
+
     return Epp(
         command=CommandType(
             create=ReadWriteType(other_element=create),
-            extension=ExtAnyType(other_element=[_sec_dns_create(domain.dnsSEC)]) if domain.dnsSEC else None,
+            extension=ExtAnyType(other_element=extensions) if extensions else None,
             cl_trid=rpp_cl_trid,
         )
     )

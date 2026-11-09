@@ -1,0 +1,38 @@
+{
+  "test_id": "test28-lgr_without_idn_table",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "{alabel:bücher-t28}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "uName": "{ulabel:bücher-t28}.example",
+          "lgr": "cyrl-1.0"
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02001"
+        }
+      }
+    }
+  ]
+}

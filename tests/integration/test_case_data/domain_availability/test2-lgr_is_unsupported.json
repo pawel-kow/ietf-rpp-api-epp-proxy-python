@@ -1,0 +1,26 @@
+{
+  "test_id": "test2-lgr_is_unsupported",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/{alabel:bücher-a1}.example/availability?lgr=latn-1.0",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02102"
+        }
+      }
+    }
+  ]
+}

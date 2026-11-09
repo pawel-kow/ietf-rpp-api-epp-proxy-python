@@ -47,6 +47,9 @@ single feature (e.g. "domain update") touches every layer:
    clear is refused (`NotSupportedByEpp`). `contact_replacement.py` (PUT) keeps what EPP cannot clear when the body
    omits it, and `contact_patch.py` sends `/status` and `/authInfo` without a read and reads for `/contactInfo`, see
    [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-contact).
+   `idn_tables.py` holds `IdnTables`, the map between a domain's `lgr` and the table of the EPP IDN extension, which
+   `domains.rpp_to_model` and `domains.model_to_rpp` take from the handler. `domain_availability.rpp_to_model` refuses
+   the `uName` and `lgr` parameters of a check, see [spec-issues.md](../../.spec/spec-issues.md#idn).
    `patch_statuses.py` hides server statuses from a patch, on hosts, domains and contacts, see
    [spec-issues.md](../../.spec/spec-issues.md#status-in-json-patch).
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
@@ -167,7 +170,9 @@ leading `0`.
 `false`) toggles between stateless per-request EPP connections and a cached,
 stateful connection. The EPP backend host and port come from `rpp_epp_host` and
 `rpp_epp_port`, and `new_epp_client` in [src/run.py](../../src/run.py) uses them to
-open the connection. `rpp_epp_use_tls` (default `true`) connects over TLS with the
+open the connection. `rpp_idn_lgr_tables` maps an LGR name to an IDN table id, one to one. `run.py` turns it into
+`IdnTables`, which refuses a map that is not one to one, so the app does not start with one. Without it no `lgr` is
+accepted. `rpp_epp_use_tls` (default `true`) connects over TLS with the
 certificate and hostname verified. `rpp_epp_tls_insecure_skip_verify` (default `false`)
 turns both checks off, for test backends only.
 
@@ -183,7 +188,7 @@ check the `version` parameter of the media type, so core §12's 406 is not enfor
 [src/run.py](../../src/run.py) is the composition root: it builds the default
 `EPPClient` factory and passes it to
 [`EppSessionAuthenticator`](../../src/controller/epp_session_authenticator.py), which
-goes to `create_app` in [src/app.py](../../src/app.py), with `config` as the settings of the discovery document, which the handler reads from the app configuration. `create_app` hands
+goes to `create_app` in [src/app.py](../../src/app.py), with `config` as the settings of the discovery document, which the handler reads from the app configuration, and the `IdnTables`, which the domain handlers read from it the same way. `create_app` hands
 `authenticate` to Connexion through `security_map`, because Connexion would otherwise
 resolve the function by name and it could not receive dependencies.
 

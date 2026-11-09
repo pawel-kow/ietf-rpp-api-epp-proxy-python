@@ -31,14 +31,22 @@ Further:
 
 ## Tasks
 
-- [~] Plan, branch, mutex
-- [ ] `epp_model/idn_1_0.py` (xsdata 25.7 from the draft's schema), `IDN_EXTENSION` in `LOGIN_EXTENSIONS`
-- [ ] `DomainIdn` model, `Domain.idn`
-- [ ] Failing unit tests: mapper create/read, `IdnTables`, XML create/info, wire 501s, availability parameters
-- [ ] Implement: `IdnTables`, config key, `create_app` wiring, mappers, `epp_domains_Create` check, availability
-- [ ] Integration: un-skip `draft_domain/test7-read_idn` (create first), `domain_create` IDN cases
-- [ ] Docs: architecture.project.md, testing.project.md, spec-issues.md (IDN), config.yaml comment
-- [ ] Full `pytest`, PR, close #58
+- [x] Plan, branch, mutex
+- [x] `epp_model/idn_1_0.py` (xsdata 25.7 from the draft's schema), `IDN_EXTENSION` in `LOGIN_EXTENSIONS`
+- [x] `DomainIdn` model, `Domain.idn`
+- [x] Failing unit tests: mapper create/read, `IdnTables`, XML create/info, wire 501s, availability parameters
+- [x] Implement: `IdnTables`, config key, `create_app` wiring, mappers, `epp_domains_Create` check, availability
+- [x] Integration: un-skip `draft_domain/test7-read_idn` (create first), `domain_create` test24-31,
+      `domain_update` test33-34, new group `domain_availability`. `{alabel:…}`/`{ulabel:…}` placeholders.
+- [x] Docs: architecture.project.md, testing.project.md, spec-issues.md (IDN), config.yaml comment
+- [~] Full `pytest`, PR, close #58
+
+## Corrections
+
+- The running test DB predated the EPP-server-docker migrations `001_idn.sql` and `002_epp_session.sql`
+  (they run only at DB init): every IDN create was `2306 Unknown idn:table de`. Applied both by hand with the
+  maintainer's approval (2026-11-09).
+- The "extension not offered" error in `epp_domains.py` was written out three times; it is now `_missing_extension`.
 
 ## Open questions
 

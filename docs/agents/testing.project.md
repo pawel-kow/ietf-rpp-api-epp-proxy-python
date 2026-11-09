@@ -62,6 +62,12 @@ Info does not show `pendingTransfer` (#64), a completed transfer cannot be
 queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in
 unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67). Contact transfers behave the same, except that Info does show the sponsor changing, so `contact_transfer` cases read it back.
 
+The IDN tables of the backend are `de` and `es`, and `config.yaml` maps `latn-1.0` to `de` only, so a read with an
+unmapped table is tested only in unit tests. It answers 2306, not the 2005 of draft-obispo-epp-idn-04, for a `uname`
+that does not match the name. Its IDN tables and the session table come from migrations in EPP-server-docker, which run
+only when the database is first created: a database from before them answers `2306 Unknown idn:table` and needs them
+applied by hand.
+
 The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
 `expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
 
@@ -88,7 +94,8 @@ update → verify) run against a Flask test client.
 
 - Placeholders `{random_name}`, `{random_id_10}`, `{test_start}` (start of the case)
   and `{unique_cltrid}` (new value per occurrence) keep tests idempotent against a
-  shared registry. The backend requires contact ids to start with `FO-`.
+  shared registry. The backend requires contact ids to start with `FO-`. `{ulabel:TEXT}` is the U-label
+  `TEXT-<random_id_10>` and `{alabel:TEXT}` its A-label, so an IDN case writes `{alabel:bücher-t24}.example`.
 - Every step asserts the headers of core §6.2: `RPP-Svtrid`, a 5-digit `RPP-Code`, and
   `RPP-Cltrid` echoed.
 - Response body comparison is **subset + case-insensitive**

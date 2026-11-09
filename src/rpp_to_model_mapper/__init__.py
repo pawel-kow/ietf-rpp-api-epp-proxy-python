@@ -5,6 +5,7 @@ from . import (
     host_dns, json_patch,
     host_patch, host_replacement, hosts, messages, patch_statuses, phones, prov_metadata, rpp_authorization, statuses,
 )
+from .idn_tables import IdnTables
 from .not_supported_by_epp import NotSupportedByEpp
 from .not_supported_by_proxy import NotSupportedByProxy
 from .patch_not_applicable import PatchNotApplicable

@@ -14,6 +14,7 @@ from controller.rpp_request_body_validator import RppRequestBodyValidator
 from controller.rpp_response_body_validator import RppResponseBodyValidator
 from controller.epp_basic_security_handler import EppBasicSecurityHandler
 from models import ResultCode
+from rpp_to_model_mapper import IdnTables
 
 
 def _default_result(status: int) -> ResultCode:
@@ -42,7 +43,7 @@ def handle_rpp_error(request: ConnexionRequest, exc: ProblemException) -> Connex
     )
 
 
-def create_app(authenticator, discovery_settings=None):
+def create_app(authenticator, discovery_settings=None, idn_tables=None):
     """
     Builds the application.
 
@@ -51,6 +52,8 @@ def create_app(authenticator, discovery_settings=None):
             token info holding the request's EPP client, or None to reject the request.
         discovery_settings: Has rpp_base_url, rpp_tlds, rpp_environment_name and
             rpp_environment_status, which the discovery document states.
+        idn_tables: The IdnTables that map a domain's `lgr` to the IDN table of EPP. Without them no `lgr` is
+            accepted, and reads leave out `uName` and `lgr`.
     """
     app = FlaskApp(
         __name__,
@@ -72,6 +75,7 @@ def create_app(authenticator, discovery_settings=None):
                     "response": MediaTypeDict({"*/*json": RppResponseBodyValidator}),
                 })
     app.app.config["RPP_DISCOVERY_SETTINGS"] = discovery_settings
+    app.app.config["RPP_IDN_TABLES"] = idn_tables or IdnTables()
     app.add_error_handler(ProblemException, handle_rpp_error)
 
     return app

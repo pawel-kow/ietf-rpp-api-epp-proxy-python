@@ -32,6 +32,7 @@ rpp_epp_objects:
 #  EPP extensions this EPP client must advertise to EPP server
 rpp_epp_extensions:
   - "urn:ietf:params:xml:ns:secDNS-1.1"
+  - "urn:ietf:params:xml:ns:idn-1.0"
 
 # used to map EPP namespaces to readable names
 rpp_epp_ns_map:
@@ -41,6 +42,14 @@ rpp_epp_ns_map:
   host: "urn:ietf:params:xml:ns:host-1.0"
   secDNS: "urn:ietf:params:xml:ns:secDNS-1.1"
   rgp: "urn:ietf:params:xml:ns:rgp-1.0"
+  idn: "urn:ietf:params:xml:ns:idn-1.0"
+
+# Maps an LGR name, which json §6.4 asks for in `lgr`, to the IDN table id of the EPP IDN extension
+# (urn:ietf:params:xml:ns:idn-1.0), one to one. A create with an `lgr` not listed is a 400. A domain whose table is not
+# listed reads without `uName` and `lgr`. Without this map no `lgr` can be sent. The entry below fits the test backend,
+# whose tables are `de` and `es`.
+rpp_idn_lgr_tables:
+  latn-1.0: de
 
 # What the discovery document (GET /.well-known/rpp) states. Without all four, or with a value of the wrong shape,
 # it answers 500. The values below are placeholders for the test deployment: an operator MUST replace them.

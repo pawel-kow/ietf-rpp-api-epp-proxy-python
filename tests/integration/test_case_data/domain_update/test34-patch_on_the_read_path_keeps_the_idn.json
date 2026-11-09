@@ -1,0 +1,75 @@
+{
+  "test_id": "test34-patch_on_the_read_path_keeps_the_idn",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "{alabel:bücher-u34}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "uName": "{ulabel:bücher-u34}.example",
+          "lgr": "latn-1.0"
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/{alabel:bücher-u34}.example",
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/status",
+            "value": [
+              {
+                "@type": "domainStatus",
+                "label": "clientHold"
+              }
+            ]
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "name": "{alabel:bücher-u34}.example",
+          "uName": "{ulabel:bücher-u34}.example",
+          "lgr": "latn-1.0",
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "clientHold"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

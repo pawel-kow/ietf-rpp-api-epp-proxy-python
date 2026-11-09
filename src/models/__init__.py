@@ -9,6 +9,7 @@ from .contact_update import ContactUpdate
 from .contact_update_response import ContactUpdateResponse
 from .contact_check_response import ContactCheckResponse
 from .dns_sec import DnsSec
+from .domain_idn import DomainIdn
 from .ds_data import DsData
 from .key_data import KeyData
 from .localized_postal_info import LocalizedPostalInfo

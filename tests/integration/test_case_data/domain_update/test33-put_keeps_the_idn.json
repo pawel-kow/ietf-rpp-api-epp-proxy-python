@@ -1,0 +1,60 @@
+{
+  "test_id": "test33-put_keeps_the_idn",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "{alabel:bücher-u33}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          },
+          "uName": "{ulabel:bücher-u33}.example",
+          "lgr": "latn-1.0"
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/domainNames/{alabel:bücher-u33}.example",
+        "body_json": {
+          "@type": "domainName"
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "name": "{alabel:bücher-u33}.example",
+          "uName": "{ulabel:bücher-u33}.example",
+          "lgr": "latn-1.0"
+        }
+      }
+    }
+  ]
+}
