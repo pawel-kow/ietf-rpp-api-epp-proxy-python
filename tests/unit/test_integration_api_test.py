@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from tests.helper.integration_api_test import endpoint_test
+from tests.helper.integration_api_test import endpoint_test, substitute_captures
 from tests.helper.recursive_compare_existing import recusive_compare_existing
 
 REQUEST = {"method": "GET", "url": "/x", "headers": {"RPP-Cltrid": "cl-1"}}
@@ -87,3 +87,31 @@ def test_list_of_another_length_fails():
 def test_list_with_a_different_element_fails():
     with pytest.raises(AssertionError, match=r"\$"):
         compare([1, 2], [1, 3])
+
+
+CAPTURES = {"expiry": "2027-11-07T07:26:27.000000Z", "leap": "2024-02-29T01:02:03.000000Z", "nothing": None}
+
+
+def test_capture_is_substituted_everywhere():
+    value = {"a": ["x {capture:expiry} y"], "b": {"c": "{capture:expiry}"}, "d": 5}
+    assert substitute_captures(value, CAPTURES) == {
+        "a": ["x 2027-11-07T07:26:27.000000Z y"], "b": {"c": "2027-11-07T07:26:27.000000Z"}, "d": 5}
+
+
+def test_capture_plus_years():
+    assert substitute_captures("{capture:expiry+2y}", CAPTURES) == "2029-11-07T07:26:27.000000Z"
+
+
+def test_capture_plus_years_to_29_february_is_not_clamped():
+    assert substitute_captures("{capture:leap+4y}", CAPTURES) == "2028-02-29T01:02:03.000000Z"
+    with pytest.raises(pytest.fail.Exception, match="29 February|valid"):
+        substitute_captures("{capture:leap+1y}", CAPTURES)
+
+
+@pytest.mark.parametrize("text", [
+    "{capture:missing}", "{capture:expiry2}", "{capture:expiry+2m}", "{capture: expiry}", "{capture:}",
+    "{capture:expiry+y}", "{capture:nothing}", "{capture:nothing+1y}",
+])
+def test_bad_capture_fails(text):
+    with pytest.raises(pytest.fail.Exception):
+        substitute_captures(text, CAPTURES)

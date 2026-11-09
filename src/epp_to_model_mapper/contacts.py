@@ -1,9 +1,9 @@
 from models import *
 from typing import Union
 from .epp_response import cl_trid, epp_datetime, find_res_data, parse_epp_response_header, status_reasons
-from .commands.contacts import contact_create, contact_delete, contact_info, contact_update
+from .commands.contacts import contact_check, contact_create, contact_delete, contact_info, contact_transfer, contact_update
 from .commands.helper import epp_to_str, str_to_epp
-from .epp_model.contact_1_0 import CreData, InfData, PostalInfoEnumType
+from .epp_model.contact_1_0 import ChkData, CreData, InfData, PostalInfoEnumType, TrnData
 from .epp_model.epp_1_0 import Epp
 
 
@@ -31,12 +31,42 @@ def create_contact_xml(contact: Contact, client_request_id=None) -> str:
     return epp_to_str(contact_create(contact, cl_trid(client_request_id)))
 
 
+def contact_check_xml(id: str, client_request_id=None) -> str:
+    return epp_to_str(contact_check(id, cl_trid(client_request_id)))
+
+
 def info_contact_xml(id: str, client_request_id=None) -> str:
     return epp_to_str(contact_info(id, cl_trid(client_request_id)))
 
 
 def delete_contact_xml(id: str, client_request_id=None) -> str:
     return epp_to_str(contact_delete(id, cl_trid(client_request_id)))
+
+
+def transfer_contact_xml(transfer: ContactTransfer, client_request_id=None) -> str:
+    return epp_to_str(contact_transfer(transfer, cl_trid(client_request_id)))
+
+
+def parse_contact_transfer_response(xml_string: str, client_transaction_id: str | None) -> ContactTransferResponse:
+    """Parses an EPP contact transfer response, which is the same for every operation."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    data = find_res_data(epp, TrnData)
+    if data is None:  # applied, but EPP gave no state
+        return ContactTransferResponse(transfer=None, **header)
+    return ContactTransferResponse(
+        transfer=ContactTransferProcess(
+            id=data.id,
+            trStatus=data.tr_status.value,
+            reqClientId=data.re_id,
+            requestDate=epp_datetime(data.re_date),
+            actClientId=data.ac_id,
+            actionDate=epp_datetime(data.ac_date),
+        ),
+        **header,
+    )
 
 
 def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[ContactDeleteResponse, ErrorResponse]:
@@ -118,3 +148,18 @@ def parse_contact_update_response(xml_string: str, client_transaction_id: str | 
     if client_transaction_id is None:
         header["client_transaction_id"] = None
     return ContactUpdateResponse(**header)
+
+
+def parse_contact_check_response(xml_string: str, contact_id: str, client_transaction_id: str | None) -> ContactCheckResponse:
+    """Parses the answer to a single-id check. The backend can change the case of the id."""
+    epp = str_to_epp(xml_string)
+    header = parse_epp_response_header(epp)
+    if client_transaction_id is None:
+        header["client_transaction_id"] = None
+    result = find_res_data(epp, ChkData).cd[0]
+    return ContactCheckResponse(
+        contact_id=contact_id,
+        available=result.id.avail,
+        reason=result.reason.value if result.reason else None,
+        **header,
+    )

@@ -316,10 +316,45 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - `GET .../transferProcesses/latest` with nothing pending gets EPP `2301`. Table 9 maps `02301` to 409, but the OpenAPI has no 409 on that GET, and core §16.9.5.2 says the resource "may not exist", which suggests 404 (#68).
 - **Proxy:** 409 (`02301`).
 - Core §16.9.5.5 shows approve with no content and the OpenAPI declares no `requestBody`, but json §8.1.10 sends `{"@type": "domainTransferProcess"}`.
-- **Proxy:** accepts both.
+- **Proxy:** accepts both. Approve reads its body like reject does: `reason` is 501 (`02102`), anything else the schema does not allow is 400 (`02001`), and nothing is sent to EPP, because an approval cannot be undone.
 - Json §8.2.9 gives an example with `reason`, which data-objects §10.1.1.5 forbids in the EPP Compatibility Profile, without naming the rejection.
 - **Proxy:** 501 (`02102`).
 - EPP has no process ids and no transfer history, so the list and `/{processId}` operations have nothing to map to.
 - **Proxy:** 501 (`02101`), and responses have no `processId`.
 - EPP has no push transfer, and its response does not say the direction.
 - **Proxy:** `transferDir: push` and `gainingClientId` are 501 (`02102`), and responses always have `transferDir: pull`.
+- Contacts use the same mapping as domains (core §16.9.5, json §8.2.6 to §8.2.9) with `@type` `transferProcess`. RFC 5733 has no period and `contact:trnData` no expiry date, so a contact has neither, and a `transferPeriod` in a contact request is not in the schema (json §4.4).
+- **Proxy:** `transferPeriod` on a contact is 400 (`02001`). Json §8.2.9's reject example has `reason`, so the draft's own example is 501 (`02102`) and `draft_contact/test11` expects that.
+- The OpenAPI declares no 501 on the transfer operations, which the proxy answers for list, `/{processId}`, push, `gainingClientId` and `reason`.
+- `RPP-Authorization` can accompany query, cancel, approve and reject too. RFC 5730 §2.9.3.4 says authorization information MUST be provided to complete a transfer command, and RFC 5733 §3.2.4 gives `contact:authInfo` for every `op` without saying a server ignores it on any of them.
+- **Proxy:** forwards it on every operation. EPP has a place for it, so nothing is dropped, and refusing it would change the domain wire.
+
+## Renew process
+
+- Json §8.1.7 and data-objects §10.3 make `expiryDate` optional, and call it the client's guard against duplicate renewals. EPP requires `curExpDate` (RFC 5731 §3.2.3), as an `xs:date`.
+- **Proxy:** without `expiryDate` it reads the domain and uses the date of its `exDate`. The read and the renew are not atomic, and the client gave up the guard, so a client that retries without `expiryDate` after a lost response renews twice (see "Repeated `RPP-Cltrid`"). With `expiryDate` it sends no read.
+- EPP holds only a date, so the time of day of `expiryDate` has no element. The json §8.1.7 example has `22:00:00Z`.
+- **Proxy:** sends the date in UTC, after converting any offset, and does not check the time. A date that does not match is EPP's `2306`, so 422.
+- Core §16.9.4 shows a 201 with a `Location`, which assumes an exposed process resource. EPP has no process, and the OpenAPI has no `latest` or `{processId}` path for renew. Core §16.1.4 requires a 200 from a server without a persistent process resource.
+- **Proxy:** 200, no `Location`, no `processId`. The body is `@type` and the new `expiryDate` from `renData`, with no `renewalPeriod` (EPP does not echo it). A `1001` is a 200 with `01001` and no `expiryDate`, as is a `1000` without `renData`.
+- Data-objects §10.3 allows the period to default by server policy.
+- **Proxy:** sends no `period` when `renewalPeriod` is absent, and leaves the default to the registry. The test backend answers `1000` without extending the expiry (pawel-kow/epp#25).
+- EPP's renew (RFC 5731 §3.2.3) has no authInfo, so an `RPP-Authorization` header on a renew has nowhere to go.
+- **Proxy:** 501 (`02102`).
+- A `1001` has not completed, and data-objects §10.3 ties the new expiry date to a completed renewal.
+- **Proxy:** `expiryDate` is left out of a `1001`, even when the registry sends `renData`.
+- `expiryDate` must be an RFC 3339 date-time. The schema `format` is not enforced (json §4.9.1's `unevaluatedProperties` is a separate gap, see "Undeclared properties").
+- **Proxy:** checks the RFC 3339 §5.6 form itself, with `T` and `Z` in either case. A leap second (`:60`) is a 400.
+- EPP has no process list or process ids.
+- **Proxy:** `GET .../renewProcesses` is 501 (`02101`).
+
+## Discovery
+
+- Core §11 and data-objects §17.3.1 require the document without authentication. The drafts give no caching rule, and `datetime` is the current time, so a cached document goes stale.
+- Json §6.10 and data-objects §17.2 say the same about `objects`: each value MUST be a valid object identifier of the RPP Data Object Registry. In data-objects §17.2 that rule sits in a stray description and constraint after Notices, detached from `Objects`, whose own constraint says "(None)". The description of `Objects` ("The list of identifiers of data objects supported by the server") covers `message`, which is not a provisioning object, so it is unclear whether `message` belongs in `objects` (#99).
+- Json §5.2.1 shows `idnLgr` elements without `url` and `default`, which `discoveryIdnLgr.read` requires.
+- No RPP extension identifier exists for secDNS, so `extensions` has nothing true to say about DNSSEC.
+- Core §12.4 says the server MUST provide its supported profiles in `profiles`, and json §8.7.1 shows `urn:ietf:params:rpp:profile:epp-compatibility`, and data-objects §2.8 defines the EPP Compatibility Profile. Data-objects §19.13 only creates the RPP Profiles registry, with that URN as an example, so the draft registers no profile name. `GET /profiles/{name}` is still 501, and the proxy does not process the profile parameters of a client (core §14.2, §14.3), so a client can read the name in discovery but not the profile. Core §14.2 requires an error for an unsupported profile, while `RPP-Profile: profile=urn:bogus;version=9.9` gives 200 (#41). Core §12.4 tells clients to use the profile "version information", but discovery `profiles` is a list of strings with no version.
+- `links` is omitted because the proxy has no such documents. Data-objects §17.2 only says a server SHOULD provide privacy-policy and terms-of-service links.
+- The 400 without `RPP-Cltrid` follows core §6.1 and the OpenAPI, but sits awkwardly with data-objects §17.3.1 ("Input: (None)") and an anonymous read.
+- **Proxy:** answers 200 from configuration and constants, without EPP: `versions` (`1.0`), `environment`, `tlds`, `profiles` (`epp-compatibility`), `objects` (`domainName`, `host`, `contact`) and `datetime`. It omits `extensions`, `links`, `idnLgr` and `notices`, and sends no `Cache-Control`. The media type is not negotiated (#41): `version` is ignored and `Accept` is not checked. Configuration that is missing or of the wrong shape, or a base URL that is not `https`, is 500 (`02400`) (#38).

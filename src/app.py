@@ -9,6 +9,7 @@ from connexion.validators import VALIDATOR_MAP
 from starlette.middleware.cors import CORSMiddleware
 from controller import *
 from controller.helper.rpp_response import RPP_ERROR_TYPE, problem_headers
+from controller.body_buffering_middleware import BodyBufferingMiddleware
 from controller.rpp_request_body_validator import RppRequestBodyValidator
 from controller.rpp_response_body_validator import RppResponseBodyValidator
 from controller.epp_basic_security_handler import EppBasicSecurityHandler
@@ -41,18 +42,21 @@ def handle_rpp_error(request: ConnexionRequest, exc: ProblemException) -> Connex
     )
 
 
-def create_app(authenticator):
+def create_app(authenticator, discovery_settings=None):
     """
     Builds the application.
 
     Args:
         authenticator: Provides authenticate(username, password), which returns the
             token info holding the request's EPP client, or None to reject the request.
+        discovery_settings: Has rpp_base_url, rpp_tlds, rpp_environment_name and
+            rpp_environment_status, which the discovery document states.
     """
     app = FlaskApp(
         __name__,
         security_map={"basic": lambda: EppBasicSecurityHandler(authenticator.authenticate)},
     )
+    app.add_middleware(BodyBufferingMiddleware, position=MiddlewarePosition.BEFORE_VALIDATION)
     app.add_middleware(
         CORSMiddleware,
         position=MiddlewarePosition.BEFORE_EXCEPTION,
@@ -67,5 +71,7 @@ def create_app(authenticator):
                     "body": MediaTypeDict({**VALIDATOR_MAP["body"], "*/*json": RppRequestBodyValidator}),
                     "response": MediaTypeDict({"*/*json": RppResponseBodyValidator}),
                 })
+    app.app.config["RPP_DISCOVERY_SETTINGS"] = discovery_settings
     app.add_error_handler(ProblemException, handle_rpp_error)
+
     return app

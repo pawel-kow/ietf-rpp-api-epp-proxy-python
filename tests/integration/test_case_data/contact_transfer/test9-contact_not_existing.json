@@ -1,0 +1,32 @@
+{
+  "test_id": "test9-contact_not_existing",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts/FO-{random_id_10}C9/processes/transferProcesses",
+        "headers": {
+          "Authorization": "Basic YmF6OnF1eA==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=UGFzc3dvcmQxIUA="
+        },
+        "body_json": {
+          "@type": "transferProcess",
+          "transferDir": "pull"
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02303"
+        }
+      }
+    }
+  ]
+}

@@ -1,8 +1,8 @@
-import asyncio
 import functools
 import uuid
 
 from connexion import ProblemException, request
+from flask import request as flask_request
 from jsonschema import ValidationError
 
 from models import ErrorResponse, OperationResponse, ResultCode
@@ -81,9 +81,21 @@ def raise_epp_error(resp: ErrorResponse):
     )
 
 
+def request_has_content() -> bool:
+    """Whether the request carries content, whatever its framing, type or syntax: `null` and `{}` count.
+
+    Read through Flask: Connexion's `get_body()` gives the parsed content, which is falsy for these,
+    and waiting on the ASGI stream can hang when the body arrives after the headers. Form content
+    types leave no raw bytes in the handler, so the parsed form and files count too.
+    """
+    return bool(
+        flask_request.content_length or flask_request.get_data() or flask_request.form or flask_request.files
+    )
+
+
 def require_empty_body():
-    """DELETE takes no request body."""
-    if asyncio.run(request.get_body()):
+    """DELETE takes no request body (core §16.1.4)."""
+    if request_has_content():
         raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
 
 

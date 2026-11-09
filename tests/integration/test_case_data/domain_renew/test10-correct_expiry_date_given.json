@@ -1,0 +1,97 @@
+{
+  "test_id": "test10-correct_expiry_date_given",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "rn10-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rn10-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        },
+        "fields": {
+          "expiryDate": {
+            "type": "not_null"
+          }
+        }
+      },
+      "capture": {
+        "expiry": "expiryDate"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rn10-{random_name}.example/processes/renewProcesses",
+        "body_json": {
+          "@type": "renewProcess",
+          "expiryDate": "{capture:expiry}",
+          "renewalPeriod": {
+            "@type": "period",
+            "value": 2,
+            "unit": "y"
+          }
+        },
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "@type": "renewProcess",
+          "expiryDate": "{capture:expiry+2y}"
+        }
+      }
+    }
+  ]
+}

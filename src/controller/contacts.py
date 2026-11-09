@@ -61,3 +61,22 @@ def contacts_updatePartial(id, body):
         return map_request(rpp_mapper.contact_patch.rpp_to_model_with_current, id, body, current)
 
     return _updated_contact(flows.patch_contact(get_epp_client(), id, update, update_from_current, client_transaction_id()))
+
+
+def _availability(id):
+    ret = epp_contacts_Check(get_epp_client(), id, client_transaction_id=client_transaction_id())
+    if isinstance(ret, ErrorResponse):
+        raise_epp_error(ret)
+    return ret
+
+@rpp_operation
+def contacts_availabilityHead(id):
+    ret = _availability(id)
+    headers = generate_rpp_response_headers(ret)
+    del headers["Content-Type"]  # the OpenAPI defines no content for HEAD
+    return None, 200 if ret.available else 404, headers
+
+@rpp_operation
+def contacts_availability(id):
+    ret = _availability(id)
+    return rpp_mapper.contact_availability.model_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)

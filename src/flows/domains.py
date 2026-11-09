@@ -1,8 +1,9 @@
+from dataclasses import replace
 from typing import Callable
 
-from eppclient.epp_domains import epp_domains_Info, epp_domains_Update
+from eppclient.epp_domains import epp_domains_Info, epp_domains_Renew, epp_domains_Update
 from eppclient.eppclient import EPPClient
-from models import Domain, DomainInfoResponse, DomainUpdate, ErrorResponse
+from models import Domain, DomainInfoResponse, DomainRenew, DomainRenewResponse, DomainUpdate, ErrorResponse, ResultCode
 from .domain_mutation_result import DomainMutationResult
 from .sponsor import require_sponsor
 
@@ -51,6 +52,26 @@ def patch_domain(
     if isinstance(updated, ErrorResponse):
         return updated
     return _read_back(epp_client, domain_name, updated)
+
+
+
+
+def renew_domain(epp_client: EPPClient, renew: DomainRenew, client_transaction_id) -> DomainRenewResponse | ErrorResponse:
+    """Renews a domain. EPP needs the current expiry date, so a client that gave none has it read (json §8.1.7).
+    The read and the renew are not atomic, and without the client's date nothing guards against a double renewal."""
+    if renew.curExpDate is None:
+        current = epp_domains_Info(epp_client, renew.name)
+        if isinstance(current, ErrorResponse):
+            return current
+        if not current.domain.exDate:
+            return ErrorResponse(
+                code=ResultCode.COMMAND_FAILED,
+                msg="The registry reports no expiry date for the domain",
+                server_transaction_id=current.server_transaction_id,
+                client_transaction_id=client_transaction_id,
+            )
+        renew = replace(renew, curExpDate=current.domain.exDate[:10])
+    return epp_domains_Renew(epp_client, renew, client_transaction_id=client_transaction_id)
 
 
 def replace_domain(

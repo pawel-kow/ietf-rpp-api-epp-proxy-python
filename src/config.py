@@ -22,6 +22,12 @@ class Config:
 
     rpp_epp_ns_map: Optional[dict[str, str]] = field(default_factory=dict)
 
+    # What the discovery document states, see core §11. All four are needed to answer it.
+    rpp_base_url: Optional[str] = None
+    rpp_tlds: Optional[List[str]] = None
+    rpp_environment_name: Optional[str] = None
+    rpp_environment_status: Optional[str] = None
+
 
 
     def __init__(self):

@@ -1,6 +1,6 @@
 import re
 
-from models import Address, Contact, ContactType, ContactUpdate, ContactUpdateChanges
+from models import Address, AuthInfo, Contact, ContactTransfer, ContactType, ContactUpdate, ContactUpdateChanges
 
 from ..epp_model.contact_1_0 import (
     AddRemType,
@@ -8,6 +8,7 @@ from ..epp_model.contact_1_0 import (
     AuthInfoType,
     ChgPostalInfoType,
     ChgType,
+    Check,
     Create,
     Delete,
     E164Type,
@@ -17,8 +18,9 @@ from ..epp_model.contact_1_0 import (
     StatusType,
     StatusValueType,
     Update,
+    Transfer,
 )
-from ..epp_model.epp_1_0 import CommandType, Epp, ReadWriteType
+from ..epp_model.epp_1_0 import CommandType, Epp, ReadWriteType, TransferOpType, TransferType
 from ..epp_model.eppcom_1_0 import PwAuthInfoType
 
 
@@ -141,3 +143,25 @@ def _add_rem(changes: ContactUpdateChanges | None) -> AddRemType | None:
 def contact_update(update: ContactUpdate, rpp_cl_trid: str) -> Epp:
     body = Update(id=update.id, add=_add_rem(update.add), rem=_add_rem(update.remove), chg=_chg(update.change))
     return Epp(command=CommandType(update=ReadWriteType(other_element=body), cl_trid=rpp_cl_trid))
+
+
+def _transfer_auth_info(auth_info: AuthInfo) -> AuthInfoType:
+    return AuthInfoType(pw=PwAuthInfoType(value=auth_info.pw, roid=auth_info.roid))
+
+
+def contact_transfer(transfer: ContactTransfer, rpp_cl_trid: str) -> Epp:
+    return Epp(
+        command=CommandType(
+            transfer=TransferType(
+                op=TransferOpType(transfer.operation.value),
+                other_element=Transfer(
+                    id=transfer.id.upper(),
+                    auth_info=_transfer_auth_info(transfer.authInfo) if transfer.authInfo else None,
+                ),
+            ),
+            cl_trid=rpp_cl_trid,
+        )
+    )
+
+def contact_check(contact_id: str, rpp_cl_trid: str) -> Epp:
+    return Epp(command=CommandType(check=ReadWriteType(other_element=Check(id=[contact_id.upper()])), cl_trid=rpp_cl_trid))

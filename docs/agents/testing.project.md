@@ -35,7 +35,7 @@ the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and
 The backend refuses a repeated clTRID with `2400`, also across sessions, so every EPP command
 needs a new one. It drops addresses given when creating an external host, so tests of addresses
 at create use an internal host, which needs its domain to exist first. Its other host defects are
-#49, #50 and #54. Info returns no `domain:upID` or `domain:upDate` (#61), so reading `upClientId`
+#49, #50 and #54. A contact check of an id outside 3 to 16 characters answers available (pawel-kow/epp#24). Info returns no `domain:upID` or `domain:upDate` (#61), so reading `upClientId`
 is tested only in unit tests. It refuses the secDNS key data interface with `2306`, and a digest it
 already holds even under another keyTag (pawel-kow/epp#20). It stores `domain:hostAttr` as a host
 object, so a domain created with glue reads back with `nameservers`. Removing a host from a domain that does not have it succeeds, so "no element matches" is tested with `replace` and `match`, which reads the domain first.
@@ -55,7 +55,10 @@ objects are created with `nameservers` and a PUT with `ns` records follows (`dom
 
 Info does not show `pendingTransfer` (#64), a completed transfer cannot be
 queried (#65), and cancel with nothing pending is `2201` (#66), so its 409 is tested only in
-unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67).
+unit tests. `acID` and `acDate` after cancel and reject are not asserted (#67). Contact transfers behave the same, except that Info does show the sponsor changing, so `contact_transfer` cases read it back.
+
+The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
+`expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
 
 ## Tests without the backend
 
@@ -91,11 +94,14 @@ update → verify) run against a Flask test client.
 - A step's `response` can be `{"any_of": [...]}`, a list of responses of which one must match,
   for behaviour the protocol leaves to the server. A create that may be refused, or may keep
   the data in another form, lists each outcome, see `domain_create/test16` to `test18`.
+- A step's `capture` maps a name to a dotted field of its response body. Later steps write `{capture:name}`
+  in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
+  a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.
-- `draft_domain/`, `draft_contact/`, `draft_host/` and `draft_patch/` hold the examples
-  of the JSON draft (§8.1, §8.2, §8.3, §5.3.1). Examples for operations not implemented yet have the
+- `draft_domain/`, `draft_contact/`, `draft_host/`, `draft_patch/` and `draft_discovery/` hold the examples
+  of the JSON draft (§8.1, §8.2, §8.3, §5.3.1, §8.7.1; the discovery one has the configured values). Examples for operations not implemented yet have the
   expected result written down and `"skip": "#<issue>"`.
 
 To add a case, drop a new JSON file in the appropriate group dir. No Python changes

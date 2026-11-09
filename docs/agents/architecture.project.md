@@ -50,7 +50,9 @@ single feature (e.g. "domain update") touches every layer:
    `patch_statuses.py` hides server statuses from a patch, on hosts, domains and contacts, see
    [spec-issues.md](../../.spec/spec-issues.md#status-in-json-patch).
    `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
-   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a transfer.
+   `domain_transfer_process.py` and `domain_transfer_reject.py` convert a domain transfer,
+   `contact_transfer_process.py` and `contact_transfer_reject.py` a contact transfer, and
+   `domain_renew_process.py` a renewal.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
@@ -82,10 +84,21 @@ mutation has still been applied, so the handler answers **202** with no body and
 mutation's `RPP-*` headers. `openapi.yaml` does not define this 202 (#23 tracks the
 question for the spec).
 
-Transfer handlers are in `controller/domain_transfers.py`. An EPP `<transfer>` reply carries
-the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer` runs all
-five operations, chosen by `DomainTransfer.operation`. EPP has no process ids, so only
+Transfer handlers are in `controller/domain_transfers.py` and `controller/contact_transfers.py`, thin
+functions over `TransferHandlers` in `controller/transfer_handlers.py`. An EPP `<transfer>` reply carries
+the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer` and
+`epp_contacts_Transfer` run all five operations, chosen by the model's `operation`. EPP has no process ids, so only
 `latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process).
+
+`BodyBufferingMiddleware` in `controller/body_buffering_middleware.py` is the middleware that `create_app`
+adds after security and before Connexion's validators, so an anonymous client gets its 401 before its body is read. It reads the whole body of a request that has one before anything else runs, drops the request if the client
+disconnects first, and passes on a complete request with a `content-length`. So chunked bodies, late bodies and
+aborted uploads reach no handler half-received. It has no size limit (#93).
+
+The renew handler is `domainNameRenewProcesses_renewCreate` in `controller/domains.py`, and `renew_domain` in
+`flows/domains.py` runs it. EPP needs `curExpDate`, so a request without `expiryDate` first has the domain read.
+The EPP renew reply carries the new expiry date, so there is no read-back, and the answer is a 200 without
+`Location`, see [spec-issues.md](../../.spec/spec-issues.md#renew-process).
 
 `RppRequestBodyValidator` and `RppResponseBodyValidator` let a body be absent where the
 OpenAPI allows it, which Connexion's validators do not. The handler then gets an empty dict.
@@ -148,12 +161,19 @@ open the connection. `rpp_epp_use_tls` (default `true`) connects over TLS with t
 certificate and hostname verified. `rpp_epp_tls_insecure_skip_verify` (default `false`)
 turns both checks off, for test backends only.
 
+`rpp_base_url`, `rpp_tlds`, `rpp_environment_name` and `rpp_environment_status` are what the
+discovery document (`GET /.well-known/rpp`, no authentication, no EPP) states. `controller/discovery.py`
+adds the RPP version and the supported objects, which are constants. Without all four, it answers
+500 (`02400`) and logs the keys, never the values. A setting is also missing when it has the wrong shape: `rpp_base_url` must be an absolute `https` URL, `rpp_tlds` a non-empty list of non-empty strings. `profiles` is the constant `epp-compatibility`, though `GET /profiles/{name}` is 501. The base URL is never taken from the request. The proxy does not
+check the `version` parameter of the media type, so core §12's 406 is not enforced (#41). See
+[spec-issues.md](../../.spec/spec-issues.md#discovery).
+
 ## Composition
 
 [src/run.py](../../src/run.py) is the composition root: it builds the default
 `EPPClient` factory and passes it to
 [`EppSessionAuthenticator`](../../src/controller/epp_session_authenticator.py), which
-goes to `create_app` in [src/app.py](../../src/app.py). `create_app` hands
+goes to `create_app` in [src/app.py](../../src/app.py), with `config` as the settings of the discovery document, which the handler reads from the app configuration. `create_app` hands
 `authenticate` to Connexion through `security_map`, because Connexion would otherwise
 resolve the function by name and it could not receive dependencies.
 
