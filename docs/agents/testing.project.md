@@ -97,6 +97,8 @@ update → verify) run against a Flask test client.
   and `{unique_cltrid}` (new value per occurrence) keep tests idempotent against a
   shared registry. The backend requires contact ids to start with `FO-`. `{ulabel:TEXT}` is the U-label
   `TEXT-<random_id_10>` and `{alabel:TEXT}` its A-label, so an IDN case writes `{alabel:bücher-t24}.example`.
+  `{upper:TEXT}` is TEXT in upper case, after the other placeholders in it are replaced. The backend stores host
+  names in upper case, so a `match` on a generated host writes `{upper:ns1.u17-{random_name}.net}`.
 - Every step asserts the headers of core §6.2: `RPP-Svtrid`, a 5-digit `RPP-Code`, and
   `RPP-Cltrid` echoed.
 - Response body comparison is **subset + case-insensitive**
@@ -139,8 +141,14 @@ afterwards.
 
 Absence cannot be asserted, because the body comparison is a subset. A case shows that something was removed with a
 `replace` with `match` on it, which reads the domain and answers 422 `02308`. The same `match`, in the form the
-registry stores (`NS1.BAR.EXAMPLE`, as a match is exact), must first answer 200 before the removal, or the 422 proves
+registry stores (`{upper:...}`, as a match is exact), must first answer 200 before the removal, or the 422 proves
 nothing (see `domain_update/test17`).
+
+A case creates the contacts, hosts and domains it uses, in its first steps, and relies on nothing seeded in the
+backend. `{random_name}` and `{random_id_10}` are the same for every case of a run, so each case adds its own part:
+contacts are `FO-{random_id_10}` plus a suffix of the case (`ua1`, at most 16 characters in all), hosts are external
+`nsN.<case>-{random_name}.net`, which need their own `ns` record at create. `domain_create/test7` creates the domain
+it then finds taken.
 
 Isolate one update facet per file (authInfo-only, hostObj add/remove,
 contacts+registrant, …). `domainNames_create`, `domainNames_updatePartial` and `domainNames_update` build their
