@@ -43,13 +43,11 @@ from .message_error_response import MessageErrorResponse
 from .unknown_result_code import UnknownResultCode
 from .discovery import Discovery
 
-from .auth_info_action import AuthInfoAction
-from .auth_info_intent import AuthInfoIntent
 from .domain_replacement import DomainReplacement
 from .contact_replacement import ContactReplacement
 from .host_replacement import HostReplacement
 from . import (
     client_statuses, contact_application, contact_difference, domain_application, domain_difference, host_application,
-    host_difference,
+    host_difference, stated_members,
 )
 from . import contact_localization

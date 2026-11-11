@@ -1,4 +1,3 @@
-from .auth_info_intent import AuthInfoIntent
 from .client_statuses import client_statuses
 from .dns_sec import DnsSec
 from .domain_difference import (
@@ -40,12 +39,14 @@ def _dns_sec(current: DnsSec | None, delta: DomainUpdate) -> DnsSec | None:
     return DnsSec(**items) if items["ds_data"] or items["key_data"] else None
 
 
-def _auth_info(change: DomainUpdateChange | None) -> AuthInfoIntent:
+def _auth_info(current: Domain, change: DomainUpdateChange | None) -> dict:
+    """The authorisation information as the update leaves it. One the update does not name is unchanged, as a backend
+    need not show the stored one."""
     if change and change.clear_auth_info:
-        return AuthInfoIntent.clear()
+        return {"authInfo": None}
     if change and change.authInfo:
-        return AuthInfoIntent.set(change.authInfo)
-    return AuthInfoIntent.keep()
+        return {"authInfo": change.authInfo}
+    return {"authInfo": current.authInfo, "unchanged": frozenset({"authInfo"})}
 
 
 def apply(current: Domain, delta: DomainUpdate) -> DomainReplacement:
@@ -78,5 +79,5 @@ def apply(current: Domain, delta: DomainUpdate) -> DomainReplacement:
         dnsSEC=_dns_sec(dns_sec_of(current.dnsSEC), delta),
         status=list(statuses),
         status_reasons={label: reason for label, reason in statuses.items() if reason},
-        auth_info=_auth_info(delta.change),
+        **_auth_info(current, delta.change),
     )

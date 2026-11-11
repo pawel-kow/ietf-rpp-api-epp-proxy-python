@@ -1,6 +1,6 @@
-from models import AuthInfoIntent, Contact, ContactReplacement
+from models import AuthInfo, Contact, ContactReplacement
 from rpp_schema_validator import validate_schema
-from . import auth_info, contacts
+from . import auth_info, contacts, include_elements
 from .common import parse_rpp, reject_set
 from .rpp_models import RPPContact
 
@@ -9,8 +9,11 @@ CHANGEABLE = ("contactInfo", "status", "authInfo", "disclose")
 OBJECT = "contact"
 
 
-def replacement_from_rpp(contact_rpp: RPPContact, auth_info_intent: AuthInfoIntent) -> ContactReplacement:
-    """The contact a full update or a patched read asks for. A `due` date has no place in EPP."""
+def replacement_from_rpp(
+    contact_rpp: RPPContact, password: AuthInfo | None, unchanged: frozenset[str],
+) -> ContactReplacement:
+    """The contact a full update or a patched read asks for. A `due` date has no place in EPP. The caller converts
+    `authInfo`, which a read need not show, and names the members the request leaves `unchanged`."""
     contact: Contact = contacts.contact_from_rpp(contact_rpp)
     for status in contact_rpp.status or []:
         reject_set(due=status.due)
@@ -25,7 +28,8 @@ def replacement_from_rpp(contact_rpp: RPPContact, auth_info_intent: AuthInfoInte
         localizedPostalInfo=contact.localizedPostalInfo,
         status=[status.label for status in contact_rpp.status or []],
         status_reasons={status.label: status.reason for status in contact_rpp.status or [] if status.reason},
-        auth_info=auth_info_intent,
+        authInfo=password,
+        unchanged=unchanged,
     )
 
 
@@ -39,4 +43,5 @@ def rpp_to_model(contact_id: str, rpp: dict, requested: frozenset[str] = frozens
     for member in rpp.keys() - {TYPE, *CHANGEABLE}:
         raise ValueError(f"'{member}' cannot be sent in a full update")
     contact_rpp = parse_rpp(RPPContact, {**rpp, "id": contact_id})  # rejects undeclared members at any depth
-    return replacement_from_rpp(contact_rpp, auth_info.full_update_intent(OBJECT, rpp, requested))
+    unchanged = include_elements.left_alone(OBJECT, rpp, requested)
+    return replacement_from_rpp(contact_rpp, auth_info.rpp_to_model(contact_rpp.authInfo), unchanged)

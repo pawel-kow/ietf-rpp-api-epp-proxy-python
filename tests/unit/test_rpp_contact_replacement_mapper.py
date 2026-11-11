@@ -157,10 +157,16 @@ def test_an_omitted_status_removes_the_client_statuses():
 
 
 def test_included_auth_info_is_sent_and_one_not_included_is_left_alone():
-    auth = {"@type": "authInfo", "method": "authinfo", "authdata": "Secret1!x"}
+    auth = {"@type": "authInfo", "method": "authinfo", "authdata": "NewSecret1!x"}
 
     assert update(put_body()).change is None
-    assert update(put_body(authInfo=auth), requested=frozenset({"authInfo"})).change.authInfo.pw == "Secret1!x"
+    assert update(put_body(authInfo=auth), requested=frozenset({"authInfo"})).change.authInfo.pw == "NewSecret1!x"
+
+
+def test_included_auth_info_that_is_stored_changes_nothing():
+    auth = {"@type": "authInfo", "method": "authinfo", "authdata": "Secret1!x"}
+
+    assert update(put_body(authInfo=auth), requested=frozenset({"authInfo"})).change is None
 
 
 def test_included_auth_info_omitted_is_a_501():

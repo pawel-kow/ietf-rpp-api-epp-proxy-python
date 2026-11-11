@@ -1,7 +1,7 @@
 import pytest
 from jsonschema import ValidationError
 
-from models import ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
+from models import AuthInfo, ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
 from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, domain_replacement, domains
 
 NAME = "foo.example"
@@ -272,7 +272,13 @@ def test_included_auth_info_present_is_always_sent():
 
 
 def test_included_auth_info_omitted_is_cleared():
-    assert replace(STAYS, AUTH_INFO).change.clear_auth_info
+    assert replace(STAYS, AUTH_INFO, authInfo=AuthInfo(pw="Pw1")).change.clear_auth_info
+
+
+def test_included_auth_info_that_is_stored_changes_nothing():
+    auth = {"@type": "authInfo", "method": "authinfo", "authdata": "Pw1"}
+
+    assert replace({**STAYS, "authInfo": auth}, AUTH_INFO, authInfo=AuthInfo(pw="Pw1")).change is None
 
 
 def test_auth_info_not_included_is_left_alone():

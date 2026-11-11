@@ -1,4 +1,3 @@
-from .auth_info_intent import AuthInfoIntent
 from .client_statuses import client_statuses
 from .contact_difference import INT, LOC
 from .contact_replacement import ContactReplacement
@@ -27,6 +26,8 @@ def apply(current: Contact, delta: ContactUpdate) -> ContactReplacement:
         fax=current.fax,
         address=current.address,
         localizedPostalInfo=current.localizedPostalInfo,
+        authInfo=current.authInfo,
+        unchanged=frozenset({"authInfo"}),
     )
     for form in change.postal_info if change else []:
         if form.form == INT:
@@ -39,7 +40,7 @@ def apply(current: Contact, delta: ContactUpdate) -> ContactReplacement:
         wanted.phone, wanted.fax = _value(current.phone, change.voice), _value(current.fax, change.fax)
         wanted.email = _value(current.email, change.email)
         if change.authInfo:
-            wanted.auth_info = AuthInfoIntent.set(change.authInfo)
+            wanted.authInfo, wanted.unchanged = change.authInfo, frozenset()
     statuses = client_statuses(current.status, current.status_reasons)
     for label in delta.remove.status if delta.remove else []:
         statuses.pop(label, None)

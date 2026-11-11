@@ -32,3 +32,14 @@ def left_alone(object_identifier: str, rpp: dict, requested: frozenset[str]) -> 
     if sent:
         raise ValueError(f"'{sent[0]}' needs 'includeElements={sent[0]}' in a full update")
     return frozenset(unrequested)
+
+
+def on_demand_paths(object_identifier: str) -> tuple[str, ...]:
+    """The JSON Pointers of the data elements with onDemand Visibility, which a read need not show."""
+    return tuple(sorted(f"/{element}" for element in _on_demand(object_identifier)))
+
+
+def left_alone_by_patch(object_identifier: str, paths: list[str]) -> frozenset[str]:
+    """The data elements with onDemand Visibility that no operation of a partial update names, which it leaves as
+    they are."""
+    return frozenset(element for element in _on_demand(object_identifier) if f"/{element}" not in paths)

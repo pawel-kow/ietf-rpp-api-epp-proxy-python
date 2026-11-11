@@ -1,4 +1,4 @@
-from models import AuthInfoAction, Contact, ContactReplacement, ErrorResponse
+from models import Contact, ContactReplacement, ErrorResponse, password_of, stated_members
 from .epp_refusal import not_supported_by_epp
 
 
@@ -21,6 +21,7 @@ def _localization_refusal(current: Contact, wanted: ContactReplacement) -> str |
 
 def refuse(current: Contact, wanted: ContactReplacement) -> ErrorResponse | None:
     """What RFC 5733 cannot clear: the name, the address, the email, a `postalInfo` form, and the `authInfo`."""
+    wanted = stated_members.stated(wanted, current)
     if _removed(current.name, wanted.name):
         refusal = "Removing the name"
     elif _removed(current.address, wanted.address):
@@ -29,6 +30,6 @@ def refuse(current: Contact, wanted: ContactReplacement) -> ErrorResponse | None
         refusal = _localization_refusal(current, wanted)
     if refusal is None and _removed((current.email or [None])[0], (wanted.email or [None])[0]):
         refusal = "Removing the email"
-    if refusal is None and wanted.auth_info.action == AuthInfoAction.CLEAR:
+    if refusal is None and _removed(password_of(current), password_of(wanted)):
         refusal = "Removing the 'authInfo'"
     return not_supported_by_epp(refusal) if refusal else None

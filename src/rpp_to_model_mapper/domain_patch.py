@@ -1,9 +1,9 @@
 from models import (
-    AuthInfoIntent, ContactMinimal, ContactReferenceNew, DomainReplacement, DomainUpdate, DomainUpdateAdd,
+    ContactMinimal, ContactReferenceNew, DomainReplacement, DomainUpdate, DomainUpdateAdd,
     DomainUpdateChange, DomainUpdateRemove, HostObj, NS,
 )
 from rpp_schema_validator import validate_schema
-from . import auth_info, domain_wanted, json_patch, patch_statuses
+from . import auth_info, domain_wanted, include_elements, json_patch, patch_statuses
 from .common import parse_rpp
 from .dns_records import DNS_PARENTS
 from .domains import REGISTRANT, check_contact_label
@@ -17,6 +17,7 @@ READ_ARRAY_PATHS = ARRAY_PATHS + ("/status", "/dns/records")
 OBJECT_PATHS = ("/registrant", "/authInfo")
 STATE_PATHS = ("/status", "/dns", "/dns/records", "/dns/controls")
 AUTH_INFO_PATH = "/authInfo"
+OBJECT = "domainName"
 
 
 def _validated(member: str, value):
@@ -110,11 +111,6 @@ class _PatchedUpdate:
             registrant = parse_rpp(RPPContactReference, operation.value)
             self.add_contacts.append(_contact(REGISTRANT, registrant.id))
 
-    def auth_info_intent(self) -> AuthInfoIntent:
-        if self.clear_auth_info:
-            return AuthInfoIntent.clear()
-        return AuthInfoIntent.set(self.auth_info) if self.auth_info else AuthInfoIntent.keep()
-
     def _change(self) -> DomainUpdateChange | None:
         if self.auth_info or self.clear_auth_info:
             return DomainUpdateChange(authInfo=self.auth_info, clear_auth_info=self.clear_auth_info)
@@ -158,12 +154,13 @@ def rpp_to_model(domain_name: str, rpp: list) -> DomainUpdate | None:
 def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict) -> DomainReplacement:
     """Applies the patch to the current domain (its read representation) and returns the domain it asks for.
 
-    `authInfo` is not part of a read, so its operations are converted as without the current domain.
+    A read need not show a data element with onDemand Visibility (`authInfo`), so its operations are converted as
+    without the current domain, and one that no operation names is left as it is.
     """
     operations = _operations(rpp)
     patched = json_patch.apply(
         patch_statuses.without_server_statuses(current), operations, READ_ARRAY_PATHS,
-        ignored_path=AUTH_INFO_PATH, absent_parents=DNS_PARENTS,
+        ignored_paths=include_elements.on_demand_paths(OBJECT), absent_parents=DNS_PARENTS,
     )
     patched = patch_statuses.with_server_statuses(patched, current, "domainStatus")
     validate_schema("domainName.read", patched)
@@ -172,4 +169,5 @@ def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict) -> Dom
     for operation in operations:
         if operation.path == AUTH_INFO_PATH:
             auth_info_update.apply(operation)
-    return domain_wanted.rpp_to_model(domain_name, patched, auth_info_update.auth_info_intent())
+    unchanged = include_elements.left_alone_by_patch(OBJECT, [operation.path for operation in operations])
+    return domain_wanted.rpp_to_model(domain_name, patched, auth_info_update.auth_info, unchanged)

@@ -62,8 +62,9 @@ single feature (e.g. "domain update") touches every layer:
    provider-neutral. Next to the classes it holds the pure conversions between the two kinds of update, written
    once per object: `<object>_difference.difference(current, wanted)` gives the delta that turns the stored
    object into the replacement, and `<object>_application.apply(current, delta)` the replacement a delta amounts
-   to (unused by EPP, for a backend that updates by replacement). `AuthInfoIntent` says what a replacement does
-   with the authorisation information (`KEEP`, `SET`, `CLEAR`). `contact_localization.as_stored` puts a wanted
+   to (unused by EPP, for a backend that updates by replacement). A replacement's `unchanged` names the members
+   it does not state, which stay as stored: the data elements with onDemand Visibility the request did not include
+   (`stated_members.stated` fills them in from the stored object). Nothing in this is specific to `authInfo`. `contact_localization.as_stored` puts a wanted
    contact in the terms of the stored one, because a read shows a localization by its differences from the card. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
    [src/models/response.py](../../src/models/response.py).

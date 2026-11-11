@@ -1,10 +1,11 @@
 from dataclasses import replace
 
-from .auth_info_action import AuthInfoAction
 from .client_statuses import client_statuses, status_changes
+from .common import password_of
 from .contacts import ContactMinimal
 from .dns_sec import DnsSec
 from .domain_replacement import DomainReplacement
+from .stated_members import stated
 from .domains import (
     ContactReferenceNew, Domain, DomainUpdate, DomainUpdateAdd, DomainUpdateChange, DomainUpdateRemove, HostAttr, HostObj,
     NS,
@@ -129,13 +130,12 @@ def _contact_changes(current: Domain, wanted: DomainReplacement) -> tuple[list[C
     return add, remove
 
 
-def _auth_info_change(wanted: DomainReplacement) -> DomainUpdateChange | None:
-    intent = wanted.auth_info
-    if intent.action == AuthInfoAction.SET:
-        return DomainUpdateChange(authInfo=intent.auth_info)
-    if intent.action == AuthInfoAction.CLEAR:
-        return DomainUpdateChange(clear_auth_info=True)
-    return None
+def _auth_info_change(current: Domain, wanted: DomainReplacement) -> DomainUpdateChange | None:
+    """A password that differs is set, one the replacement omits is cleared. A registry that does not show the
+    password makes any wanted one differ, so it is sent."""
+    if password_of(wanted) == password_of(current):
+        return None
+    return DomainUpdateChange(authInfo=wanted.authInfo) if wanted.authInfo else DomainUpdateChange(clear_auth_info=True)
 
 
 def _hosts(object_names: list[str], attrs: list[HostAttr]) -> NS | None:
@@ -146,6 +146,7 @@ def _hosts(object_names: list[str], attrs: list[HostAttr]) -> NS | None:
 
 def difference(current: Domain, wanted: DomainReplacement) -> DomainUpdate:
     """The update that turns the current domain into the wanted one (core §16.8: what is omitted is cleared)."""
+    wanted = stated(wanted, current)
     add_hosts, remove_hosts, add_attrs, remove_attrs = _nameserver_changes(
         host_objects_of(current.ns), host_attributes_of(current.ns),
         host_objects_of(wanted.ns), host_attributes_of(wanted.ns),
@@ -168,7 +169,7 @@ def difference(current: Domain, wanted: DomainReplacement) -> DomainUpdate:
         name=wanted.name,
         add=add if add.ns or add.contacts or add.dnsSEC or add.status else None,
         remove=remove if remove.ns or remove.contacts or remove.dnsSEC or remove.status else None,
-        change=_auth_info_change(wanted),
+        change=_auth_info_change(current, wanted),
     )
 
 

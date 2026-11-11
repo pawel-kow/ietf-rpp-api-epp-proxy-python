@@ -12,6 +12,11 @@ class AuthInfo:
     hash: Optional[str] = None
     roid: Optional[str] = None
     
+def password_of(obj) -> Optional[str]:
+    """The password of the authorisation information of an object or a replacement, if it has one."""
+    return obj.authInfo.pw if obj.authInfo else None
+
+
 @dataclass(kw_only=True)
 class ProvisioningObject:
     roid: Optional[str] = None

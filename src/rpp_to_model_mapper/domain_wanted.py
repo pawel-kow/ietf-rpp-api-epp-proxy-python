@@ -1,4 +1,4 @@
-from models import AuthInfoIntent, ContactMinimal, ContactReferenceNew, DomainReplacement, HostObj, NS
+from models import AuthInfo, ContactMinimal, ContactReferenceNew, DomainReplacement, HostObj, NS
 from . import domain_dns
 from .common import parse_rpp, reject_set
 from .domains import check_contact_label
@@ -46,9 +46,12 @@ def _ns(domain_name: str, domain: dict):
     return (NS(host_objs=None, host_attrs=attrs) if attrs else None), dns_sec
 
 
-def rpp_to_model(domain_name: str, domain: dict, auth_info: AuthInfoIntent) -> DomainReplacement:
+def rpp_to_model(
+    domain_name: str, domain: dict, auth_info: AuthInfo | None, unchanged: frozenset[str],
+) -> DomainReplacement:
     """The replacement a domain representation asks for: a full update, or a read with a patch applied. Its read-only
-    members and server statuses are not the client's and are left out."""
+    members and server statuses are not the client's and are left out. The caller converts `authInfo`, which a read
+    need not show, and names the members the request leaves `unchanged`."""
     _reject_nameservers_with_records(domain)
     ns, dns_sec = _ns(domain_name, domain)
     statuses = _client_statuses(domain)
@@ -63,5 +66,6 @@ def rpp_to_model(domain_name: str, domain: dict, auth_info: AuthInfoIntent) -> D
         dnsSEC=dns_sec,
         status=list(statuses),
         status_reasons={label: reason for label, reason in statuses.items() if reason},
-        auth_info=auth_info,
+        authInfo=auth_info,
+        unchanged=unchanged,
     )

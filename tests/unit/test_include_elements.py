@@ -1,7 +1,7 @@
 """Visibility and `includeElements` (data-objects §2.4, §2.7.3, core §16.1.7), see spec-issues.md."""
 import pytest
 
-from models import AuthInfo, AuthInfoAction
+from models import AuthInfo
 from rpp_to_model_mapper import contact_replacement, domain_replacement, include_elements
 from tests.helper.contact_fixtures import put_body
 
@@ -34,16 +34,16 @@ def test_a_default_element_is_always_shown():
 
 
 def domain_intent(body, requested=frozenset()):
-    return domain_replacement.rpp_to_model("foo.example", body, requested).auth_info
+    return domain_replacement.rpp_to_model("foo.example", body, requested)
 
 
 def contact_intent(body, requested=frozenset()):
-    return contact_replacement.rpp_to_model("JD-1234", body, requested).auth_info
+    return contact_replacement.rpp_to_model("JD-1234", body, requested)
 
 
 @pytest.mark.parametrize("intent, body", [(domain_intent, DOMAIN_BODY), (contact_intent, put_body())])
 def test_a_full_update_without_the_request_leaves_auth_info_alone(intent, body):
-    assert intent(body).action == AuthInfoAction.KEEP
+    assert intent(body).unchanged == {"authInfo"}
 
 
 @pytest.mark.parametrize("intent, body", [(domain_intent, DOMAIN_BODY), (contact_intent, put_body())])
@@ -56,9 +56,11 @@ def test_a_full_update_sending_auth_info_it_does_not_include_is_rejected(intent,
 def test_a_full_update_including_auth_info_sets_it(intent, body):
     result = intent({**body, "authInfo": PASSWORD}, frozenset({"authInfo"}))
 
-    assert result.action == AuthInfoAction.SET and result.auth_info == AuthInfo(pw="NewSecret1!x")
+    assert result.unchanged == frozenset() and result.authInfo == AuthInfo(pw="NewSecret1!x")
 
 
 @pytest.mark.parametrize("intent, body", [(domain_intent, DOMAIN_BODY), (contact_intent, put_body())])
 def test_a_full_update_including_auth_info_and_omitting_it_clears_it(intent, body):
-    assert intent(body, frozenset({"authInfo"})).action == AuthInfoAction.CLEAR
+    result = intent(body, frozenset({"authInfo"}))
+
+    assert result.unchanged == frozenset() and result.authInfo is None

@@ -1,6 +1,6 @@
-from models import AuthInfoIntent, Contact, ContactReplacement, ContactUpdate, ContactUpdateChange, ContactUpdateChanges
+from models import Contact, ContactReplacement, ContactUpdate, ContactUpdateChange, ContactUpdateChanges
 from rpp_schema_validator import validate_schema
-from . import auth_info, contact_replacement, contacts, json_patch, patch_statuses
+from . import auth_info, contact_replacement, contacts, include_elements, json_patch, patch_statuses
 from .common import parse_rpp, reject_operation, reject_set
 from .needs_current_state import NeedsCurrentState
 from .not_supported_by_proxy import NotSupportedByProxy
@@ -17,6 +17,7 @@ ABSENT_PARENTS = {
     f"{CONTACT_INFO_PATH}/{member}": {} for member in ("organizations", "addresses", "phones", "emails", "localizations")
 }
 READ_ONLY_MEMBERS = ("provMetadata", "processes")
+OBJECT = "contact"
 # The entries EPP holds as one value each, with the member of the entry that holds the value.
 ENTRIES = {
     f"{CONTACT_INFO_PATH}/phones/{contacts.PHONE_VOICE}": "number",
@@ -167,7 +168,8 @@ def _with_derived_kind(patched: dict, operations: list[RPPPatchOperation]) -> di
 def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> ContactReplacement:
     """Applies the patch to the current contact (its read representation) and returns the contact it asks for.
 
-    `authInfo` is not compared, its operations are converted as without the current contact.
+    A read need not show a data element with onDemand Visibility (`authInfo`), so its operations are converted as
+    without the current contact, and one that no operation names is left as it is.
     """
     operations = _operations(rpp)
     for operation in operations:
@@ -175,7 +177,7 @@ def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> C
     read = contacts.model_to_rpp(current)
     patched = json_patch.apply(
         patch_statuses.without_server_statuses(read), operations, ARRAY_PATHS,
-        ignored_path=AUTH_INFO_PATH, absent_parents=ABSENT_PARENTS,
+        ignored_paths=include_elements.on_demand_paths(OBJECT), absent_parents=ABSENT_PARENTS,
     )
     patched = patch_statuses.with_server_statuses(patched, read, "contactStatus")
     validate_schema("contact.read", patched)
@@ -184,5 +186,5 @@ def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> C
     for operation in operations:
         if operation.path == AUTH_INFO_PATH:
             auth_info_update.apply(operation)
-    intent = AuthInfoIntent.set(auth_info_update.auth_info) if auth_info_update.auth_info else AuthInfoIntent.keep()
-    return contact_replacement.replacement_from_rpp(parse_rpp(RPPContact, requested), intent)
+    unchanged = include_elements.left_alone_by_patch(OBJECT, [operation.path for operation in operations])
+    return contact_replacement.replacement_from_rpp(parse_rpp(RPPContact, requested), auth_info_update.auth_info, unchanged)

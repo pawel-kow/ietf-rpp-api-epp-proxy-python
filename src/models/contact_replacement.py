@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, FrozenSet, List, Optional
 
 from .address import Address
-from .auth_info_intent import AuthInfoIntent
+from .common import AuthInfo
 from .localized_postal_info import LocalizedPostalInfo
 
 
@@ -10,7 +10,9 @@ from .localized_postal_info import LocalizedPostalInfo
 class ContactReplacement:
     """The wanted state of the members of a contact a client may replace. An omitted member is cleared.
 
-    `status` holds client statuses only, the server's are not the client's to replace.
+    `status` holds client statuses only, the server's are not the client's to replace. `unchanged` names the members
+    the replacement does not state, which stay as they are stored: a data element with onDemand Visibility the request
+    did not include.
     """
     id: str
     name: Optional[str] = None
@@ -22,4 +24,5 @@ class ContactReplacement:
     localizedPostalInfo: Optional[LocalizedPostalInfo] = None
     status: List[str] = field(default_factory=list)
     status_reasons: Dict[str, str] = field(default_factory=dict)
-    auth_info: AuthInfoIntent = field(default_factory=AuthInfoIntent)
+    authInfo: Optional[AuthInfo] = None
+    unchanged: FrozenSet[str] = frozenset()

@@ -3,7 +3,7 @@ import pytest
 from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
-from models import ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
+from models import AuthInfo, ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
 from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, PatchNotApplicable, domain_patch, domains
 
 NAME = "foo.example"
@@ -230,10 +230,22 @@ def test_nameservers_and_dns_records_cannot_be_mixed():
         update(op("add", "/dns", value=dns))
 
 
-def test_remove_auth_info_needs_no_current_value():
-    result = update(op("remove", "/authInfo"), op("remove", "/nameservers"))
+def test_remove_auth_info_clears_the_stored_one():
+    result = update(op("remove", "/authInfo"), op("remove", "/nameservers"), authInfo=AuthInfo(pw="Secret1!x"))
 
     assert result.change.clear_auth_info is True
+
+
+def test_auth_info_no_operation_names_is_left_alone():
+    assert update(op("remove", "/nameservers"), authInfo=AuthInfo(pw="Secret1!x")).change is None
+
+
+def test_replacing_auth_info_with_the_stored_one_changes_nothing():
+    password = {"@type": "authInfo", "method": "authinfo", "authdata": "Secret1!x"}
+
+    result = update(op("replace", "/authInfo", value=password), op("remove", "/nameservers"), authInfo=AuthInfo(pw="Secret1!x"))
+
+    assert result.change is None
 
 
 def test_other_members_cannot_be_changed():

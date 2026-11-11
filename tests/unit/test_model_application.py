@@ -3,7 +3,7 @@ the direct mappers produce, the round trip gives the update back, up to order (#
 import pytest
 
 from models import (
-    Address, AuthInfo, AuthInfoAction, Contact, ContactReference, ContactType, Domain, DsData, DnsSec, Host, HostObj, NS,
+    Address, AuthInfo, Contact, ContactReference, ContactType, Domain, DsData, DnsSec, Host, HostObj, NS,
     contact_application, contact_difference, domain_application, domain_difference, host_application, host_difference,
 )
 from rpp_to_model_mapper import contact_patch, domain_patch, host_patch
@@ -34,7 +34,7 @@ def current_domain() -> Domain:
         name=DOMAIN, roid="D1", status=["ok", "clientHold"], status_reasons={"clientHold": "Unpaid"}, clID="foo",
         ns=NS(host_objs=[HostObj(id="ns1.foo.example"), HostObj(id="ns2.foo.example")], host_attrs=None),
         contacts=[ContactReference(id="REG-1", types=["registrant"]), ContactReference(id="REG-2", types=["tech"])],
-        dnsSEC=DnsSec(ds_data=[DsData(keyTag=1, algorithm=8, digestType=2, digest="AB")]),
+        dnsSEC=DnsSec(ds_data=[DsData(keyTag=1, algorithm=8, digestType=2, digest="AB")]), authInfo=AuthInfo(pw="Secret1!x"),
     )
 
 
@@ -69,7 +69,7 @@ def test_applying_a_domain_update_keeps_what_it_does_not_name():
     assert wanted.registrant == "REG-1" and [(c.type, c.contact.id) for c in wanted.contacts] == [("tech", "REG-2")]
     assert wanted.status == ["clientHold"] and wanted.status_reasons == {"clientHold": "Unpaid"}
     assert wanted.dnsSEC.ds_data == [DsData(keyTag=1, algorithm=8, digestType=2, digest="AB")]
-    assert wanted.auth_info.action == AuthInfoAction.KEEP
+    assert wanted.unchanged == {"authInfo"}
 
 
 def current_contact() -> Contact:

@@ -1,11 +1,12 @@
-from .auth_info_action import AuthInfoAction
 from .client_statuses import client_statuses, status_changes
+from .common import password_of
 from .contact_replacement import ContactReplacement
 from .contact_update import ContactUpdate
 from .contact_update_change import ContactUpdateChange
 from .contact_update_changes import ContactUpdateChanges
 from .contacts import Contact
 from .postal_info_change import PostalInfoChange
+from .stated_members import stated
 
 INT = "int"
 LOC = "loc"
@@ -53,15 +54,17 @@ def difference(current: Contact, wanted: ContactReplacement) -> ContactUpdate:
 
     Every form that differs is sent complete. A wanted localization of None leaves the stored one alone: removing a
     form is not an update, a backend that cannot do it refuses it before (`removes_the_localization`). The email ""
-    clears it. `authInfo` is sent when the replacement sets it.
+    clears it. A password that differs is sent; clearing one is not an update, a backend that cannot do it refuses it
+    before.
     """
+    wanted = stated(wanted, current)
     forms = [form for form in (_int_change(current, wanted), _loc_change(current, wanted)) if form]
     change = ContactUpdateChange(
         postal_info=forms,
         voice=_number(current.phone, wanted.phone),
         fax=_number(current.fax, wanted.fax),
         email=_email(current, wanted),
-        authInfo=wanted.auth_info.auth_info if wanted.auth_info.action == AuthInfoAction.SET else None,
+        authInfo=wanted.authInfo if wanted.authInfo and password_of(wanted) != password_of(current) else None,
     )
     add, remove = _status_changes(current, wanted)
     return ContactUpdate(id=wanted.id, add=add, remove=remove, change=change or None)

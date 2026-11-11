@@ -154,6 +154,11 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
 - The integration backend is not reachable from the devcontainer: #109 dropped the `docker network connect` from
   `postStartCommand`. Unit tests pass; the integration run is pending the network.
 
+- **D9** No `authInfo`-specific intent in the model: `AuthInfoAction`/`AuthInfoIntent` go. A replacement holds
+  `authInfo` as an ordinary member and `unchanged`, the members it does not state, filled from the onDemand
+  Visibility (`include_elements.left_alone` for a PUT, `left_alone_by_patch` for a PATCH). `difference` compares
+  `authInfo` like any member: the stored password again sends no `chg` (before: always sent).
+
 ## Corrections
 
 - **C1 (Q2)** A PUT is the wanted state: after it, the read-write members of the object equal the request. An omitted
