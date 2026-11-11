@@ -37,6 +37,11 @@ class Config:
         config_path = os.getenv("RPP_CONFIG_FILE", "./config.yaml")
         with open(config_path) as f:
             data = yaml.safe_load(f)
+        # An untracked <name>.local.yaml next to it replaces the top-level keys it has, for one machine's settings.
+        local_path = os.path.splitext(config_path)[0] + ".local.yaml"
+        if os.path.exists(local_path):
+            with open(local_path) as f:
+                data.update(yaml.safe_load(f) or {})
         for f in fields(self):
             if f.name in data:
                 setattr(self, f.name, data[f.name])

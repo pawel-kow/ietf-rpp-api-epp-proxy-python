@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from tests.helper.integration_api_test import endpoint_test, substitute_captures
+from tests.helper.integration_api_test import endpoint_test, field_value, replace_upper_placeholders, substitute_captures
 from tests.helper.recursive_compare_existing import recusive_compare_existing
 
 REQUEST = {"method": "GET", "url": "/x", "headers": {"RPP-Cltrid": "cl-1"}}
@@ -16,6 +16,9 @@ class FakeResponse:
         self.text = json.dumps(body)
         self.content = self.text.encode()
         self.headers = {"RPP-Svtrid": "sv-1", "RPP-Code": code, "RPP-Cltrid": "cl-1", "rpp-code": code}
+
+    def json(self):
+        return json.loads(self.text)
 
 
 class FakeClient:
@@ -115,6 +118,39 @@ def test_capture_plus_years_to_29_february_is_not_clamped():
 def test_bad_capture_fails(text):
     with pytest.raises(pytest.fail.Exception):
         substitute_captures(text, CAPTURES)
+
+
+def test_field_path_reads_a_list_element_by_index():
+    assert field_value([{"id": "41"}, {"id": "42"}], "1.id") == "42"
+    assert field_value({"a": [{"b": "c"}]}, "a.0.b") == "c"
+
+
+@pytest.mark.parametrize("path", ["2.id", "x.id", "-1.id"])
+def test_field_path_outside_the_list_fails(path):
+    with pytest.raises(AssertionError, match="not found"):
+        field_value([{"id": "41"}, {"id": "42"}], path)
+
+
+def test_capture_from_a_list_body_is_used_by_the_next_step():
+    client = FakeClient(FakeResponse(200, [{"id": "42"}], "01301"), FakeResponse(200, {}, "01000"))
+    sent = []
+    request = client.request
+    client.request = lambda method, url, **kw: sent.append(url) or request(method, url, **kw)
+
+    endpoint_test(client, {"test_id": "t", "steps": [
+        {"request": REQUEST, "response": {"status": 200, "body": [{}]}, "capture": {"head": "0.id"}},
+        {"request": {**REQUEST, "url": "/messages/{capture:head}"}, "response": {"status": 200, "body": {}}},
+    ]})
+
+    assert sent == ["/x", "/messages/42"]
+
+
+def test_upper_placeholder_is_its_text_in_upper_case():
+    assert replace_upper_placeholders('"{upper:ns1.t1-ab.net}" and {upper:x}') == '"NS1.T1-AB.NET" and X'
+
+
+def test_text_without_upper_placeholder_is_unchanged():
+    assert replace_upper_placeholders("ns1.{random_name}.net") == "ns1.{random_name}.net"
 
 
 def test_delay_seconds_waits_before_the_request():

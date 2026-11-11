@@ -19,11 +19,15 @@ def evaluate_condition(value, spec):
         return False
 
 def field_value(document, path):
-    """Reads a dotted field path, for example 'provMetadata.crDate'."""
+    """Reads a dotted field path, for example 'provMetadata.crDate'. A number picks a list element, as in '0.id'."""
     value = document
     for part in path.split("."):
-        assert part in value, f"Field '{path}' not found"
-        value = value[part]
+        if isinstance(value, list):
+            assert part.isdigit() and int(part) < len(value), f"Field '{path}' not found"
+            value = value[int(part)]
+        else:
+            assert part in value, f"Field '{path}' not found"
+            value = value[part]
     return value
 
 def assert_rpp_headers(request_headers, response, test_name):
@@ -118,6 +122,12 @@ def substitute_captures(value, captures):
                 pytest.fail(f"{match.group(0)}: {years} years after {captures[name]} is not a valid date")
         return CAPTURE.sub(replace, value)
     return value
+
+UPPER = re.compile(r"\{upper:([^{}]*)\}")
+
+def replace_upper_placeholders(value: str) -> str:
+    """Replaces {upper:TEXT} by TEXT in upper case, the form the registry stores a name in, for an exact `match`."""
+    return UPPER.sub(lambda match: match.group(1).upper(), value)
 
 def endpoint_test(client, case_sequence, sleep=time.sleep):
     """

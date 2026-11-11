@@ -21,10 +21,13 @@ doubles: they exercise the full RPP→EPP→RPP round trip against a live regist
 
 Its host and port come from `config.yaml` (`rpp_epp_host`/`rpp_epp_port`) via
 `new_epp_client` in [src/run.py](../../src/run.py). In the
-devcontainer that is the test stack of EPP-server-docker, reached as `epp-server` on TLS port `743` over its
-`epptest_epp_net` docker network. Its certificate
+devcontainer that is the `epp-server-docker-epp-server-1` container on TLS port `743`,
+reached over the shared `epp-server-docker_epp_net` docker network (attached via
+`postStartCommand` in
+[.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json)). Its certificate
 is self-signed and does not name that host, so `config.yaml` sets
-`rpp_epp_tls_insecure_skip_verify`.
+`rpp_epp_tls_insecure_skip_verify`. Where the backend has another name, put it in an untracked
+`config.local.yaml` (`rpp_epp_host: epp-server`): its top-level keys replace those of `config.yaml`.
 
 Auth uses HTTP Basic, and the username and password are passed straight through as
 the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and `baz`
@@ -40,8 +43,8 @@ object, so a domain created with glue reads back with `nameservers`. Removing a 
 
 The message queue is shared per registrar, and other cases add to it (every transfer request queues a message for the
 losing registrar), so `message/` cases assert only the shape of the head and use `any_of` where the queue may be empty.
-Acking a real head is tested in `tests/unit/test_message_wire.py`, as the integration runner cannot carry an id from
-one step to the next. The backend returns the id of the acknowledged message in the `msgQ` of an ack reply.
+To ack a real head, a case first requests a transfer, so the queue of `foo` is not empty, and captures `0.id` of
+`GET /messages` (`message/test6`). The backend returns the id of the acknowledged message in the `msgQ` of an ack reply.
 
 A contact `chg` of a `postalInfo` form replaces it: the address members not sent again (`sp`, `pc`) are wiped, also when
 only `name` or `org` is sent, so the proxy sends every changed form complete (pawel-kow/epp#22). A `chg` of a form the contact does not have
@@ -100,6 +103,8 @@ update → verify) run against a Flask test client.
   and `{unique_cltrid}` (new value per occurrence) keep tests idempotent against a
   shared registry. The backend requires contact ids to start with `FO-`. `{ulabel:TEXT}` is the U-label
   `TEXT-<random_id_10>` and `{alabel:TEXT}` its A-label, so an IDN case writes `{alabel:bücher-t24}.example`.
+  `{upper:TEXT}` is TEXT in upper case, after the other placeholders in it are replaced. The backend stores host
+  names in upper case, so a `match` on a generated host writes `{upper:ns1.u17-{random_name}.net}`.
 - Every step asserts the headers of core §6.2: `RPP-Svtrid`, a 5-digit `RPP-Code`, and
   `RPP-Cltrid` echoed.
 - Response body comparison is **subset + case-insensitive**
@@ -110,7 +115,7 @@ update → verify) run against a Flask test client.
 - A step's `response` can be `{"any_of": [...]}`, a list of responses of which one must match,
   for behaviour the protocol leaves to the server. A create that may be refused, or may keep
   the data in another form, lists each outcome, see `domain_create/test16` to `test18`.
-- A step's `capture` maps a name to a dotted field of its response body. Later steps write `{capture:name}`
+- A step's `capture` maps a name to a dotted field of its response body, where a number picks a list element (`0.id`). Later steps write `{capture:name}`
   in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
   a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
 - A step's `delay_seconds` waits that long before its request, for a registry period that must pass first. Each
@@ -144,8 +149,14 @@ afterwards.
 
 Absence cannot be asserted, because the body comparison is a subset. A case shows that something was removed with a
 `replace` with `match` on it, which reads the domain and answers 422 `02308`. The same `match`, in the form the
-registry stores (`NS1.BAR.EXAMPLE`, as a match is exact), must first answer 200 before the removal, or the 422 proves
+registry stores (`{upper:...}`, as a match is exact), must first answer 200 before the removal, or the 422 proves
 nothing (see `domain_update/test17`).
+
+A case creates the contacts, hosts and domains it uses, in its first steps, and relies on nothing seeded in the
+backend. `{random_name}` and `{random_id_10}` are the same for every case of a run, so each case adds its own part:
+contacts are `FO-{random_id_10}` plus a suffix of the case (`ua1`, at most 16 characters in all), hosts are external
+`nsN.<case>-{random_name}.net`, which need their own `ns` record at create. `domain_create/test7` creates the domain
+it then finds taken.
 
 Isolate one update facet per file (authInfo-only, hostObj add/remove,
 contacts+registrant, …). `domainNames_create`, `domainNames_updatePartial` and `domainNames_update` build their
