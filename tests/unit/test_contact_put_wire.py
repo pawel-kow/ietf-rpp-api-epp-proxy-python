@@ -107,7 +107,7 @@ def test_put_whose_read_back_fails_is_a_202_without_a_body():
     ({**NEW_EMAIL, "id": "JD-1234"}, 400, "02001"),
     (put_body(card(foo=1)), 400, "02001"),
     (put_body(disclose={"@type": "disclose"}), 501, "02102"),
-    (put_body(authInfo={"@type": "authInfo", "method": "x", "authdata": "y"}), 501, "02102"),
+    (put_body(authInfo={"@type": "authInfo", "method": "x", "authdata": "y"}), 400, "02001"),  # not included
 ])
 def test_a_refused_put_sends_nothing_to_the_registry(body, status, code):
     session = Session(info())
@@ -128,14 +128,22 @@ def test_patch_of_a_status_is_sent_without_a_read():
     assert "contact:update" in session.client.sent[0]
 
 
-def test_patch_of_the_email_reads_and_updates():
-    response = patch(
-        info(), DONE, info("b@example.example"),
-        body=[{"op": "replace", "path": "/contactInfo/emails/email/address", "value": "b@example.example"}],
+def test_patch_of_the_email_updates_without_a_read():
+    session = Session(DONE, info("b@example.example"))
+
+    response = session.request(
+        "patch", json=[{"op": "replace", "path": "/contactInfo/emails/email/address", "value": "b@example.example"}],
     )
 
     assert response.status_code == 200
     assert response.json()["contactInfo"]["emails"]["email"]["address"] == "b@example.example"
+    assert "<contact:email>b@example.example</contact:email>" in session.client.sent[0]
+
+
+def test_patch_of_the_name_reads_and_updates():
+    response = patch(info(), DONE, info(), body=[{"op": "replace", "path": "/contactInfo/name/full", "value": "Joe"}])
+
+    assert response.status_code == 200
 
 
 def test_patch_that_removes_the_organisation_that_is_not_there_is_a_422():

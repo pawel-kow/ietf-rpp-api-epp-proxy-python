@@ -68,15 +68,17 @@
         }
       },
       "response": {
-        "status": 400,
+        "status": 200,
         "headers": {
-          "RPP-Code": "02003"
+          "RPP-Code": "01000"
         },
+        "content_type": "application/rpp+json",
         "body": {
-          "type": "urn:ietf:params:rpp:error"
-        },
-        "content_type": "application/problem+json"
+          "@type": "host",
+          "hostName": "t15.{random_name}.net"
+        }
       }
     }
-  ]
+  ],
+  "description": "A full update that repeats the stored host sends no EPP update and answers 200 with the host (core §16.8), see spec-issues.md (Full update without a change)."
 }

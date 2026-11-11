@@ -119,6 +119,9 @@ update → verify) run against a Flask test client.
   of the JSON draft (§8.1, §8.2, §8.3, §5.3.1, §8.7.1; the discovery one has the configured values). Examples for operations not implemented yet have the
   expected result written down and `"skip": "#<issue>"`.
 
+`authInfo` is `onDemand`, so a step that expects it in a response asks for it with `?includeElements=authInfo`. A PUT
+without it leaves the password alone and does not show it, so a GET that includes it follows to prove the password.
+
 To add a case, drop a new JSON file in the appropriate group dir. No Python changes
 are needed. Add `"skip": "reason"` at the top level to skip one.
 

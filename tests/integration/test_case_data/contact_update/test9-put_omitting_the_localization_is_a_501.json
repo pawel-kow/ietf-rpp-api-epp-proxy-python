@@ -149,50 +149,16 @@
         }
       },
       "response": {
-        "status": 200,
+        "status": 501,
         "headers": {
-          "RPP-Code": "01000"
+          "RPP-Code": "02102"
         },
-        "content_type": "application/rpp+json",
+        "content_type": "application/problem+json",
         "body": {
-          "@type": "contact",
-          "id": "FO-{random_id_10}09A",
-          "contactInfo": {
-            "name": {
-              "full": "Jane Doe"
-            },
-            "localizations": {
-              "und": {
-                "name": {
-                  "full": "Jörg Müller"
-                }
-              }
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "region",
-                    "value": "PA"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
-                  }
-                ]
-              }
-            }
-          }
+          "type": "urn:ietf:params:rpp:error"
         }
       }
     }
-  ]
+  ],
+  "description": "A full update without the localization the contact has asks to remove it, which EPP cannot do: 501, see spec-issues.md (Full update of a contact)."
 }

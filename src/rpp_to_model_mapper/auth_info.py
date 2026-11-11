@@ -17,3 +17,4 @@ def model_to_rpp(auth_info: AuthInfo | None) -> RPPAuthInfo | None:
     if auth_info is None or not auth_info.pw:
         return None
     return RPPAuthInfo(method=AUTHINFO_METHOD, authdata=auth_info.pw)
+

@@ -224,7 +224,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames",
+        "url": "/domainNames?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -357,7 +357,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/ex6-{random_name}.example",
+        "url": "/domainNames/ex6-{random_name}.example?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
