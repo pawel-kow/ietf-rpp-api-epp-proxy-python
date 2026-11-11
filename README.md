@@ -11,6 +11,8 @@ Install modules
 pip install -r requirements.txt 
 ```
 
+For development, install `requirements-dev.txt` instead, which adds the tools of the checks.
+
 ## Running
 ```
 cd src
