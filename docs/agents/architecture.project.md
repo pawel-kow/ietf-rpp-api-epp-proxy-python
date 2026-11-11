@@ -29,24 +29,26 @@ single feature (e.g. "domain update") touches every layer:
    host, which EPP represents implicitly: it is mandatory on input and goes no further, see
    [spec-issues.md](../../.spec/spec-issues.md#the-own-ns-record-of-a-host). `dns_records.py` holds what hosts and domains share for DNS
    records, and `domain_dns.py` maps a domain's `dns` to `hostAttr` and secDNS.
-   `domain_patch.py` turns a JSON Patch into a `DomainUpdate` without reading the object, and
-   answers `None` when an operation needs the current state (whole-array `replace` or `remove`,
-   `replace` with `match`, a partial `match`, `/status`, `/dns`, `/dns/records`, `/dns/controls`).
-   `rpp_to_model_with_current` then applies the patch to the read representation of the domain with
-   `json_patch.py` (json §5.2.2), and `domain_patch_difference.py` turns the difference into the
-   update. A patch that matches no element, or matches several for a `replace`, is
-   `PatchNotApplicable` (`02308`, 422). `host_patch.py` does the same for hosts: its
-   `rpp_to_model_with_current` returns the wanted `Host`, and the flow takes the difference.
-   `domain_replacement.py` does the same for a domain PUT: it rejects members outside `domainName.update`, keeps
-   the read-only members and server statuses of the read, takes only the replaceable members from the body (an
-   omitted one is cleared) and lets `domain_patch_difference.py` produce the update. A present `authInfo` always
-   goes as `chg`, an omitted one is left alone, see [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-domain).
+   A mapper returns the intent it got, and never a mix: a partial update is a delta (`DomainUpdate`,
+   `ContactUpdate`, `HostUpdate`), a full update is the wanted state (`DomainReplacement`,
+   `ContactReplacement`, `HostReplacement`). `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
+   without reading the object, and answers `None` when an operation needs the current state (whole-array
+   `replace` or `remove`, `replace` with `match`, a partial `match`, `/status`, `/dns`, `/dns/records`,
+   `/dns/controls`). `rpp_to_model_with_current` then applies the patch to the read representation of the domain
+   with `json_patch.py` (json §5.2.2), and `domain_wanted.py` turns the patched representation into the
+   `DomainReplacement`. A patch that matches no element, or matches several for a `replace`, is
+   `PatchNotApplicable` (`02308`, 422). `host_patch.py` and `contact_patch.py` do the same for hosts and contacts.
+   `domain_replacement.py`, `contact_replacement.py` and `host_replacement.py` turn a PUT into the replacement
+   without a read: they reject members outside the `.update` schema, and what the body omits is cleared. An
+   `onDemand` data element (`authInfo`) is part of a PUT only when the request includes it, see
+   [spec-issues.md](../../.spec/spec-issues.md#visibility-and-includeelements).
    `contacts.py` also holds `contact_from_rpp`, the Card conversion that create, PUT and PATCH share.
-   `contact_difference.py` turns a current and a wanted `Contact` into a `ContactUpdate`: every changed `postalInfo`
-   form is sent complete, the organisation and the numbers are cleared by an empty element, and what EPP cannot
-   clear is refused (`NotSupportedByEpp`). `contact_replacement.py` (PUT) keeps what EPP cannot clear when the body
-   omits it, and `contact_patch.py` sends `/status` and `/authInfo` without a read and reads for `/contactInfo`, see
+   `contact_patch.py` sends `/status`, `/authInfo`, and an `add` or `replace` of a phone or the email without a
+   read, and reads for the rest of `/contactInfo`, see
    [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-contact).
+   `include_elements.py` checks the `includeElements` of a request against the data model and hides an `onDemand`
+   element the request does not include, for every object, from the Visibility in
+   `rpp_schema_validator/schemas/draft-ietf-rpp-data-objects.yaml`.
    `idn_tables.py` holds `IdnTables`, the map between a domain's `lgr` and the table of the EPP IDN extension, which
    `domains.rpp_to_model` and `domains.model_to_rpp` take from the handler. `domain_availability.rpp_to_model` refuses
    the `uName` and `lgr` parameters of a check, see [spec-issues.md](../../.spec/spec-issues.md#idn).
@@ -57,7 +59,12 @@ single feature (e.g. "domain update") touches every layer:
    `contact_transfer_process.py` and `contact_transfer_reject.py` a contact transfer, and
    `domain_renew_process.py` a renewal.
 4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
-   provider-neutral. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
+   provider-neutral. Next to the classes it holds the pure conversions between the two kinds of update, written
+   once per object: `<object>_difference.difference(current, wanted)` gives the delta that turns the stored
+   object into the replacement, and `<object>_application.apply(current, delta)` the replacement a delta amounts
+   to (unused by EPP, for a backend that updates by replacement). `AuthInfoIntent` says what a replacement does
+   with the authorisation information (`KEEP`, `SET`, `CLEAR`). `contact_localization.as_stored` puts a wanted
+   contact in the terms of the stored one, because a read shows a localization by its differences from the card. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
    [src/models/response.py](../../src/models/response.py).
 5. **`eppclient/`:** runs one EPP operation: build XML →
@@ -68,13 +75,15 @@ single feature (e.g. "domain update") touches every layer:
    `1xxx` = success). It keeps the extensions of the greeting for
    `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` the server offers.
 6. **`flows/`:** multi-step operations, free of the web framework. A flow returns a
-   typed result or an `ErrorResponse`, and the handler renders it. `flows/hosts.py`
-   holds mutate-then-Info, and PUT as Info, difference, update and Info. `patch_host` in
-   `flows/hosts.py` and `patch_domain` in `flows/domains.py` hold PATCH: update and Info for a patch
-   that maps directly, and Info, update and Info for one that needs the current state. `replace_domain`
-   is a domain PUT: it takes the second path, and a PUT that changes nothing sends no update. `flows/contacts.py`
-   does the same for contacts. `flows/sponsor.py` holds the 403 for an update that changes nothing and is not the
-   sponsor's, which sends no EPP command to say so. The read and the update are not atomic.
+   typed result or an `ErrorResponse`, and the handler renders it. `patch_<object>` and `replace_<object>` in
+   `flows/domains.py`, `flows/contacts.py` and `flows/hosts.py` take a delta (`update`) or a replacement. A delta
+   is sent as it is, then the object is read back. EPP has no full update, so a replacement goes through
+   `derived_update.replace`, the one derivation for every object: it reads the object (unless a PATCH has read it
+   already), lets the object's `ReplacementSteps` prepare the wanted state and refuse what EPP cannot clear
+   (`epp_contact_refusal.py`, as an `ErrorResponse`), sends the `difference` as one update, and answers a
+   `ReplaceOutcome`. When nothing changes it sends nothing and the outcome is `unchanged`. `flows/sponsor.py`
+   then holds the 403 for a client that is not the sponsor, which sends no EPP command to say so. The read and the
+   update are not atomic.
 7. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
    inbound EPP XML into models. `epp_model/` holds xsdata-generated dataclasses for
    the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
@@ -119,8 +128,10 @@ OpenAPI allows it, which Connexion's validators do not. The handler then gets an
 ## Generated artifacts: do not hand-edit
 
 `src/openapi.yaml` and `src/rpp_schema_validator/schemas/rpp.schema.normalized.json`
-are copied verbatim from `.spec/auto/` by [copy_models.sh](../../copy_models.sh). The
-JSON schema is the single source of truth for request/response validation. `$defs`
+are copied verbatim from `.spec/auto/` by [copy_models.sh](../../copy_models.sh), and
+`src/rpp_schema_validator/schemas/draft-ietf-rpp-data-objects.yaml` from `.spec/`. The
+JSON schema is the single source of truth for request/response validation, the data model for the Visibility of
+the data elements (`visibility_of`). `$defs`
 names (e.g. `"domainName.read"`) are passed by string to `validate_schema`. If
 validation fails unexpectedly, check whether the schema and the mapper drifted.
 A change to the contract goes to `.spec/auto/`, then through `copy_models.sh`. The

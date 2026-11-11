@@ -3,7 +3,7 @@ import pytest
 from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
-from models import ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS
+from models import ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
 from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, PatchNotApplicable, domain_patch, domains
 
 NAME = "foo.example"
@@ -11,7 +11,7 @@ HOST = {"@type": "host", "hostName": "ns3.foo.example"}
 STATUS = {"@type": "domainStatus", "label": "clientHold"}
 
 
-def current(**members):
+def current_domain(**members):
     domain = Domain(
         name=NAME, roid="D1", status=["ok"], crDate="2026-11-04T10:00:00Z", clID="foo", crID="foo",
         ns=NS(host_objs=[HostObj(id="ns1.foo.example"), HostObj(id="ns2.foo.example")], host_attrs=None),
@@ -23,11 +23,18 @@ def current(**members):
     )
     for member, value in members.items():
         setattr(domain, member, value)
-    return domains.model_to_rpp(domain)
+    return domain
+
+
+def current(**members):
+    return domains.model_to_rpp(current_domain(**members))
 
 
 def update(*operations, **members):
-    return domain_patch.rpp_to_model_with_current(NAME, list(operations), current(**members))
+    """The update the patch asks for: the mapper gives the wanted domain, and the model the difference to the current."""
+    domain = current_domain(**members)
+    wanted = domain_patch.rpp_to_model_with_current(NAME, list(operations), domains.model_to_rpp(domain))
+    return domain_difference.difference(domain, wanted)
 
 
 def op(name, path, **members):

@@ -61,14 +61,11 @@ def _owner(domain_name: str, name: str) -> str:
     return f"{name}.{domain_name}"
 
 
-def _add_glue(domain_name: str, hosts: dict[str, HostAttr], owner: str, record: RPPDnsRecord, checked: bool):
-    """EPP holds addresses only on a nameserver of the domain. A stored domain is not checked, it holds what it holds."""
+def _add_glue(hosts: dict[str, HostAttr], owner: str, record: RPPDnsRecord):
+    """EPP holds addresses only on a nameserver of the domain. Whether the nameserver may have them is the
+    registry's to decide: what a read can show must be accepted as input."""
     family, address = record_address(record)
-    if checked and owner != domain_name and not owner.endswith(f".{domain_name}"):
-        raise ValueError(f"The record for '{record.name}' is not in the domain")
     if owner not in hosts:
-        if not checked:
-            return
         raise NotSupportedByEpp(f"A DNS record for '{record.name}'")
     host = hosts[owner]
     setattr(host, family, (getattr(host, family) or []) + [address])
@@ -81,11 +78,8 @@ def _reject_controls(controls: dict | None):
         raise NotSupportedByProxy("'dns.controls'")
 
 
-def rpp_to_model(domain_name: str, dns: RPPDnsData, checked: bool = True) -> tuple[NS | None, DnsSec | None]:
-    """The delegation and DNSSEC data of the records. Delegation goes to EPP as host attributes.
-
-    `checked` is False for the records of a stored domain: out-of-zone glue is no reason to refuse a change.
-    """
+def rpp_to_model(domain_name: str, dns: RPPDnsData) -> tuple[NS | None, DnsSec | None]:
+    """The delegation and DNSSEC data of the records. Delegation goes to EPP as host attributes."""
     _reject_controls(dns.controls)
     domain_name = domain_name.lower()
     hosts: dict[str, HostAttr] = {}
@@ -110,7 +104,7 @@ def rpp_to_model(domain_name: str, dns: RPPDnsData, checked: bool = True) -> tup
     if ds_data and key_data:
         raise NotSupportedByProxy("'ds' and 'dnskey' records in one request")
     for owner, record in glue:
-        _add_glue(domain_name, hosts, owner, record, checked)
+        _add_glue(hosts, owner, record)
     ns = NS(host_objs=None, host_attrs=list(hosts.values())) if hosts else None
     dns_sec = DnsSec(ds_data=ds_data or None, key_data=key_data or None) if ds_data or key_data else None
     return ns, dns_sec

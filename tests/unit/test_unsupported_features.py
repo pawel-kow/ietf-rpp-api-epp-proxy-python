@@ -14,6 +14,11 @@ TTL = {"@type": "dnsControls", "ttl": {"a": 3600}}
 SIG_LIFETIME = {"@type": "dnsControls", "maxSigLifetime": {"ds": 3600}}
 
 
+def replace_host(body):
+    """A full update of the host the body names."""
+    return host_replacement.rpp_to_model("ns1.foo.example", body)
+
+
 def card(**members):
     return {"@type": "Card", "version": "2.0", "kind": "individual", "name": {"full": "John Doe"}, **members}
 
@@ -54,7 +59,7 @@ NOT_IN_EPP = [
     (hosts.rpp_to_model, {**HOST, "dns": dns(record("ns", {"nsdname": "other.example."}))}),
     (hosts.rpp_to_model, {**HOST, "dns": dns(record("mx", {"exchange": "a.", "preference": "1"}))}),
     (hosts.rpp_to_model, {**HOST, "dns": dns(controls=SIG_LIFETIME)}),
-    (host_replacement.rpp_to_model, {**HOST, "status": [{**STATUS, "due": "2030-01-01T00:00:00Z"}]}),
+    (replace_host, {**HOST, "status": [{**STATUS, "due": "2030-01-01T00:00:00Z"}]}),
     (contacts.rpp_to_model, contact(status=[{"@type": "contactStatus", "label": "clientUpdateProhibited"}])),
     (contacts.rpp_to_model, contact(card(links={"url": {"uri": "https://example.example"}}))),
     (contacts.rpp_to_model, contact(card(emails={"email": EMAIL, "email-1": EMAIL}))),
@@ -109,7 +114,7 @@ def test_what_only_the_proxy_lacks_is_unimplemented_option(case):
     (domains.rpp_to_model, {**DOMAIN, "dns": dns(controls=TTL)}),
     (domains.rpp_to_model, {**DOMAIN, "dns": dns(controls={**TTL, **SIG_LIFETIME})}),
     (hosts.rpp_to_model, {**HOST, "dns": dns(controls=TTL)}),
-    (host_replacement.rpp_to_model, {**HOST, "dns": dns(controls=TTL)}),
+    (replace_host, {**HOST, "dns": dns(controls=TTL)}),
 ])
 def test_ttl_needs_an_extension_the_proxy_lacks(case):
     assert isinstance(raised_by(*case), NotSupportedByProxy)

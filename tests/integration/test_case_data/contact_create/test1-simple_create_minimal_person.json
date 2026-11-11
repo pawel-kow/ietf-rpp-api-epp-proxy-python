@@ -4,7 +4,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/contacts",
+        "url": "/contacts?includeElements=authInfo",
         "body_json": {
           "@type": "contact",
           "id": "FO-{random_id_10}-01",

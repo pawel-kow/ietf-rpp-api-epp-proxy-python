@@ -4,14 +4,13 @@ from connexion import ProblemException
 from controller.helper.rpp_response import map_request
 from models import Address, Contact, ContactType
 from rpp_to_model_mapper import contact_patch, contact_replacement
-from tests.helper.contact_fixtures import ADDRESS, card, current_contact, localized, put_body
+from tests.helper.contact_fixtures import ADDRESS, card, current_contact, derived_update, localized, put_body
 
 ID = "JD-1234"
 
 
-def update(body, current=None):
-    checked = map_request(contact_replacement.rpp_to_model, ID, body)
-    return map_request(contact_replacement.rpp_to_model_with_current, ID, checked, current or current_contact())
+def update(body, current=None, requested=frozenset()):
+    return derived_update(current or current_contact(), map_request(contact_replacement.rpp_to_model, ID, body, requested))
 
 
 def rejected(body, current=None) -> int:
@@ -82,16 +81,19 @@ def test_a_sent_address_replaces_the_whole_address():
 
 
 @pytest.mark.parametrize("omitted", ["name", "addresses", "emails"])
-def test_what_epp_cannot_clear_is_kept_when_omitted(omitted):
-    result = update(put_body(without(card(), omitted)))
+def test_what_epp_cannot_clear_is_a_501_when_omitted(omitted):
+    """A full update is the wanted state, so an omitted member is cleared, and EPP cannot clear these."""
+    with pytest.raises(ProblemException) as problem:
+        update(put_body(without(card(), omitted)))
 
-    assert result.change is None
+    assert problem.value.status == 501 and problem.value.headers["RPP-Code"] == "02102"
+    assert "cannot be expressed in EPP" in problem.value.detail
 
 
-def test_an_omitted_localization_is_kept():
+def test_an_omitted_localization_is_a_501():
     current = current_contact(localizedPostalInfo=localized(name="Jörg", address=ADDRESS))
 
-    assert update(put_body(), current).change is None
+    assert rejected(put_body(), current) == 501
 
 
 def test_a_localization_is_sent_complete_with_what_it_leaves_out_from_the_card():
@@ -154,11 +156,19 @@ def test_an_omitted_status_removes_the_client_statuses():
     assert result.remove.status == ["clientDeleteProhibited"] and result.add is None
 
 
-def test_auth_info_present_is_sent_and_omitted_is_left_alone():
+def test_included_auth_info_is_sent_and_one_not_included_is_left_alone():
     auth = {"@type": "authInfo", "method": "authinfo", "authdata": "Secret1!x"}
 
     assert update(put_body()).change is None
-    assert update(put_body(authInfo=auth)).change.authInfo.pw == "Secret1!x"
+    assert update(put_body(authInfo=auth), requested=frozenset({"authInfo"})).change.authInfo.pw == "Secret1!x"
+
+
+def test_included_auth_info_omitted_is_a_501():
+    """RFC 5733 has no null element for a contact's authInfo."""
+    with pytest.raises(ProblemException) as problem:
+        update(put_body(), requested=frozenset({"authInfo"}))
+
+    assert problem.value.status == 501 and problem.value.headers["RPP-Code"] == "02102"
 
 
 @pytest.mark.parametrize("member", ["id", "provMetadata", "processes", "unknown"])
@@ -208,15 +218,15 @@ def with_loc(loc_name="Yohn", **members):
     return current_contact(localizedPostalInfo=localized(name=loc_name, address=ADDRESS, **members))
 
 
-def test_a_localization_without_an_address_is_completed_from_the_kept_card():
-    body = put_body(card(localizations={"und": {"name": {"full": "Yohn"}}}, **{}))
-    body["contactInfo"].pop("addresses")
+@pytest.mark.parametrize("omitted", ["name", "addresses"])
+def test_a_card_member_omitted_next_to_a_localization_is_a_501(omitted):
+    body = put_body(without(card(localizations={"und": {"name": {"full": "Yohn"}}}), omitted))
 
-    assert update(body, with_loc()).change is None
+    assert rejected(body, with_loc()) == 501
 
 
-def test_a_localization_without_a_name_is_completed_from_the_kept_card():
-    body = put_body(without(card(localizations={"und": {"addresses": B_ADDRESS}}), "name"))
+def test_a_localization_without_a_name_takes_the_name_of_the_card():
+    body = put_body(card(localizations={"und": {"addresses": B_ADDRESS}}))
 
     (form,) = update(body, with_loc()).change.postal_info
 
@@ -224,7 +234,7 @@ def test_a_localization_without_a_name_is_completed_from_the_kept_card():
 
 
 def test_a_repeated_put_with_a_completed_localization_sends_nothing():
-    body = put_body(without(card(localizations={"und": {"addresses": B_ADDRESS}}), "name"))
+    body = put_body(card(localizations={"und": {"addresses": B_ADDRESS}}))
     settled = current_contact(localizedPostalInfo=localized(
         name="John Doe", address=Address(street=None, city="Bonn", country="DE"),
     ))
@@ -244,13 +254,15 @@ def test_a_localization_the_read_shows_in_part_is_not_rewritten_by_a_repeated_pu
     assert update(body, current).change is None
 
 
-def test_a_cleared_organisation_is_cleared_in_a_kept_localization_that_shared_it():
+def test_a_cleared_organisation_is_cleared_in_a_localization_that_shared_it():
     current = current_contact(
         type=ContactType.ORG, organisationName="ACME Inc.",
         localizedPostalInfo=localized(name="Yohn", organisationName="ACME Inc.", address=ADDRESS),
     )
 
-    forms = {f.form: f for f in update(put_body(), current).change.postal_info}
+    body = put_body(card(localizations={"und": {"name": {"full": "Yohn"}}}))
+
+    forms = {f.form: f for f in update(body, current).change.postal_info}
 
     assert forms["int"].organisationName == "" and forms["loc"].organisationName == ""
     assert forms["loc"].name == "Yohn"
@@ -262,22 +274,24 @@ def test_put_and_patch_agree_on_a_cleared_organisation():
         localizedPostalInfo=localized(name="Yohn", organisationName="ACME Inc.", address=ADDRESS),
     )
 
-    patched = map_request(
+    patched = derived_update(current, map_request(
         contact_patch.rpp_to_model_with_current, ID, [{"op": "remove", "path": "/contactInfo/organizations/org"}], current,
-    )
+    ))
 
-    assert patched == update(put_body(), current)
+    assert patched == update(put_body(card(localizations={"und": {"name": {"full": "Yohn"}}})), current)
 
 
-def test_a_localization_of_another_organisation_is_kept_as_it_is():
+def test_a_repeated_localization_of_another_organisation_stays_when_the_card_loses_its_own():
     current = current_contact(
         type=ContactType.ORG, organisationName="ACME Inc.",
         localizedPostalInfo=localized(name="Yohn", organisationName="ACME GmbH", address=ADDRESS),
     )
 
-    forms = {f.form: f for f in update(put_body(), current).change.postal_info}
+    body = put_body(card(kind="org", localizations={"und": {"name": {"full": "Yohn"}, "organizations": {"org": {"name": "ACME GmbH"}}}}))
 
-    assert "loc" not in forms
+    forms = {f.form: f for f in update(body, current).change.postal_info}
+
+    assert forms["int"].organisationName == "" and "loc" not in forms
 
 
 STORED = dict(status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "why"})

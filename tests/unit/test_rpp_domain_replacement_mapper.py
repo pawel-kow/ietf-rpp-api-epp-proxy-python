@@ -1,7 +1,7 @@
 import pytest
 from jsonschema import ValidationError
 
-from models import ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS
+from models import ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
 from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, domain_replacement, domains
 
 NAME = "foo.example"
@@ -30,12 +30,16 @@ def current(**members):
     )
     for member, value in members.items():
         setattr(domain, member, value)
-    return domains.model_to_rpp(domain)
+    return domain
 
 
-def replace(body_members, **domain_members):
+def replace(body_members, requested=frozenset(), **domain_members):
+    """The update the full update asks for: the mapper gives the wanted domain, and the model the difference."""
     body = {"@type": "domainName", **body_members}
-    return domain_replacement.rpp_to_model_with_current(NAME, domain_replacement.rpp_to_model(NAME, body), current(**domain_members))
+    return domain_difference.difference(current(**domain_members), domain_replacement.rpp_to_model(NAME, body, requested))
+
+
+AUTH_INFO = frozenset({"authInfo"})
 
 
 STAYS = {
@@ -141,7 +145,7 @@ def test_an_undeclared_nested_member_is_rejected(members):
 
 def test_an_auth_info_method_other_than_authinfo_is_unsupported():
     with pytest.raises(NotSupportedByEpp):
-        replace({**STAYS, "authInfo": {"@type": "authInfo", "method": "other", "authdata": "x"}})
+        replace({**STAYS, "authInfo": {"@type": "authInfo", "method": "other", "authdata": "x"}}, AUTH_INFO)
 
 
 def test_contacts_with_several_roles_are_compared_by_role_and_id():
@@ -259,15 +263,19 @@ def test_a_member_outside_the_update_is_rejected(member):
         domain_replacement.rpp_to_model(NAME, {"@type": "domainName", member: "x"})
 
 
-def test_auth_info_present_is_always_sent():
+def test_included_auth_info_present_is_always_sent():
     auth = {"@type": "authInfo", "method": "authinfo", "authdata": "Pw1"}
 
-    result = replace({**STAYS, "authInfo": auth})
+    result = replace({**STAYS, "authInfo": auth}, AUTH_INFO)
 
     assert result.change.authInfo.pw == "Pw1"
 
 
-def test_auth_info_omitted_is_left_alone():
+def test_included_auth_info_omitted_is_cleared():
+    assert replace(STAYS, AUTH_INFO).change.clear_auth_info
+
+
+def test_auth_info_not_included_is_left_alone():
     assert replace(STAYS).change is None
 
 
@@ -327,7 +335,7 @@ def test_a_repeated_reason_that_is_empty_changes_nothing():
 
 def test_stored_glue_out_of_the_zone_does_not_block_a_put_that_echoes_the_read():
     current_ns = NS(host_objs=None, host_attrs=[HostAttr(id="ns1.bar.example", ipv4=["192.0.2.1"])])
-    echo = {**WITHOUT_NAMESERVERS, "dns": current(ns=current_ns)["dns"]}
+    echo = {**WITHOUT_NAMESERVERS, "dns": domains.model_to_rpp(current(ns=current_ns))["dns"]}
 
     result = replace(echo, ns=current_ns)
 

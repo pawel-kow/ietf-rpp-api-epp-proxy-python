@@ -1,6 +1,6 @@
-from models import Contact, ContactUpdate, ContactUpdateChange, ContactUpdateChanges
+from models import AuthInfoIntent, Contact, ContactReplacement, ContactUpdate, ContactUpdateChange, ContactUpdateChanges
 from rpp_schema_validator import validate_schema
-from . import auth_info, contact_difference, contact_replacement, contacts, json_patch, patch_statuses
+from . import auth_info, contact_replacement, contacts, json_patch, patch_statuses
 from .common import parse_rpp, reject_operation, reject_set
 from .needs_current_state import NeedsCurrentState
 from .not_supported_by_proxy import NotSupportedByProxy
@@ -17,6 +17,13 @@ ABSENT_PARENTS = {
     f"{CONTACT_INFO_PATH}/{member}": {} for member in ("organizations", "addresses", "phones", "emails", "localizations")
 }
 READ_ONLY_MEMBERS = ("provMetadata", "processes")
+# The entries EPP holds as one value each, with the member of the entry that holds the value.
+ENTRIES = {
+    f"{CONTACT_INFO_PATH}/phones/{contacts.PHONE_VOICE}": "number",
+    f"{CONTACT_INFO_PATH}/phones/{contacts.PHONE_FAX}": "number",
+    f"{CONTACT_INFO_PATH}/emails/email": "address",
+}
+FAX_FEATURES = {contacts.PHONE_FAX: True}
 
 
 def _check(operation: RPPPatchOperation):
@@ -35,6 +42,7 @@ class _PatchedUpdate:
         self.add = ContactUpdateChanges()
         self.remove = ContactUpdateChanges()
         self.auth_info = None
+        self.change = ContactUpdateChange()
 
     def apply(self, operation: RPPPatchOperation):
         _check(operation)
@@ -43,7 +51,26 @@ class _PatchedUpdate:
         elif operation.path == STATUS_PATH:
             self._apply_to_status(operation)
         else:
+            self._apply_to_entry(operation)
+
+    def _apply_to_entry(self, operation: RPPPatchOperation):
+        """A phone or the email is one EPP value, which `chg` sets without a read. A removal takes the read path, so
+        that removing what is not there stays a 422 (RFC 6902 §4.2)."""
+        entry, member = _entry(operation.path)
+        if entry is None or operation.match is not None or operation.op == "remove":
             raise NeedsCurrentState()
+        value = {ENTRIES[entry]: operation.value} if member else operation.value
+        if member and entry.endswith(f"/{contacts.PHONE_FAX}"):
+            value = {**value, "features": FAX_FEATURES}
+        self._set(entry, _entry_value(entry, value))
+
+    def _set(self, entry: str, value: str):
+        if entry.endswith("/email"):
+            self.change.email = value
+        elif entry.endswith(f"/{contacts.PHONE_FAX}"):
+            self.change.fax = value
+        else:
+            self.change.voice = value
 
     def _apply_to_auth_info(self, operation: RPPPatchOperation):
         if operation.match is not None:
@@ -81,8 +108,29 @@ class _PatchedUpdate:
             id=contact_id,
             add=self.add or None,
             remove=self.remove or None,
-            change=ContactUpdateChange(authInfo=self.auth_info) if self.auth_info else None,
+            change=ContactUpdateChange(
+                voice=self.change.voice, fax=self.change.fax, email=self.change.email, authInfo=self.auth_info,
+            ) or None,
         )
+
+
+def _entry(path: str) -> tuple[str | None, str | None]:
+    """The phone or email entry the path names, and the member of it, if it names one."""
+    for entry, member in ENTRIES.items():
+        if path == entry:
+            return entry, None
+        if path == f"{entry}/{member}":
+            return entry, member
+    return None, None
+
+
+def _entry_value(entry: str, value) -> str:
+    """The number or address of an entry, checked as the Card of a full update would be."""
+    _, collection, key = entry.rsplit("/", 2)
+    card = {"@type": "Card", "version": "2.0", collection: {key: value}}
+    validate_schema("contact.update", {"@type": "contact", "contactInfo": card})
+    contact = contacts.contact_from_rpp(parse_rpp(RPPContact, {"id": "-", "contactInfo": card}))
+    return {contacts.PHONE_VOICE: contact.phone, contacts.PHONE_FAX: contact.fax}.get(key, contact.email)[0]
 
 
 def _operations(rpp: list) -> list[RPPPatchOperation]:
@@ -116,10 +164,10 @@ def _with_derived_kind(patched: dict, operations: list[RPPPatchOperation]) -> di
     return {**patched, "contactInfo": card}
 
 
-def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> ContactUpdate:
-    """Applies the patch to the current contact (its read representation) and returns the difference as an update.
+def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> ContactReplacement:
+    """Applies the patch to the current contact (its read representation) and returns the contact it asks for.
 
-    `authInfo` is sent as the patch says and not compared, see `contact_replacement`.
+    `authInfo` is not compared, its operations are converted as without the current contact.
     """
     operations = _operations(rpp)
     for operation in operations:
@@ -132,11 +180,9 @@ def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> C
     patched = patch_statuses.with_server_statuses(patched, read, "contactStatus")
     validate_schema("contact.read", patched)
     requested = {member: value for member, value in _with_derived_kind(patched, operations).items() if member not in READ_ONLY_MEMBERS}
-    contact_rpp = parse_rpp(RPPContact, requested)
-    wanted = contact_replacement.wanted_statuses(contacts.contact_from_rpp(contact_rpp), contact_rpp)
     auth_info_update = _PatchedUpdate()
     for operation in operations:
         if operation.path == AUTH_INFO_PATH:
             auth_info_update.apply(operation)
-    wanted.authInfo = auth_info_update.auth_info
-    return contact_difference.difference(contact_id, current, contact_difference.with_stored_localization(wanted, current))
+    intent = AuthInfoIntent.set(auth_info_update.auth_info) if auth_info_update.auth_info else AuthInfoIntent.keep()
+    return contact_replacement.replacement_from_rpp(parse_rpp(RPPContact, requested), intent)

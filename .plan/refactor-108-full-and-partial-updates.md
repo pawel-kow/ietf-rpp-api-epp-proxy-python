@@ -6,22 +6,22 @@ Status: accepted by the maintainer with decisions D1–D8 and correction C1.
 ## Tasks
 
 - [x] T0 Plan, findings and open questions; maintainer accepts the approach
-- [~] T1 Models: `AuthInfoIntent`, `DomainReplacement`, `ContactReplacement`, `HostReplacement` (one file each)
-- [ ] T2 Models: `difference` for hosts (moved from `flows/hosts.py` `_difference`), with its tests
-- [ ] T3 Models: `difference` for contacts (moved from `rpp_to_model_mapper/contact_difference.py`, EPP refusals split off)
-- [ ] T4 Models: `difference` for domains (rewritten from RPP dicts to `Domain` / `DomainReplacement`);
+- [x] T1 Models: `AuthInfoIntent`, `DomainReplacement`, `ContactReplacement`, `HostReplacement` (one file each)
+- [x] T2 Models: `difference` for hosts (moved from `flows/hosts.py` `_difference`), with its tests
+- [x] T3 Models: `difference` for contacts (moved from `rpp_to_model_mapper/contact_difference.py`, EPP refusals split off)
+- [x] T4 Models: `difference` for domains (rewritten from RPP dicts to `Domain` / `DomainReplacement`);
       cases of `test_rpp_domain_patch_current_mapper.py` and `test_rpp_domain_replacement_mapper.py` moved to model level
-- [ ] T5 Models: `apply(current, delta)` for the three objects, with round-trip tests
-- [ ] T6 EPP side: one derived `replace` orchestration (read unless `current` given → EPP resolution and refusals →
+- [x] T5 Models: `apply(current, delta)` for the three objects, with round-trip tests
+- [x] T6 EPP side: one derived `replace` orchestration (read unless `current` given → EPP resolution and refusals →
       `difference` → `<update>`, or `unchanged` + `current`)
-- [ ] T7 Mappers return intent: PUT → `*Replacement` without a read; PATCH with current → `*Replacement`; direct PATCH → delta
-- [ ] T8 Flows and controllers: `patch_*` / `replace_*` call `update(delta)` or `replace(wanted, current)`; sponsor 403 kept
-- [ ] T9 Docs: `architecture.project.md` (mapper and flow sections), `spec-issues.md` only if wording names moved modules
-- [ ] T11 `onDemand` Visibility and `includeElements` (D6, D7): output filter, PUT input rule, spec-issues entry
-- [ ] T12 Drop the out-of-domain glue refusal and the `checked` flag (D4), spec-issues entry
-- [ ] T13 Contact PATCH of phones and email without a read (D8)
-- [ ] T14 Behaviour changes C1, D2, D3: spec-issues, integration and unit cases
-- [ ] T10 Full `pytest` (unit + EPP integration) unchanged and green; draft PR
+- [x] T7 Mappers return intent: PUT → `*Replacement` without a read; PATCH with current → `*Replacement`; direct PATCH → delta
+- [x] T8 Flows and controllers: `patch_*` / `replace_*` call `update(delta)` or `replace(wanted, current)`; sponsor 403 kept
+- [x] T9 Docs: `architecture.project.md` (mapper and flow sections), `spec-issues.md` only if wording names moved modules
+- [x] T11 `onDemand` Visibility and `includeElements` (D6, D7): output filter, PUT input rule, spec-issues entry
+- [x] T12 Drop the out-of-domain glue refusal and the `checked` flag (D4), spec-issues entry
+- [x] T13 Contact PATCH of phones and email without a read (D8)
+- [x] T14 Behaviour changes C1, D2, D3: spec-issues, integration and unit cases
+- [~] T10 Full `pytest` (unit + EPP integration) unchanged and green; draft PR
 
 ## Findings (evidence)
 
@@ -141,6 +141,18 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
   copied by `copy_models.sh` into `src/` and read at start-up.
 - **D8 (Q9)** In this issue: a contact PATCH of the phones and the email maps directly to EPP `chg` without a read,
   where EPP can express it.
+
+## Implementation notes
+
+- The model `difference` for domains compares the stored DS digests in uppercase, as the read representation did
+  (`domain_dns._rpp_to_ds`); host attribute names keep their case and compare without it, as before.
+- The domain refusal of `ds` and `dnskey` added together was unreachable after the mapper's own check of the wanted
+  `dns` (`domain_dns.rpp_to_model`), so the EPP side has no domain refusal.
+- D8: `remove` of a phone or the email stays on the read path, so that removing what is not there stays a 422 and
+  `contact_update/test2` keeps proving absence. `add` and `replace` go direct; a direct `replace` of an absent entry
+  sets it (spec-issues).
+- The integration backend is not reachable from the devcontainer: #109 dropped the `docker network connect` from
+  `postStartCommand`. Unit tests pass; the integration run is pending the network.
 
 ## Corrections
 

@@ -1,4 +1,4 @@
-from models import Host, HostUpdateChanges
+from models import Host, HostReplacement, HostUpdateChanges
 from rpp_schema_validator import validate_schema
 from . import host_dns, prov_metadata
 from .common import parse_rpp, reject_set
@@ -48,13 +48,16 @@ def rpp_host_to_model(host_rpp: RPPHost) -> Host:
     return Host(name=host_rpp.hostName, ipv4=addresses["ipv4"] or None, ipv6=addresses["ipv6"] or None)
 
 
-def rpp_host_with_status_to_model(host_rpp: RPPHost) -> Host:
-    """The Host a full update or a patch asks for."""
+def replacement_from_rpp(host_name: str, host_rpp: RPPHost) -> HostReplacement:
+    """The host a full update or a patched read asks for. `host_name` is the name the host has now."""
     host = rpp_host_to_model(host_rpp)
     host.status = []
     for status in host_rpp.status or []:
         add_rpp_status(status, host)
-    return host
+    return HostReplacement(
+        name=host_name, new_name=host.name, ipv4=host.ipv4, ipv6=host.ipv6,
+        status=host.status, status_reasons=host.status_reasons,
+    )
 
 
 def rpp_to_model(rpp: dict) -> Host:

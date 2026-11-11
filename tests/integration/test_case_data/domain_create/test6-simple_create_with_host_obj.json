@@ -4,7 +4,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames",
+        "url": "/domainNames?includeElements=authInfo",
         "body_json": {
           "@type": "domainName",
           "name": "test6-{random_name}.example",

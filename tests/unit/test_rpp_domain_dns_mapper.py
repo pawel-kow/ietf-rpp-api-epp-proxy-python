@@ -70,6 +70,13 @@ def test_create_keeps_a_nameserver_of_another_domain():
     assert create(ns("ns1.other.example.")).ns.host_attrs == [HostAttr(id="ns1.other.example")]
 
 
+def test_create_leaves_glue_of_another_domain_to_the_registry():
+    """A read shows what the registry stores, so the same records are accepted as input."""
+    domain = create(ns("ns1.other.example."), glue("ns1.other.example."))
+
+    assert domain.ns.host_attrs == [HostAttr(id="ns1.other.example", ipv4=["192.0.2.1"])]
+
+
 def test_create_can_hold_delegation_and_dnssec_together():
     domain = create(ns(), record("@", "ds", DS_RDATA))
 
@@ -99,7 +106,6 @@ def test_create_rejects_dns_records_together_with_nameservers():
     [record("@", "dnskey", {k: v for k, v in KEY_RDATA.items() if k != "protocol"})],
     [ns(), glue(address="192.0.2.300")],
     [ns(), glue(record_type="aaaa")],
-    [ns("ns1.other.example."), glue("ns1.other.example.")],
 ])
 def test_create_rejects_what_the_draft_forbids(records):
     with pytest.raises(ValueError):

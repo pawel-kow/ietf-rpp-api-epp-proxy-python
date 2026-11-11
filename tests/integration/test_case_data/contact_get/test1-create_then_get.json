@@ -92,7 +92,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}-G1",
+        "url": "/contacts/FO-{random_id_10}-G1?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",

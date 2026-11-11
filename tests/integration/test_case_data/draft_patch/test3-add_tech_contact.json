@@ -223,7 +223,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames",
+        "url": "/domainNames?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",

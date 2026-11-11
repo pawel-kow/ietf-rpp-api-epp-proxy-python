@@ -1,10 +1,21 @@
 from flows import patch_contact, replace_contact
-from models import Address, Contact, ContactUpdate, ContactUpdateChange, ErrorResponse, PostalInfoChange, ResultCode
+from models import (
+    Address, Contact, ContactReplacement, ContactUpdate, ContactUpdateChange, ErrorResponse, PostalInfoChange, ResultCode,
+    LocalizedPostalInfo, contact_application,
+)
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.unit.test_contact_xml import info_reply, postal
 
 ID = "JD-1"
 EMAIL_CHANGE = ContactUpdate(id=ID, change=ContactUpdateChange(email="b@example.example"))
+BERLIN = Address(street=None, city="Berlin", country="DE")
+# The contact of `info()`.
+UNCHANGED = ContactReplacement(id=ID, name="Joe", address=BERLIN, email=["a@example.example"])
+
+
+def applying(update: ContactUpdate):
+    """The patch that asks for the current contact with `update` applied."""
+    return lambda contact: contact_application.apply(contact, update)
 
 
 def reply(code, res_data=""):
@@ -51,12 +62,13 @@ def test_a_patch_needing_the_contact_reads_it_first():
 
     def from_current(contact):
         seen.append(contact)
-        return EMAIL_CHANGE
+        return contact_application.apply(contact, EMAIL_CHANGE)
 
     result = patch_contact(epp, ID, None, from_current, "cl-1")
 
     assert seen[0].name == "Joe"
     assert kinds(epp) == [(True, False), (False, True), (True, False)]
+    assert "<contact:email>b@example.example</contact:email>" in epp.sent[1]
     assert result.mutation.server_transaction_id == "sv-1"
 
 
@@ -73,21 +85,21 @@ def test_a_failed_update_is_returned():
 def test_a_replacement_that_changes_nothing_sends_no_update():
     epp = client(info())
 
-    result = replace_contact(epp, ID, lambda contact: ContactUpdate(id=ID), "cl-1")
+    result = replace_contact(epp, UNCHANGED, "cl-1")
 
     assert kinds(epp) == [(True, False)]
     assert result.contact.id == "JD-1" and result.mutation.server_transaction_id == "sv-1"
 
 
 def test_an_unchanged_contact_of_another_client_is_a_403():
-    result = replace_contact(client(info("ClientY")), ID, lambda contact: ContactUpdate(id=ID), "cl-1")
+    result = replace_contact(client(info("ClientY")), UNCHANGED, "cl-1")
 
     assert isinstance(result, ErrorResponse) and result.code == ResultCode.AUTHORIZATION_ERROR
     assert result.client_transaction_id == "cl-1"
 
 
 def test_the_sponsor_is_compared_without_regard_to_case():
-    result = replace_contact(client(info(), username="clientx"), ID, lambda contact: ContactUpdate(id=ID), "cl-1")
+    result = replace_contact(client(info(), username="clientx"), UNCHANGED, "cl-1")
 
     assert result.contact is not None
 
@@ -120,7 +132,7 @@ BOTH = info_with(postal("int", "Joe", "Berlin"), postal("loc", "Jörg", "Berlin"
 
 
 def test_a_form_the_registry_did_not_add_is_an_error_naming_it():
-    result = patch_contact(client(INT_ONLY, DONE, INT_ONLY), ID, None, lambda contact: ADD_LOC, "cl-1")
+    result = patch_contact(client(INT_ONLY, DONE, INT_ONLY), ID, None, applying(ADD_LOC), "cl-1")
 
     assert isinstance(result, ErrorResponse) and result.code == ResultCode.COMMAND_FAILED
     assert "loc" in result.msg
@@ -128,25 +140,30 @@ def test_a_form_the_registry_did_not_add_is_an_error_naming_it():
 
 
 def test_an_int_form_the_registry_did_not_add_to_a_loc_only_contact_is_an_error():
-    result = patch_contact(client(LOC_ONLY, DONE, LOC_ONLY), ID, None, lambda contact: ADD_INT, "cl-1")
+    result = patch_contact(client(LOC_ONLY, DONE, LOC_ONLY), ID, None, applying(ADD_INT), "cl-1")
 
     assert isinstance(result, ErrorResponse) and "int" in result.msg
 
 
 def test_a_form_the_registry_added_is_a_success():
-    result = patch_contact(client(INT_ONLY, DONE, BOTH), ID, None, lambda contact: ADD_LOC, "cl-1")
+    result = patch_contact(client(INT_ONLY, DONE, BOTH), ID, None, applying(ADD_LOC), "cl-1")
 
     assert result.contact is not None
 
 
 def test_a_form_that_was_there_and_is_changed_is_not_checked():
-    result = replace_contact(client(BOTH, DONE, BOTH), ID, lambda contact: ADD_LOC, "cl-1")
+    changed = ContactReplacement(
+        id=ID, name="Joe", address=BERLIN, email=["a@example.example"],
+        localizedPostalInfo=LocalizedPostalInfo(name="Jörgen", address=BERLIN),
+    )
+
+    result = replace_contact(client(BOTH, DONE, BOTH), changed, "cl-1")
 
     assert result.contact is not None
 
 
 def test_a_form_that_cannot_be_read_back_is_not_an_error():
-    result = patch_contact(client(INT_ONLY, DONE, MISSING), ID, None, lambda contact: ADD_LOC, "cl-1")
+    result = patch_contact(client(INT_ONLY, DONE, MISSING), ID, None, applying(ADD_LOC), "cl-1")
 
     assert result.contact is None
 
