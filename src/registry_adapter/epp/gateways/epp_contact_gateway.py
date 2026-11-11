@@ -7,10 +7,12 @@ from core.ports.replacement_steps import ReplacementSteps
 from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 from registry_adapter.epp import contact_refusal
-from registry_adapter.epp.commands.contact.contact_commands import (
-    epp_contacts_Check, epp_contacts_Create, epp_contacts_Delete, epp_contacts_Info, epp_contacts_Transfer,
-    epp_contacts_Update,
-)
+from registry_adapter.epp.commands.contact.check import epp_contacts_Check
+from registry_adapter.epp.commands.contact.create import epp_contacts_Create
+from registry_adapter.epp.commands.contact.delete import epp_contacts_Delete
+from registry_adapter.epp.commands.contact.info import epp_contacts_Info
+from registry_adapter.epp.commands.contact.transfer import epp_contacts_Transfer
+from registry_adapter.epp.commands.contact.update import epp_contacts_Update
 from registry_adapter.epp.session.epp_client import EPPClient
 
 

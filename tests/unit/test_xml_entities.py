@@ -4,7 +4,7 @@ import pytest
 
 from core.session.session_pool import SessionPool
 from registry_adapter.common.xmlsafe.xml_helper import decode_xml
-from registry_adapter.epp.commands.message.message_xml import parse_poll_response
+from registry_adapter.epp.commands.message.poll import parse_poll_response
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
 from registry_adapter.epp.profile import EPP_PROFILE
 from registry_adapter.epp.xml.codec import str_to_epp

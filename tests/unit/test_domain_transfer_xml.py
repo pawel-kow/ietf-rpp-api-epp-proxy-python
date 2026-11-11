@@ -6,7 +6,7 @@ from core.model.shared.common import AuthInfo
 from core.model.shared.domain_transfer_process import DomainTransferProcess
 from core.model.shared.transfer_operation import TransferOperation
 from core.result.result_code import ResultCode
-from registry_adapter.epp.commands.domain.domain_xml import parse_domain_transfer_response, transfer_domain_xml
+from registry_adapter.epp.commands.domain.transfer import parse_domain_transfer_response, transfer_domain_xml
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"

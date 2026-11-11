@@ -31,7 +31,7 @@ src/
     ├── epp/
     │   ├── session/         EPPClient: greeting, login, extensions
     │   ├── xml/             codec (ns_map passed in), generated/
-    │   ├── commands/        {domain,contact,host,message}/, shared/
+    │   ├── commands/        {domain,contact,host,message}/<operation>.py, shared/
     │   ├── gateways/        EppBackend, Epp*Gateway
     │   ├── idn_tables.py    lgr <-> EPP IDN table
     │   ├── profile.py       EPP_PROFILE, epp_profile
@@ -179,11 +179,13 @@ flow, the port and the EPP commands of one object.
 9. **`registry_adapter/epp/`:** the EPP adapter. `EppBackend` in `gateways/` is the `RegistryBackend` over one
    `EPPClient`, whose login is the sponsor id, with the namespace map the commands render with and the `IdnTables`.
    `EppDomainGateway`, `EppContactGateway`, `EppHostGateway` and `EppMessageGateway` call the `epp_*` functions of
-   `commands/<object>/<object>_commands.py`. EPP has no full update, so each `replace` goes through
+   `commands/<object>/<operation>.py` (`commands/domain/create.py`, `commands/message/poll.py` …). EPP has no full update, so each `replace` goes through
    `derived_update.replace`, with the refusal of what RFC 5733 cannot clear on a contact (`contact_refusal.py`).
-   An `epp_*` function runs one EPP operation: build XML (`<object>_xml.py` over the xsdata request of
-   `epp_request.py`) → `send_and_get_response` → parse. `commands/shared/` reads the result and transaction ids of a
-   reply. [epp_client.py](../../src/registry_adapter/epp/session/epp_client.py) is the raw TCP+XML client
+   An operation's module holds all of it: the xsdata request (`domain_create`), its XML (`create_domain_xml`), the
+   parser of the reply and the `epp_*` function that runs it: build XML → `send_and_get_response` → parse. What
+   several operations of an object share is in its `common.py` (the create reply is parsed as an info reply, so
+   `create.py` imports `parse_domain_response` from `info.py`). `commands/shared/` reads the result and transaction
+   ids of a reply. [epp_client.py](../../src/registry_adapter/epp/session/epp_client.py) is the raw TCP+XML client
    (login/logout, `_parse_epp_response` reads the `<result code>`; codes matching
    `1xxx` = success). It keeps the extensions of the greeting for
    `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` (secDNS, IDN and RGP) the server offers. Before
@@ -215,7 +217,7 @@ Messages are in `rpp/handlers/message/message_handlers.py`. `GET /messages` is E
 `DELETE /messages/{id}` is `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in
 `core/flows/message/message_flows.py`,
 because EPP cannot read past the head. `str_to_epp` and `decode_xml` read EPP replies without entities or a DTD, and
-a DOCTYPE is refused. `commands/message/message_xml.py` turns the reply into a `QueueMessage`
+a DOCTYPE is refused. `commands/message/poll.py` turns the reply into a `QueueMessage`
 whose `event` is a `TransferEvent` (domain and contact `trnData`) or a `PendingActionEvent` (`panData`), and
 `rpp/mapping/message/messages.py` renders it. Anything the proxy cannot translate, or that fails the `.read`
 schema, or a reply that does not follow the EPP schema, becomes a `serviceNoticeMessage` that names the elements
@@ -357,5 +359,3 @@ Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
   docstrings say so by name. With a second backend they become facts of the `BackendProfile`, as the contact labels
   did. `core`, `rpp/http` and `rpp/handlers` no longer name EPP, which `tests/unit/test_protocol_names.py` checks
   (#128).
-- **EPP commands by object, not by operation:** one operation spans `epp_request.py`, `<object>_xml.py` and
-  `<object>_commands.py` of its object. (#129)

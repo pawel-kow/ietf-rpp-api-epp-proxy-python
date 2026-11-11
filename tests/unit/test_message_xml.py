@@ -5,9 +5,8 @@ from core.model.message.pending_action_event import PendingActionEvent
 from core.model.message.transfer_event import TransferEvent
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
-from registry_adapter.epp.commands.message.message_xml import (
-    parse_ack_response, parse_poll_response, poll_ack_xml, poll_request_xml,
-)
+from registry_adapter.epp.commands.message.ack import parse_ack_response, poll_ack_xml
+from registry_adapter.epp.commands.message.poll import parse_poll_response, poll_request_xml
 from tests.helper.captured_log import capture_log
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
@@ -413,7 +412,7 @@ def test_text_after_a_comment_is_kept():
 
 
 def test_text_after_a_comment_is_kept_on_every_operation():
-    from registry_adapter.epp.commands.domain.domain_xml import parse_domain_check_response_single
+    from registry_adapter.epp.commands.domain.check import parse_domain_check_response_single
     xml = reply(1000, (
         f'<resData><domain:chkData xmlns:domain="{DOMAIN}"><domain:cd><domain:name avail="1">exa<!-- c -->mple.test'
         '</domain:name></domain:cd></domain:chkData></resData>'

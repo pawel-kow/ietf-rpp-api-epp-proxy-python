@@ -4,9 +4,8 @@ from core.model.contact.contact_update_change import ContactUpdateChange
 from core.model.contact.contact_update_changes import ContactUpdateChanges
 from core.model.contact.postal_info_change import PostalInfoChange
 from core.model.shared.common import AuthInfo
-from registry_adapter.epp.commands.contact.contact_xml import (
-    parse_contact_response, parse_contact_update_response, update_contact_xml,
-)
+from registry_adapter.epp.commands.contact.info import parse_contact_response
+from registry_adapter.epp.commands.contact.update import parse_contact_update_response, update_contact_xml
 from tests.helper.epp_ns_map import EPP_NS_MAP
 from tests.unit.test_contact_xml import info_reply, postal
 

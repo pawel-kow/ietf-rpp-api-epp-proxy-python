@@ -88,3 +88,6 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       the message mapper takes `backend_name`; flows and handlers use the profile. Docstrings of `core`,
       `rpp/http` and `rpp/handlers` no longer name EPP, checked by `tests/unit/test_protocol_names.py`. The limits
       `rpp/mapping` enforces are EPP's and stay named there, as known debt until a second backend gives them a profile.
+- D25 #129: `registry_adapter/epp/commands/<object>/<operation>.py` holds an operation's request, XML, reply parser and
+      `epp_*` runner; what several operations share is `common.py` (helpers made public there). The create reply is
+      parsed by `info.parse_domain_response`. `_address`/`_addresses` of the request side became `_addr_type(s)`.

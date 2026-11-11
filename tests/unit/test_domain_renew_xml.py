@@ -3,7 +3,7 @@ from lxml import etree
 
 from core.model.domain.domain_renew import DomainRenew
 from core.result.result_code import ResultCode
-from registry_adapter.epp.commands.domain.domain_xml import parse_domain_renew_response, renew_domain_xml
+from registry_adapter.epp.commands.domain.renew import parse_domain_renew_response, renew_domain_xml
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"

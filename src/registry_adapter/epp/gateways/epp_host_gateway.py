@@ -6,9 +6,11 @@ from core.ports.replace_outcome import ReplaceOutcome
 from core.ports.replacement_steps import ReplacementSteps
 from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
-from registry_adapter.epp.commands.host.host_commands import (
-    epp_hosts_Check, epp_hosts_Create, epp_hosts_Delete, epp_hosts_Info, epp_hosts_Update,
-)
+from registry_adapter.epp.commands.host.check import epp_hosts_Check
+from registry_adapter.epp.commands.host.create import epp_hosts_Create
+from registry_adapter.epp.commands.host.delete import epp_hosts_Delete
+from registry_adapter.epp.commands.host.info import epp_hosts_Info
+from registry_adapter.epp.commands.host.update import epp_hosts_Update
 from registry_adapter.epp.session.epp_client import EPPClient
 
 

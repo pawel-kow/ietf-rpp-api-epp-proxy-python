@@ -1,9 +1,9 @@
 from core.model.contact.address import Address
 from core.model.contact.contacts import Contact, ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
-from registry_adapter.epp.commands.contact.contact_xml import (
-    contact_check_xml, create_contact_xml, parse_contact_check_response, parse_contact_response,
-)
+from registry_adapter.epp.commands.contact.check import contact_check_xml, parse_contact_check_response
+from registry_adapter.epp.commands.contact.create import create_contact_xml
+from registry_adapter.epp.commands.contact.info import parse_contact_response
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 CONTACT_NS = 'xmlns:contact="urn:ietf:params:xml:ns:contact-1.0"'

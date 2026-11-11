@@ -1,4 +1,5 @@
-from registry_adapter.epp.commands.message.message_commands import epp_messages_Ack, epp_messages_Poll
+from registry_adapter.epp.commands.message.ack import epp_messages_Ack
+from registry_adapter.epp.commands.message.poll import epp_messages_Poll
 from registry_adapter.epp.session.epp_client import EPPClient
 
 

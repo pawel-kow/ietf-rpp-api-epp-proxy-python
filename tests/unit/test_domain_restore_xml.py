@@ -3,9 +3,8 @@ from lxml import etree
 from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.restore_report import RestoreReport
 from core.result.result_code import ResultCode
-from registry_adapter.epp.commands.domain.domain_xml import (
-    parse_domain_response, parse_domain_restore_response, restore_domain_xml,
-)
+from registry_adapter.epp.commands.domain.info import parse_domain_response
+from registry_adapter.epp.commands.domain.restore import parse_domain_restore_response, restore_domain_xml
 from registry_adapter.epp.idn_tables import IdnTables
 from tests.helper.epp_ns_map import EPP_NS_MAP
 

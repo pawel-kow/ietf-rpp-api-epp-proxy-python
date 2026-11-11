@@ -4,7 +4,8 @@ from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_idn import DomainIdn
 from core.model.domain.domains import Domain
 from core.model.domain.ds_data import DsData
-from registry_adapter.epp.commands.domain.domain_xml import create_domain_xml, parse_domain_response
+from registry_adapter.epp.commands.domain.create import create_domain_xml
+from registry_adapter.epp.commands.domain.info import parse_domain_response
 from registry_adapter.epp.idn_tables import IdnTables
 from tests.helper.epp_ns_map import EPP_NS_MAP
 

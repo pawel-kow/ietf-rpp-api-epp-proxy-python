@@ -3,11 +3,11 @@ import pytest
 from core.model.host.host import Host
 from core.model.host.host_update import HostUpdate
 from core.model.host.host_update_changes import HostUpdateChanges
-from registry_adapter.epp.commands.host.host_xml import (
-    create_host_update_xml, create_host_xml, delete_host_xml, host_check_xml, info_host_xml,
-    parse_host_check_response, parse_host_create_response, parse_host_delete_response, parse_host_response,
-    parse_host_update_response,
-)
+from registry_adapter.epp.commands.host.check import host_check_xml, parse_host_check_response
+from registry_adapter.epp.commands.host.create import create_host_xml, parse_host_create_response
+from registry_adapter.epp.commands.host.delete import delete_host_xml, parse_host_delete_response
+from registry_adapter.epp.commands.host.info import info_host_xml, parse_host_response
+from registry_adapter.epp.commands.host.update import create_host_update_xml, parse_host_update_response
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 HOST_NS = 'xmlns:host="urn:ietf:params:xml:ns:host-1.0"'
