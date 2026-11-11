@@ -8,11 +8,17 @@ Run from the repository root. `pyproject.toml` sets `pythonpath=src` and
 `testpaths=tests`.
 
 ```bash
-pytest                                                  # all tests
+pytest -n 8                                             # all tests, in 8 workers (pytest-xdist)
+pytest                                                  # all tests, one at a time
 pytest tests/integration/test_from_file_definition.py   # the data-driven integration suite
 pytest -k domain_update                                 # single test group by substring
 pytest "tests/integration/test_from_file_definition.py::test_from_file_definition[domain_update-test1-simple_update]"  # one case by id
 ```
+
+Run the full suite with `-n 8`, which takes about 8 minutes where one worker takes about 18. The unit tests are
+bound by CPU (#112), so more workers than cores do not speed them up, and the backend refuses logins under about
+16 concurrent sessions (pawel-kow/EPP-server-docker#7), so 8 is the most it takes. Every worker makes its own
+`{random_name}`, so cases in different workers do not collide.
 
 ## Backend
 
@@ -20,13 +26,15 @@ Integration tests require a **backend EPP test server**. They do not use test
 doubles: they exercise the full RPP→EPP→RPP round trip against a live registry.
 
 Its host and port come from `config.yaml` (`rpp_epp_host`/`rpp_epp_port`) via
-`new_epp_client` in [src/run.py](../../src/run.py). In the
-devcontainer that is the `epp-server-docker-epp-server-1` container on TLS port `743`,
-reached over the shared `epp-server-docker_epp_net` docker network (attached via
-`postStartCommand` in
-[.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json)). Its certificate
-is self-signed and does not name that host, so `config.yaml` sets
-`rpp_epp_tls_insecure_skip_verify`.
+`new_epp_client` in [src/run.py](../../src/run.py). The backend is a docker compose project (today `epptest`),
+and `config.yaml` names its EPP server by the compose service name, `epp-server`, on TLS port `743`. That name
+resolves on the project's network, `<project>_epp_net` (today `epptest_epp_net`), which the devcontainer has to
+join: `postStartCommand` in [.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json) no longer does it
+(#111), so attach it by hand: `docker network connect epptest_epp_net <container>`, where `<container>` is the
+devcontainer's id (`cat /etc/hostname` inside it). Without it every
+integration case fails with 401 (`02200`). Its certificate is self-signed and does not name that host, so
+`config.yaml` sets `rpp_epp_tls_insecure_skip_verify`. Where the backend has another name, put it in an untracked
+`config.local.yaml` (`rpp_epp_host: <name>`): its top-level keys replace those of `config.yaml`.
 
 Auth uses HTTP Basic, and the username and password are passed straight through as
 the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and `baz`
@@ -42,8 +50,8 @@ object, so a domain created with glue reads back with `nameservers`. Removing a 
 
 The message queue is shared per registrar, and other cases add to it (every transfer request queues a message for the
 losing registrar), so `message/` cases assert only the shape of the head and use `any_of` where the queue may be empty.
-Acking a real head is tested in `tests/unit/test_message_wire.py`, as the integration runner cannot carry an id from
-one step to the next. The backend returns the id of the acknowledged message in the `msgQ` of an ack reply.
+To ack a real head, a case first requests a transfer, so the queue of `foo` is not empty, and captures `0.id` of
+`GET /messages` (`message/test6`). The backend returns the id of the acknowledged message in the `msgQ` of an ack reply.
 
 A contact `chg` of a `postalInfo` form replaces it: the address members not sent again (`sp`, `pc`) are wiped, also when
 only `name` or `org` is sent, so the proxy sends every changed form complete (pawel-kow/epp#22). A `chg` of a form the contact does not have
@@ -67,6 +75,12 @@ unmapped table is tested only in unit tests. It answers 2306, not the 2005 of dr
 that does not match the name. Its IDN tables and the session table come from migrations in EPP-server-docker, which run
 only when the database is first created: a database from before them answers `2306 Unknown idn:table` and needs them
 applied by hand.
+
+Its RFC 3915 periods are minutes (pawel-kow/EPP-server-docker#5): a domain deleted within 2 minutes of its create is
+purged at once, a later delete puts it in `redemptionPeriod`, and a request then holds it in `pendingRestore` for 3
+minutes. So a restore case creates its domain and deletes it after `delay_seconds` of 125, see `domain_restore/test12`
+and the draft examples. The backend sends no `rgp:upData`. A read of `pendingDelete` would need the 5-minute
+redemption period to pass, so it is tested only in unit tests.
 
 The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
 `expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
@@ -96,6 +110,8 @@ update → verify) run against a Flask test client.
   and `{unique_cltrid}` (new value per occurrence) keep tests idempotent against a
   shared registry. The backend requires contact ids to start with `FO-`. `{ulabel:TEXT}` is the U-label
   `TEXT-<random_id_10>` and `{alabel:TEXT}` its A-label, so an IDN case writes `{alabel:bücher-t24}.example`.
+  `{upper:TEXT}` is TEXT in upper case, after the other placeholders in it are replaced. The backend stores host
+  names in upper case, so a `match` on a generated host writes `{upper:ns1.u17-{random_name}.net}`.
 - Every step asserts the headers of core §6.2: `RPP-Svtrid`, a 5-digit `RPP-Code`, and
   `RPP-Cltrid` echoed.
 - Response body comparison is **subset + case-insensitive**
@@ -106,15 +122,20 @@ update → verify) run against a Flask test client.
 - A step's `response` can be `{"any_of": [...]}`, a list of responses of which one must match,
   for behaviour the protocol leaves to the server. A create that may be refused, or may keep
   the data in another form, lists each outcome, see `domain_create/test16` to `test18`.
-- A step's `capture` maps a name to a dotted field of its response body. Later steps write `{capture:name}`
+- A step's `capture` maps a name to a dotted field of its response body, where a number picks a list element (`0.id`). Later steps write `{capture:name}`
   in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
   a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
+- A step's `delay_seconds` waits that long before its request, for a registry period that must pass first. Each
+  wait adds to the run, so a case waits at most once, see `domain_restore/`.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.
 - `draft_domain/`, `draft_contact/`, `draft_host/`, `draft_patch/` and `draft_discovery/` hold the examples
   of the JSON draft (§8.1, §8.2, §8.3, §5.3.1, §8.7.1; the discovery one has the configured values). Examples for operations not implemented yet have the
   expected result written down and `"skip": "#<issue>"`.
+
+`authInfo` is `onDemand`, so a step that expects it in a response asks for it with `?includeElements=authInfo`. A PUT
+without it leaves the password alone and does not show it, so a GET that includes it follows to prove the password.
 
 To add a case, drop a new JSON file in the appropriate group dir. No Python changes
 are needed. Add `"skip": "reason"` at the top level to skip one.
@@ -138,8 +159,14 @@ afterwards.
 
 Absence cannot be asserted, because the body comparison is a subset. A case shows that something was removed with a
 `replace` with `match` on it, which reads the domain and answers 422 `02308`. The same `match`, in the form the
-registry stores (`NS1.BAR.EXAMPLE`, as a match is exact), must first answer 200 before the removal, or the 422 proves
+registry stores (`{upper:...}`, as a match is exact), must first answer 200 before the removal, or the 422 proves
 nothing (see `domain_update/test17`).
+
+A case creates the contacts, hosts and domains it uses, in its first steps, and relies on nothing seeded in the
+backend. `{random_name}` and `{random_id_10}` are the same for every case of a run, so each case adds its own part:
+contacts are `FO-{random_id_10}` plus a suffix of the case (`ua1`, at most 16 characters in all), hosts are external
+`nsN.<case>-{random_name}.net`, which need their own `ns` record at create. `domain_create/test7` creates the domain
+it then finds taken.
 
 Isolate one update facet per file (authInfo-only, hostObj add/remove,
 contacts+registrant, …). `domainNames_create`, `domainNames_updatePartial` and `domainNames_update` build their

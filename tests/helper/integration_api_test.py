@@ -2,6 +2,7 @@ from .recursive_compare_existing import recusive_compare_existing
 import json
 import re
 import pytest
+import time
 from datetime import datetime, timezone
 from tests.helper.check_datetime import check_datetime_format_utc_and_delta
 
@@ -18,11 +19,15 @@ def evaluate_condition(value, spec):
         return False
 
 def field_value(document, path):
-    """Reads a dotted field path, for example 'provMetadata.crDate'."""
+    """Reads a dotted field path, for example 'provMetadata.crDate'. A number picks a list element, as in '0.id'."""
     value = document
     for part in path.split("."):
-        assert part in value, f"Field '{path}' not found"
-        value = value[part]
+        if isinstance(value, list):
+            assert part.isdigit() and int(part) < len(value), f"Field '{path}' not found"
+            value = value[int(part)]
+        else:
+            assert part in value, f"Field '{path}' not found"
+            value = value[part]
     return value
 
 def assert_rpp_headers(request_headers, response, test_name):
@@ -118,19 +123,28 @@ def substitute_captures(value, captures):
         return CAPTURE.sub(replace, value)
     return value
 
-def endpoint_test(client, case_sequence):
+UPPER = re.compile(r"\{upper:([^{}]*)\}")
+
+def replace_upper_placeholders(value: str) -> str:
+    """Replaces {upper:TEXT} by TEXT in upper case, the form the registry stores a name in, for an exact `match`."""
+    return UPPER.sub(lambda match: match.group(1).upper(), value)
+
+def endpoint_test(client, case_sequence, sleep=time.sleep):
     """
     Tests the POST /domains endpoint using the Flask test client.
 
     Args:
         client: The Flask test client fixture.
         cases: A sequence of test steps as parameterized test case dictionaries.
+        sleep: Waits for a step's "delay_seconds" before its request, for registry periods that must pass.
     """
     if "skip" in case_sequence:
         pytest.skip(reason=f"Skipping test case: {case_sequence['test_id']} - {case_sequence['skip']}")
     captures = {}
     for i, case in enumerate(case_sequence["steps"]):
         case = substitute_captures(case, captures)
+        if case.get("delay_seconds"):
+            sleep(case["delay_seconds"])
         # --- Make HTTP Request ---
         if "body_json" in case["request"]:
             response = client.request(case["request"]["method"],

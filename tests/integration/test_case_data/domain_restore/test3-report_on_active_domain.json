@@ -1,0 +1,76 @@
+{
+  "test_id": "test3-report_on_active_domain",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "rs3-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/domainNames/rs3-{random_name}.example/processes/restoreProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "restoreProcess",
+          "restoreReport": {
+            "@type": "restoreReport",
+            "preData": "Pre-delete registration data.",
+            "postData": "Post-restore registration data.",
+            "deleteTime": "2026-01-10T12:00:00.0Z",
+            "restoreTime": "2026-01-20T15:30:00.0Z",
+            "restoreReason": "Domain deleted in error by client operator.",
+            "statements": [
+              "The information in this report is true to the best of my knowledge.",
+              "I have a valid reason for restoring this domain name."
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02304",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

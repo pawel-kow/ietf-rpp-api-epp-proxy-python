@@ -7,6 +7,11 @@ from rpp_to_model_mapper import UnsupportedRppFeature, host_availability, host_r
 NAME = "ns1.example.example"
 
 
+def replace_host(body):
+    """A full update of the host the body names."""
+    return host_replacement.rpp_to_model(NAME, body)
+
+
 def record(record_type, rdata, name=f"{NAME}."):
     return {"@type": "dnsRecord", "name": name, "type": record_type, "rdata": rdata}
 
@@ -28,7 +33,7 @@ def test_host_with_only_its_ns_record_has_no_addresses():
     assert hosts.rpp_to_model(host()) == Host(name=NAME)
 
 
-@pytest.mark.parametrize("mapper", [hosts.rpp_to_model, host_replacement.rpp_to_model])
+@pytest.mark.parametrize("mapper", [hosts.rpp_to_model, replace_host])
 @pytest.mark.parametrize("body", [
     {"@type": "host", "hostName": NAME},
     without_own_ns(),
@@ -39,7 +44,7 @@ def test_request_without_the_own_ns_record_is_a_client_error(mapper, body):
         mapper(body)
 
 
-@pytest.mark.parametrize("mapper", [hosts.rpp_to_model, host_replacement.rpp_to_model])
+@pytest.mark.parametrize("mapper", [hosts.rpp_to_model, replace_host])
 def test_a_record_epp_cannot_hold_comes_before_the_missing_ns_record(mapper):
     with pytest.raises(UnsupportedRppFeature):
         mapper(without_own_ns(record("a", {"address": "192.0.2.1"}, name="www")))
@@ -54,7 +59,7 @@ def test_status_on_create_comes_before_the_missing_ns_record():
 
 def test_a_status_epp_cannot_hold_comes_before_the_missing_ns_record_on_a_replacement():
     with pytest.raises(UnsupportedRppFeature):
-        host_replacement.rpp_to_model({"@type": "host", "hostName": NAME, "status": [
+        replace_host({"@type": "host", "hostName": NAME, "status": [
             {"@type": "hostStatus", "label": "clientUpdateProhibited", "due": "2030-01-01T00:00:00Z"},
         ]})
 
@@ -149,13 +154,13 @@ def test_request_is_validated_against_the_schema():
 def test_replacement_keeps_status_labels():
     body = host(A, status=[{"@type": "hostStatus", "label": "clientDeleteProhibited"}])
 
-    assert host_replacement.rpp_to_model(body).status == ["clientDeleteProhibited"]
+    assert replace_host(body).status == ["clientDeleteProhibited"]
 
 
 def test_replacement_keeps_a_status_reason():
     body = host(status=[{"@type": "hostStatus", "label": "clientDeleteProhibited", "reason": "x"}])
 
-    assert host_replacement.rpp_to_model(body).status_reasons == {"clientDeleteProhibited": "x"}
+    assert replace_host(body).status_reasons == {"clientDeleteProhibited": "x"}
 
 
 def test_replacement_rejects_dns_controls():
@@ -163,7 +168,7 @@ def test_replacement_rejects_dns_controls():
     body["dns"]["controls"] = {"@type": "dnsControls", "ttl": {"a": 3600}}
 
     with pytest.raises(UnsupportedRppFeature):
-        host_replacement.rpp_to_model(body)
+        replace_host(body)
 
 
 def stored(**members):

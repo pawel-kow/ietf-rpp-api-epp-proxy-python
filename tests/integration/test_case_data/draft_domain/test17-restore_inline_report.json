@@ -1,6 +1,5 @@
 {
   "test_id": "test17-restore_inline_report",
-  "skip": "#35",
   "steps": [
     {
       "request": {
@@ -29,11 +28,13 @@
         }
       },
       "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
+        "status": 501,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02102"
+        },
         "body": {
-          "@type": "restoreProcess",
-          "restoreStatus": "restored"
+          "type": "urn:ietf:params:rpp:error"
         }
       }
     }

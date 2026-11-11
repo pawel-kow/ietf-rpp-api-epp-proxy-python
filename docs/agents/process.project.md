@@ -27,7 +27,7 @@ docker run --rm -p 8000:8091 pawelk/rpp_server_epp_proxy
 
 ## Checks before done
 
-There is no CI in this repository. The only check is the full `pytest` run from
+There is no CI in this repository. The only check is the full `pytest -n 8` run from
 the repository root, which needs the live backend. See
 [testing.project.md](testing.project.md).
 

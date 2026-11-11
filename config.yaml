@@ -1,7 +1,7 @@
 # hostname of the backend EPP server to use
-# points at the epp-server-docker-epp-server-1 container over the shared
-# epp-server-docker_epp_net docker network (see .devcontainer/devcontainer.json)
-rpp_epp_host: epp-server-docker-epp-server-1
+# the compose service name of the test backend, which resolves on its <project>_epp_net
+# docker network once the devcontainer is attached to it (see docs/agents/testing.project.md)
+rpp_epp_host: epp-server
 
 # optional settings
 # container-internal EPP TLS port (published on the docker host as 7043, but we

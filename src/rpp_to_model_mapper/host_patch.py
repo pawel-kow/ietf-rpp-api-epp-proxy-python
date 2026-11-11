@@ -1,9 +1,9 @@
-from models import Host, HostUpdate, HostUpdateChanges
+from models import HostReplacement, HostUpdate, HostUpdateChanges
 from rpp_schema_validator import validate_schema
 from . import host_dns, json_patch, patch_statuses
 from .common import parse_rpp, reject_operation
 from .dns_records import ADDRESS_RECORDS, DNS_PARENTS
-from .hosts import add_rpp_status, has_own_ns, rpp_host_with_status_to_model
+from .hosts import add_rpp_status, has_own_ns, replacement_from_rpp
 from .needs_current_state import NeedsCurrentState
 from .not_supported_by_epp import NotSupportedByEpp
 from .rpp_models import RPPDnsRecord, RPPHost, RPPPatchOperation, RPPStatus
@@ -108,8 +108,8 @@ def rpp_to_model(host_name: str, rpp: list) -> HostUpdate | None:
     return update.to_host_update()
 
 
-def rpp_to_model_with_current(host_name: str, rpp: list, current: dict) -> Host:
-    """Applies the patch to the current host (its read representation) and returns the Host it asks for.
+def rpp_to_model_with_current(host_name: str, rpp: list, current: dict) -> HostReplacement:
+    """Applies the patch to the current host (its read representation) and returns the host it asks for.
 
     The records of the host stay under the name it has now, also when the patch renames it.
     """
@@ -123,8 +123,8 @@ def rpp_to_model_with_current(host_name: str, rpp: list, current: dict) -> Host:
     validate_schema("host.read", patched)
     requested = {member: value for member, value in patched.items() if member != READ_ONLY_MEMBER}
     host_rpp = parse_rpp(RPPHost, {**requested, "hostName": current["hostName"]})
-    host = rpp_host_with_status_to_model(host_rpp)
+    wanted = replacement_from_rpp(host_name, host_rpp)
     if not has_own_ns(host_rpp):
         raise NotSupportedByEpp("Removing the 'ns' record of the host")
-    host.name = patched["hostName"]
-    return host
+    wanted.new_name = patched["hostName"]
+    return wanted

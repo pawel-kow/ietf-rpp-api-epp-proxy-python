@@ -29,6 +29,10 @@ from .contact_transfer_response import ContactTransferResponse
 from .domain_renew import DomainRenew
 from .domain_renew_process import DomainRenewProcess
 from .domain_renew_response import DomainRenewResponse
+from .domain_restore import DomainRestore
+from .domain_restore_process import DomainRestoreProcess
+from .domain_restore_response import DomainRestoreResponse
+from .restore_report import RestoreReport
 from .domain_transfer import DomainTransfer
 from .domain_transfer_process import DomainTransferProcess
 from .domain_transfer_response import DomainTransferResponse
@@ -42,3 +46,12 @@ from .transfer_event import TransferEvent
 from .message_error_response import MessageErrorResponse
 from .unknown_result_code import UnknownResultCode
 from .discovery import Discovery
+
+from .domain_replacement import DomainReplacement
+from .contact_replacement import ContactReplacement
+from .host_replacement import HostReplacement
+from . import (
+    client_statuses, contact_application, contact_difference, domain_application, domain_difference, host_application,
+    host_difference, stated_members,
+)
+from . import contact_localization

@@ -1,12 +1,12 @@
-import ipaddress
 from typing import Callable
 
 from eppclient.epp_hosts import epp_hosts_Create, epp_hosts_Info, epp_hosts_Update
 from eppclient.eppclient import EPPClient
-from models import ErrorResponse, Host, HostUpdate, HostUpdateChanges, OperationResponse
+from models import ErrorResponse, Host, HostReplacement, HostUpdate, OperationResponse, host_difference
+from . import derived_update
 from .host_mutation_result import HostMutationResult
-
-CLIENT_STATUS_PREFIX = "client"
+from .replacement_steps import ReplacementSteps
+from .sponsor import require_sponsor
 
 
 def _read_back(epp_client: EPPClient, host_name: str, mutation: OperationResponse) -> HostMutationResult:
@@ -37,72 +37,47 @@ def update_host(epp_client: EPPClient, update: HostUpdate, client_transaction_id
     return _read_back(epp_client, update.new_name or update.name, updated)
 
 
-def _addresses_missing_from(addresses: list[str] | None, others: list[str] | None) -> list[str]:
-    known = {ipaddress.ip_address(address) for address in others or []}
-    return [address for address in addresses or [] if ipaddress.ip_address(address) not in known]
+HOST_STEPS = ReplacementSteps(
+    read=epp_hosts_Info,
+    object_of=lambda info: info.host,
+    difference=host_difference.difference,
+    changes_nothing=host_difference.changes_nothing,
+    update=epp_hosts_Update,
+)
 
 
-def _client_statuses(host: Host) -> set[str]:
-    return {label for label in host.status or [] if label.startswith(CLIENT_STATUS_PREFIX)}
-
-
-def _statuses_with_a_new_reason(current: Host, wanted: Host) -> set[str]:
-    """EPP cannot change a reason, so these statuses are removed and added again."""
-    return {
-        label for label in _client_statuses(current) & _client_statuses(wanted)
-        if current.status_reasons.get(label) != wanted.status_reasons.get(label)
-    }
-
-
-def _difference(host_name: str, current: Host, wanted: Host) -> HostUpdate:
-    """The update that turns the current host into the wanted one (core §16.8: what is omitted is cleared)."""
-    new_reason = _statuses_with_a_new_reason(current, wanted)
-    add_status = sorted(_client_statuses(wanted) - _client_statuses(current) | new_reason)
-    add = HostUpdateChanges(
-        ipv4=_addresses_missing_from(wanted.ipv4, current.ipv4),
-        ipv6=_addresses_missing_from(wanted.ipv6, current.ipv6),
-        status=add_status,
-        status_reasons={label: wanted.status_reasons[label] for label in add_status if label in wanted.status_reasons},
-    )
-    remove = HostUpdateChanges(
-        ipv4=_addresses_missing_from(current.ipv4, wanted.ipv4),
-        ipv6=_addresses_missing_from(current.ipv6, wanted.ipv6),
-        status=sorted(_client_statuses(current) - _client_statuses(wanted) | new_reason),
-    )
-    return HostUpdate(
-        name=host_name,
-        new_name=wanted.name if wanted.name.lower() != current.name.lower() else None,
-        add=add or None,
-        remove=remove or None,
-    )
-
-
-def _changes_nothing(update: HostUpdate) -> bool:
-    return update.new_name is None and update.add is None and update.remove is None
+def _replaced(epp_client: EPPClient, outcome, client_transaction_id) -> HostMutationResult | ErrorResponse:
+    """The answer to a full update: the host read back, or the host as read when nothing changed, for its sponsor."""
+    if isinstance(outcome, ErrorResponse):
+        return outcome
+    if outcome.unchanged:
+        current = outcome.current
+        refused = require_sponsor(epp_client, current.host.clID, current, client_transaction_id, "host")
+        return refused or HostMutationResult(mutation=current, host=current.host)
+    return _read_back(epp_client, outcome.update.new_name or outcome.update.name, outcome.mutation)
 
 
 def patch_host(
     epp_client: EPPClient,
     host_name: str,
     update: HostUpdate | None,
-    wanted_from_current: Callable[[Host], Host],
+    wanted_from_current: Callable[[Host], HostReplacement],
     client_transaction_id,
 ) -> HostMutationResult | ErrorResponse:
     """A partial update. Without an `update` the patch needs the current host (#71): it is read,
-    `wanted_from_current` applies the patch, and the difference is sent. The read and the update are not atomic."""
-    if update is None:
-        current = epp_hosts_Info(epp_client, host_name)
-        if isinstance(current, ErrorResponse):
-            return current
-        update = _difference(host_name, current.host, wanted_from_current(current.host))
-        if _changes_nothing(update):
-            return HostMutationResult(mutation=current, host=current.host)
-    return update_host(epp_client, update, client_transaction_id)
-
-
-def replace_host(epp_client: EPPClient, host_name: str, wanted: Host, client_transaction_id) -> HostMutationResult | ErrorResponse:
-    """A full update: EPP has none, so it reads the host and sends the difference."""
+    `wanted_from_current` applies the patch, and the host is replaced with the result."""
+    if update is not None:
+        return update_host(epp_client, update, client_transaction_id)
     current = epp_hosts_Info(epp_client, host_name)
     if isinstance(current, ErrorResponse):
         return current
-    return update_host(epp_client, _difference(host_name, current.host, wanted), client_transaction_id)
+    outcome = derived_update.replace(
+        HOST_STEPS, epp_client, host_name, wanted_from_current(current.host), client_transaction_id, current,
+    )
+    return _replaced(epp_client, outcome, client_transaction_id)
+
+
+def replace_host(epp_client: EPPClient, wanted: HostReplacement, client_transaction_id) -> HostMutationResult | ErrorResponse:
+    """A full update. A replacement that changes nothing sends no update (core §16.8 asks for a 200)."""
+    outcome = derived_update.replace(HOST_STEPS, epp_client, wanted.name, wanted, client_transaction_id)
+    return _replaced(epp_client, outcome, client_transaction_id)

@@ -13,7 +13,8 @@
         },
         "ghcr.io/devcontainers/features/python:1": {
             "installTools": true
-        }
+        },
+        "ghcr.io/devcontainers/features/node:2": {}
     },
     "customizations": {
         "vscode": {
@@ -34,8 +35,7 @@
 
     // Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
     "mounts": [
-            "source=claude-code-config-rpp-work,target=/home/vscode/.claude,type=volume",
-            "source=user-config-rpp-work,target=/home/vscode/.config,type=volume"
+            "source=user-home-rpp-rri-work,target=/home/vscode/,type=volume"
     ],
     "remoteUser": "vscode",
     "containerEnv": {
@@ -46,5 +46,5 @@
     },
     "postCreateCommand": "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt",
     // re-own the mount on every start to keep it writable for the remote user.
-    "postStartCommand": "sudo chown -R vscode:vscode /home/vscode/.claude /home/vscode/.config && docker network connect epp-server-docker_epp_net $(cat /etc/hostname) || true"
+    "postStartCommand": "sudo chown -R vscode:vscode /home/vscode/"
 }

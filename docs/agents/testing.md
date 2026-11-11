@@ -34,6 +34,8 @@ change are missing, write them before the change.
   because they localise regressions.
 - **Keep tests repeatable.** Tests against shared systems use unique generated
   data so that reruns do not collide.
+- **Keep tests independent.** No test relies on another one or on their order, so
+  the suite can run in parallel.
 
 ## Design for testability
 

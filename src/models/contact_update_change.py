@@ -7,7 +7,7 @@ from .postal_info_change import PostalInfoChange
 
 @dataclass(kw_only=True)
 class ContactUpdateChange:
-    """What a contact update changes. `voice` and `fax` "" clear the number."""
+    """What a contact update changes. `voice`, `fax` and `email` "" clear the value."""
     postal_info: List[PostalInfoChange] = field(default_factory=list)
     voice: Optional[str] = None
     fax: Optional[str] = None
@@ -16,5 +16,5 @@ class ContactUpdateChange:
 
     def __bool__(self) -> bool:
         return bool(
-            self.postal_info or self.voice is not None or self.fax is not None or self.email or self.authInfo
+            self.postal_info or self.voice is not None or self.fax is not None or self.email is not None or self.authInfo
         )

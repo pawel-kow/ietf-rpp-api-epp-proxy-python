@@ -8,13 +8,14 @@ from flask import request as flask_request
 from jsonschema import ValidationError
 
 from models import ErrorResponse, OperationResponse, ResultCode
-from rpp_to_model_mapper import UnsupportedRppFeature
+from rpp_to_model_mapper import UnsupportedRppFeature, include_elements
 
 logger = logging.getLogger("uvicorn.error")
 
 PRINTABLE_ASCII = re.compile(r"[\x20-\x7e]+")
 RPP_MEDIA_TYPE = "application/rpp+json"
 RPP_ERROR_TYPE = "urn:ietf:params:rpp:error"
+INCLUDE_ELEMENTS = "includeElements"
 
 # Core §18.1 Table 9, for the codes the proxy can receive or produce.
 STATUS_BY_RESULT = {
@@ -130,6 +131,12 @@ def map_request(mapper, *args):
         raise ProblemException(status=400, title="Bad Request", detail=e.message)
     except Exception as e:
         raise ProblemException(status=400, title="Bad Request", detail=str(e))
+
+
+def requested_elements(object_identifier: str) -> frozenset[str]:
+    """The data elements the request asks to include, one Identifier per repeated `includeElements` (core §16.1.7).
+    Read from the query itself: the OpenAPI declares one comma-separated value (see spec-issues.md)."""
+    return map_request(include_elements.rpp_to_model, object_identifier, flask_request.args.getlist(INCLUDE_ELEMENTS))
 
 
 def rpp_operation(handler):

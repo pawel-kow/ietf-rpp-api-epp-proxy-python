@@ -83,7 +83,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}23A",
+        "url": "/contacts/FO-{random_id_10}23A?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",

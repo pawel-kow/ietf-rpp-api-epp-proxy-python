@@ -120,7 +120,7 @@ def test_operations_apply_in_order():
 def test_rename_keeps_the_records_of_the_old_name():
     host = wanted(op("replace", "/hostName", value="ns2.foo.example"), op("remove", "/dns/records", match={"type": "aaaa"}))
 
-    assert host.name == "ns2.foo.example"
+    assert host.name == NAME and host.new_name == "ns2.foo.example"
     assert host.ipv4 == ["192.0.2.1", "192.0.2.2"]
 
 

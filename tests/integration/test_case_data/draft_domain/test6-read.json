@@ -4,6 +4,80 @@
     {
       "request": {
         "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "ns1.d6-{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.d6-{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "host",
+          "hostName": "ns1.d6-{random_name}.net"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "ns2.d6-{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns2.d6-{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "host",
+          "hostName": "ns2.d6-{random_name}.net"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
         "url": "/contacts",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
@@ -150,7 +224,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames",
+        "url": "/domainNames?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -163,11 +237,11 @@
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "ns1.bar.example"
+              "hostName": "ns1.d6-{random_name}.net"
             },
             {
               "@type": "host",
-              "hostName": "ns2.bar.example"
+              "hostName": "ns2.d6-{random_name}.net"
             }
           ],
           "registrant": {
@@ -245,11 +319,11 @@
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "NS1.BAR.EXAMPLE"
+              "hostName": "{upper:ns1.d6-{random_name}.net}"
             },
             {
               "@type": "host",
-              "hostName": "NS2.BAR.EXAMPLE"
+              "hostName": "{upper:ns2.d6-{random_name}.net}"
             }
           ],
           "authInfo": {
@@ -283,7 +357,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/ex6-{random_name}.example",
+        "url": "/domainNames/ex6-{random_name}.example?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -325,11 +399,11 @@
           "nameservers": [
             {
               "@type": "host",
-              "hostName": "NS1.BAR.EXAMPLE"
+              "hostName": "{upper:ns1.d6-{random_name}.net}"
             },
             {
               "@type": "host",
-              "hostName": "NS2.BAR.EXAMPLE"
+              "hostName": "{upper:ns2.d6-{random_name}.net}"
             }
           ],
           "authInfo": {

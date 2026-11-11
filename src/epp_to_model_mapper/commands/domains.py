@@ -1,9 +1,9 @@
 import base64
 import re
 
-from xsdata.models.datatype import XmlDate
+from xsdata.models.datatype import XmlDate, XmlDateTime
 
-from models import AuthInfo, DnsSec, Domain, DomainRenew, DomainTransfer, DomainUpdate
+from models import AuthInfo, DnsSec, Domain, DomainRenew, DomainRestore, DomainTransfer, DomainUpdate, RestoreReport
 
 from ..epp_model.domain_1_0 import (
     AddRemType,
@@ -39,6 +39,8 @@ from ..epp_model.epp_1_0 import (
 from ..epp_model.eppcom_1_0 import PwAuthInfoType
 from ..epp_model.host_1_0 import AddrType, IpType
 from ..epp_model.idn_1_0 import Data as IdnData
+from ..epp_model.rgp_1_0 import MixedType, ReportTextType, ReportType, RestoreType, RgpOpType
+from ..epp_model.rgp_1_0 import Update as RgpUpdate
 from ..epp_model.sec_dns_1_1 import Create as SecdnsCreateType
 from ..epp_model.sec_dns_1_1 import DsDataType, DsOrKeyType, KeyDataType, RemType as SecdnsRemType
 from ..epp_model.sec_dns_1_1 import Update as SecdnsUpdateType
@@ -169,6 +171,33 @@ def domain_renew(renew: DomainRenew, rpp_cl_trid: str) -> Epp:
                     period=_period(renew.duration) if renew.duration else None,
                 ),
             ),
+            cl_trid=rpp_cl_trid,
+        )
+    )
+
+
+def _rgp_report(report: RestoreReport) -> ReportType:
+    return ReportType(
+        pre_data=MixedType(content=[report.preData]),
+        post_data=MixedType(content=[report.postData]),
+        del_time=XmlDateTime.from_string(report.deleteTime),
+        res_time=XmlDateTime.from_string(report.restoreTime),
+        res_reason=ReportTextType(content=[report.restoreReason]),
+        statement=[ReportTextType(content=[statement]) for statement in report.statements],
+        other=MixedType(content=[report.other]) if report.other is not None else None,
+    )
+
+
+def domain_restore(restore: DomainRestore, rpp_cl_trid: str) -> Epp:
+    """RFC 3915 §4.2.5: a domain update with an empty chg, carrying the request or the report."""
+    if restore.report is None:
+        rgp_restore = RestoreType(op=RgpOpType.REQUEST)
+    else:
+        rgp_restore = RestoreType(op=RgpOpType.REPORT, report=_rgp_report(restore.report))
+    return Epp(
+        command=CommandType(
+            update=ReadWriteType(other_element=Update(name=restore.name.upper(), chg=ChgType())),
+            extension=ExtAnyType(other_element=[RgpUpdate(restore=rgp_restore)]),
             cl_trid=rpp_cl_trid,
         )
     )
