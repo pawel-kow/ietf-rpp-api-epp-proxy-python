@@ -82,3 +82,9 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
 
 - C1 Full `pytest -n 8` per phase: 2→ 2132 passed/1 error (#124), 3 → same, 4 → 2135 passed, 5 → 2143 passed,
       6 + import sort → 2143 passed, 5 skipped each time; `lint-imports` 12 kept at the end.
+- D23 (maintainer) #128 and #129 are done in this PR as well.
+- D24 #128: messages a client receives name the backend from its profile, so EPP's texts stay the same. Mappers raise
+      `core/capabilities/BackendRequirement` with `{backend}`, which `map_request` (400) and `rpp_operation` (500) name;
+      the message mapper takes `backend_name`; flows and handlers use the profile. Docstrings of `core`,
+      `rpp/http` and `rpp/handlers` no longer name EPP, checked by `tests/unit/test_protocol_names.py`. The limits
+      `rpp/mapping` enforces are EPP's and stay named there, as known debt until a second backend gives them a profile.

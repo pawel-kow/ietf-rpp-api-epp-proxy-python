@@ -6,7 +6,7 @@ from flask import request as flask_request
 from core.model.shared.transfer_operation import TransferOperation
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
-from rpp.http.context import get_backend
+from rpp.http.context import backend_profile, get_backend
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers
 from rpp.http.operation import map_request, request_has_content, require_empty_body
 from rpp.http.problem import raise_registry_error
@@ -16,7 +16,7 @@ LATEST = "latest"
 
 
 class TransferHandlers:
-    """The operations on the transfer of one kind of object, which EPP runs with one command.
+    """The operations on the transfer of one kind of object, which the backend runs with one command.
 
     `gateway_of(backend)` is the gateway of the object, whose `transfer` runs a transfer, `create_mapper`,
     `approve_mapper` and `reject_mapper` convert a request, `response_mapper` a process, and `make_transfer(id, operation,
@@ -47,11 +47,11 @@ class TransferHandlers:
             if transfer.operation == TransferOperation.QUERY:  # nothing was applied, so there is nothing to confirm
                 raise_registry_error(ErrorResponse(
                     code=ResultCode.COMMAND_FAILED,
-                    msg="The EPP server gave no transfer state",
+                    msg=f"The {backend_profile().name} server gave no transfer state",
                     server_transaction_id=resp.server_transaction_id,
                     client_transaction_id=resp.client_transaction_id,
                 ))
-            return None, 202, generate_rpp_response_headers(resp)  # applied, but EPP gave no state to show
+            return None, 202, generate_rpp_response_headers(resp)  # applied, but the backend gave no state to show
         return self._response_mapper(resp.payload), 200, generate_rpp_response_headers(resp)
 
     def _operation(self, id, operation):
@@ -61,11 +61,11 @@ class TransferHandlers:
     def create(self, id, body):
         resp = self._run(map_request(self._create_mapper, id, body, self._authorization()))
         headers = generate_rpp_response_headers(resp)
-        if resp.payload is None:  # applied, but EPP gave no state to show
+        if resp.payload is None:  # applied, but the backend gave no state to show
             return None, 202, headers
         process = self._response_mapper(resp.payload)
         if resp.code != ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
-            return process, 200, headers  # completed at once: EPP exposes no process (core §16.1.4)
+            return process, 200, headers  # completed at once: the backend exposes no process (core §16.1.4)
         return process, 201, {**headers, "Location": f"{str(request.url).rstrip('/')}/{LATEST}"}
 
     def read(self, id):

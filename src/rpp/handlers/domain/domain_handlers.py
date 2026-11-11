@@ -34,7 +34,7 @@ def _mutation_answer(result, requested, status=200, extra_headers=None):
 
 
 def _availability(name, u_name, lgr):
-    """EPP check has no place for `uName` and `lgr` (draft-obispo-epp-idn-04 adds nothing to it)."""
+    """The check takes the name alone: `uName` and `lgr` are refused by the mapper."""
     map_request(domain_availability.rpp_to_model, u_name, lgr)
     ret = get_backend().domains.check(name, client_transaction_id=client_transaction_id())
     if isinstance(ret, ErrorResponse):
@@ -107,7 +107,7 @@ def domainNames_update(name, body):
 
 @rpp_operation
 def domainNameRenewProcesses_renewCreate(name, body):
-    """EPP exposes no renew process, so the answer is a 200 with no Location (core §16.1.4)."""
+    """The backend exposes no renew process, so the answer is a 200 with no Location (core §16.1.4)."""
     renew = map_request(domain_renew_process.rpp_to_model, name, body, request.headers.get("RPP-Authorization"))
     resp = renew_domain(get_backend(), renew, client_transaction_id())
     if isinstance(resp, ErrorResponse):
@@ -124,7 +124,7 @@ def _restore(restore):
 
 @rpp_operation
 def domainNameRestoreProcesses_create(name, body):
-    """EPP exposes no restore process, so the answer is a 200 with no Location (core §16.1.4)."""
+    """The backend exposes no restore process, so the answer is a 200 with no Location (core §16.1.4)."""
     return _restore(map_request(domain_restore_process.rpp_to_model, name, body))
 
 

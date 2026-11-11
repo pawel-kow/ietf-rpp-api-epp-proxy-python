@@ -13,6 +13,6 @@ def client_statuses(status: list[str] | None, reasons: dict[str, str] | None) ->
 
 def status_changes(before: dict[str, str | None], after: dict[str, str | None]) -> tuple[list[str], list[str]]:
     """The labels to add and to remove. A status is compared by label, and one whose reason changed is removed and
-    added again, as EPP cannot change a reason."""
+    added again, as a partial update can only add and remove a status, not change its reason."""
     new_reason = {label for label in before.keys() & after.keys() if before[label] != after[label]}
     return sorted(after.keys() - before.keys() | new_reason), sorted(before.keys() - after.keys() | new_reason)

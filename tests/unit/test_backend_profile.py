@@ -3,14 +3,18 @@ from dataclasses import replace
 import pytest
 from connexion import ProblemException
 
+from core.capabilities.backend_requirement import BackendRequirement
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.domain.domains import ContactReference
+from core.model.message.queue_message import QueueMessage
 from registry_adapter.epp.gateways.epp_backend import EppBackend
 from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.http.operation import map_request
-from rpp.mapping.domain import domain_patch, domain_replacement, domains
+from rpp.mapping.domain import domain_patch, domain_replacement, domain_restore_report, domains
+from rpp.mapping.message import messages
 from tests.helper.epp_ns_map import EPP_NS_MAP
+from tests.unit.test_rpp_domain_restore_mapper import REPORT
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 
 NAME = "foo.example"
@@ -96,3 +100,27 @@ def test_a_refusal_for_epp_names_epp(epp_app_context):
         map_request(create, EPP_PROFILE, contacts=[contact("reseller")])
 
     assert refused.value.detail == "Contact label 'reseller' cannot be expressed in EPP"
+
+
+def test_a_value_not_in_the_form_of_the_backend_is_a_400_that_names_it(epp_app_context):
+    epp_app_context.config["RPP_BACKEND_PROFILE"] = OTHER
+    report = {"@type": "restoreProcess", "restoreReport": {**REPORT, "statements": REPORT["statements"][:1]}}
+
+    with pytest.raises(ProblemException) as refused:
+        map_request(domain_restore_report.rpp_to_model, NAME, report)
+
+    assert refused.value.status == 400
+    assert refused.value.detail == "Other requires exactly 2 statements in the restore report"
+
+
+def test_a_backend_requirement_without_a_backend_says_the_backend():
+    refusal = BackendRequirement("Phone number '{1}' is not an {backend} number")
+
+    assert str(refusal) == "Phone number '{1}' is not an the backend number"
+    assert refusal.detail("EPP") == "Phone number '{1}' is not an EPP number"
+
+
+def test_a_message_the_proxy_cannot_translate_names_the_backend():
+    message = QueueMessage(id="1", creationDate="2026-11-11T00:00:00Z", lang=None, text="Hi", unmapped="urn:example:x")
+
+    assert "The Other message carried data" in messages.model_to_rpp(message, backend_name="Other")["data"]["message"]

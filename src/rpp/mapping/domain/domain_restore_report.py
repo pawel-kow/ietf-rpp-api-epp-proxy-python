@@ -1,3 +1,4 @@
+from core.capabilities.backend_requirement import BackendRequirement
 from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.restore_report import RestoreReport
 from rpp.dto.rpp_restore_report import RPPRestoreReport
@@ -13,9 +14,9 @@ STATEMENTS = 2
 def _report(report_rpp: RPPRestoreReport) -> RestoreReport:
     missing = [member for member in REQUIRED if getattr(report_rpp, member) is None]
     if missing:
-        raise ValueError(f"EPP requires {', '.join(repr(member) for member in missing)} in the restore report")
+        raise BackendRequirement(f"{{backend}} requires {', '.join(repr(member) for member in missing)} in the restore report")
     if len(report_rpp.statements or []) != STATEMENTS:
-        raise ValueError(f"EPP requires exactly {STATEMENTS} statements in the restore report")
+        raise BackendRequirement(f"{{backend}} requires exactly {STATEMENTS} statements in the restore report")
     return RestoreReport(
         preData=report_rpp.preData,
         postData=report_rpp.postData,

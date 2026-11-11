@@ -8,7 +8,7 @@ from core.flows.message.message_flows import read_message
 from core.model.message.message_error_response import MessageErrorResponse
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
-from rpp.http.context import get_backend
+from rpp.http.context import backend_profile, get_backend
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers, problem_headers
 from rpp.http.operation import require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
@@ -29,7 +29,7 @@ def _queue_size(value) -> str | None:
 
 
 def _language(value) -> str | None:
-    """The language of the EPP message, when it can be a Content-Language value (BCP 47 syntax)."""
+    """The language of the message, when it can be a Content-Language value (BCP 47 syntax)."""
     if not value:
         return None
     if LANGUAGE_TAG.fullmatch(value):
@@ -71,13 +71,13 @@ def _require_valid_id(id: str):
 
 @rpp_operation
 def messages_query():
-    """EPP poll req. The EPP Compatibility Profile ignores `type` (core §16.10.1)."""
+    """The head of the queue. The EPP Compatibility Profile ignores `type` (core §16.10.1)."""
     resp = get_backend().messages.poll(client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
     if resp.payload.message is None:
         return [], 200, _headers(resp)
-    return [messages.model_to_rpp(resp.payload.message)], 200, _headers(resp, resp.payload.message.lang)
+    return [messages.model_to_rpp(resp.payload.message, backend_name=backend_profile().name)], 200, _headers(resp, resp.payload.message.lang)
 
 
 @rpp_operation
@@ -86,12 +86,12 @@ def messages_read(id):
     resp = read_message(get_backend(), id, client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
-    return messages.model_to_rpp(resp.payload.message), 200, _headers(resp, resp.payload.message.lang)
+    return messages.model_to_rpp(resp.payload.message, backend_name=backend_profile().name), 200, _headers(resp, resp.payload.message.lang)
 
 
 @rpp_operation
 def messages_delete(id):
-    """EPP poll ack."""
+    """Acknowledges a message, which removes it from the queue."""
     require_empty_body()
     _require_valid_id(id)
     resp = get_backend().messages.ack(id, client_transaction_id=client_transaction_id())
@@ -106,9 +106,9 @@ def messages_delete(id):
 
 @rpp_operation
 def messages_create():
-    """Only the server creates messages, and EPP has no command to insert one."""
+    """Only the server creates messages, and the backend has no command to insert one."""
     raise ProblemException(
         status=501, title=ResultCode.UNIMPLEMENTED_COMMAND.value[1],
-        detail="EPP has no command to create a message",
+        detail=f"{backend_profile().name} has no command to create a message",
         headers=problem_headers(ResultCode.UNIMPLEMENTED_COMMAND),
     )

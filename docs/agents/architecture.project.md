@@ -292,6 +292,11 @@ take the profile as the keyword `profile`, from `backend_profile()` in the handl
 in `registry_adapter/epp/profile.py`, and `epp_profile(idn_tables)` adds the LGRs of the configured IDN tables. Some
 of its facts are not read yet, they are for a backend that differs.
 
+A value that is not in the form the backend requires (a phone number, the parts of a restore report) is a 400. The
+mapper raises `BackendRequirement` (`core/capabilities/`) with `{backend}` in its text, and `map_request` names the
+backend; a value read from the backend that cannot be shown is a 500 named the same way by `rpp_operation`.
+Messages that flows and handlers make name the backend from its profile as well.
+
 An extension the proxy does not know of cannot be told apart from no extension, so it
 counts as the first kind. A PATCH that EPP could do once the proxy has read the object
 is the second kind.
@@ -347,7 +352,10 @@ Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
 - **Several classes per file:** `src/core/model/domain/domains.py` (11), `src/core/model/contact/contacts.py` (3),
   `src/core/model/shared/common.py` (3), `src/registry_adapter/common/transport/tcp_client.py` (2).
   Generated `registry_adapter/epp/xml/generated/` is exempt. (#20)
-- **EPP named outside the EPP adapter:** `rpp/mapping` and `core` still say EPP in error details and docstrings, which
-  the import check cannot see. (#128)
+- **EPP limits in the mappers:** `rpp/mapping` refuses what EPP has no place for as constants of the mappers (pull
+  transfers only, no reason on approve and reject, the parts of a restore report, the phone number form …), and its
+  docstrings say so by name. With a second backend they become facts of the `BackendProfile`, as the contact labels
+  did. `core`, `rpp/http` and `rpp/handlers` no longer name EPP, which `tests/unit/test_protocol_names.py` checks
+  (#128).
 - **EPP commands by object, not by operation:** one operation spans `epp_request.py`, `<object>_xml.py` and
   `<object>_commands.py` of its object. (#129)

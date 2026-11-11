@@ -31,7 +31,7 @@ def transfer(status="pending", object_type="domainName", process=None):
 
 
 def test_envelope():
-    rpp = messages.model_to_rpp(message())
+    rpp = messages.model_to_rpp(message(), backend_name="EPP")
     assert rpp["@type"] == "message"
     assert rpp["id"] == "42"
     assert rpp["creationDate"] == DATE
@@ -40,7 +40,7 @@ def test_envelope():
 
 
 def test_pending_transfer_is_a_transfer_request_message():
-    data = messages.model_to_rpp(message(transfer(process=domain_process())))["data"]
+    data = messages.model_to_rpp(message(transfer(process=domain_process())), backend_name="EPP")["data"]
     assert data["@type"] == "transferRequestMessage"
     assert data["status"] == "pending"
     assert (data["objectType"], data["objectId"]) == ("domainName", "FOO.EXAMPLE")
@@ -51,12 +51,12 @@ def test_pending_transfer_is_a_transfer_request_message():
 
 
 def test_transfer_without_process():
-    assert "process" not in messages.model_to_rpp(message(transfer()))["data"]
+    assert "process" not in messages.model_to_rpp(message(transfer()), backend_name="EPP")["data"]
 
 
 @pytest.mark.parametrize("status", ["clientApproved", "clientCancelled", "clientRejected", "serverApproved", "serverCancelled"])
 def test_other_status_is_a_transfer_outcome_message(status):
-    data = messages.model_to_rpp(message(transfer(status)))["data"]
+    data = messages.model_to_rpp(message(transfer(status)), backend_name="EPP")["data"]
     assert data["@type"] == "transferOutcomeMessage"
     assert data["trStatus"] == status
     assert data["expiryDate"] == DATE
@@ -66,7 +66,7 @@ def test_contact_transfer_carries_a_contact_process():
     process = ContactTransferProcess(
         id="FO-1", trStatus="pending", reqClientId="baz", requestDate=DATE, actClientId="foo", actionDate=DATE,
     )
-    data = messages.model_to_rpp(message(transfer(object_type="contact", process=process)))["data"]
+    data = messages.model_to_rpp(message(transfer(object_type="contact", process=process)), backend_name="EPP")["data"]
     assert data["objectType"] == "contact"
     assert data["process"]["@type"] == "transferProcess"
 
@@ -76,7 +76,7 @@ def test_pending_action_is_a_review_response_message():
         objectType="domainName", objectId="FOO.EXAMPLE", approved=False, clientTransactionId="cl-9",
         serverTransactionId="sv-9", completionDate=DATE,
     )
-    data = messages.model_to_rpp(message(event, text="Denied."))["data"]
+    data = messages.model_to_rpp(message(event, text="Denied."), backend_name="EPP")["data"]
     assert data == {
         "@type": "reviewResponseMessage", "objectType": "domainName", "objectId": "FOO.EXAMPLE", "approved": False,
         "clientTransactionId": "cl-9", "serverTransactionId": "sv-9", "completionDate": DATE, "message": "Denied.",
@@ -84,19 +84,19 @@ def test_pending_action_is_a_review_response_message():
 
 
 def test_no_event_is_a_service_notice():
-    data = messages.model_to_rpp(message())["data"]
+    data = messages.model_to_rpp(message(), backend_name="EPP")["data"]
     assert data == {"@type": "serviceNoticeMessage", "message": "Some text."}
 
 
 def test_unmapped_content_is_named_in_the_notice():
-    data = messages.model_to_rpp(message(unmapped="urn:example:x other"))["data"]
+    data = messages.model_to_rpp(message(unmapped="urn:example:x other"), backend_name="EPP")["data"]
     assert data["@type"] == "serviceNoticeMessage"
     assert data["message"].startswith("Some text.")
     assert "urn:example:x other" in data["message"]
 
 
 def test_mapping_that_fails_validation_falls_back_to_a_service_notice():
-    rpp = messages.model_to_rpp(message(transfer("weird")))
+    rpp = messages.model_to_rpp(message(transfer("weird")), backend_name="EPP")
     assert rpp["data"]["@type"] == "serviceNoticeMessage"
     assert "Some text." in rpp["data"]["message"]
     assert rpp["id"] == "42"
@@ -104,7 +104,7 @@ def test_mapping_that_fails_validation_falls_back_to_a_service_notice():
 
 
 def test_missing_creation_date_is_the_request_date_of_a_transfer():
-    rpp = messages.model_to_rpp(message(transfer(), creationDate=None))
+    rpp = messages.model_to_rpp(message(transfer(), creationDate=None), backend_name="EPP")
     assert rpp["creationDate"] == DATE
 
 
@@ -113,18 +113,18 @@ def test_missing_creation_date_is_the_completion_date_of_a_pending_action():
         objectType="domainName", objectId="FOO.EXAMPLE", approved=True, clientTransactionId=None,
         serverTransactionId="sv-9", completionDate="2026-11-06T10:00:00.000000Z",
     )
-    assert messages.model_to_rpp(message(event, creationDate=None))["creationDate"] == "2026-11-06T10:00:00.000000Z"
+    assert messages.model_to_rpp(message(event, creationDate=None), backend_name="EPP")["creationDate"] == "2026-11-06T10:00:00.000000Z"
 
 
 def test_missing_creation_date_without_an_event_date_is_the_time_of_the_read():
-    rpp = messages.model_to_rpp(message(creationDate=None))
+    rpp = messages.model_to_rpp(message(creationDate=None), backend_name="EPP")
     assert rpp["creationDate"].endswith("Z") and rpp["creationDate"] != DATE
     validate_schema("message.read", rpp)
 
 
 def test_validation_fallback_names_the_data_and_logs_it_without_content():
     with capture_log() as caplog:
-        data = messages.model_to_rpp(message(transfer("weird"), data_name="{urn:x}trnData"))["data"]
+        data = messages.model_to_rpp(message(transfer("weird"), data_name="{urn:x}trnData"), backend_name="EPP")["data"]
     assert "{urn:x}trnData" in data["message"]
     assert "{urn:x}trnData" in caplog.text
     assert "FOO.EXAMPLE" not in caplog.text
@@ -133,7 +133,7 @@ def test_validation_fallback_names_the_data_and_logs_it_without_content():
 def test_a_transfer_without_any_date_still_gives_a_message():
     event = transfer(process=None)
     event.requestDate = None
-    rpp = messages.model_to_rpp(message(event, creationDate=None))
+    rpp = messages.model_to_rpp(message(event, creationDate=None), backend_name="EPP")
     assert rpp["data"]["@type"] == "serviceNoticeMessage"
     assert rpp["creationDate"]
     validate_schema("message.read", rpp)
@@ -144,7 +144,7 @@ def test_a_pending_action_without_any_date_still_gives_a_message():
         objectType="domainName", objectId="FOO.EXAMPLE", approved=True, clientTransactionId=None,
         serverTransactionId="sv-9", completionDate=None,
     )
-    rpp = messages.model_to_rpp(message(event, creationDate=None))
+    rpp = messages.model_to_rpp(message(event, creationDate=None), backend_name="EPP")
     assert rpp["creationDate"]
     validate_schema("message.read", rpp)
 
@@ -152,5 +152,5 @@ def test_a_pending_action_without_any_date_still_gives_a_message():
 def test_the_validation_fallback_cannot_inject_a_log_line(log=None):
     from tests.helper.captured_log import capture_log
     with capture_log() as captured:
-        messages.model_to_rpp(message(transfer("weird"), id="4\nFAKE LOG LINE", data_name="{urn:x}trnData"))
+        messages.model_to_rpp(message(transfer("weird"), id="4\nFAKE LOG LINE", data_name="{urn:x}trnData"), backend_name="EPP")
     assert captured.lines and all("\n" not in line for line in captured.lines)

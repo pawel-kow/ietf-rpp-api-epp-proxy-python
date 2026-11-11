@@ -54,10 +54,10 @@ def _typed(message: QueueMessage):
     )
 
 
-def _notice(message: QueueMessage, unmapped: str | None) -> RPPServiceNoticeMessage:
+def _notice(message: QueueMessage, unmapped: str | None, backend_name: str) -> RPPServiceNoticeMessage:
     text = message.text
     if unmapped:
-        text = f"{text} (The EPP message carried data the proxy cannot translate: {unmapped}.)".strip()
+        text = f"{text} (The {backend_name} message carried data the proxy cannot translate: {unmapped}.)".strip()
     return RPPServiceNoticeMessage(message=text)
 
 
@@ -77,9 +77,10 @@ def _envelope(message: QueueMessage, created: str, data) -> dict:
     return RPPMessage(id=message.id, creationDate=created, status=QUEUED, data=data.to_rpp()).to_rpp()
 
 
-def model_to_rpp(message: QueueMessage) -> dict:
+def model_to_rpp(message: QueueMessage, *, backend_name: str) -> dict:
     """A message that cannot become a valid typed message becomes a service notice, so that it can
-    still be read and acknowledged, which a client cannot do past a message that fails."""
+    still be read and acknowledged, which a client cannot do past a message that fails. The notice names the backend
+    the message came from."""
     created = _created(message)
     if message.event is not None:
         try:
@@ -90,6 +91,6 @@ def model_to_rpp(message: QueueMessage) -> dict:
             name = message.data_name or "data"
             logger.warning("Poll message %r is a service notice, its data %s does not map: %s", message.id, name, type(e).__name__)
             message = replace(message, event=None, unmapped=f"{name}, which failed validation")
-    rpp = _envelope(message, created, _notice(message, message.unmapped))
+    rpp = _envelope(message, created, _notice(message, message.unmapped, backend_name))
     validate_schema("message.read", rpp)
     return rpp

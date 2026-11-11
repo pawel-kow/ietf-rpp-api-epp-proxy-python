@@ -68,7 +68,7 @@ def replace_domain(backend: RegistryBackend, wanted: DomainReplacement, client_t
 
 
 def renew_domain(backend: RegistryBackend, renew: DomainRenew, client_transaction_id) -> OperationResponse[DomainRenewProcess] | ErrorResponse:
-    """Renews a domain. EPP needs the current expiry date, so a client that gave none has it read (json §8.1.7).
+    """Renews a domain. The backend needs the current expiry date, so a client that gave none has it read (json §8.1.7).
     The read and the renew are not atomic, and without the client's date nothing guards against a double renewal."""
     if renew.curExpDate is None:
         current = backend.domains.info(renew.name)
@@ -86,7 +86,7 @@ def renew_domain(backend: RegistryBackend, renew: DomainRenew, client_transactio
 
 
 def read_domain_restore(backend: RegistryBackend, domain_name: str, client_transaction_id) -> OperationResponse[DomainRestoreProcess] | ErrorResponse:
-    """The restore of a domain, from its RGP statuses. EPP keeps no restore process and cannot tell a restored domain
+    """The restore of a domain, from its RGP statuses. The backend keeps no restore process and cannot tell a restored domain
     from one never deleted, so a domain without a restore under way has none (spec-issues.md, "Restore process")."""
     info = backend.domains.restore_info(domain_name, client_transaction_id=client_transaction_id)
     if isinstance(info, ErrorResponse):

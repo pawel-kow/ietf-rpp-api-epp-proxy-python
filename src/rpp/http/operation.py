@@ -4,6 +4,7 @@ from connexion import ProblemException
 from flask import request as flask_request
 from jsonschema import ValidationError
 
+from core.capabilities.backend_requirement import BackendRequirement
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from core.capabilities.unsupported_feature import UnsupportedFeature
@@ -49,6 +50,8 @@ def map_request(mapper, *args, **kwargs):
     except ValidationError as e:
         # Only the message: str(e) would print the request, including its authInfo.
         raise ProblemException(status=400, title="Bad Request", detail=e.message)
+    except BackendRequirement as e:
+        raise ProblemException(status=400, title="Bad Request", detail=e.detail(backend_profile().name))
     except Exception as e:
         raise ProblemException(status=400, title="Bad Request", detail=str(e))
 
@@ -61,6 +64,8 @@ def rpp_operation(handler):
             return handler(*args, **kwargs)
         except ProblemException:
             raise
+        except BackendRequirement as e:
+            raise ProblemException(status=500, title="Internal Server Error", detail=e.detail(backend_profile().name))
         except Exception as e:
             raise ProblemException(status=500, title="Internal Server Error", detail=str(e))
     return wrapper

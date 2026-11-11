@@ -4,7 +4,7 @@ from typing import Optional
 
 @dataclass(kw_only=True)
 class DomainRenew:
-    """A renewal of a domain. `curExpDate` is the current expiry as a date (EPP holds no time)."""
+    """A renewal of a domain. `curExpDate` is the current expiry as a date, without the time."""
     name: str
     curExpDate: Optional[str] = None
     duration: Optional[str] = None

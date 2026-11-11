@@ -20,7 +20,7 @@ RPP_VERSION = "1.0"
 
 @rpp_operation
 def discovery_read():
-    """The Discovery Data Object: no authentication and no EPP, it comes from configuration and the proxy itself."""
+    """The Discovery Data Object: no authentication and no registry command, it comes from configuration and the proxy itself."""
     settings = discovery_settings()
     missing = discovery.invalid_settings(settings)
     if missing:

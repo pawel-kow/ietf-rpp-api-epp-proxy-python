@@ -9,9 +9,9 @@ from core.result.result_code import ResultCode
 
 
 def read_message(backend: RegistryBackend, message_id: str, client_transaction_id=None) -> Union[OperationResponse[MessageQueue], ErrorResponse]:
-    """Reads a message by id, which EPP allows only for the head of the queue.
+    """Reads a message by id, which the backend allows only for the head of the queue.
 
-    EPP cannot read past the head, so a queued message that is not the head, an acknowledged one and
+    The backend cannot read past the head, so a queued message that is not the head, an acknowledged one and
     an unknown one look the same, and none of them can be answered.
     """
     resp = backend.messages.poll(client_transaction_id=client_transaction_id)
@@ -25,7 +25,7 @@ def read_message(backend: RegistryBackend, message_id: str, client_transaction_i
     if resp.payload.message.id != message_id:
         return MessageErrorResponse(
             queue_size=resp.payload.queue_size, code=ResultCode.UNIMPLEMENTED_OPTION,
-            msg="EPP can read only the message at the head of the queue, and message {id} is not it".format(id=message_id),
+            msg=f"{backend.profile.name} can read only the message at the head of the queue, and message {message_id} is not it",
             server_transaction_id=resp.server_transaction_id, client_transaction_id=resp.client_transaction_id,
         )
     return resp
