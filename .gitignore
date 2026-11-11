@@ -70,3 +70,8 @@ target/
 
 # Per-machine overrides of config.yaml (see src/config.py)
 *.local.yaml
+
+# Local credentials, for example of the RRI test environment (MTEST)
+.env
+.env.*
+!.env.example
