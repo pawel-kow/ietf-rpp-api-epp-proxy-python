@@ -4,9 +4,9 @@ Branch `chore/parallel-tests`, requested by the maintainer on 2026-11-11 after a
 
 ## Tasks
 
-- [~] Add `pytest-xdist` to `requirements.txt`
-- [ ] Document `pytest -n 8` as the check (testing.project.md, process.project.md), with the backend limit
-- [ ] Full run with `pytest -n 8`, PR
+- [x] Add `pytest-xdist` to `requirements.txt`
+- [x] Document `pytest -n 8` as the check (testing.project.md, process.project.md), with the backend limit
+- [~] Full run with `pytest -n 8`, PR
 
 ## Findings (trial on feature/35-restore-process, 4-core devcontainer)
 
