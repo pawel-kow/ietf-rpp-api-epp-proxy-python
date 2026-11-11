@@ -15,7 +15,7 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       `core/session`; `run.py` → `main.py`; `copy_models.sh`, Dockerfile and docs for `uvicorn main:app`
 - [x] T4 Phase 5: `IdnTables` → `epp/`; read-back once (closes #17); settings passed in
 - [x] T5 Phase 6: result envelope for gateway results
-- [~] T6 Docs (`architecture.project.md`, `testing.project.md`, `process.project.md`, README), import-linter contracts
+- [x] T6 Docs (`architecture.project.md`, `testing.project.md`, `process.project.md`, README), import-linter contracts
       for the target, final checks, draft PR
 
 ## Findings (evidence)
@@ -77,3 +77,8 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       are. `ReplacementSteps.object_of` is gone: a read's object is its payload.
 - D22 Follow-ups filed: #128 (EPP still named in `rpp/mapping` and `core` messages), #129 (EPP commands grouped by
       object, not by operation, D4).
+
+## Corrections
+
+- C1 Full `pytest -n 8` per phase: 2→ 2132 passed/1 error (#124), 3 → same, 4 → 2135 passed, 5 → 2143 passed,
+      6 + import sort → 2143 passed, 5 skipped each time; `lint-imports` 12 kept at the end.
