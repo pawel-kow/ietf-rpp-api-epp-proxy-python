@@ -6,7 +6,7 @@ import uuid
 import re
 from run import app
 import datetime
-from tests.helper.integration_api_test import endpoint_test
+from tests.helper.integration_api_test import endpoint_test, replace_upper_placeholders
 from tests.helper.check_datetime import check_datetime_format_utc_and_delta
 from tests.helper.idn_labels import replace_idn_placeholders
 import os
@@ -110,7 +110,7 @@ def process_placeholders(json_data=dict|list|str|None, obj=None, started=None):
             .replace("{random_name}", f"{obj['test_group'].replace('_', '-')}-{random_name}" if "test_group" in obj else random_name)\
             .replace("{random_id_10}", f"{random_id_10}")\
             .replace("{test_start}", started.isoformat())# type: ignore
-        replaced = replace_idn_placeholders(replaced, random_id_10)
+        replaced = replace_upper_placeholders(replace_idn_placeholders(replaced, random_id_10))
         return replaced.replace("{unique_cltrid}", str(uuid.uuid4())) # RPP-Cltrid is unique per request
     else:
         return json_data

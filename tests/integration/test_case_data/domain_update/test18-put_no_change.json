@@ -4,6 +4,59 @@
     {
       "request": {
         "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}ul1",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "FO-{random_id_10}ul1"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
         "url": "/domainNames",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
@@ -21,7 +74,7 @@
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-TEST1"
+            "id": "FO-{random_id_10}ul1"
           }
         }
       },
@@ -50,7 +103,7 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-TEST1"
+            "id": "FO-{random_id_10}ul1"
           }
         }
       },
@@ -61,7 +114,7 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-TEST1"
+            "id": "FO-{random_id_10}ul1"
           }
         },
         "headers": {
