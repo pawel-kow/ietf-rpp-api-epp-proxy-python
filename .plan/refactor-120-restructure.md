@@ -91,3 +91,4 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
 - D25 #129: `registry_adapter/epp/commands/<object>/<operation>.py` holds an operation's request, XML, reply parser and
       `epp_*` runner; what several operations share is `common.py` (helpers made public there). The create reply is
       parsed by `info.parse_domain_response`. `_address`/`_addresses` of the request side became `_addr_type(s)`.
+- C2 #128 + #129 (5d73b39): `lint-imports` 12 kept, `pytest -n 8` 2149 passed, 5 skipped.
