@@ -1,10 +1,14 @@
+from eppclient.epp_profile import EPP_PROFILE
 import jsonschema
 import pytest
 from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
+from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 from models import AuthInfo, ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
-from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, PatchNotApplicable, domain_patch, domains
+from rpp_to_model_mapper import NotSupportedByBackend, NotSupportedByProxy, PatchNotApplicable, domain_patch, domains
+
+pytestmark = pytest.mark.usefixtures("epp_app_context")
 
 NAME = "foo.example"
 HOST = {"@type": "host", "hostName": "ns3.foo.example"}
@@ -33,7 +37,7 @@ def current(**members):
 def update(*operations, **members):
     """The update the patch asks for: the mapper gives the wanted domain, and the model the difference to the current."""
     domain = current_domain(**members)
-    wanted = domain_patch.rpp_to_model_with_current(NAME, list(operations), domains.model_to_rpp(domain))
+    wanted = domain_patch.rpp_to_model_with_current(NAME, list(operations), domains.model_to_rpp(domain), profile=EPP_PROFILE)
     return domain_difference.difference(domain, wanted)
 
 
@@ -262,7 +266,7 @@ def test_no_matching_element_is_a_422_data_management_policy_violation():
     with pytest.raises(ProblemException) as problem:
         map_request(
             domain_patch.rpp_to_model_with_current, NAME,
-            [op("remove", "/contacts", match={"label": "billing"})], current(),
+            [op("remove", "/contacts", match={"label": "billing"})], current(), profile=EPP_PROFILE,
         )
 
     assert problem.value.status == 422
@@ -271,7 +275,7 @@ def test_no_matching_element_is_a_422_data_management_policy_violation():
 
 
 def test_a_status_with_a_due_date_is_unsupported():
-    with pytest.raises(NotSupportedByEpp, match="due"):
+    with pytest.raises(NotSupportedByBackend, match="due"):
         update(op("add", "/status", value={**STATUS, "due": "2027-01-01T00:00:00Z"}))
 
 

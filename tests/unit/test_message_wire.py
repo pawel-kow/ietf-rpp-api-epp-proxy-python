@@ -3,6 +3,7 @@ import pytest
 
 from tests.helper.captured_log import capture_log
 
+from eppclient.epp_profile import EPP_PROFILE
 from app import create_app
 from connexion import ProblemException
 from controller.helper.rpp_response import problem_headers
@@ -33,7 +34,7 @@ def factory(username, password):
 
 @pytest.fixture(scope="module")
 def http():
-    return create_app(SessionAuthenticator(epp_backends(factory))).test_client()
+    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client()
 
 
 def answer(http, method, url, *replies, **kwargs):

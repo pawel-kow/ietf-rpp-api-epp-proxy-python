@@ -3,7 +3,7 @@ from rpp_schema_validator import validate_schema
 from . import host_dns, prov_metadata
 from .common import parse_rpp, reject_set
 from .dns_records import nameserver_records, reject_ttl
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPDnsData, RPPHost, RPPStatus
 
 
@@ -19,7 +19,7 @@ def _reject_controls(controls: dict | None):
     """EPP has a TTL extension for hosts, but `maxSigLifetime` is secDNS, which is for domains only."""
     if controls:
         reject_ttl(controls)
-        raise NotSupportedByEpp("'dns.controls' on a host")
+        raise NotSupportedByBackend("'dns.controls' on a host")
 
 
 def has_own_ns(host_rpp: RPPHost) -> bool:

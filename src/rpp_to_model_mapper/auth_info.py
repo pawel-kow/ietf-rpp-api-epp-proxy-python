@@ -1,5 +1,5 @@
 from models import AuthInfo
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPAuthInfo
 
 AUTHINFO_METHOD = "authinfo"
@@ -9,7 +9,7 @@ def rpp_to_model(rpp: RPPAuthInfo | None) -> AuthInfo | None:
     if rpp is None:
         return None
     if rpp.method != AUTHINFO_METHOD:
-        raise NotSupportedByEpp(f"authInfo method '{rpp.method}'")
+        raise NotSupportedByBackend(f"authInfo method '{rpp.method}'")
     return AuthInfo(pw=rpp.authdata)
 
 

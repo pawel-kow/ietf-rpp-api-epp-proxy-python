@@ -1,5 +1,6 @@
 """`apply` turns a partial update into the full one it amounts to, `difference` the other way round. For every update
 the direct mappers produce, the round trip gives the update back, up to order (#108)."""
+from eppclient.epp_profile import EPP_PROFILE
 import pytest
 
 from models import (
@@ -54,14 +55,14 @@ def current_domain() -> Domain:
     ],
 ])
 def test_a_domain_update_survives_the_round_trip(operations):
-    delta = domain_patch.rpp_to_model(DOMAIN, operations)
+    delta = domain_patch.rpp_to_model(DOMAIN, operations, profile=EPP_PROFILE)
     current = current_domain()
 
     assert canonical(domain_difference.difference(current, domain_application.apply(current, delta))) == canonical(delta)
 
 
 def test_applying_a_domain_update_keeps_what_it_does_not_name():
-    delta = domain_patch.rpp_to_model(DOMAIN, [op("remove", "/nameservers", match={"hostName": "ns1.foo.example"})])
+    delta = domain_patch.rpp_to_model(DOMAIN, [op("remove", "/nameservers", match={"hostName": "ns1.foo.example"})], profile=EPP_PROFILE)
 
     wanted = domain_application.apply(current_domain(), delta)
 

@@ -1,3 +1,4 @@
+from eppclient.epp_profile import EPP_PROFILE
 import logging
 
 import pytest
@@ -26,7 +27,7 @@ def info_domain(**extra):
 def test_create_maps_nameservers_to_host_objects():
     body = create_body(nameservers=[{"@type": "host", "hostName": "ns1.foo.example"}])
 
-    assert domains.rpp_to_model(body).ns == NS(host_objs=[HostObj(id="ns1.foo.example")], host_attrs=None)
+    assert domains.rpp_to_model(body, profile=EPP_PROFILE).ns == NS(host_objs=[HostObj(id="ns1.foo.example")], host_attrs=None)
 
 
 def test_create_maps_registrant_and_labelled_contacts():
@@ -35,7 +36,7 @@ def test_create_maps_registrant_and_labelled_contacts():
         contacts=[{"label": "admin", "object": contact("SH-8013")}],
     )
 
-    assert domains.rpp_to_model(body).contacts == [
+    assert domains.rpp_to_model(body, profile=EPP_PROFILE).contacts == [
         ContactReference(id="JD-1234", types=["registrant"]),
         ContactReference(id="SH-8013", types=["admin"]),
     ]
@@ -44,7 +45,7 @@ def test_create_maps_registrant_and_labelled_contacts():
 def test_create_maps_authinfo_method_to_password():
     body = create_body(authInfo={"@type": "authInfo", "method": "authinfo", "authdata": "2fooBAR"})
 
-    assert domains.rpp_to_model(body).authInfo == AuthInfo(pw="2fooBAR")
+    assert domains.rpp_to_model(body, profile=EPP_PROFILE).authInfo == AuthInfo(pw="2fooBAR")
 
 
 @pytest.mark.parametrize("value, unit, duration", [(2, "y", "P2Y"), (6, "m", "P6M")])
@@ -54,7 +55,7 @@ def test_create_maps_period_to_duration(value, unit, duration):
         "period": {"@type": "period", "value": value, "unit": unit},
     }]})
 
-    assert domains.rpp_to_model(body).processes["creation"].duration == duration
+    assert domains.rpp_to_model(body, profile=EPP_PROFILE).processes["creation"].duration == duration
 
 
 @pytest.mark.parametrize("extra", [
@@ -64,17 +65,17 @@ def test_create_maps_period_to_duration(value, unit, duration):
 ])
 def test_create_rejects_what_the_model_cannot_hold(extra):
     with pytest.raises(UnsupportedRppFeature):
-        domains.rpp_to_model(create_body(**extra))
+        domains.rpp_to_model(create_body(**extra), profile=EPP_PROFILE)
 
 
 def test_create_rejects_a_schema_violation():
     with pytest.raises(ValidationError):
-        domains.rpp_to_model({"name": "foo.example"})
+        domains.rpp_to_model({"name": "foo.example"}, profile=EPP_PROFILE)
 
 
 def test_create_rejects_undeclared_properties():
     with pytest.raises(ValueError):
-        domains.rpp_to_model(create_body(unknown="x"))
+        domains.rpp_to_model(create_body(unknown="x"), profile=EPP_PROFILE)
 
 
 def test_read_builds_provisioning_metadata():
@@ -151,23 +152,23 @@ def idn_body(**extra):
 
 
 def test_create_maps_lgr_and_uname_to_the_idn_table_and_uname():
-    domain = domains.rpp_to_model(idn_body(uName="bücher.example", lgr="latn-1.0"), TABLES)
+    domain = domains.rpp_to_model(idn_body(uName="bücher.example", lgr="latn-1.0"), TABLES, profile=EPP_PROFILE)
 
     assert domain.idn == DomainIdn(table="de", uname="bücher.example")
 
 
 def test_create_maps_lgr_alone_to_the_idn_table():
-    assert domains.rpp_to_model(idn_body(lgr="latn-1.0"), TABLES).idn == DomainIdn(table="de")
+    assert domains.rpp_to_model(idn_body(lgr="latn-1.0"), TABLES, profile=EPP_PROFILE).idn == DomainIdn(table="de")
 
 
 def test_create_without_lgr_has_no_idn():
-    assert domains.rpp_to_model(idn_body(), TABLES).idn is None
+    assert domains.rpp_to_model(idn_body(), TABLES, profile=EPP_PROFILE).idn is None
 
 
 def test_create_with_uname_and_no_lgr_is_refused():
     """Json §6.4: lgr MUST be present whenever uName is present."""
     with pytest.raises(ValueError) as refused:
-        domains.rpp_to_model(idn_body(uName="bücher.example"), TABLES)
+        domains.rpp_to_model(idn_body(uName="bücher.example"), TABLES, profile=EPP_PROFILE)
 
     assert not isinstance(refused.value, UnsupportedRppFeature)
 
@@ -175,14 +176,14 @@ def test_create_with_uname_and_no_lgr_is_refused():
 @pytest.mark.parametrize("tables", [TABLES, IdnTables()])
 def test_create_with_an_lgr_without_a_table_is_refused(tables):
     with pytest.raises(ValueError) as refused:
-        domains.rpp_to_model(idn_body(lgr="cyrl-1.0"), tables)
+        domains.rpp_to_model(idn_body(lgr="cyrl-1.0"), tables, profile=EPP_PROFILE)
 
     assert not isinstance(refused.value, UnsupportedRppFeature)
 
 
 def test_create_without_tables_refuses_any_lgr():
     with pytest.raises(ValueError):
-        domains.rpp_to_model(idn_body(lgr="latn-1.0"))
+        domains.rpp_to_model(idn_body(lgr="latn-1.0"), profile=EPP_PROFILE)
 
 
 def test_read_maps_the_idn_table_and_uname_to_lgr_and_uname():

@@ -4,9 +4,12 @@ import pytest
 from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
+from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 from models import Address, AuthInfo, Contact, ContactType, LocalizedPostalInfo
 from rpp_schema_validator import validate_schema
 from rpp_to_model_mapper import contacts
+
+pytestmark = pytest.mark.usefixtures("epp_app_context")
 
 
 def card(**extra):

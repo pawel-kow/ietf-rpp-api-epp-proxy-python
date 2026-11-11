@@ -1,4 +1,5 @@
 from models import ErrorResponse, ResultCode
+from .epp_profile import EPP_PROFILE
 
 
 def _unimplemented(message: str) -> ErrorResponse:
@@ -9,6 +10,5 @@ def _unimplemented(message: str) -> ErrorResponse:
 
 
 def not_supported_by_epp(feature: str) -> ErrorResponse:
-    """What EPP has no place for, worded as the mappers' `NotSupportedByEpp`."""
-    return _unimplemented(f"{feature} cannot be expressed in EPP")
-
+    """What EPP has no place for, worded as the mappers' `NotSupportedByBackend` for EPP."""
+    return _unimplemented(f"{feature} cannot be expressed in {EPP_PROFILE.name}")

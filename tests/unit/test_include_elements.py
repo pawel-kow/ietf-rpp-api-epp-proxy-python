@@ -1,4 +1,5 @@
 """Visibility and `includeElements` (data-objects §2.4, §2.7.3, core §16.1.7), see spec-issues.md."""
+from eppclient.epp_profile import EPP_PROFILE
 import pytest
 
 from models import AuthInfo
@@ -34,7 +35,7 @@ def test_a_default_element_is_always_shown():
 
 
 def domain_intent(body, requested=frozenset()):
-    return domain_replacement.rpp_to_model("foo.example", body, requested)
+    return domain_replacement.rpp_to_model("foo.example", body, requested, profile=EPP_PROFILE)
 
 
 def contact_intent(body, requested=frozenset()):

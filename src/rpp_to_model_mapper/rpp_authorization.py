@@ -3,7 +3,7 @@ import binascii
 
 from models import AuthInfo
 from .auth_info import AUTHINFO_METHOD
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 
 MALFORMED = "Malformed RPP-Authorization header"
 
@@ -34,6 +34,6 @@ def rpp_to_model(header: str | None) -> AuthInfo | None:
         return None
     method, _, text = header.strip().partition(" ")
     if method != AUTHINFO_METHOD:
-        raise NotSupportedByEpp(f"RPP-Authorization method '{method}'")
+        raise NotSupportedByBackend(f"RPP-Authorization method '{method}'")
     fields = _fields(text)
     return AuthInfo(pw=_password(fields.get("value")), roid=fields.get("roid"))

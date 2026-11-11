@@ -3,7 +3,7 @@ from jsonschema import ValidationError
 
 from models import DomainRestore, DomainRestoreProcess, RestoreReport
 from rpp_to_model_mapper import (
-    NotSupportedByEpp, PatchNotApplicable, domain_restore_patch, domain_restore_process, domain_restore_report,
+    NotSupportedByBackend, PatchNotApplicable, domain_restore_patch, domain_restore_process, domain_restore_report,
 )
 
 REPORT = {
@@ -39,7 +39,7 @@ def test_request_without_report():
 
 def test_inline_report_is_not_supported_by_epp():
     """RFC 3915 restores in two steps, a request and then a report. The maintainer chose not to emulate one step."""
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         domain_restore_process.rpp_to_model("foo.example", UPDATE)
 
 

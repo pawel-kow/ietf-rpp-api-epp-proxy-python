@@ -5,7 +5,7 @@ from .common import parse_rpp, reject_operation
 from .dns_records import ADDRESS_RECORDS, DNS_PARENTS
 from .hosts import add_rpp_status, has_own_ns, replacement_from_rpp
 from .needs_current_state import NeedsCurrentState
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPDnsRecord, RPPHost, RPPPatchOperation, RPPStatus
 
 HOST_NAME_PATH = "/hostName"
@@ -125,6 +125,6 @@ def rpp_to_model_with_current(host_name: str, rpp: list, current: dict) -> HostR
     host_rpp = parse_rpp(RPPHost, {**requested, "hostName": current["hostName"]})
     wanted = replacement_from_rpp(host_name, host_rpp)
     if not has_own_ns(host_rpp):
-        raise NotSupportedByEpp("Removing the 'ns' record of the host")
+        raise NotSupportedByBackend("Removing the 'ns' record of the host")
     wanted.new_name = patched["hostName"]
     return wanted

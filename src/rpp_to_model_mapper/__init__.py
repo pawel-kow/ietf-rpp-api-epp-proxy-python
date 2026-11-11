@@ -7,7 +7,7 @@ from . import (
     rpp_authorization, statuses,
 )
 from .idn_tables import IdnTables
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .not_supported_by_proxy import NotSupportedByProxy
 from .patch_not_applicable import PatchNotApplicable
 from .unsupported_rpp_feature import UnsupportedRppFeature

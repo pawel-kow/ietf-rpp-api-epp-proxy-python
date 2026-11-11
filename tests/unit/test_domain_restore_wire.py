@@ -2,6 +2,7 @@ import base64
 
 import pytest
 
+from eppclient.epp_profile import EPP_PROFILE
 from app import create_app
 from controller.session_authenticator import SessionAuthenticator
 from tests.helper.epp_backends import epp_backends
@@ -64,7 +65,7 @@ def setup(*replies, extensions=(SEC_DNS_EXTENSION, RGP_EXTENSION)):
         clients.append(FakeEppClient(username, password, replies=list(replies), extensions=extensions))
         return clients[-1]
 
-    return create_app(SessionAuthenticator(epp_backends(factory))).test_client(), clients
+    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client(), clients
 
 
 def sent(clients):

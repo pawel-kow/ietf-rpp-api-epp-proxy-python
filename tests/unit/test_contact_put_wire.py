@@ -2,6 +2,7 @@ import base64
 
 import pytest
 
+from eppclient.epp_profile import EPP_PROFILE
 from app import create_app
 from controller.session_authenticator import SessionAuthenticator
 from tests.helper.epp_backends import epp_backends
@@ -54,7 +55,7 @@ class Session:
         return self.client
 
     def request(self, method, **kwargs):
-        http = create_app(SessionAuthenticator(epp_backends(self._factory))).test_client()
+        http = create_app(SessionAuthenticator(epp_backends(self._factory)), EPP_PROFILE).test_client()
         return getattr(http, method)("/contacts/JD-1234", headers=AUTH, **kwargs)
 
 
