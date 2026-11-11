@@ -1,17 +1,18 @@
-from eppclient.epp_profile import EPP_PROFILE
-from epp_to_model_mapper.domains import create_domain_update_xml
+from registry_adapter.epp.profile import EPP_PROFILE
+from registry_adapter.epp.commands.domain.domain_xml import create_domain_update_xml
 from models import (
     DnsSec, DomainUpdate, DomainUpdateAdd, DomainUpdateChange, DomainUpdateRemove, DsData, HostAttr, NS,
 )
 from rpp_to_model_mapper import domain_patch
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 
 def update_xml(body):
-    return create_domain_update_xml(domain_patch.rpp_to_model("foo.example", body, profile=EPP_PROFILE), client_request_id="t")
+    return create_domain_update_xml(domain_patch.rpp_to_model("foo.example", body, profile=EPP_PROFILE), client_request_id="t", ns_map=EPP_NS_MAP)
 
 
 def update_xml_of(domain_update):
-    return create_domain_update_xml(domain_update, client_request_id="t")
+    return create_domain_update_xml(domain_update, client_request_id="t", ns_map=EPP_NS_MAP)
 
 
 def add_contact(label, contact_id):

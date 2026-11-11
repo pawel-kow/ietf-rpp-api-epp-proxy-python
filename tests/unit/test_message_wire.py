@@ -3,7 +3,7 @@ import pytest
 
 from tests.helper.captured_log import capture_log
 
-from eppclient.epp_profile import EPP_PROFILE
+from registry_adapter.epp.profile import EPP_PROFILE
 from app import create_app
 from connexion import ProblemException
 from controller.helper.rpp_response import problem_headers

@@ -23,12 +23,10 @@ addopts = "--strict-markers --tb=short -p no:warnings"
 # therefore seen as external and forbidden by name. app and run as importers are checked once phase 4 moves them.
 root_packages = [
     "controller",
-    "epp_to_model_mapper",
-    "eppclient",
     "flows",
-    "helpers",
     "models",
     "registry",
+    "registry_adapter",
     "rpp_schema_validator",
     "rpp_to_model_mapper",
 ]
@@ -40,8 +38,8 @@ name = "core.model (models) imports only the standard library"
 type = "forbidden"
 source_modules = ["models"]
 forbidden_modules = [
-    "app", "config", "controller", "epp_to_model_mapper", "eppclient", "flows", "helpers", "registry",
-    "rpp_schema_validator", "rpp_to_model_mapper", "run",
+    "app", "config", "controller", "flows", "registry", "registry_adapter", "rpp_schema_validator",
+    "rpp_to_model_mapper", "run",
     "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
 ]
 
@@ -57,8 +55,7 @@ name = "core (models, registry, flows) imports no adapter, framework or wire for
 type = "forbidden"
 source_modules = ["flows", "models", "registry"]
 forbidden_modules = [
-    "app", "config", "controller", "epp_to_model_mapper", "eppclient", "helpers", "rpp_schema_validator",
-    "rpp_to_model_mapper", "run",
+    "app", "config", "controller", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper", "run",
     "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
 ]
 
@@ -67,7 +64,7 @@ id = "rpp-not-registry-adapter"
 name = "rpp (controller, rpp_to_model_mapper, rpp_schema_validator) never imports the registry adapter or XML"
 type = "forbidden"
 source_modules = ["controller", "rpp_schema_validator", "rpp_to_model_mapper"]
-forbidden_modules = ["epp_to_model_mapper", "eppclient", "helpers", "lxml", "xsdata"]
+forbidden_modules = ["registry_adapter", "lxml", "xsdata"]
 
 [[tool.importlinter.contracts]]
 id = "rpp-mapping-no-http"
@@ -78,9 +75,9 @@ forbidden_modules = ["app", "controller", "connexion", "flask", "starlette", "we
 
 [[tool.importlinter.contracts]]
 id = "registry-adapter-not-rpp"
-name = "registry_adapter (eppclient, epp_to_model_mapper, helpers) never imports rpp, flows or a web framework"
+name = "registry_adapter never imports rpp, flows or a web framework"
 type = "forbidden"
-source_modules = ["epp_to_model_mapper", "eppclient", "helpers"]
+source_modules = ["registry_adapter"]
 forbidden_modules = [
     "app", "controller", "flows", "rpp_schema_validator", "rpp_to_model_mapper", "run",
     "connexion", "dataclasses_json", "flask", "jsonschema", "starlette", "werkzeug",
@@ -88,18 +85,30 @@ forbidden_modules = [
 
 [[tool.importlinter.contracts]]
 id = "epp-layers"
-name = "Inside epp: eppclient -> epp_to_model_mapper -> helpers"
+name = "Inside epp: gateways -> commands -> xml, session"
 type = "layers"
-layers = ["eppclient", "epp_to_model_mapper", "helpers"]
+containers = ["registry_adapter.epp"]
+layers = ["gateways", "commands", "xml | session"]
+
+[[tool.importlinter.contracts]]
+id = "epp-only-session-sends"
+name = "Inside epp only session uses the transport"
+type = "forbidden"
+source_modules = [
+    "registry_adapter.epp.commands", "registry_adapter.epp.gateways", "registry_adapter.epp.xml",
+    "registry_adapter.epp.contact_refusal", "registry_adapter.epp.profile", "registry_adapter.epp.refusals",
+]
+forbidden_modules = ["registry_adapter.common.transport"]
+allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 id = "registry-adapter-common-standalone"
-name = "registry_adapter.common (helpers) imports no project package"
+name = "registry_adapter.common imports no project package"
 type = "forbidden"
-source_modules = ["helpers"]
+source_modules = ["registry_adapter.common"]
 forbidden_modules = [
-    "app", "config", "controller", "epp_to_model_mapper", "eppclient", "flows", "models", "registry",
-    "rpp_schema_validator", "rpp_to_model_mapper", "run",
+    "app", "config", "controller", "flows", "models", "registry", "registry_adapter.epp", "rpp_schema_validator",
+    "rpp_to_model_mapper", "run",
 ]
 
 [[tool.importlinter.contracts]]
@@ -107,11 +116,6 @@ id = "only-main-imports-settings"
 name = "Only main (run) imports settings (config), and nobody imports main"
 type = "forbidden"
 source_modules = [
-    "controller", "epp_to_model_mapper", "eppclient", "flows", "helpers", "models", "registry",
-    "rpp_schema_validator", "rpp_to_model_mapper",
+    "controller", "flows", "models", "registry", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper",
 ]
 forbidden_modules = ["config", "run"]
-ignore_imports = [
-    # Known debt (#120 finding 2): the EPP codec reads ns_map from the global config. Phase 2 passes it in.
-    "epp_to_model_mapper.commands.helper -> config",
-]

@@ -1,7 +1,7 @@
 import pytest
 
-from eppclient.eppclient import EPPClient, IDN_EXTENSION, RGP_EXTENSION, SEC_DNS_EXTENSION
-from eppclient.tcpclient import ConnectionException
+from registry_adapter.epp.session.epp_client import EPPClient, IDN_EXTENSION, RGP_EXTENSION, SEC_DNS_EXTENSION
+from registry_adapter.common.transport.tcp_client import ConnectionException
 
 OTHER_EXTENSION = "urn:ietf:params:xml:ns:launch-1.0"
 LOGIN_OK = (

@@ -1,7 +1,10 @@
 from lxml import etree
 
-from epp_to_model_mapper import parse_domain_response, parse_domain_restore_response, restore_domain_xml
+from registry_adapter.epp.commands.domain.domain_xml import (
+    parse_domain_response, parse_domain_restore_response, restore_domain_xml,
+)
 from models import DomainRestore, ResultCode, RestoreReport
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
 DOMAIN = "urn:ietf:params:xml:ns:domain-1.0"
@@ -18,7 +21,7 @@ REPORT = RestoreReport(
 
 
 def command(restore):
-    return etree.fromstring(restore_domain_xml(restore, client_request_id="rs35-cl-1").encode())
+    return etree.fromstring(restore_domain_xml(restore, client_request_id="rs35-cl-1", ns_map=EPP_NS_MAP).encode())
 
 
 def only(root, path):

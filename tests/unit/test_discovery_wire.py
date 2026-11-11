@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from eppclient.epp_profile import EPP_PROFILE
+from registry_adapter.epp.profile import EPP_PROFILE
 from app import create_app
 from tests.helper.fake_epp_client import FakeEppClient
 

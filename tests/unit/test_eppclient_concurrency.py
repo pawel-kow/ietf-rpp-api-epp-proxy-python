@@ -2,7 +2,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from eppclient.eppclient import EPPClient
+from registry_adapter.epp.session.epp_client import EPPClient
 
 REPLY = (
     '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><response>'

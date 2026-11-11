@@ -5,9 +5,9 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
 
 ## Tasks
 
-- [~] T0 Move tool (scratchpad): moves modules and rewrites every import in `src/` and `tests/` as an absolute import
+- [x] T0 Move tool (scratchpad): moves modules and rewrites every import in `src/` and `tests/` as an absolute import
       from the defining module; star imports become the names used
-- [ ] T1 Phase 2: `eppclient`, `epp_to_model_mapper`, `helpers` → `registry_adapter/{epp,common}`; `ns_map` passed in;
+- [~] T1 Phase 2: `eppclient`, `epp_to_model_mapper`, `helpers` → `registry_adapter/{epp,common}`; `ns_map` passed in;
       `commands/not_used/` deleted; contracts renamed
 - [ ] T2 Phase 3: `models`, `registry`, `flows` → `core/` per object; explicit imports; `BackendProfile` and the
       refusals → `core/capabilities`
@@ -38,3 +38,9 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       `<object>_xml.py` (render, parse), `<object>_commands.py` (one operation: render → send → parse). Shared reply
       parsing in `epp/commands/shared/`.
 - D5 `ns_map` goes into an `EppCodec` built by the composition root, held by `EppBackend` and passed to the commands.
+- D6 `ns_map` is passed as a plain dict: `EppBackend(epp_client, ns_map)` → gateways → `epp_*` commands → `*_xml` →
+      `epp_to_str(epp, ns_map)`, keyword-only where added. The composition root passes `config.rpp_epp_ns_map`; the
+      tests pass `tests/helper/epp_ns_map.EPP_NS_MAP`, the same map.
+- D7 `registry_adapter/common` must not know its protocol: `EPP_READ_TIMEOUT` → `READ_TIMEOUT`, the docstrings no
+      longer name EPP, and the warning that names `rpp_epp_tls_insecure_skip_verify` moves to the composition root.
+- D8 Each phase's full `pytest -n 8` runs on a worktree of its commit, in the background, while the next phase goes on.

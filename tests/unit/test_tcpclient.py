@@ -2,7 +2,7 @@ import struct
 
 import pytest
 
-from eppclient.tcpclient import ConnectionException, TCPClient
+from registry_adapter.common.transport.tcp_client import ConnectionException, TCPClient
 
 
 class FakeSocket:

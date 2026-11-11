@@ -1,4 +1,4 @@
-from eppclient.epp_profile import EPP_PROFILE
+from registry_adapter.epp.profile import EPP_PROFILE
 import jsonschema
 import pytest
 from connexion import ProblemException

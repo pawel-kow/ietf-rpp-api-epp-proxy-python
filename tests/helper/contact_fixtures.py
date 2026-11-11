@@ -1,5 +1,5 @@
 from controller.helper.rpp_response import raise_registry_error
-from eppclient import epp_contact_refusal
+from registry_adapter.epp import contact_refusal
 from models import (
     Address, AuthInfo, Contact, ContactReplacement, ContactType, ContactUpdate, LocalizedPostalInfo, contact_difference,
     contact_localization,
@@ -43,7 +43,7 @@ def localized(**members) -> LocalizedPostalInfo:
 def derived_update(current: Contact, wanted: ContactReplacement) -> ContactUpdate:
     """The EPP update the EPP adapter derives from a full update, without the registry; a refusal as the handler renders it."""
     wanted = contact_localization.as_stored(wanted, current)
-    refused = epp_contact_refusal.refuse(current, wanted)
+    refused = contact_refusal.refuse(current, wanted)
     if refused:
         raise_registry_error(refused)
     return contact_difference.difference(current, wanted)

@@ -1,8 +1,9 @@
 import pytest
 from lxml import etree
 
-from epp_to_model_mapper import parse_domain_transfer_response, transfer_domain_xml
+from registry_adapter.epp.commands.domain.domain_xml import parse_domain_transfer_response, transfer_domain_xml
 from models import AuthInfo, DomainTransfer, DomainTransferProcess, ResultCode, TransferOperation
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
 DOMAIN = "urn:ietf:params:xml:ns:domain-1.0"
@@ -10,7 +11,7 @@ NS = {"epp": EPP, "domain": DOMAIN}
 
 
 def command(transfer):
-    return etree.fromstring(transfer_domain_xml(transfer, client_request_id="cl-1").encode())
+    return etree.fromstring(transfer_domain_xml(transfer, client_request_id="cl-1", ns_map=EPP_NS_MAP).encode())
 
 
 def only(root, path):

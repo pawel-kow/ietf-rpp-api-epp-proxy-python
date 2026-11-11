@@ -4,7 +4,7 @@ import pytest
 from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
-from eppclient.epp_profile import EPP_PROFILE
+from registry_adapter.epp.profile import EPP_PROFILE
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 from models import ResultCode
 from rpp_to_model_mapper import (

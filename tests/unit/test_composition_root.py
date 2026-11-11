@@ -2,8 +2,8 @@ import ssl
 from types import SimpleNamespace
 
 from config import Config, config
-from eppclient.epp_backend import EppBackend
-from eppclient.tcpclient import TCPClient
+from registry_adapter.epp.gateways.epp_backend import EppBackend
+from registry_adapter.common.transport.tcp_client import TCPClient
 import run
 from run import new_backend, new_epp_client, tls_context, tls_context_from_config
 
@@ -46,6 +46,14 @@ def test_tls_context_honours_the_opt_in():
     settings = SimpleNamespace(rpp_epp_use_tls=True, rpp_epp_tls_insecure_skip_verify=True)
 
     assert tls_context_from_config(settings).verify_mode == ssl.CERT_NONE
+
+
+def test_skip_verify_warns(caplog):
+    settings = SimpleNamespace(rpp_epp_use_tls=True, rpp_epp_tls_insecure_skip_verify=True)
+
+    tls_context_from_config(settings)
+
+    assert "rpp_epp_tls_insecure_skip_verify" in caplog.text
 
 
 def test_default_factory_passes_the_tls_context_to_the_transport():

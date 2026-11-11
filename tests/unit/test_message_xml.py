@@ -3,8 +3,11 @@ import pytest
 from tests.helper.captured_log import capture_log
 from lxml import etree
 
-from epp_to_model_mapper.messages import parse_ack_response, parse_poll_response, poll_ack_xml, poll_request_xml
+from registry_adapter.epp.commands.message.message_xml import (
+    parse_ack_response, parse_poll_response, poll_ack_xml, poll_request_xml,
+)
 from models import ErrorResponse, PendingActionEvent, ResultCode, TransferEvent
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
 NS = {"epp": EPP}
@@ -18,14 +21,14 @@ def command(xml):
 
 
 def test_poll_request_is_poll_req():
-    root = command(poll_request_xml(client_request_id="msg-cl-1"))
+    root = command(poll_request_xml(client_request_id="msg-cl-1", ns_map=EPP_NS_MAP))
     assert root.xpath("//epp:poll/@op", namespaces=NS) == ["req"]
     assert root.xpath("//epp:poll/@msgID", namespaces=NS) == []
     assert root.xpath("//epp:clTRID/text()", namespaces=NS) == ["msg-cl-1"]
 
 
 def test_poll_ack_carries_the_message_id_escaped():
-    root = command(poll_ack_xml('12"<&3', client_request_id="msg-cl-1"))
+    root = command(poll_ack_xml('12"<&3', client_request_id="msg-cl-1", ns_map=EPP_NS_MAP))
     assert root.xpath("//epp:poll/@op", namespaces=NS) == ["ack"]
     assert root.xpath("//epp:poll/@msgID", namespaces=NS) == ['12"<&3']
 
@@ -404,7 +407,7 @@ def test_text_after_a_comment_is_kept():
 
 
 def test_text_after_a_comment_is_kept_on_every_operation():
-    from epp_to_model_mapper import parse_domain_check_response_single
+    from registry_adapter.epp.commands.domain.domain_xml import parse_domain_check_response_single
     xml = reply(1000, (
         f'<resData><domain:chkData xmlns:domain="{DOMAIN}"><domain:cd><domain:name avail="1">exa<!-- c -->mple.test'
         '</domain:name></domain:cd></domain:chkData></resData>'
@@ -413,7 +416,7 @@ def test_text_after_a_comment_is_kept_on_every_operation():
 
 
 def test_a_bare_doctype_is_refused_on_the_typed_path():
-    from epp_to_model_mapper.commands.helper import str_to_epp
+    from registry_adapter.epp.xml.codec import str_to_epp
     with pytest.raises(ValueError):
         str_to_epp('<!DOCTYPE epp>' + reply(1300))
 

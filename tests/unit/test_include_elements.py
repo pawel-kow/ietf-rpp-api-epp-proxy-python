@@ -1,5 +1,5 @@
 """Visibility and `includeElements` (data-objects §2.4, §2.7.3, core §16.1.7), see spec-issues.md."""
-from eppclient.epp_profile import EPP_PROFILE
+from registry_adapter.epp.profile import EPP_PROFILE
 import pytest
 
 from models import AuthInfo

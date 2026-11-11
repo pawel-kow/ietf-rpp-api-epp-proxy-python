@@ -1,0 +1,49 @@
+from models import ContactCreateResponse, ContactReplacement, ErrorResponse, contact_difference, contact_localization
+from registry import ReplaceOutcome, ReplacementSteps, derived_update
+from registry_adapter.epp import contact_refusal
+from registry_adapter.epp.commands.contact.contact_commands import (
+    epp_contacts_Check, epp_contacts_Create, epp_contacts_Delete, epp_contacts_Info, epp_contacts_Transfer,
+    epp_contacts_Update,
+)
+from registry_adapter.epp.session.epp_client import EPPClient
+
+
+class EppContactGateway:
+    """The contact commands over EPP. EPP has no full update, so `replace` is derived from `<update>`, and refuses
+    what RFC 5733 cannot clear."""
+
+    def __init__(self, epp_client: EPPClient, ns_map: dict[str, str]):
+        self._epp_client = epp_client
+        self._ns_map = ns_map
+        self._steps = ReplacementSteps(
+            read=self.info,
+            object_of=lambda info: info.contact,
+            prepare=contact_localization.as_stored,
+            refuse=contact_refusal.refuse,
+            difference=contact_difference.difference,
+            changes_nothing=contact_difference.changes_nothing,
+            update=self.update,
+        )
+
+    def check(self, id, client_transaction_id=None):
+        return epp_contacts_Check(self._epp_client, id, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+
+    def info(self, id, client_transaction_id=None):
+        return epp_contacts_Info(self._epp_client, id, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+
+    def create(self, contact, client_transaction_id=None):
+        return epp_contacts_Create(self._epp_client, contact, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+
+    def update(self, update, client_transaction_id=None):
+        return epp_contacts_Update(self._epp_client, update, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+
+    def replace(
+        self, wanted: ContactReplacement, current: ContactCreateResponse | None = None, client_transaction_id=None,
+    ) -> ReplaceOutcome | ErrorResponse:
+        return derived_update.replace(self._steps, wanted.id, wanted, client_transaction_id, current)
+
+    def delete(self, id, client_transaction_id=None):
+        return epp_contacts_Delete(self._epp_client, id, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+
+    def transfer(self, transfer, client_transaction_id=None):
+        return epp_contacts_Transfer(self._epp_client, transfer, client_transaction_id=client_transaction_id, ns_map=self._ns_map)

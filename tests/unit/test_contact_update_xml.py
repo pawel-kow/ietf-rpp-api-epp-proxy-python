@@ -1,14 +1,17 @@
-from epp_to_model_mapper import parse_contact_response, parse_contact_update_response, update_contact_xml
+from registry_adapter.epp.commands.contact.contact_xml import (
+    parse_contact_response, parse_contact_update_response, update_contact_xml,
+)
 from models import (
     Address, AuthInfo, ContactUpdate, ContactUpdateChange, ContactUpdateChanges, PostalInfoChange,
 )
 from tests.unit.test_contact_xml import info_reply, postal
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 ADDRESS = Address(street=["1 Main"], city="Berlin", stateProvince="BE", postalCode="10115", country="DE")
 
 
 def xml(**members):
-    return update_contact_xml(ContactUpdate(id="JD-1", **members), client_request_id="cl-1")
+    return update_contact_xml(ContactUpdate(id="JD-1", **members), client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
 
 def test_status_is_added_and_removed_with_its_reason():

@@ -1,5 +1,8 @@
 from models import Address, Contact, ContactType, LocalizedPostalInfo
-from epp_to_model_mapper import contact_check_xml, create_contact_xml, parse_contact_check_response, parse_contact_response
+from registry_adapter.epp.commands.contact.contact_xml import (
+    contact_check_xml, create_contact_xml, parse_contact_check_response, parse_contact_response,
+)
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 CONTACT_NS = 'xmlns:contact="urn:ietf:params:xml:ns:contact-1.0"'
 
@@ -32,7 +35,7 @@ def contact(**extra):
 
 
 def test_create_sends_only_the_int_form_without_a_localization():
-    xml = create_contact_xml(contact(), client_request_id="cl-1")
+    xml = create_contact_xml(contact(), client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
     assert 'type="int"' in xml and 'type="loc"' not in xml
 
@@ -40,7 +43,7 @@ def test_create_sends_only_the_int_form_without_a_localization():
 def test_create_sends_the_loc_form_after_the_int_form():
     xml = create_contact_xml(contact(localizedPostalInfo=LocalizedPostalInfo(
         name="Jörg", address=Address(street=None, city="München", country="DE"),
-    )), client_request_id="cl-1")
+    )), client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
     assert xml.index('type="int"') < xml.index('type="loc"')
     loc = xml[xml.index('type="loc"'):]
@@ -51,7 +54,7 @@ def test_create_sends_the_org_in_the_loc_form():
     xml = create_contact_xml(Contact(
         id="JD-1", type=ContactType.ORG, name="Joe", organisationName="Example Inc.",
         localizedPostalInfo=LocalizedPostalInfo(name="Joe", organisationName="Müller GmbH"),
-    ), client_request_id="cl-1")
+    ), client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
     assert "Müller GmbH" in xml[xml.index('type="loc"'):]
 
@@ -110,7 +113,7 @@ def check_reply(avail, reason=""):
 
 
 def test_check_xml():
-    xml = contact_check_xml("jd-1", client_request_id="cl-1")
+    xml = contact_check_xml("jd-1", client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
     assert "<contact:check" in xml
     assert "<contact:id>JD-1</contact:id>" in xml

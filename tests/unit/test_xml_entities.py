@@ -2,14 +2,14 @@ import base64
 
 import pytest
 
-from eppclient.epp_profile import EPP_PROFILE
+from registry_adapter.epp.profile import EPP_PROFILE
 from app import create_app
 from controller.session_authenticator import SessionAuthenticator
 from tests.helper.epp_backends import epp_backends
-from epp_to_model_mapper import get_epp_error_response
-from epp_to_model_mapper.commands.helper import str_to_epp
-from epp_to_model_mapper.messages import parse_poll_response
-from helpers import decode_xml
+from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
+from registry_adapter.epp.xml.codec import str_to_epp
+from registry_adapter.epp.commands.message.message_xml import parse_poll_response
+from registry_adapter.common.xmlsafe.xml_helper import decode_xml
 from tests.helper.fake_epp_client import FakeEppClient
 
 SECRET = "SECRET-FILE-CONTENT-8f3a"

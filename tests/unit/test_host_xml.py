@@ -1,11 +1,12 @@
 import pytest
 
 from models import Host, HostUpdate, HostUpdateChanges
-from epp_to_model_mapper import (
+from registry_adapter.epp.commands.host.host_xml import (
     create_host_update_xml, create_host_xml, delete_host_xml, host_check_xml, info_host_xml,
     parse_host_check_response, parse_host_create_response, parse_host_delete_response, parse_host_response,
     parse_host_update_response,
 )
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 HOST_NS = 'xmlns:host="urn:ietf:params:xml:ns:host-1.0"'
 
@@ -19,7 +20,7 @@ def reply(res_data=""):
 
 
 def test_check():
-    xml = host_check_xml("ns1.example.example", client_request_id="cl-1")
+    xml = host_check_xml("ns1.example.example", client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
     assert "<host:check" in xml
     assert "<host:name>ns1.example.example</host:name>" in xml
@@ -27,22 +28,22 @@ def test_check():
 
 
 def test_info():
-    assert "<host:info" in info_host_xml("ns1.example.example")
+    assert "<host:info" in info_host_xml("ns1.example.example", ns_map=EPP_NS_MAP)
 
 
 def test_delete():
-    assert "<host:delete" in delete_host_xml("ns1.example.example")
+    assert "<host:delete" in delete_host_xml("ns1.example.example", ns_map=EPP_NS_MAP)
 
 
 def test_create_without_addresses():
-    xml = create_host_xml(Host(name="ns1.example.example"))
+    xml = create_host_xml(Host(name="ns1.example.example"), ns_map=EPP_NS_MAP)
 
     assert "<host:create" in xml
     assert "host:addr" not in xml
 
 
 def test_create_with_addresses():
-    xml = create_host_xml(Host(name="ns1.example.example", ipv4=["192.0.2.1"], ipv6=["2001:db8::1"]))
+    xml = create_host_xml(Host(name="ns1.example.example", ipv4=["192.0.2.1"], ipv6=["2001:db8::1"]), ns_map=EPP_NS_MAP)
 
     assert '<host:addr ip="v4">192.0.2.1</host:addr>' in xml
     assert '<host:addr ip="v6">2001:db8::1</host:addr>' in xml
@@ -53,7 +54,7 @@ def test_update_add_and_remove():
         name="ns1.example.example",
         add=HostUpdateChanges(ipv4=["192.0.2.2"], status=["clientUpdateProhibited"]),
         remove=HostUpdateChanges(ipv6=["2001:db8::1"], status=["clientDeleteProhibited"]),
-    ))
+    ), ns_map=EPP_NS_MAP)
 
     add = xml[xml.index("<host:add>"):xml.index("</host:add>")]
     rem = xml[xml.index("<host:rem>"):xml.index("</host:rem>")]
@@ -68,13 +69,13 @@ def test_update_sends_the_status_reason():
     xml = create_host_update_xml(HostUpdate(
         name="ns1.example.example",
         add=HostUpdateChanges(status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "x & y"}),
-    ))
+    ), ns_map=EPP_NS_MAP)
 
     assert ">x &amp; y</host:status>" in xml
 
 
 def test_update_rename():
-    xml = create_host_update_xml(HostUpdate(name="ns1.example.example", new_name="ns2.example.example"))
+    xml = create_host_update_xml(HostUpdate(name="ns1.example.example", new_name="ns2.example.example"), ns_map=EPP_NS_MAP)
 
     assert "<host:chg>" in xml
     assert "<host:name>ns2.example.example</host:name>" in xml

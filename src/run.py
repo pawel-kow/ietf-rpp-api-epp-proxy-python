@@ -1,17 +1,24 @@
+import logging
+
 from app import create_app
 from config import config
 from controller.session_authenticator import SessionAuthenticator
-from eppclient.epp_backend import EppBackend
-from eppclient.epp_profile import EPP_PROFILE
-from eppclient.eppclient import EPPClient
-from eppclient.tcpclient import TCPClient
-from eppclient.tls import new_tls_context
+from registry_adapter.epp.gateways.epp_backend import EppBackend
+from registry_adapter.epp.profile import EPP_PROFILE
+from registry_adapter.epp.session.epp_client import EPPClient
+from registry_adapter.common.transport.tcp_client import TCPClient
+from registry_adapter.common.transport.tls import new_tls_context
 from rpp_to_model_mapper import IdnTables
+
+
+logger = logging.getLogger(__name__)
 
 
 def tls_context_from_config(settings):
     if not settings.rpp_epp_use_tls:
         return None
+    if settings.rpp_epp_tls_insecure_skip_verify:
+        logger.warning("rpp_epp_tls_insecure_skip_verify is on: the EPP server's certificate is not verified")
     return new_tls_context(settings.rpp_epp_tls_insecure_skip_verify)
 
 
@@ -23,7 +30,7 @@ def new_epp_client(username, password):
 
 
 def new_backend(username, password):
-    return EppBackend(new_epp_client(username, password))
+    return EppBackend(new_epp_client(username, password), config.rpp_epp_ns_map)
 
 
 app = create_app(

@@ -5,8 +5,8 @@ import threading
 
 import pytest
 
-from eppclient.eppclient import EPPClient
-from eppclient.tcpclient import ConnectionException, TCPClient
+from registry_adapter.epp.session.epp_client import EPPClient
+from registry_adapter.common.transport.tcp_client import ConnectionException, TCPClient
 
 GREETING = (
     '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><greeting><svID>s</svID><svcMenu><version>1.0</version>'

@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from eppclient.tcpclient import TCPClient
-from eppclient.tls import new_tls_context
+from registry_adapter.common.transport.tcp_client import TCPClient
+from registry_adapter.common.transport.tls import new_tls_context
 from tests.helper.loopback_epp_server import LoopbackEppServer
 
 
@@ -42,12 +42,6 @@ def test_skip_verify_turns_off_certificate_and_hostname_check():
 
     assert context.verify_mode == ssl.CERT_NONE
     assert context.check_hostname is False
-
-
-def test_skip_verify_warns(caplog):
-    new_tls_context(insecure_skip_verify=True)
-
-    assert "rpp_epp_tls_insecure_skip_verify" in caplog.text
 
 
 def test_verification_on_does_not_warn(caplog):

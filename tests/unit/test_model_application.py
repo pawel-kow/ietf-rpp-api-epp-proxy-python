@@ -1,6 +1,6 @@
 """`apply` turns a partial update into the full one it amounts to, `difference` the other way round. For every update
 the direct mappers produce, the round trip gives the update back, up to order (#108)."""
-from eppclient.epp_profile import EPP_PROFILE
+from registry_adapter.epp.profile import EPP_PROFILE
 import pytest
 
 from models import (

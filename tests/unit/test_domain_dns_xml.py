@@ -1,5 +1,6 @@
-from epp_to_model_mapper import create_domain_xml, parse_domain_response
+from registry_adapter.epp.commands.domain.domain_xml import create_domain_xml, parse_domain_response
 from models import DnsSec, Domain, DsData, HostAttr, KeyData, NS
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'
 SEC_DNS_NS = 'xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1"'
@@ -19,7 +20,7 @@ def info(members="", extension=""):
 
 
 def create_xml(**members):
-    return create_domain_xml(Domain(name="foo.example", **members), client_request_id="cl-1")
+    return create_domain_xml(Domain(name="foo.example", **members), client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
 
 def test_create_has_no_extension_without_dnssec():

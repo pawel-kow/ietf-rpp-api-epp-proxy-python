@@ -4,11 +4,12 @@ import pytest
 from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
-from eppclient.epp_backend import EppBackend
-from eppclient.epp_profile import EPP_PROFILE
+from registry_adapter.epp.gateways.epp_backend import EppBackend
+from registry_adapter.epp.profile import EPP_PROFILE
 from models import ContactReference
 from rpp_to_model_mapper import NotSupportedByBackend, domain_patch, domain_replacement, domains
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 NAME = "foo.example"
 OTHER = replace(
@@ -38,7 +39,7 @@ def test_epp_holds_the_contact_roles_of_rfc_5731():
 
 
 def test_the_epp_backend_has_the_epp_profile():
-    assert EppBackend(None).profile is EPP_PROFILE
+    assert EppBackend(None, EPP_NS_MAP).profile is EPP_PROFILE
 
 
 def test_a_contact_label_of_the_backend_is_accepted():
