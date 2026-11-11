@@ -2,7 +2,8 @@ import base64
 
 
 from app import create_app
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from controller.session_authenticator import SessionAuthenticator
+from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 OBJECT_DOES_NOT_EXIST = (
@@ -26,7 +27,7 @@ def client_for(**fake_options):
         created.append(client)
         return client
 
-    return create_app(EppSessionAuthenticator(factory)).test_client(), created
+    return create_app(SessionAuthenticator(epp_backends(factory))).test_client(), created
 
 
 def test_request_is_served_by_the_injected_client():

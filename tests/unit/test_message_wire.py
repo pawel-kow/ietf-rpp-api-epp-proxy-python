@@ -9,7 +9,8 @@ from controller.helper.rpp_response import problem_headers
 from controller.messages import _require_valid_id
 from models import ResultCode
 from tests.helper.captured_log import capture_log
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from controller.session_authenticator import SessionAuthenticator
+from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.unit.test_message_xml import DOMAIN, contact_trn, domain_trn, msg_q, pan, reply
 
@@ -32,7 +33,7 @@ def factory(username, password):
 
 @pytest.fixture(scope="module")
 def http():
-    return create_app(EppSessionAuthenticator(factory)).test_client()
+    return create_app(SessionAuthenticator(epp_backends(factory))).test_client()
 
 
 def answer(http, method, url, *replies, **kwargs):

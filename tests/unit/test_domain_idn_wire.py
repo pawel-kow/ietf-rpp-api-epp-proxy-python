@@ -1,7 +1,8 @@
 import pytest
 
 from app import create_app
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from controller.session_authenticator import SessionAuthenticator
+from tests.helper.epp_backends import epp_backends
 from eppclient.eppclient import IDN_EXTENSION, SEC_DNS_EXTENSION
 from rpp_to_model_mapper import IdnTables
 from tests.helper.fake_epp_client import FakeEppClient
@@ -34,7 +35,7 @@ def setup(*replies, extensions=IDN_SERVER, idn_tables=TABLES):
         clients.append(client)
         return client
 
-    return create_app(EppSessionAuthenticator(factory), idn_tables=idn_tables).test_client(), clients
+    return create_app(SessionAuthenticator(epp_backends(factory)), idn_tables=idn_tables).test_client(), clients
 
 
 def sent(clients):

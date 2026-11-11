@@ -7,7 +7,8 @@ import pytest
 import uvicorn
 
 from app import create_app
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from controller.session_authenticator import SessionAuthenticator
+from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
@@ -36,7 +37,7 @@ def setup():
         clients.append(FakeEppClient(username, password, reply=EPP_OK))
         return clients[-1]
 
-    return create_app(EppSessionAuthenticator(factory)), clients
+    return create_app(SessionAuthenticator(epp_backends(factory))), clients
 
 
 @pytest.fixture(scope="module")

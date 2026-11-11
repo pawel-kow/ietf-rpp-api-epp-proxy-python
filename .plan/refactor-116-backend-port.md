@@ -6,18 +6,18 @@ Status: phase 1 of `docs/rri/refactoring.md` (on `feature/denicrri`) §6. The ma
 
 ## Tasks
 
-- [~] T1 `registry/` port: `RegistryBackend`, `DomainGateway`, `ContactGateway`, `HostGateway`, `MessageGateway`
+- [x] T1 `registry/` port: `RegistryBackend`, `DomainGateway`, `ContactGateway`, `HostGateway`, `MessageGateway`
       (`typing.Protocol`, one per file), imports `models` only
-- [ ] T2 Move `derived_update.py`, `ReplaceOutcome`, `ReplacementSteps` from `flows/` to `registry/`, without `EPPClient`
-- [ ] T3 EPP adapter in `eppclient/`: `EppBackend` and one gateway per object; the EPP replacement steps and the EPP
+- [x] T2 Move `derived_update.py`, `ReplaceOutcome`, `ReplacementSteps` from `flows/` to `registry/`, without `EPPClient`
+- [x] T3 EPP adapter in `eppclient/`: `EppBackend` and one gateway per object; the EPP replacement steps and the EPP
       refusals (`epp_refusal.py`, `epp_contact_refusal.py`) move there from `flows/`
-- [ ] T4 Flows take a `RegistryBackend`; `require_sponsor` compares with `backend.sponsor_id`
-- [ ] T5 Controllers call `get_backend()`; `raise_epp_error` → `raise_registry_error`; `TransferHandlers` takes the
+- [x] T4 Flows take a `RegistryBackend`; `require_sponsor` compares with `backend.sponsor_id`
+- [x] T5 Controllers call `get_backend()`; `raise_epp_error` → `raise_registry_error`; `TransferHandlers` takes the
       gateway of its object
-- [ ] T6 `EppSessionAuthenticator` → `SessionAuthenticator`, token key `backend`; `run.py` builds `EppBackend`
-- [ ] T7 Tests follow the renames; unit tests of `EppBackend` and of `derived_update` without EPP
-- [ ] T8 Docs: `architecture.project.md` (lifecycle, composition), `testing.project.md` (test doubles)
-- [ ] T9 Full `pytest -n 8` green; draft PR
+- [x] T6 `EppSessionAuthenticator` → `SessionAuthenticator`, token key `backend`; `run.py` builds `EppBackend`
+- [x] T7 Tests follow the renames; unit tests of `EppBackend` and of `derived_update` without EPP
+- [x] T8 Docs: `architecture.project.md` (lifecycle, composition), `testing.project.md` (test doubles)
+- [~] T9 Full `pytest -n 8` green; draft PR
 
 ## Findings (evidence)
 
@@ -41,6 +41,10 @@ Status: phase 1 of `docs/rri/refactoring.md` (on `feature/denicrri`) §6. The ma
   `connect`, `connected`, `verify_credentials` and `disconnect`. `EppBackend` delegates them to its `EPPClient`.
 - D5 `ReplaceOutcome.update` stays the delta that was sent (finding 5), the EPP adapter fills it. It is `None` when
   nothing changed.
+
+## Results
+
+- `pytest -n 8`: 2110 passed, 5 skipped (8 min), unit and EPP integration (`epptest`).
 
 ## Open questions
 

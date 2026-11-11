@@ -90,8 +90,11 @@ The backend refuses a renew period under one year (`2306`), so month periods are
 Unit tests in `tests/unit/` inject test doubles through constructors:
 
 - `EPPClient(transport, username, password)` takes a fake transport.
-- `EppSessionAuthenticator(client_factory)` takes a factory returning a fake client,
-  such as [FakeEppClient](../../tests/helper/fake_epp_client.py).
+- `EppBackend(epp_client)` takes a fake client, such as
+  [FakeEppClient](../../tests/helper/fake_epp_client.py), and a flow takes that backend.
+- `SessionAuthenticator(backend_factory)` takes a factory returning a backend.
+  [epp_backends](../../tests/helper/epp_backends.py) turns a factory of fake EPP clients into one, so the test still
+  sees the clients.
 - `create_app(authenticator)` builds a full app around that authenticator, so a
   handler can be tested through `test_client()` without a registry. See
   [test_app_injection.py](../../tests/unit/test_app_injection.py).

@@ -1,6 +1,7 @@
 from app import create_app
 from config import config
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from controller.session_authenticator import SessionAuthenticator
+from eppclient.epp_backend import EppBackend
 from eppclient.eppclient import EPPClient
 from eppclient.tcpclient import TCPClient
 from eppclient.tls import new_tls_context
@@ -20,4 +21,8 @@ def new_epp_client(username, password):
     return EPPClient(TCPClient(config.rpp_epp_host, config.rpp_epp_port, tls_context), username, password)
 
 
-app = create_app(EppSessionAuthenticator(new_epp_client), config, IdnTables(config.rpp_idn_lgr_tables))
+def new_backend(username, password):
+    return EppBackend(new_epp_client(username, password))
+
+
+app = create_app(SessionAuthenticator(new_backend), config, IdnTables(config.rpp_idn_lgr_tables))

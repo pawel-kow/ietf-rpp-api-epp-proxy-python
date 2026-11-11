@@ -2,9 +2,10 @@ import ssl
 from types import SimpleNamespace
 
 from config import Config, config
+from eppclient.epp_backend import EppBackend
 from eppclient.tcpclient import TCPClient
 import run
-from run import new_epp_client, tls_context, tls_context_from_config
+from run import new_backend, new_epp_client, tls_context, tls_context_from_config
 
 
 def test_default_factory_connects_to_the_configured_backend():
@@ -19,6 +20,14 @@ def test_default_factory_uses_the_request_credentials():
     client = new_epp_client("user", "pw")
 
     assert client.verify_credentials("user", "pw")
+
+
+def test_the_backend_is_epp_over_the_default_client():
+    backend = new_backend("user", "pw")
+
+    assert isinstance(backend, EppBackend)
+    assert backend.epp_client.client.server_address == config.rpp_epp_host
+    assert backend.sponsor_id == "user"
 
 
 def test_no_tls_context_when_tls_is_off():

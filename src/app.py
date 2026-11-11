@@ -49,7 +49,7 @@ def create_app(authenticator, discovery_settings=None, idn_tables=None):
 
     Args:
         authenticator: Provides authenticate(username, password), which returns the
-            token info holding the request's EPP client, or None to reject the request.
+            token info holding the request's registry backend, or None to reject the request.
         discovery_settings: Has rpp_base_url, rpp_tlds, rpp_environment_name and
             rpp_environment_status, which the discovery document states.
         idn_tables: The IdnTables that map a domain's `lgr` to the IDN table of EPP. Without them no `lgr` is
