@@ -29,6 +29,10 @@ from .contact_transfer_response import ContactTransferResponse
 from .domain_renew import DomainRenew
 from .domain_renew_process import DomainRenewProcess
 from .domain_renew_response import DomainRenewResponse
+from .domain_restore import DomainRestore
+from .domain_restore_process import DomainRestoreProcess
+from .domain_restore_response import DomainRestoreResponse
+from .restore_report import RestoreReport
 from .domain_transfer import DomainTransfer
 from .domain_transfer_process import DomainTransferProcess
 from .domain_transfer_response import DomainTransferResponse

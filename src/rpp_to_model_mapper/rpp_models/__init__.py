@@ -17,6 +17,8 @@ from .rpp_domain_create_process import RPPDomainCreateProcess
 from .rpp_domain_name_availability import RPPDomainNameAvailability
 from .rpp_domain_transfer_request import RPPDomainTransferRequest
 from .rpp_domain_renew_process import RPPDomainRenewProcess
+from .rpp_restore_process import RPPRestoreProcess
+from .rpp_restore_report import RPPRestoreReport
 from .rpp_domain_transfer_process import RPPDomainTransferProcess
 from .rpp_domain_transfer_reject import RPPDomainTransferReject
 from .rpp_host import RPPHost

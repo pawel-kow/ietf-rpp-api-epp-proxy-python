@@ -1,10 +1,11 @@
 from dataclasses import replace
 from typing import Callable
 
-from eppclient.epp_domains import epp_domains_Info, epp_domains_Renew, epp_domains_Update
+from eppclient.epp_domains import epp_domains_Info, epp_domains_Renew, epp_domains_RestoreInfo, epp_domains_Update
 from eppclient.eppclient import EPPClient
 from models import (
-    Domain, DomainRenew, DomainRenewResponse, DomainReplacement, DomainUpdate, ErrorResponse, ResultCode, domain_difference,
+    Domain, DomainRenew, DomainRenewResponse, DomainReplacement, DomainRestoreProcess, DomainRestoreResponse, DomainUpdate,
+    ErrorResponse, ResultCode, domain_difference,
 )
 from . import derived_update
 from .domain_mutation_result import DomainMutationResult
@@ -91,3 +92,27 @@ def renew_domain(epp_client: EPPClient, renew: DomainRenew, client_transaction_i
             )
         renew = replace(renew, curExpDate=current.domain.exDate[:10])
     return epp_domains_Renew(epp_client, renew, client_transaction_id=client_transaction_id)
+
+
+def read_domain_restore(epp_client: EPPClient, domain_name: str, client_transaction_id) -> DomainRestoreResponse | ErrorResponse:
+    """The restore of a domain, from its RGP statuses. EPP keeps no restore process and cannot tell a restored domain
+    from one never deleted, so a domain without a restore under way has none (spec-issues.md, "Restore process")."""
+    info = epp_domains_RestoreInfo(epp_client, domain_name, client_transaction_id)
+    if isinstance(info, ErrorResponse):
+        return info
+    restore = DomainRestoreProcess(rgpStatus=info.domain.rgpStatus)
+    if not restore.under_way():
+        return ErrorResponse(
+            code=ResultCode.OBJECT_DOES_NOT_EXIST,
+            msg="The domain has no restore under way",
+            server_transaction_id=info.server_transaction_id,
+            client_transaction_id=info.client_transaction_id,
+        )
+    return DomainRestoreResponse(
+        restore=restore,
+        code=info.code,
+        msg=info.msg,
+        server_transaction_id=info.server_transaction_id,
+        client_transaction_id=info.client_transaction_id,
+    )
+

@@ -1,0 +1,268 @@
+{
+  "test_id": "test12-restore_cycle_with_patch",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "rs12-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "delay_seconds": 125,
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/rs12-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rs12-{random_name}.example/processes/restoreProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02303"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/domainNames/rs12-{random_name}.example/processes/restoreProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "restoreProcess",
+          "restoreReport": {
+            "@type": "restoreReport",
+            "preData": "Pre-delete registration data.",
+            "postData": "Post-restore registration data.",
+            "deleteTime": "2026-01-10T12:00:00.0Z",
+            "restoreTime": "2026-01-20T15:30:00.0Z",
+            "restoreReason": "Domain deleted in error by client operator.",
+            "statements": [
+              "The information in this report is true to the best of my knowledge.",
+              "I have a valid reason for restoring this domain name."
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02304"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rs12-{random_name}.example/processes/restoreProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "restoreProcess"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "restoreProcess",
+          "restoreStatus": "pendingRestore"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rs12-{random_name}.example/processes/restoreProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "restoreProcess"
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02304"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rs12-{random_name}.example/processes/restoreProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "restoreProcess",
+          "restoreStatus": "pendingRestore"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/rs12-{random_name}.example/processes/restoreProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/restoreReport",
+            "value": {
+              "@type": "restoreReport",
+              "preData": "Pre-delete registration data.",
+              "postData": "Post-restore registration data.",
+              "deleteTime": "2026-01-10T12:00:00.0Z",
+              "restoreTime": "2026-01-20T15:30:00.0Z",
+              "restoreReason": "Domain deleted in error by client operator.",
+              "statements": [
+                "The information in this report is true to the best of my knowledge.",
+                "I have a valid reason for restoring this domain name."
+              ]
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "restoreProcess",
+          "restoreStatus": "restored"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rs12-{random_name}.example/processes/restoreProcesses/latest",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02303"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rs12-{random_name}.example",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "domainName",
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "ok"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

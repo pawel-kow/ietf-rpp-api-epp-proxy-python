@@ -151,3 +151,18 @@ def test_upper_placeholder_is_its_text_in_upper_case():
 
 def test_text_without_upper_placeholder_is_unchanged():
     assert replace_upper_placeholders("ns1.{random_name}.net") == "ns1.{random_name}.net"
+
+
+def test_delay_seconds_waits_before_the_request():
+    waits = []
+    client = FakeClient(FakeResponse(201, {"name": "a"}, "01000"), FakeResponse(201, {"name": "a"}, "01000"))
+    steps = [{"request": REQUEST, "response": CREATED}, {"delay_seconds": 130, "request": REQUEST, "response": CREATED}]
+    endpoint_test(client, {"test_id": "t", "steps": steps}, sleep=lambda seconds: waits.append((seconds, len(client.responses))))
+    assert waits == [(130, 1)]
+
+
+def test_without_delay_seconds_nothing_waits():
+    waits = []
+    endpoint_test(FakeClient(FakeResponse(201, {"name": "a"}, "01000")),
+                  {"test_id": "t", "steps": [{"request": REQUEST, "response": CREATED}]}, sleep=waits.append)
+    assert waits == []

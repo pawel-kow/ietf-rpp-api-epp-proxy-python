@@ -76,6 +76,12 @@ that does not match the name. Its IDN tables and the session table come from mig
 only when the database is first created: a database from before them answers `2306 Unknown idn:table` and needs them
 applied by hand.
 
+Its RFC 3915 periods are minutes (pawel-kow/EPP-server-docker#5): a domain deleted within 2 minutes of its create is
+purged at once, a later delete puts it in `redemptionPeriod`, and a request then holds it in `pendingRestore` for 3
+minutes. So a restore case creates its domain and deletes it after `delay_seconds` of 125, see `domain_restore/test12`
+and the draft examples. The backend sends no `rgp:upData`. A read of `pendingDelete` would need the 5-minute
+redemption period to pass, so it is tested only in unit tests.
+
 The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
 `expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
 
@@ -119,6 +125,8 @@ update → verify) run against a Flask test client.
 - A step's `capture` maps a name to a dotted field of its response body, where a number picks a list element (`0.id`). Later steps write `{capture:name}`
   in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
   a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
+- A step's `delay_seconds` waits that long before its request, for a registry period that must pass first. Each
+  wait adds to the run, so a case waits at most once, see `domain_restore/`.
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.

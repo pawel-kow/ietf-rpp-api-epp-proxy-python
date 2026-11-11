@@ -1,0 +1,36 @@
+{
+  "test_id": "test2-request_on_unknown_domain",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rs2-{random_name}.example/processes/restoreProcesses",
+        "headers": {
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "restoreProcess"
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02303",
+          "RPP-Svtrid": {
+            "type": "not_empty_string"
+          },
+          "RPP-Cltrid": {
+            "type": "not_empty_string"
+          }
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

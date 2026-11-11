@@ -11,7 +11,8 @@ from .tcpclient import ConnectionException
 EPP_NAMESPACE = {'epp': 'urn:ietf:params:xml:ns:epp-1.0'}
 SEC_DNS_EXTENSION = "urn:ietf:params:xml:ns:secDNS-1.1"
 IDN_EXTENSION = "urn:ietf:params:xml:ns:idn-1.0"
-LOGIN_EXTENSIONS = (SEC_DNS_EXTENSION, IDN_EXTENSION)
+RGP_EXTENSION = "urn:ietf:params:xml:ns:rgp-1.0"
+LOGIN_EXTENSIONS = (SEC_DNS_EXTENSION, IDN_EXTENSION, RGP_EXTENSION)
 
 class EPPClient:
     """

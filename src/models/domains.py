@@ -46,6 +46,7 @@ class Domain(ProvisioningObject):
     subordinateHosts: Optional[List[str]] = None
     processes: Optional[Dict[str, Process]] = None
     status_reasons: Dict[str, str] = field(default_factory=dict)
+    rgpStatus: List[str] = field(default_factory=list)  # RFC 3915 §4.1.2, empty without rgp:infData
     
     def update(self, obj):
         super().update(obj)
