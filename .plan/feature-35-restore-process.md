@@ -34,6 +34,12 @@ Branch `feature/35-restore-process`.
 - Backend add grace period is 5 days (pawel-kow/epp `command-delete.cgi`, `change-domain-status.pl`); EPP-server-docker shortens only `TRANSFER_WAITING_MINUTES`. Probed: still `addPeriod` after 75 s, and the delete purged the domain. So draft_domain test16, test18, test19 stay skipped.
 - `rpp_to_model_mapper/date_time.py` now holds the RFC 3339 check that renew had privately, shared with the report.
 
+## Corrections (2026-11-11)
+
+- Backend redeployed with minute RGP periods (EPP-server-docker#5, PR 6), reached as `epp-server` on `epptest_epp_net`; `config.yaml` changed by the maintainer.
+- Probed: delete after 125 s gives `redemptionPeriod` + `pendingDelete`; report before request `2304`; request `1000` without `rgp:upData`; second request `2304`; report `1000`, then status `ok` and no RGP status.
+- [~] Runner `delay_seconds` step; draft_domain test16, test18, test19 enabled; `domain_restore/test12` full cycle with PATCH.
+
 ## Open questions
 
 - None. Backend request for configurable RGP periods: pawel-kow/EPP-server-docker#5.

@@ -115,3 +115,18 @@ def test_capture_plus_years_to_29_february_is_not_clamped():
 def test_bad_capture_fails(text):
     with pytest.raises(pytest.fail.Exception):
         substitute_captures(text, CAPTURES)
+
+
+def test_delay_seconds_waits_before_the_request():
+    waits = []
+    client = FakeClient(FakeResponse(201, {"name": "a"}, "01000"), FakeResponse(201, {"name": "a"}, "01000"))
+    steps = [{"request": REQUEST, "response": CREATED}, {"delay_seconds": 130, "request": REQUEST, "response": CREATED}]
+    endpoint_test(client, {"test_id": "t", "steps": steps}, sleep=lambda seconds: waits.append((seconds, len(client.responses))))
+    assert waits == [(130, 1)]
+
+
+def test_without_delay_seconds_nothing_waits():
+    waits = []
+    endpoint_test(FakeClient(FakeResponse(201, {"name": "a"}, "01000")),
+                  {"test_id": "t", "steps": [{"request": REQUEST, "response": CREATED}]}, sleep=waits.append)
+    assert waits == []
