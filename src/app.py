@@ -1,3 +1,8 @@
+import copy
+from functools import cache
+from pathlib import Path
+
+import yaml
 from connexion import FlaskApp
 from connexion.datastructures import MediaTypeDict
 from connexion.exceptions import ProblemException
@@ -16,6 +21,18 @@ from controller.epp_basic_security_handler import EppBasicSecurityHandler
 from models import ResultCode
 from registry import BackendProfile
 from rpp_to_model_mapper import IdnTables
+
+OPENAPI_SPEC = Path(__file__).parent / "openapi.yaml"
+
+
+@cache
+def parsed_spec() -> dict:
+    """
+    The OpenAPI document, parsed once per process with libyaml, because parsing it takes most of the time an app
+    takes to build (#112). Callers get it shared: copy it before handing it on.
+    """
+    with OPENAPI_SPEC.open("rb") as spec:
+        return yaml.load(spec, Loader=yaml.CSafeLoader)
 
 
 def _default_result(status: int) -> ResultCode:
@@ -70,7 +87,8 @@ def create_app(authenticator, profile: BackendProfile, discovery_settings=None, 
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.add_api("openapi.yaml", resolver=RelativeResolver('controller'), resolver_error=501,
+    # connexion changes the spec it is given, so each app gets its own copy.
+    app.add_api(copy.deepcopy(parsed_spec()), resolver=RelativeResolver('controller'), resolver_error=501,
                 validate_responses=True, options={"swagger_ui": True, "serve_spec": True},
                 validator_map={
                     "body": MediaTypeDict({**VALIDATOR_MAP["body"], "*/*json": RppRequestBodyValidator}),
