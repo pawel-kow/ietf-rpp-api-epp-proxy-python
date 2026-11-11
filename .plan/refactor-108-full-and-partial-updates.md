@@ -95,7 +95,12 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
   whether `authInfo` is part of the PUT; `authInfo` set "without visibility" is an error; add a spec-issues entry.
   Reading proposed to the maintainer, not yet confirmed: PUT with `includeElements=authInfo` → present = SET,
   absent = CLEAR (contact CLEAR = 501); without it → KEEP, and a body `authInfo` → 400.
-- ~~**Q7**~~ Decided, D3.
+- ~~**Q7**~~ Decided, D3. ~~Q3~~ D4, ~~Q4~~ D5, ~~Q6~~ D6.
+- **Q8** Where does the list of `onDemand` elements come from: a constant in one module, or
+  `.spec/draft-ietf-rpp-data-objects.yaml` (generated, has `visibility` per element) copied by `copy_models.sh` and
+  read at start-up?
+- **Q9** A contact PATCH of `/contactInfo/...` always reads (only `/status` and `/authInfo` map directly). A direct
+  mapping of phones and email is possible but out of scope: file a follow-up issue?
 - ~~**Q5**~~ Decided, D2. Host PUT that changes nothing (finding 4): keep sending the empty update (`2003`), as "must not change"
   requires? Then `replace` takes a flag to send even when unchanged, for hosts only.
 
@@ -109,6 +114,22 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
   `test_host_flows.py` updated.
 - **D3 (Q7)** A host PUT or PATCH that changes nothing, from a client that is not the sponsor, is 403 (`02201`) via
   `require_sponsor`, as domains and contacts. Behaviour change for host PATCH (today 200) and PUT (today `2003`).
+- **D4 (Q3)** EPP cannot replace without a read, so the EPP derivation always reads (or takes the flow's `current`);
+  the PUT mapper does not. A value the registry stores and a GET shows must be accepted on create, PUT and PATCH:
+  the proxy's "record … is not in the domain" refusal of glue outside the domain goes (the registry decides), and with
+  it the `checked` flag of `domain_dns.rpp_to_model` (an address record for a host without an `ns` record stays 501,
+  a read never produces one). Behaviour change, `spec-issues.md` entry added.
+- **D5 (Q4)** `with_stored_localization` keeps today's effect on PUT and PATCH (no unrequested `chg loc`). It needs
+  the current contact, so it runs once, backend-neutral, in the contact flow after the read and before the backend
+  call; it moves to `models/`.
+- **D6 (Q6)** Visibility drives output and full-update input, generically for every `onDemand` element (today
+  `authInfo` of domain and contact; `restoreReport` when restore exists). `includeElements` is parsed and validated
+  once (unknown top-level identifier → 400, data-objects §2.7.3) for every operation that returns a domain or contact.
+  Output: an `onDemand` element is left out unless listed (GET, create, PUT, PATCH responses). PUT: listed → part of the
+  wanted state (present = SET, absent = CLEAR); not listed → KEEP, and present in the body → 400. PATCH unchanged.
+  `spec-issues.md` entry asks whether this is wanted (data-objects §2.4 says Visibility affects output only), and
+  notes core §16.1.7 (repeated parameter) vs data-objects §2.7.3 (comma list; the OpenAPI uses the comma list).
+  Integration cases that assert `authInfo` in a read add `includeElements=authInfo`.
 
 ## Corrections
 
