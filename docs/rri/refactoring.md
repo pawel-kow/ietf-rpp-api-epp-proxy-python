@@ -364,9 +364,11 @@ A test environment is one backend server the suite runs against. It is chosen wi
 config: config.rri-mtest.yaml       # RPP_CONFIG_FILE of the app under test
 max_workers: 4                      # MTEST allows 4 sessions per RegAcc
 rpp_requests_per_minute: 25         # paced per registrar, under the ACL of 100 RRI requests a minute
-registrars:                         # the slots the cases name
-  a: {user: RRI_MTEST_A_USER, password: RRI_MTEST_A_PASSWORD}
-  b: {user: RRI_MTEST_B_USER, password: RRI_MTEST_B_PASSWORD}
+registrars:                         # the slots the cases name, each naming its variables in .env
+  a: {user: TEST_RRI_REGACC1, password: TEST_RRI_REGACC1_PASSWORD,
+      gen_req: TEST_RRI_REGACC1_GEN_REQ, abuse: TEST_RRI_REGACC1_ABUSE}
+  b: {user: TEST_RRI_REGACC2, password: TEST_RRI_REGACC2_PASSWORD,
+      gen_req: TEST_RRI_REGACC2_GEN_REQ, abuse: TEST_RRI_REGACC2_ABUSE}
 handle: "{regacc}-{random_id_10}{suffix}"   # a handle starts with the RegAccId
 facts:
   tld: de
@@ -387,10 +389,25 @@ New placeholders take the place of what the cases hard-code:
 | `{handle:a:ud1}` | `FO-{random_id_10}ud1` | `DENIC-<n>-{random_id_10}ud1` |
 | `{tld}` | `example` | `de` |
 | `{regacc:a}` | `foo` | `DENIC-<n>` |
+| `{gen_req:a}`, `{abuse:a}` | none: EPP has no such roles, so only cases that select `{"profile.contact_labels": {"contains": "generalRequest"}}` use them | the handles in `.env` |
 
-The credentials go into `.env` in the repository root, which the runner loads with python-dotenv (in
-`requirements.txt` already). The proxy never reads it. `.env` goes into `.gitignore`, and a committed `.env.example`
-names the variables with no values. The runner puts a credential into a request header when it sends the request,
+The MTEST values are in `.env` in the repository root, which the runner loads with python-dotenv (in
+`requirements.txt` already). The proxy never reads it. `.env` is in `.gitignore`, and a committed `.env.example`
+names the variables with no values:
+
+| Variable | Holds |
+|---|---|
+| `TEST_RRI_REGACC1`, `TEST_RRI_REGACC2` | The RRI login of RegAcc 1 and 2 (registrars `a` and `b`), a DENIC handle whose prefix is the RegAccId (P1) |
+| `TEST_RRI_REGACC1_PASSWORD`, `TEST_RRI_REGACC2_PASSWORD` | The password of that login |
+| `TEST_RRI_REGACC1_GEN_REQ`, `TEST_RRI_REGACC2_GEN_REQ` | The handle of a `REQUEST` contact of that RegAcc for the General Request role |
+| `TEST_RRI_REGACC1_ABUSE`, `TEST_RRI_REGACC2_ABUSE` | The handle of a `REQUEST` contact of that RegAcc for the Abuse role |
+
+The General Request and Abuse handles are created on MTEST beforehand, outside the suite. They are the one
+exception to the rule that a case creates the contacts it uses
+([testing.project.md](../agents/testing.project.md#isolating-cases)): a domain on RRI needs both roles, and they
+are `REQUEST` contacts, which RPP cannot create yet (gap Q2). The cases use the pre-created handles as long as RPP
+has no way to create a `REQUEST` contact. Once it has, the cases create their own, and the `*_GEN_REQ` and `*_ABUSE`
+variables are removed. The runner puts a credential into a request header when it sends the request,
 never into the case dictionary, so a failure report cannot print it ([security.md](../agents/security.md)).
 
 ### 5.4 RRI integration tests on MTEST
