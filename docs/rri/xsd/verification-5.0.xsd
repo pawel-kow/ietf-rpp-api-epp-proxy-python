@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:verification="http://registry.denic.de/verification/5.0"
+    targetNamespace="http://registry.denic.de/verification/5.0"
+    elementFormDefault="qualified">
+
+    <simpleType name="contactClaimsType">
+        <restriction base="string">
+        </restriction>
+    </simpleType>
+
+    <simpleType name="trustFrameworkType">
+        <restriction base="string">
+        </restriction>
+    </simpleType>
+
+    <simpleType name="verificationMethodType">
+        <restriction base="string">
+        </restriction>
+    </simpleType>
+
+    <simpleType name="verificationEvidenceType">
+        <restriction base="string">
+        </restriction>
+    </simpleType>
+
+    <simpleType name="verificationReferenceType">
+        <restriction base="string">
+        </restriction>
+    </simpleType>
+
+    <simpleType name="verificationResultType">
+        <restriction base="string">
+            <enumeration value="success" />
+            <enumeration value="failed" />
+        </restriction>
+    </simpleType>
+
+    <complexType name="verifiedClaimsType">
+        <sequence>
+            <element name="claim" type="verification:contactClaimsType" minOccurs="1"
+                maxOccurs="unbounded"></element>
+        </sequence>
+    </complexType>
+
+    <complexType name="verificationInfoBaseType" abstract="true">
+        <sequence>
+            <element name="verifiedClaims" type="verification:verifiedClaimsType" minOccurs="1"
+                maxOccurs="1" />
+            <element name="verificationResult" type="verification:verificationResultType"
+                minOccurs="1" maxOccurs="1" />
+        </sequence>
+    </complexType>
+
+    <complexType name="verificationInformationType">
+        <complexContent>
+            <extension base="verification:verificationInfoBaseType">
+                <sequence>
+                    <element name="verificationReference"
+                        type="verification:verificationReferenceType"
+                        minOccurs="1" maxOccurs="1" />
+                    <element name="verificationTimestamp" type="dateTime" minOccurs="1"
+                        maxOccurs="1" />
+                    <element name="verificationEvidence"
+                        type="verification:verificationEvidenceType"
+                        minOccurs="1" maxOccurs="1" />
+                    <element name="verificationMethod" type="verification:verificationMethodType"
+                        minOccurs="1" maxOccurs="1" />
+                    <element name="trustFramework" type="verification:trustFrameworkType"
+                        minOccurs="1"
+                        maxOccurs="1" />
+                </sequence>
+            </extension>
+        </complexContent>
+    </complexType>
+
+    <complexType name="domainVerificationInformationType">
+        <complexContent>
+            <extension base="verification:verificationInfoBaseType">
+                <sequence>
+                    <element name="verificationReference"
+                        type="verification:verificationReferenceType"
+                        minOccurs="0" maxOccurs="1" />
+                    <element name="verificationTimestamp" type="dateTime" minOccurs="0"
+                        maxOccurs="1" />
+                    <element name="verificationEvidence"
+                        type="verification:verificationEvidenceType"
+                        minOccurs="0" maxOccurs="1" />
+                    <element name="verificationMethod" type="verification:verificationMethodType"
+                        minOccurs="0" maxOccurs="1" />
+                    <element name="trustFramework" type="verification:trustFrameworkType"
+                        minOccurs="0"
+                        maxOccurs="1" />
+                </sequence>
+            </extension>
+        </complexContent>
+    </complexType>
+
+    <element name="verificationInformation" type="verification:verificationInfoBaseType" />
+</schema>

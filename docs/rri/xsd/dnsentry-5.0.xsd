@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:dnsentry="http://registry.denic.de/dnsentry/5.0"
+    targetNamespace="http://registry.denic.de/dnsentry/5.0" elementFormDefault="qualified">
+    <simpleType name="asciiToken">
+        <restriction base="token">
+            <pattern value="\p{IsBasicLatin}*" />
+        </restriction>
+    </simpleType>
+    <simpleType name="hostnameType">
+        <restriction base="dnsentry:asciiToken">
+            <pattern value="([*a-zA-Z0-9\-]+\.)+[*a-zA-Z0-9\-]*|(\.)" />
+            <minLength value="1" />
+            <maxLength value="254" />
+        </restriction>
+    </simpleType>
+    <simpleType name="addrStringType">
+        <restriction base="token">
+            <minLength value="3" />
+            <maxLength value="39" />
+        </restriction>
+    </simpleType>
+    <complexType name="A">
+        <complexContent>
+            <extension base="dnsentry:dnsentryBaseType">
+                <sequence>
+                    <element name="rdata">
+                        <complexType>
+                            <sequence>
+                                <element name="address" type="dnsentry:addrStringType" />
+                            </sequence>
+                        </complexType>
+                    </element>
+                </sequence>
+            </extension>
+        </complexContent>
+    </complexType>
+    <complexType name="AAAA">
+        <complexContent>
+            <extension base="dnsentry:dnsentryBaseType">
+                <sequence>
+                    <element name="rdata">
+                        <complexType>
+                            <sequence>
+                                <element name="address" type="dnsentry:addrStringType" />
+                            </sequence>
+                        </complexType>
+                    </element>
+                </sequence>
+            </extension>
+        </complexContent>
+    </complexType>
+    <complexType name="NS">
+        <complexContent>
+            <extension base="dnsentry:dnsentryBaseType">
+                <sequence>
+                    <element name="rdata">
+                        <complexType>
+                            <sequence>
+                                <element name="nameserver" type="dnsentry:hostnameType" />
+                                <element name="address" type="dnsentry:addrStringType" minOccurs="0"
+                                    maxOccurs="unbounded" />
+                                <element name="addressV6" type="dnsentry:addrStringType"
+                                    minOccurs="0" maxOccurs="unbounded" />
+                            </sequence>
+                        </complexType>
+                    </element>
+                </sequence>
+            </extension>
+        </complexContent>
+    </complexType>
+    <complexType name="MX">
+        <complexContent>
+            <extension base="dnsentry:dnsentryBaseType">
+                <sequence>
+                    <element name="rdata">
+                        <complexType>
+                            <sequence>
+                                <element name="preference">
+                                    <simpleType>
+                                        <restriction base="unsignedShort">
+                                            <minInclusive value="0" />
+                                            <maxInclusive value="999" />
+                                        </restriction>
+                                    </simpleType>
+                                </element>
+                                <element name="exchange" type="dnsentry:hostnameType" />
+                            </sequence>
+                        </complexType>
+                    </element>
+                </sequence>
+            </extension>
+        </complexContent>
+    </complexType>
+    <complexType name="DNSKEY">
+        <complexContent>
+            <extension base="dnsentry:dnsentryBaseType">
+                <sequence>
+                    <element name="rdata">
+                        <complexType>
+                            <sequence>
+                                <element name="flags" type="unsignedShort" />
+                                <element name="protocol" type="unsignedByte" />
+                                <element name="algorithm" type="unsignedByte" />
+                                <element name="publicKey" type="base64Binary" />
+                            </sequence>
+                        </complexType>
+                    </element>
+                </sequence>
+            </extension>
+        </complexContent>
+    </complexType>
+    <complexType name="dnsentryBaseType" abstract="true">
+        <sequence>
+            <element name="owner" type="dnsentry:hostnameType" />
+        </sequence>
+    </complexType>
+    <element name="dnsentry" type="dnsentry:dnsentryBaseType" />
+</schema>
