@@ -5,12 +5,11 @@ from connexion import ProblemException
 from flask import Response
 
 import rpp_to_model_mapper as rpp_mapper
-from eppclient.epp_messages import epp_messages_Ack, epp_messages_Poll
 from flows import read_message
 from models import ErrorResponse, MessageErrorResponse, ResultCode
-from .auth import get_epp_client
+from .auth import get_backend
 from .helper.rpp_response import (
-    client_transaction_id, generate_rpp_response_headers, problem_headers, raise_epp_error, require_empty_body,
+    client_transaction_id, generate_rpp_response_headers, problem_headers, raise_registry_error, require_empty_body,
     rpp_operation,
 )
 
@@ -51,7 +50,7 @@ def _headers(resp, language=None) -> dict:
 def _raise(resp: ErrorResponse):
     """An error of a message operation, which reports the size of the queue when it knows it."""
     try:
-        raise_epp_error(resp)
+        raise_registry_error(resp)
     except ProblemException as problem:
         size = _queue_size(resp.queue_size) if isinstance(resp, MessageErrorResponse) else None
         if size is not None:
@@ -71,7 +70,7 @@ def _require_valid_id(id: str):
 @rpp_operation
 def messages_query():
     """EPP poll req. The EPP Compatibility Profile ignores `type` (core §16.10.1)."""
-    resp = epp_messages_Poll(get_epp_client(), client_transaction_id=client_transaction_id())
+    resp = get_backend().messages.poll(client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
     if resp.message is None:
@@ -82,7 +81,7 @@ def messages_query():
 @rpp_operation
 def messages_read(id):
     _require_valid_id(id)
-    resp = read_message(get_epp_client(), id, client_transaction_id=client_transaction_id())
+    resp = read_message(get_backend(), id, client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
     return rpp_mapper.messages.model_to_rpp(resp.message), 200, _headers(resp, resp.message.lang)
@@ -93,7 +92,7 @@ def messages_delete(id):
     """EPP poll ack."""
     require_empty_body()
     _require_valid_id(id)
-    resp = epp_messages_Ack(get_epp_client(), id, client_transaction_id=client_transaction_id())
+    resp = get_backend().messages.ack(id, client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
     headers = _headers(resp)

@@ -1,11 +1,10 @@
-from eppclient.epp_domains import epp_domains_Transfer
 from models import DomainTransfer
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import rpp_operation
 from .transfer_handlers import TransferHandlers
 
 _handlers = TransferHandlers(
-    run=epp_domains_Transfer,
+    gateway_of=lambda backend: backend.domains,
     create_mapper=rpp_mapper.domain_transfer_process.rpp_to_model,
     approve_mapper=rpp_mapper.domain_transfer_approve.rpp_to_model,
     reject_mapper=rpp_mapper.domain_transfer_reject.rpp_to_model,

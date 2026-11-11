@@ -90,8 +90,8 @@ def problem_headers(code: ResultCode, server_transaction_id: str | None = None) 
     }
 
 
-def raise_epp_error(resp: ErrorResponse):
-    """Translates an EPP error into a Problem Detail."""
+def raise_registry_error(resp: ErrorResponse):
+    """Translates an error of the registry, or a refusal before any command, into a Problem Detail."""
     raise ProblemException(
         status=http_status(resp.code),
         title=resp.code.value[1],

@@ -1,13 +1,14 @@
-from eppclient.eppclient import EPPClient
 from models import ErrorResponse, OperationResponse, ResultCode
+from registry import RegistryBackend
 
 
 def require_sponsor(
-    epp_client: EPPClient, sponsor_id: str | None, read: OperationResponse, client_transaction_id, object_name: str,
+    backend: RegistryBackend, sponsor_id: str | None, read: OperationResponse, client_transaction_id, object_name: str,
 ) -> ErrorResponse | None:
-    """The refusal of an update that changes nothing, which sends no EPP command. Only the sponsor may update
-    (data-objects §11.3.4, §12.3.4), and EPP would have said so. The login id is taken to be the `clID`, whatever its case."""
-    if (sponsor_id or "").lower() == epp_client.username.lower():
+    """The refusal of an update that changes nothing, which sends no command. Only the sponsor may update
+    (data-objects §11.3.4, §12.3.4), and the registry would have said so. The backend's sponsor id is compared
+    whatever its case."""
+    if (sponsor_id or "").lower() == backend.sponsor_id.lower():
         return None
     return ErrorResponse(
         code=ResultCode.AUTHORIZATION_ERROR,

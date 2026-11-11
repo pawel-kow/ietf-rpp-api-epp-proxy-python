@@ -13,8 +13,8 @@ single feature (e.g. "domain update") touches every layer:
    `RelativeResolver('controller')` in [src/app.py](../../src/app.py). An operation
    without a controller function answers 501 (`02101`). Generated, see below.
 2. **`controller/`:** HTTP handlers. Parse the request, call the RPP→model mapper,
-   call the eppclient and map the result back to RPP. EPP errors go through
-   `raise_epp_error` in
+   call a flow or the request's backend (`get_backend()` in `controller/auth.py`) and map the result back to RPP.
+   Registry errors go through `raise_registry_error` in
    [rpp_response.py](../../src/controller/helper/rpp_response.py), which applies core
    §18.1, and `handle_rpp_error` in [src/app.py](../../src/app.py) renders every error
    as a core §9 Problem Detail.
@@ -70,24 +70,31 @@ single feature (e.g. "domain update") touches every layer:
    contact in the terms of the stored one, because a read shows a localization by its differences from the card. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
    tuples) and `OperationResponse`/`ErrorResponse` live in
    [src/models/response.py](../../src/models/response.py).
-5. **`eppclient/`:** runs one EPP operation: build XML →
-   `send_and_get_response` → parse. `epp_*` functions return a typed `*Response`
-   model or an `ErrorResponse`, and controllers branch on `isinstance`.
+5. **`registry/`:** the backend port, which imports `models` only. `RegistryBackend` is one user's session with
+   the registry: `domains`, `contacts`, `hosts` and `messages` are its gateways (`DomainGateway` …, each a
+   `typing.Protocol`), and `sponsor_id` is the id the registry stores as sponsor. A gateway method returns a typed
+   `*Response` model or an `ErrorResponse`, and callers branch on `isinstance`. `update(delta)` is a partial update and
+   `replace(wanted, current=None)` a full one, which answers a `ReplaceOutcome`. `derived_update.replace` derives a
+   full update from a partial one, once for every object and backend: it reads the object (unless the caller has
+   read it), lets the object's `ReplacementSteps` prepare the wanted state and refuse what the backend cannot clear,
+   sends the `difference` as one update, and answers the `ReplaceOutcome`. When nothing changes it sends nothing and
+   the outcome is `unchanged`. The read and the update are not atomic.
+6. **`eppclient/`:** the EPP adapter. `EppBackend` in `epp_backend.py` is the `RegistryBackend` over one
+   `EPPClient`, whose login is the sponsor id, and `EppDomainGateway`, `EppContactGateway`, `EppHostGateway` and
+   `EppMessageGateway` call the `epp_*` functions. EPP has no full update, so each `replace` goes through
+   `derived_update.replace`, with the refusal of what RFC 5733 cannot clear on a contact (`epp_contact_refusal.py`).
+   An `epp_*` function runs one EPP operation: build XML → `send_and_get_response` → parse.
    [eppclient.py](../../src/eppclient/eppclient.py) is the raw TCP+XML client
    (login/logout, `_parse_epp_response` reads the `<result code>`; codes matching
    `1xxx` = success). It keeps the extensions of the greeting for
    `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` (secDNS, IDN and RGP) the server offers.
-6. **`flows/`:** multi-step operations, free of the web framework. A flow returns a
-   typed result or an `ErrorResponse`, and the handler renders it. `patch_<object>` and `replace_<object>` in
-   `flows/domains.py`, `flows/contacts.py` and `flows/hosts.py` take a delta (`update`) or a replacement. A delta
-   is sent as it is, then the object is read back. EPP has no full update, so a replacement goes through
-   `derived_update.replace`, the one derivation for every object: it reads the object (unless a PATCH has read it
-   already), lets the object's `ReplacementSteps` prepare the wanted state and refuse what EPP cannot clear
-   (`epp_contact_refusal.py`, as an `ErrorResponse`), sends the `difference` as one update, and answers a
-   `ReplaceOutcome`. When nothing changes it sends nothing and the outcome is `unchanged`. `flows/sponsor.py`
-   then holds the 403 for a client that is not the sponsor, which sends no EPP command to say so. The read and the
-   update are not atomic.
-7. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
+7. **`flows/`:** multi-step operations over a `RegistryBackend`, free of the web framework and of the protocol. A
+   flow returns a typed result or an `ErrorResponse`, and the handler renders it. `patch_<object>` and
+   `replace_<object>` in `flows/domains.py`, `flows/contacts.py` and `flows/hosts.py` take a delta (`update`) or a
+   replacement, and call the gateway's `update` or `replace`, then read the object back. A PATCH that needs the
+   current state passes the read it made as `current`. When the outcome is `unchanged`, `flows/sponsor.py` holds the
+   403 for a client that is not the sponsor (`backend.sponsor_id`), which sends no command to say so.
+8. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
    inbound EPP XML into models. `epp_model/` holds xsdata-generated dataclasses for
    the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
    is dead code: ignore it.
@@ -175,7 +182,7 @@ counts as the first kind. A PATCH that EPP could do once the proxy has read the 
 is the second kind.
 
 The third kind is known only from the EPP greeting, which mappers cannot reach, so the
-`epp_*` function checks `supports_extension` and `raise_epp_error` renders the result.
+`epp_*` function checks `supports_extension` and `raise_registry_error` renders the result.
 
 ## Wire contract
 
@@ -205,9 +212,10 @@ check the `version` parameter of the media type, so core §12's 406 is not enfor
 
 ## Composition
 
-[src/run.py](../../src/run.py) is the composition root: it builds the default
-`EPPClient` factory and passes it to
-[`EppSessionAuthenticator`](../../src/controller/epp_session_authenticator.py), which
+[src/run.py](../../src/run.py) is the composition root: `new_backend` builds an `EppBackend` over the default
+`EPPClient`, and is the factory it passes to
+[`SessionAuthenticator`](../../src/controller/session_authenticator.py), which keeps one backend per user, the
+token info key `backend`, and
 goes to `create_app` in [src/app.py](../../src/app.py), with `config` as the settings of the discovery document, which the handler reads from the app configuration, and the `IdnTables`, which the domain handlers read from it the same way. `create_app` hands
 `authenticate` to Connexion through `security_map`, because Connexion would otherwise
 resolve the function by name and it could not receive dependencies.
