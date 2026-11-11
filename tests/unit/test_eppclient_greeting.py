@@ -35,6 +35,9 @@ class ScriptedTransport:
     def send(self, message):
         self.sent.append(message)
 
+    def closed_by_peer(self):
+        return False
+
     def receive(self):
         return self.received.pop(0)
 

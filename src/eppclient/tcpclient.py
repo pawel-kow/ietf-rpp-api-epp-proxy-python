@@ -1,4 +1,6 @@
+import select
 import socket
+import ssl
 import struct
 
 class ConnectionException(Exception):
@@ -54,13 +56,6 @@ class TCPClient:
         """
         if self.socket is None:
             self.connect()
-        else:
-            try:
-                # Check if the socket is still alive by sending a zero-byte message
-                self.socket.send(b'')
-            except socket.error:
-                print("TCPClient: Socket is dead.")
-                raise
 
         if self.socket is None:
             print("TCPClient: Connection failed. Cannot send message.")
@@ -80,6 +75,19 @@ class TCPClient:
             print(f"TCPClient: Error sending message: {e}")
             self.disconnect()
             raise
+
+    def closed_by_peer(self) -> bool:
+        """
+        Whether an idle connection is over. EPP sends nothing unasked, so between
+        exchanges anything readable is the server closing it (EOF, TLS close_notify)
+        or a reply to no command, such as a 2500 before it closes.
+        """
+        if self.socket is None:
+            return True
+        if isinstance(self.socket, ssl.SSLSocket) and self.socket.pending():
+            return True
+        readable, _, _ = select.select([self.socket], [], [], 0)
+        return bool(readable)
 
     def receive(self):
         """

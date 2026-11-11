@@ -73,9 +73,26 @@ class EPPClient:
                 - response (str): The full response message from the server.
         """
         with self._lock:
-            if not self._connected:
-                self.connect()
-            return self._send_and_get_response(message)
+            if self._connected and self.client.closed_by_peer():
+                print("EPP session closed by the server, logging in again")
+                self.disconnect(send_logout=False)
+            self._open_session()
+            try:
+                self._send(message)
+            except Exception:
+                # A failed send leaves no complete command on the server, so sending it
+                # again on a new session cannot run it twice. A failed receive may, so it
+                # is never retried.
+                self._open_session()
+                self._send(message)
+            return self._receive_response()
+
+    def _open_session(self):
+        """Logs in unless there is a session. Callers must hold self._lock."""
+        if not self._connected:
+            self.connect()
+        if not self._connected:
+            raise ConnectionException("EPP server is not reachable")
 
     def _send_and_get_response(self, message: str) -> tuple[bool, str, str]:
         """
@@ -93,6 +110,11 @@ class EPPClient:
                 - code (str): The EPP response code from the server.
                 - response (str): The full response message from the server.
         """
+        self._send(message)
+        return self._receive_response()
+
+    def _send(self, message: str):
+        """Sends a message, and closes the session if that fails. Callers must hold self._lock."""
         try:
             self.client.send(message)
         except Exception as e:
@@ -100,6 +122,8 @@ class EPPClient:
             self.disconnect(send_logout=False)
             raise
 
+    def _receive_response(self) -> tuple[bool, str, str]:
+        """Receives a response, and closes the session if that fails. Callers must hold self._lock."""
         try:
             response = self.client.receive()
             print(f"Received response: {response}")
@@ -115,10 +139,7 @@ class EPPClient:
     def supports_extension(self, uri: str) -> bool:
         """Whether the server offers an extension, which only its greeting says."""
         with self._lock:
-            if not self._connected:
-                self.connect()
-            if not self._connected:
-                raise ConnectionException("EPP server is not reachable")
+            self._open_session()
             return uri in self._server_extensions
 
     def verify_credentials(self, user, password):

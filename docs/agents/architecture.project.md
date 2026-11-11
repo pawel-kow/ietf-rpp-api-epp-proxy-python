@@ -87,7 +87,19 @@ single feature (e.g. "domain update") touches every layer:
    [eppclient.py](../../src/eppclient/eppclient.py) is the raw TCP+XML client
    (login/logout, `_parse_epp_response` reads the `<result code>`; codes matching
    `1xxx` = success). It keeps the extensions of the greeting for
-   `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` (secDNS, IDN and RGP) the server offers.
+   `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` (secDNS, IDN and RGP) the server offers. Before a command it asks the transport whether the server has closed the idle
+   session (`closed_by_peer`) and logs in again if so. A failed send is sent once more on a new session, a failed
+   receive never, because the server may have run the command.
+6. **`flows/`:** multi-step operations, free of the web framework. A flow returns a
+   typed result or an `ErrorResponse`, and the handler renders it. `patch_<object>` and `replace_<object>` in
+   `flows/domains.py`, `flows/contacts.py` and `flows/hosts.py` take a delta (`update`) or a replacement. A delta
+   is sent as it is, then the object is read back. EPP has no full update, so a replacement goes through
+   `derived_update.replace`, the one derivation for every object: it reads the object (unless a PATCH has read it
+   already), lets the object's `ReplacementSteps` prepare the wanted state and refuse what EPP cannot clear
+   (`epp_contact_refusal.py`, as an `ErrorResponse`), sends the `difference` as one update, and answers a
+   `ReplaceOutcome`. When nothing changes it sends nothing and the outcome is `unchanged`. `flows/sponsor.py`
+   then holds the 403 for a client that is not the sponsor, which sends no EPP command to say so. The read and the
+   update are not atomic.
 7. **`flows/`:** multi-step operations over a `RegistryBackend`, free of the web framework and of the protocol. A
    flow returns a typed result or an `ErrorResponse`, and the handler renders it. `patch_<object>` and
    `replace_<object>` in `flows/domains.py`, `flows/contacts.py` and `flows/hosts.py` take a delta (`update`) or a
