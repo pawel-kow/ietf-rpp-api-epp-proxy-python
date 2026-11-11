@@ -1,16 +1,20 @@
 # Refactoring for RRI as a second backend protocol
 
-This document proposes how to restructure the proxy so that it can speak DENIC RRI 5.0 to the registry, as an
-alternative to EPP. The RPP API stays the same. Which RRI transaction serves which RPP operation, and where they
-do not fit, is in [gap-analysis.md](gap-analysis.md). The RRI facts are in [rri-5.0-reference.md](rri-5.0-reference.md).
+This document proposes how the proxy gets DENIC RRI 5.0 as an alternative to EPP for talking to the registry. The
+RPP API stays the same. Which RRI transaction serves which RPP operation, and where they do not fit, is in
+[gap-analysis.md](gap-analysis.md). The RRI facts are in [rri-5.0-reference.md](rri-5.0-reference.md), and the DENIC
+XML schemas in [xsd/](xsd/). The feature is tracked as
+[issue #126](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/126).
 
 Status: **proposal, for acceptance.** Under [process.md](../agents/process.md) rule 2 and the working agreement in
 [AGENTS.md](../../AGENTS.md), nothing here is implemented until the maintainer accepts it. The open questions in
-[gap-analysis.md §7](gap-analysis.md#7-open-questions) must be answered first, and Q20 (the wire format) in
-particular.
+[gap-analysis.md §7](gap-analysis.md#7-open-questions) and in [§8](#8-open-questions-of-this-plan) below must be
+answered first.
 
-**Prerequisite:** the split of full and partial updates (§3.5) is a refactoring of its own, tracked as
-[issue #108](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/108) ("Keep full and partial updates apart down to the model"). It changes no EPP behaviour and must be merged before phase 1 (§6).
+**Prerequisite:** [#120](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/120) ("Restructure `src/`
+into core, rpp and registry adapters") is merged. This plan builds on its target layout, as
+[architecture.project.md](../agents/architecture.project.md#target) describes it, and its dependency rules. The RRI
+adapter is `registry_adapter/rri/`, a sibling of `registry_adapter/epp/`.
 
 ## 1. Goals and non-goals
 
@@ -18,314 +22,221 @@ Goals:
 
 - One deployment talks to **one** backend, EPP or RRI, chosen in configuration. The RPP wire contract (paths,
   schemas, the §18.1 code → status mapping, the `RPP-*` headers) is unchanged.
-- Controllers, flows and the RPP mappers are written once, against a protocol-neutral **backend port**. Rules 3–6
-  of [architecture.md](../agents/architecture.md) apply: no second copy of an orchestration, and dependencies
-  point downward.
-- The EPP behaviour stays exactly as it is. The first phases are pure refactorings, and the existing test suite
-  proves them.
+- `core`, `rpp` and the flows are written once. RRI is a new `registry_adapter/rri/` behind the existing port, and
+  nothing outside it and `main.py` knows that it exists.
+- The EPP behaviour stays exactly as it is.
+- **One integration suite for both backends.** The data-driven cases select steps and expected results by the
+  facts of the backend profile, and run against the EPP test server and against DENIC's RRI test environment
+  (MTEST).
 
 Non-goals:
 
 - Running EPP and RRI side by side in one process, or routing by TLD.
 - Exposing RRI-only functions (AuthInfo2, TRANSIT, regacc INFO, NIS2 verification) in the first version. See Q8,
   Q9, Q10 and Q16.
-- The RRI K/V format, unless Q20 decides otherwise.
+- The RRI K/V format (Q20).
+- A local RRI stub server. MTEST is the integration backend for RRI.
 
-## 2. Where the code is bound to EPP today
+## 2. Starting point
 
-| Place | Binding | Evidence |
+Most of what the first version of this plan proposed as preparation is done, on EPP only and without behaviour
+changes:
+
+| Done | Where it is after #120 | Issue |
 |---|---|---|
-| Composition | `run.py` builds `EPPClient(TCPClient(...))` and hands the factory to `EppSessionAuthenticator`. | [run.py](../../src/run.py) |
-| Session | The authenticator keeps one `EPPClient` per user. The token info key is `epp_client`, and controllers read it through `get_epp_client()`. | [epp_session_authenticator.py](../../src/controller/epp_session_authenticator.py), [auth.py](../../src/controller/auth.py) |
-| Controllers | They call `epp_domains_*`, `epp_contacts_*`, `epp_hosts_*` and `epp_messages_*` directly (two with `import *`), and `raise_epp_error` for errors. | [controller/domains.py](../../src/controller/domains.py), [contacts.py](../../src/controller/contacts.py), [hosts.py](../../src/controller/hosts.py), [messages.py](../../src/controller/messages.py), [transfer_handlers.py](../../src/controller/transfer_handlers.py) and the two `*_transfers.py` |
-| Flows | They import `eppclient.epp_*` and type their argument as `EPPClient`. `require_sponsor` compares the sponsor with `epp_client.username`. | [flows/](../../src/flows/), [sponsor.py](../../src/flows/sponsor.py) |
-| Update model | `DomainUpdate`, `ContactUpdate` and `HostUpdate` are EPP add/remove/change deltas. **Both** PUT and PATCH end as such a delta before they reach the flow, so the full update is turned into EPP's partial one inside the neutral layers. The difference is computed in three places, at two levels. For domains it is computed on RPP representations, in the RPP mapper. For contacts it is computed on models, also in the RPP mapper. For hosts it is computed on models, in the flow. | [models/domains.py](../../src/models/domains.py), [flows/domains.py](../../src/flows/domains.py), [flows/hosts.py](../../src/flows/hosts.py), [domain_patch_difference.py](../../src/rpp_to_model_mapper/domain_patch_difference.py), [domain_replacement.py](../../src/rpp_to_model_mapper/domain_replacement.py), [contact_difference.py](../../src/rpp_to_model_mapper/contact_difference.py) |
-| RPP mappers | They decide what the *backend* can hold: `NotSupportedByEpp` is used in 12 modules, there are EPP contact labels (`CONTACT_LABELS`), the apex records EPP cannot hold, and what EPP cannot clear on a contact. | [not_supported_by_epp.py](../../src/rpp_to_model_mapper/not_supported_by_epp.py), [domains.py](../../src/rpp_to_model_mapper/domains.py), [domain_dns.py](../../src/rpp_to_model_mapper/domain_dns.py) |
-| IDN | `IdnTables` maps `lgr` to an EPP IDN-extension table. | [idn_tables.py](../../src/rpp_to_model_mapper/idn_tables.py) |
-| Models | `NS` is `hostObj`/`hostAttr`, `AuthInfo` is `pw`/`roid`, `ContactReference.types` holds EPP roles, and `QueueMessage.event` is `TransferEvent \| PendingActionEvent` (EPP `trnData`/`panData`). | [models/](../../src/models/) |
-| Result codes | `ResultCode` holds the EPP codes. An RPP code is the EPP code with a leading `0` (core §18), so this stays the internal code space. Only the RRI adapter needs a translation, see §3.8. | [models/response.py](../../src/models/response.py), [rpp_response.py](../../src/controller/helper/rpp_response.py) |
-| Transport | `TCPClient` writes `len(payload) + 4` (RFC 5734 counts the header). RRI counts the payload only. `EPPClient.connect` reads a greeting, and RRI sends none. | [tcpclient.py](../../src/eppclient/tcpclient.py), [eppclient.py](../../src/eppclient/eppclient.py) |
-| Configuration | `rpp_epp_*` keys only. | [config.py](../../src/config.py) |
-| Discovery | `OBJECTS` (including `host`) and `PROFILES` (`epp-compatibility`) are constants. | [controller/discovery.py](../../src/controller/discovery.py) |
-| Tests | `FakeEppClient` replays EPP XML at `send_and_get_response`. 24 test files touch the EPP client. | [tests/helper/fake_epp_client.py](../../tests/helper/fake_epp_client.py) |
+| Full and partial updates kept apart down to the model: `*Replacement`, `<object>_difference`, `<object>_application` | `core/model/{domain,contact,host}/` | #108 |
+| The backend port: `RegistryBackend`, the `*Gateway` protocols, `ReplaceOutcome`, `ReplacementSteps`, `derived_update.replace` | `core/ports/` | #116 |
+| `BackendProfile`, `NotSupportedByBackend`, `NotSupportedByProxy`; discovery states the profile's objects and profiles | `core/capabilities/`, `rpp/handlers/discovery.py` | #117 |
+| One `SessionPool` per user and backend, token info `backend` | `core/session/` | #116, #120 |
+| `IdnTables` in the EPP adapter, the mapper checks `lgr` against `BackendProfile.lgrs` | `registry_adapter/epp/idn_tables.py` | #120 |
+| Settings loaded once by the composition root and passed in | `settings/`, `main.py` | #120 |
+| TCP client and TLS free of EPP names | `registry_adapter/common/transport/` | #120 |
+
+What is still bound to EPP, and what this plan changes:
+
+| Place | Binding | Changed in |
+|---|---|---|
+| Transport | `TCPClient` writes `len(payload) + 4` (RFC 5734 counts the header). RRI counts the payload only. | R2, §3.4 |
+| Models | No apex `a`/`aaaa`/`mx` records, no `status_due`, no neutral queue events beyond `TransferEvent` and `PendingActionEvent`, no carry-over of verification data, one registrant. | R2, §3.6 |
+| Port | Only the derivation full ← partial exists (`derived_update.replace`). RRI needs partial ← full. | R4, §3.5 |
+| Profile | Several facts are declared but not read yet (`host_objects`, `client_statuses`, `contact_fax`, …). No facts for transfer, restore reports or a readable authInfo. | R1, R3–R7, §3.7 |
+| Settings | `Settings` has the `epp` and `discovery` sections only. | R3, §3.9 |
+| Integration tests | The cases hard-code EPP: credentials (`Basic Zm9vOmJhcg==` in 623 steps), contact ids (`FO-`, `BZ-` in 94 files), the TLD (`.example`), host objects, and the quirks and periods of the EPP test server. | R1, §5 |
 
 ## 3. Target design
 
-```
-openapi.yaml
-   │
-controller/        thin handlers: RPP request → mapper → flow/backend → RPP response
-   │  ├── rpp_to_model_mapper/   RPP JSON ↔ models, capability checks via the injected BackendProfile
-   │  └── flows/                 multi-step orchestration, protocol-neutral
-   │
-registry/          the backend port: protocols and value types, no I/O     ← new
-   │
-   ├── eppclient/ + epp_to_model_mapper/      EPP adapter (existing code, behind the port)
-   └── rriclient/ + rri_to_model_mapper/      RRI adapter                  ← new
-models/            provider-neutral domain model (widened, §3.6)
-```
-
 ### 3.1 The backend port
 
-There is a new package, `registry/`, with one class per file. It contains only `typing.Protocol` definitions and
-small value types. It imports `models` and nothing else:
+The port in `core/ports/` stays as it is. `registry_adapter/rri/gateways/` implements it: `RriBackend`,
+`RriDomainGateway`, `RriContactGateway` and `RriMessageGateway`. The return types are those the EPP gateways have
+after #120 phase 6 (the result envelope).
 
-- `RegistryBackend`, the session object a request works with:
-  - `domains: DomainGateway`, `contacts: ContactGateway`, `hosts: HostGateway`, `messages: MessageGateway`.
-  - `profile: BackendProfile`, the static capabilities (§3.7).
-  - `sponsor_id: str`, the registrar id the registry stores as sponsor (EPP: the login; RRI: the RegAccId, see
-    gap Q17).
-- `DomainGateway`: `check`, `info(name, auth_info=None)`, `create`, `update(delta, current=None)` (partial),
-  `replace(wanted, current=None)` (full), `delete`, `transfer`, `renew`, `restore`. §3.5 explains why the port
-  keeps partial and full updates apart. The signatures and return types are those of today's `epp_domains_*`: a typed
-  `*Response` or an `ErrorResponse`, without exceptions for registry errors. The one difference is the
-  `client_transaction_id` keyword. A method the backend lacks returns
-  `ErrorResponse(UNIMPLEMENTED_COMMAND, …)`, so `raise_epp_error` (to be renamed `raise_registry_error`) renders
-  it as 501 `02101`.
-- `ContactGateway`, `HostGateway` and `MessageGateway` follow the same shape (`poll`, `ack`).
-
-The EPP adapter (`eppclient/epp_backend.py`) wraps today's functions one to one. `EPPClient` stays the EPP
-session. No EPP behaviour changes, so the unit and integration tests carry over unchanged.
-
-**Why a gateway rather than a new set of flows for RRI.** The commands an RRI update needs (UPDATE or
-CHHOLDER, plus AuthInfo commands, §3.5) translate one neutral request, either a partial or a full update. They
-belong in the adapter, like the EPP XML building. The flows stay single: read when the RPP layer needs the
-current state, update or replace, read back. A flow passes `current` when it has already read the object, so no
-backend reads twice.
+RRI has no host objects. `RriBackend.hosts` is `RriHostGateway`, whose every method answers
+`ErrorResponse(UNIMPLEMENTED_COMMAND)`, the convention of the port for a command the backend lacks, so every
+`/hosts` operation answers 501 `02101`. A flow asks the profile first only where it would otherwise send a wasted
+read (renew without `expiryDate`, §3.5.5).
 
 ### 3.2 Session and authentication
 
-- `EppSessionAuthenticator` becomes `SessionAuthenticator`. Its logic is protocol-neutral already: a factory,
-  one session per user, `connect`/`connected`/`verify_credentials`. The token key `epp_client` becomes
-  `backend`, and `get_epp_client()` becomes `get_backend()`.
-- `RriClient` (in `rriclient/rriclient.py`) has the same session contract as `EPPClient`:
-  - It sends a LOGIN with `user` and `password`, with no greeting first, and LOGOUT on disconnect.
-  - It serialises the exchanges with a re-entrant lock, as `EPPClient` does.
-  - On a dead socket it reconnects and logs in again, and it retries **only** if the command was never written.
-    RRI writes are not idempotent, and a CTID cannot be reused (ref §3.3).
-  - It refreshes an idle session before the 5-minute timeout, by reconnecting on demand. The alternative is a
-    `QUEUE-READ`, which costs no quota but is a read the client did not ask for, so this proposal avoids it.
-- Login throttling is out of scope for now. The lockout it would prevent is listed as a risk in §7.
+- `RriClient` in `rri/session/` has the session contract of `EPPClient`: LOGIN with `user` and `password` and no
+  greeting, LOGOUT on disconnect, a re-entrant lock around each exchange, reconnect and re-login on a dead socket,
+  and a retry **only** if the command was never written. RRI writes are not idempotent, and a CTID cannot be reused
+  (ref §3.3).
+- An idle session expires after 5 minutes. The client reconnects on demand rather than sending a `QUEUE-READ` the
+  user did not ask for.
+- Lock, reconnect and re-login are now written twice. Once the RRI client works, the parts that are the same move
+  to `registry_adapter/common/` ([architecture.project.md](../agents/architecture.project.md#target), rule 6 of
+  [architecture.md](../agents/architecture.md)). What differs (greeting, extensions) stays in each adapter.
+- **The sponsor id is per session (changes Q17).** MTEST runs with two RegAccs in one deployment (§5.4), so one
+  configured `rpp_rri_regacc_id` cannot be right for both. `RriBackend.sponsor_id` is the RegAccId taken from the
+  login: an RRI login is a DENIC handle, and a handle starts with the RegAccId of its RegAcc (ref §5.1,
+  `DENIC-1000022-RRI` → `DENIC-1000022`). The maintainer confirmed that every RRI login follows this (P1).
+- Login throttling stays out of scope, see the lockout risk in §7.
 
 ### 3.3 RRI wire format
 
-**XML 5.0** is the recommendation (gap Q20):
+**XML 5.0** (gap Q20):
 
-- The server validates XML strictly against the XSDs. K/V *silently ignores unknown keywords* (ref §3.1). Under
-  RRI's full-replacement update, a misspelt K/V keyword deletes stored data without an error. That breaks the
-  proxy rule that nothing is dropped silently.
-- The DENIC XSDs (global, transaction, domain, dnsentry, contact, message, regacc, verification) can be compiled
-  with xsdata into `rri_to_model_mapper/rri_model/`, as `epp_model/` is generated today. The generated code is
-  exempt from the one-class-per-file rule, as `epp_model/` is.
-- Responses are parsed with the same hardened `decode_xml` (no entities, no DTD).
-
-To do: get the XSDs from the DENIC member site ("Schemata and BNFs"). Check their licence before checking them
-in; until then, generate them in the build.
+- The server validates XML strictly against the XSDs. K/V *silently ignores unknown keywords* (ref §3.1), and under
+  RRI's full-replacement update a misspelt keyword deletes stored data without an error.
+- The DENIC XSDs are in [docs/rri/xsd/](xsd/). xsdata compiles them into `registry_adapter/rri/xml/generated/`, as
+  the EPP XSDs are compiled into `registry_adapter/epp/xml/generated/`. The command goes into a script next to
+  [copy_models.sh](../../copy_models.sh). The generated code is exempt from the one-class-per-file rule.
+- `rri/xml/codec.py` renders and parses with the hardened parser of `registry_adapter/common/xmlsafe` (no entities,
+  no DTD).
 
 ### 3.4 Transport
 
-- `TCPClient` takes a `framing` argument: the length counts the header (EPP, RFC 5734) or not (RRI). The
-  EPP default does not change. `tests/unit/test_tcpclient.py` covers both.
-- The greeting parse moves out of the transport path into `EPPClient` (where it already lives). The RRI client
-  does not read one.
-- The TLS context is reused: verification on by default, and the `insecure_skip_verify` switch for test backends
-  only. The certificate is DENIC's public chain, so no client certificate is needed.
-- Limits: requests of 64 KB at most, and responses read with the same exact-length loop.
+- `TCPClient` in `common/transport/` takes a `framing` argument: the length counts the header (RFC 5734) or not
+  (RRI). The default is the EPP one, and the EPP composition does not change. Unit tests cover both.
+- The TLS context is reused: verification on by default, `insecure_skip_verify` for test backends only. DENIC's
+  certificate is a public chain, and no client certificate is needed.
+- Requests are at most 64 KB. Responses are read with the same exact-length loop.
 
-### 3.5 Full and partial update as separate paths
+### 3.5 Full and partial updates
 
-This step is a **prerequisite**, tracked as [issue #108](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/108) ("Keep full and partial updates apart down to the model"). It is done on the EPP-only code before
-phase 1 (§6). Until the port exists, the derivation of §3.5.2 sits in one EPP-side module, which phase 1 moves to
-`registry/derived_update.py`.
-
-The two protocols make opposite choices:
-
-- **EPP has only partial updates.** `<update>` carries add, remove and change, and nothing else.
-- **RRI has only full updates.** UPDATE and CHHOLDER replace the object, and an omitted optional value is
-  deleted (gap §4.1).
-
-Today the neutral layers turn every RPP update into an EPP delta (§2). On RRI the delta would have to be turned
-back into a full state. So the proposal keeps the client's intent, **partial** or **full**, all the way down to
-the model and the port. Each backend implements its own kind natively. The other kind is derived from it once,
-in shared code.
-
-#### 3.5.1 Two request types in the model
-
-| Intent | Model type | Meaning | Produced by |
-|---|---|---|---|
-| Partial | `DomainUpdate` (as today: `add`/`remove`/`change`) | Only the named changes. Everything else stays. | A PATCH that maps without the current state (`domain_patch.rpp_to_model`) |
-| Full | `DomainReplacement` (**new**) | The wanted state of every replaceable member. An omitted member is cleared. | A PUT (`domain_replacement.rpp_to_model`), and a PATCH that needs the current state (§3.5.3) |
-
-`DomainReplacement` holds:
-
-- only the members a client may replace: `registrant`(s), `contacts`, `nameservers`, `dns` and the client
-  statuses with their reasons;
-- `auth_info` as an explicit intent: `KEEP`, `SET(pw)` or `CLEAR`. A PUT without `authInfo` is `KEEP`, as
-  [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-domain) decides today. A PATCH `remove /authInfo`
-  is `CLEAR`.
-
-Read-only members (`provMetadata`, server statuses, `subordinateHosts`) are not part of it. So a PUT no longer
-needs the read representation in order to keep them. That is what
-`domain_replacement.rpp_to_model_with_current` does now.
-
-The same applies to contacts (`ContactUpdate` and a new `ContactReplacement`) and to hosts (`HostUpdate` and a
-new `HostReplacement`, which is EPP only).
-
-#### 3.5.2 Native and derived per backend
-
-The port has both methods: `update(delta, current=None)` and `replace(wanted, current=None)`.
+The model already keeps the client's intent apart: a partial update is a `*Update` delta, a full one a
+`*Replacement`. The two protocols make opposite choices:
 
 | | EPP adapter | RRI adapter |
 |---|---|---|
 | `update(delta)` | **Native**: one `<update>`. No read. | **Derived**: read (unless `current` is given), `wanted = apply(current, delta)`, then native `replace` |
-| `replace(wanted)` | **Derived**: read (unless `current` is given), `delta = difference(current, wanted)`, then native `update` | **Native**: UPDATE or CHHOLDER with the full state, plus AuthInfo commands. A read is still needed to pick the command and to carry data over (below). |
+| `replace(wanted)` | **Derived** (`derived_update.replace`, exists) | **Native**: UPDATE or CHHOLDER with the full state, plus AuthInfo commands |
 
-The two conversions are pure functions on the model, written once:
+#### 3.5.1 The second derivation
 
-- `difference(current: Domain, wanted: DomainReplacement) -> DomainUpdate` is today's
-  `domain_patch_difference.difference`. It moves from RPP dictionaries to models, see §3.5.4.
-- `apply(current: Domain, delta: DomainUpdate) -> DomainReplacement` is new.
+`core/ports/derived_update.py` gets `update(gateway, delta, current=None)`, the mirror of `replace`: it reads the
+object unless `current` is given, applies the delta with the object's `<object>_application.apply`, and calls the
+gateway's native `replace`. It is written once, next to `replace`, and the RRI gateways call it. A hand-written copy
+in the adapter is what rule 6 of [architecture.md](../agents/architecture.md) forbids.
 
-The derivation itself is one orchestration: read if needed, convert, call the native method. It sits in one
-module, `registry/derived_update.py`, which both adapters call. Rule 6 of
-[architecture.md](../agents/architecture.md) forbids a hand-written copy in each adapter.
+`apply` exists for domains, contacts and hosts and is pinned by round-trip tests against `difference`. RRI uses the
+domain and contact ones.
 
-Backend-specific refusals stay in the adapter that has them. `difference` produces a neutral delta that can
-include "clear" intents. The **EPP** adapter refuses the ones EPP cannot clear (`NotSupportedByBackend`), as
-`contact_difference.py` does today. The RRI adapter needs no such check, because a full update clears by
-omission.
+#### 3.5.2 The native RRI replace
 
-The native RRI `replace` for a domain:
+For a domain:
 
-1. Read `current` if it was not given. The read decides three things: whether the holders change (CHHOLDER or
-   UPDATE), whether an AuthInfo1 exists (DELETE-AUTHINFO1 before CREATE-AUTHINFO1), and whether anything changes
-   at all.
-2. If nothing differs and `auth_info` is `KEEP`, send no command and return "unchanged" (§3.5.3).
+1. Read `current` if it was not given. It decides whether the holders change (CHHOLDER or UPDATE), whether an
+   AuthInfo1 exists, and whether anything changes at all.
+2. If nothing differs and the `authInfo` intent is to keep it, send nothing and answer `ReplaceOutcome` unchanged,
+   with the `current` it read, so `core/flows/sponsor.py` still holds the 403 for a non-sponsor.
 3. If the holders differ → CHHOLDER(wanted). Otherwise, if anything else differs → UPDATE(wanted).
-4. `SET(pw)` → DELETE-AUTHINFO1 if one exists, then CREATE-AUTHINFO1(sha256(pw)). `CLEAR` → DELETE-AUTHINFO1 if
-   one exists. After a CHHOLDER both are skipped, because it already removed all AuthInfos.
-5. Return the response of the last command, or a partial-failure result (gap Q7).
+4. A new password → DELETE-AUTHINFO1 if one exists, then CREATE-AUTHINFO1(sha256(pw)). A cleared one →
+   DELETE-AUTHINFO1 if one exists. After a CHHOLDER both are skipped, because it removed all AuthInfos.
+5. Answer the response of the last command, or a partial failure (gap Q7).
 
-For a contact, step 3 is one UPDATE. The adapter also copies the verification blocks from `current` into the
-request, because RPP cannot carry them and leaving them out deletes them (gap §4.5).
+For a contact, step 3 is one UPDATE, and the adapter copies the verification blocks of `current` into the request,
+because RPP cannot carry them and leaving them out deletes them (gap §4.5).
 
-#### 3.5.3 Flows after the split
+What a backend cannot clear stays in its adapter (`registry_adapter/epp/refusals.py`). RRI needs no such check,
+because a full update clears by omission.
 
-| RPP request | Flow | EPP commands | RRI commands |
-|---|---|---|---|
-| PATCH that maps directly | `backend.update(delta)` → read back | update, info (2) | INFO, UPDATE, [AuthInfo], INFO (3+) |
-| PATCH that needs the current state | read → JSON Patch on the read representation → `DomainReplacement` → `backend.replace(wanted, current)` → read back | info, update, info (3) | INFO, UPDATE, [AuthInfo], INFO (3+) |
-| PUT | `backend.replace(wanted)` → read back | info, update, info (3), as today | INFO, UPDATE, [AuthInfo], INFO (3+) |
+#### 3.5.3 Commands per RPP request
 
-- For a PATCH that needs the current state, the result becomes a wanted state, not a delta.
-  `domain_patch.rpp_to_model_with_current` stops after the JSON Patch has been applied (json §5.2.2). It maps the
-  patched representation to a `DomainReplacement`, and it no longer calls the difference. EPP derives the delta
-  in its adapter, and RRI uses the wanted state as it is. The read the flow already made is passed as
-  `current`, so neither backend reads twice.
-- For a PUT, the flow does not read. The backend reads, because both backends need the current state for a full
-  update: EPP to compute the difference, RRI to pick the command. The flow has no reason to read for its own
-  sake.
-- **A request that changes nothing** sends no command, as today. Today `patch_domain` and `replace_domain`
-  find this out from an empty delta. After the split, `replace` returns a result marked `unchanged`, together with
-  the `current` it read. The flow then runs `require_sponsor` with it (`flows/sponsor.py`), so the 403 for a
-  non-sponsor stays where it is. On RRI this also avoids sending an UPDATE that only repeats the stored data.
-- The read-back after a mutation, and its 202 when the read-back fails, stay in the flows and work the same for
-  both backends.
-- `flows/hosts.py` loses `_difference`. That becomes `difference(current: Host, wanted: HostReplacement)` in the
-  model, called by the EPP adapter. `replace_host` and `patch_host` take the same shape as the domain flows.
+| RPP request | EPP commands | RRI commands |
+|---|---|---|
+| PATCH that maps directly | update, info (2) | INFO, UPDATE, [AuthInfo], INFO (3+) |
+| PATCH that needs the current state | info, update, info (3) | INFO, UPDATE, [AuthInfo], INFO (3+) |
+| PUT | info, update, info (3) | INFO, UPDATE, [AuthInfo], INFO (3+) |
 
-#### 3.5.4 Cost and risk of the split
+The read-back after a mutation, and its 202 when it fails, are in `core/flows/read_back.py` and work the same for
+both backends.
 
-- **The domain difference moves from RPP dictionaries to models.** `domain_patch_difference.py` compares two RPP
-  representations today, and its behaviour is pinned by `test_rpp_domain_patch_current_mapper.py` and
-  `test_rpp_domain_replacement_mapper.py`. The model must keep what the difference depends on:
-  - `nameservers` (`hostObj`) kept apart from `ns` records with glue (`hostAttr`), and refused together;
-  - a status whose reason changed, sent as a remove and an add;
-  - per-host address changes of glue records;
-  - the refusal of changes to members outside `CHANGEABLE`.
+#### 3.5.4 Other RRI operations
 
-  `Domain.ns` with `host_objs` and `host_attrs`, and `status_reasons`, hold all of this already. The tests move
-  to model level with the same cases.
-- **`apply` is new code.** It is pinned by round-trip tests: for every delta the EPP mappers can produce,
-  `difference(current, apply(current, delta))` must equal `delta`, up to order.
-- **EPP behaviour does not change.** The EPP commands of every request stay the same, so the integration suite
-  proves the split (§5). This happens in the prerequisite issue, before any RRI code exists.
-- **Contacts**: `contact_difference.py` already works on models. It moves to `models/` as the neutral
-  `difference`. Its EPP checks (what EPP cannot clear, `with_stored_localization`) go to the EPP adapter.
-
-#### 3.5.5 Other RRI flows
-
-- **Create with authInfo**: `create` on RRI is CREATE, then CREATE-AUTHINFO1 in the adapter. The handler keeps its
-  read-back and its 202 rule.
-- **The domain transfer** follows gap Q3. Under option C the RRI `transfer()` returns `UNIMPLEMENTED_COMMAND`.
-- **Renew** on RRI: `renew()` returns `UNIMPLEMENTED_COMMAND`. `renew_domain` reads `exDate` first when no
-  `expiryDate` was given, which would be a wasted INFO. So the flow asks `profile.supports_renew` first.
-- **Messages**: `read_message` is protocol-neutral already: poll, then compare ids. RRI's `msgcnt` fills
+- **Create with authInfo**: CREATE, then CREATE-AUTHINFO1, in the adapter. The flow keeps its read-back and its 202.
+- **Domain transfer** follows gap Q3. Under option C the RRI `transfer()` answers `UNIMPLEMENTED_COMMAND`.
+- **Renew**: `renew()` answers `UNIMPLEMENTED_COMMAND`. The renew flow reads `exDate` when no `expiryDate` is
+  given, which would be a wasted INFO, so it asks `profile.supports_renew` first.
+- **Restore**: RESTORE per gap Q6.
+- **Messages**: `core/flows/message/` is protocol-neutral already (poll, then compare ids). RRI's `msgcnt` fills
   `queue_size`.
 
 ### 3.6 Models
 
-The model must hold what either backend holds. Changes, each with its own tests:
+The model must hold what either backend holds. Each change has its own tests, and the EPP mapping of each stays as
+it is.
 
-| Model | Change |
+| Model (`core/model/…`) | Change |
 |---|---|
-| `DomainReplacement`, `ContactReplacement`, `HostReplacement` | New: the full-update request with an explicit `auth_info` intent (§3.5.1). One file each. |
-| `difference`, `apply` | New neutral conversions between the full and the partial request (§3.5.2): `models/domain_difference.py`, `models/domain_application.py`, and the same for contacts and hosts. |
-| `Domain.contacts` / `ContactReference.types` | Neutral role names (`registrant`, `admin`, `tech`, `billing`, `generalRequest`, `abuse`), and several `registrant`s allowed (gap Q1). |
-| `Domain` DNS | Add apex and subdomain `a`/`aaaa`/`mx` records (RRI `Nsentry`). `NS` stays: RRI name servers are `HostAttr` (`hostObj` is never used on RRI). |
-| `DnsSec` | RRI uses `key_data` only. No change. |
-| `Domain` status | Neutral labels already (`ok`, `pendingCreate`, `serverHold` …). Add `status_due` next to `status_reasons` for the `failed` deadline. |
-| `Domain` read | `authInfo` absent on RRI. `crDate` absent when RRI gives `before …`. |
-| `Contact` | `email` already a list. Phone exactly one on RRI (checked by the profile). Add `verification: list[...]` as opaque carry-over data, which is never rendered to RPP. |
-| `QueueMessage.event` | Add a neutral `ServiceNoticeEvent` and an `ExpirationEvent`. `TransferEvent` gains an optional source so the RRI `chprovAuthInfo` fits. |
-| `ResultCode` | Unchanged. `ErrorResponse` gains an optional `registry_code: str` (the 11-digit DENIC code) for the detail and the logs. |
+| `domain/` contacts | Neutral role names (`registrant`, `admin`, `tech`, `billing`, `generalRequest`, `abuse`), several registrants (gap Q1). |
+| `domain/` DNS | Apex and subdomain `a`/`aaaa`/`mx` records (RRI `Nsentry`). Name servers on RRI are host attributes only. |
+| `domain/` status | `status_due` next to `status_reasons`, for the `failed` deadline (gap Q5). |
+| `domain/` read | `authInfo` absent on RRI. `crDate` absent when RRI gives `before …`. |
+| `contact/` | `verification` as opaque carry-over data, never rendered to RPP. |
+| `message/` | A neutral `ServiceNoticeEvent` and an `ExpirationEvent`. `TransferEvent` gains an optional source, for `chprovAuthInfo`. |
+| `core/result` | `ResultCode` unchanged. `ErrorResponse` gains an optional `registry_code: str` (the 11-digit DENIC code), for the detail and the logs. |
 
-The known-debt rule applies: `models/domains.py` holds 17 classes (#20). New model classes go into files of their
-own, and the debt must not grow.
+New classes go into files of their own: the known debt of several classes per file (#20) must not grow.
 
-### 3.7 Mappers and capability checks
+### 3.7 Capabilities and the backend profile
 
-The RPP mappers now decide two things: whether RPP input is valid, and whether EPP can hold it. The second
-question moves behind an injected **`BackendProfile`**, passed the way `IdnTables` is passed today
-(`create_app` → `app.config` → handler → mapper):
+`registry_adapter/rri/profile.py` holds `RRI_PROFILE`:
 
-- `NotSupportedByEpp(feature)` becomes `NotSupportedByBackend(feature, backend_name)`, with code `02102` as now.
-  For EPP the message text stays `… cannot be expressed in EPP`, so the existing assertions hold.
-- `BackendProfile` holds the facts the mappers check:
-  - `contact_labels`: EPP `admin`/`billing`/`tech`; RRI `generalRequest`/`abuse`.
-  - `max_registrants`: EPP 1; RRI 5.
-  - `domain_record_types`: EPP `ns` (+glue), `ds`, `dnskey`; RRI `ns` (+glue), `a`, `aaaa`, `mx`, `dnskey`.
-  - `host_objects`: EPP yes; RRI no.
-  - `client_statuses`: EPP yes; RRI no.
-  - `contact_fax`, `contact_localization`, `contact_region`: EPP yes; RRI no.
-  - `contact_phones_max`.
-  - `supports_renew`, `supports_contact_delete`, `supports_transfer_query`.
-  - `objects` (for discovery) and `profiles`.
-- `IdnTables` stays EPP-specific. On RRI, the profile accepts no `lgr`, or one configured name (gap Q11), and
-  sends `uName` as the RRI `Domain`.
-- What a backend cannot *clear* is backend logic, and moves into the adapter (§3.5.2). The neutral difference
-  goes to `models/`, and the refusal of what EPP cannot clear goes to the EPP adapter. On RRI nothing needs
-  clearing, because the update replaces the whole object.
-- The RPP mappers stop computing differences. `domain_replacement`, `domain_patch.rpp_to_model_with_current`,
-  `contact_replacement`, `contact_patch.rpp_to_model_with_current` and `host_patch.rpp_to_model_with_current`
-  return a `*Replacement`. `domain_patch.rpp_to_model` and `contact_patch.rpp_to_model` still return a delta, or
-  `None` when the current state is needed. See
-  [architecture.project.md](../agents/architecture.project.md#unsupported-input) for the three kinds of
-  unsupported input, which stay as they are.
+| Fact | EPP | RRI |
+|---|---|---|
+| `contact_labels` | `admin`, `billing`, `tech` | `generalRequest`, `abuse` (gap Q2) |
+| `max_registrants` | 1 | 5 (gap Q1) |
+| `domain_record_types` | `ns`, `ds`, `dnskey` | `ns`, `a`, `aaaa`, `mx`, `dnskey` |
+| `host_objects` | yes | no |
+| `client_statuses` | yes | no |
+| `contact_fax`, `contact_localization`, `contact_region` | yes | no |
+| `contact_phones_max` | 1 | 1 |
+| `supports_renew` | yes | no |
+| `supports_contact_delete` | yes | no |
+| `objects` | `domainName`, `host`, `contact` | `domainName`, `contact` |
+| `profiles` | `epp-compatibility` | to be decided (§3.10) |
+| `lgrs` | from `rpp_idn_lgr_tables` | none, or one configured name (gap Q11) |
+
+**The profile states what the protocol can do; the test environment states what one server does.** A fact goes
+into `BackendProfile` when it is true of every server that speaks the protocol, whoever reads it: a mapper, a flow,
+discovery or the test selectors (§5.2). What one test server does (its periods, its defects, its credentials) goes
+into the test environment (§5.3), never into the profile. The profile's docstring says who reads each fact, and a
+fact nobody reads is removed.
+
+New facts, each read by the proxy and by the selectors:
+
+| Fact | EPP | RRI | Read by |
+|---|---|---|---|
+| `domain_transfer_operations: frozenset[str]` (replaces `supports_transfer_query`) | `request`, `query`, `cancel`, `approve`, `reject` | none (Q3 option C), or `request` (option B) | the transfer handlers, which answer 501 `02101` without a command |
+| `contact_transfer_operations: frozenset[str]` | the same five | none | the same |
+| `restore_report: bool` | yes | no (gap Q6) | the restore mapper, which refuses a report with 501 `02102` |
+| `auth_info_readable: bool` | yes | no | the domain mapper, which refuses `includeElements=authInfo` with 501 `02102` (P2) |
 
 ### 3.8 Result codes and errors
 
-- `rri_to_model_mapper/result_codes.py` holds the DENIC code → `ResultCode` table and the class-digit fallback in
-  [gap-analysis.md §5](gap-analysis.md#5-result-code-mapping). It is one table, unit-tested code by code.
-- `raise_epp_error` becomes `raise_registry_error`. Nothing else changes: it maps `ResultCode` through core
-  §18.1. When there is a DENIC code, the detail starts with it.
-- A `success` with warning or error messages (predelegation warnings, deadline infos) is logged with its codes,
-  never its arguments, because they can hold personal data
+- `registry_adapter/rri/result_codes.py` holds the DENIC code → `ResultCode` table and the class-digit fallback of
+  [gap-analysis.md §5](gap-analysis.md#5-result-code-mapping), unit-tested code by code.
+- The handlers render it through the existing path to core §18.1. When there is a DENIC code, the detail starts
+  with it.
+- A success with warning or info messages (predelegation warnings, deadline infos, MTEST's `13000000011`) is logged
+  with its codes, never its arguments, because they can hold personal data
   ([security.project.md](../agents/security.project.md)).
 
-### 3.9 Configuration and composition
+### 3.9 Settings and composition
 
-New keys, with all existing `rpp_epp_*` keys unchanged:
+`settings/rri_settings.py` holds `RriSettings`, and `Settings` gains `backend` and `rri`:
 
 ```yaml
 rpp_backend: epp                 # epp | rri, default epp
@@ -334,83 +245,234 @@ rpp_rri_port: 51131
 rpp_rri_use_tls: true
 rpp_rri_tls_insecure_skip_verify: false
 rpp_rri_timeout: 5
-rpp_rri_regacc_id: DENIC-1000022 # the sponsor id, gap Q17
 rpp_rri_lgr: null                # gap Q11
 ```
 
-`run.py` remains the single composition root. It reads `rpp_backend`, builds the client factory and the
-`BackendProfile` for it, and passes both to `SessionAuthenticator` and `create_app`. There is no `if backend ==`
-anywhere else.
+There is no `rpp_rri_regacc_id` (§3.2). The proxy holds no credentials: HTTP Basic is passed through as the LOGIN,
+as it is for EPP.
+
+`main.py` stays the only composition root. It reads `settings.backend`, builds the backend factory and the profile
+for it, and passes both to `SessionPool` and `create_app`. There is no `if backend ==` anywhere else.
 
 ### 3.10 Discovery
 
-`OBJECTS` and `PROFILES` come from the `BackendProfile`. On RRI they are `["domainName", "contact"]` and a profile
-to be decided. The EPP Compatibility Profile does not describe RRI, so it needs its own URN or a spec issue.
+`objects` and `profiles` come from the profile already. On RRI `objects` is `domainName` and `contact`. The EPP
+Compatibility Profile does not describe RRI, so RRI needs its own profile URN, or a spec issue.
 
 ## 4. Package layout
 
-Existing packages stay where they are, to keep the diff small and the history readable. New packages:
+The RRI adapter has the shape of the EPP one ([architecture.project.md](../agents/architecture.project.md#target)),
+with `gateways → commands → xml, session` and `session → common/transport`:
 
 ```
-src/registry/                    port: registry_backend.py, domain_gateway.py, contact_gateway.py,
-                                 host_gateway.py, message_gateway.py, backend_profile.py,
-                                 derived_update.py (the one derivation of §3.5.2)
-src/models/                      + domain_replacement.py, contact_replacement.py, host_replacement.py,
-                                 auth_info_intent.py, domain_difference.py, domain_application.py, …
-src/eppclient/epp_backend.py     EPP adapter over epp_domains_* etc.
-src/rriclient/                   rriclient.py (session), rri_backend.py (adapter),
-                                 rri_domains.py, rri_contacts.py, rri_messages.py
-src/rri_to_model_mapper/         request building and response parsing, result_codes.py,
-                                 statuses.py, rri_model/ (generated from the DENIC XSDs)
-tests/helper/fake_rri_client.py  replays RRI XML, like fake_epp_client.py
+src/registry_adapter/rri/
+├── session/             RriClient: LOGIN, LOGOUT, CTIDs, lock, reconnect
+├── xml/                 codec.py, generated/ (from docs/rri/xsd)
+├── commands/
+│   ├── shared/          the result and its messages, CTID
+│   ├── domain/          rri_request.py, domain_xml.py, domain_commands.py (as epp/commands, #120 D4)
+│   ├── contact/
+│   └── message/
+├── gateways/            RriBackend, RriDomainGateway, RriContactGateway, RriMessageGateway, RriHostGateway
+├── result_codes.py      DENIC code → ResultCode
+├── statuses.py          RRI status ↔ RPP status
+└── profile.py           RRI_PROFILE
+src/settings/rri_settings.py
+tests/helper/fake_rri_client.py      replays RRI XML, like fake_epp_client.py
+tests/integration/environments/      one descriptor per test environment (§5.3)
 ```
 
-This is a new top-level structure, so it needs the maintainer's confirmation (process rule 2).
+`import-linter` gets the contracts of `rri` in the phase that creates it: `rri` never imports `epp` or `rpp`, and
+only `rri/session` sends.
 
 ## 5. Testing
 
-- **The EPP suite is the safety net for the prerequisite and phases 1–3.** It must pass unchanged, both the unit tests and the
-  integration tests against the devcontainer EPP server
-  ([testing.project.md](../agents/testing.project.md)).
-- **RRI unit tests** use `FakeRriClient` with XML replies taken from the DENIC examples (`EX:` pages, ref §0), one
-  per transaction and per error class. They cover the update composition (UPDATE vs CHHOLDER, AuthInfo
-  sequences, carrying verification blocks over) and the result-code table.
-- **RRI integration tests** need the DENIC test environment: a membership, an allowlisted IPv4 and `rri.test.denic.de`.
-  The devcontainer has none of these. Options:
-  - a local RRI stub server, a counterpart of the EPP test server, which behaves like the DENIC test system
-    for the cases in `test_case_data`;
-  - a manual or CI job against DENIC test, with credentials kept outside the repository.
-  The data-driven suite `test_from_file_definition.py` assumes EPP behaviour (hosts, transfers, renew), so the
-  RRI run needs its own case set, or skips by backend profile.
+### 5.1 Levels
+
+| Level | EPP | RRI |
+|---|---|---|
+| Unit | `FakeEppClient` | `FakeRriClient` with replies from the DENIC examples (`EX:` pages, ref §0) and from MTEST, with personal data removed. One per transaction and per error class. They cover the update composition (UPDATE or CHHOLDER, AuthInfo sequences, verification carried over) and the result-code table. |
+| Wire | `create_app` with a fake backend and `EPP_PROFILE` | the same with `RRI_PROFILE`, for the refusals the profile drives |
+| Integration | the EPP test server (`epptest`) | DENIC MTEST (§5.4) |
+
+The integration suite is **one** suite: the same case files run against each environment, and select what differs
+(§5.2).
+
+### 5.2 Selectors in the case files
+
+A case file says which backends a case, a step or an expected result is for. A selector is a JSON object whose
+keys name facts, and it holds when every key holds:
+
+- `profile.<fact>`: a fact of the `BackendProfile` the app under test was composed with. The runner reads the
+  profile from the app, so the cases never restate it.
+- `env.<fact>`: a fact of the test environment (§5.3), for what one server does.
+
+| Value | Holds when |
+|---|---|
+| `true`, `false`, a string, a number | the fact equals it |
+| `{"contains": "admin"}` | the fact (a tuple or set) contains it |
+| `{"min": 2}`, `{"max": 1}` | the fact (a number) is at least or at most that |
+| `{"not": <value>}` | the inner value does not hold |
+
+A list of selectors holds when one of them holds. A key that names no fact fails the case when it is loaded, as a
+case that cannot be parsed does today, so a misspelt selector never skips silently. There is no selector on the
+backend's name: a difference is stated as the fact it comes from, and a missing fact is added to the profile or to
+the environment under the rule of §3.7.
+
+Where selectors go:
+
+| Where | Form | Effect |
+|---|---|---|
+| A group | `_group.json` in the group directory: `{"when": …}` | Every case of the group is skipped where it does not hold, e.g. `host_*` and `draft_host/` with `{"profile.host_objects": true}`. The runner does not collect `_group.json` as a case. |
+| A case | `"when": …` at the top level | The case is skipped where it does not hold. |
+| A step | `"when": …` in the step | The step is left out. A step whose `capture` a later step uses cannot have one: the loader refuses it. |
+| Any value in a step | `{"select": [{"when": …, "then": …}, …, {"then": …}]}` | The first entry that holds gives the value. The last entry, without `when`, is the default and is required. |
+
+`select` is how one step expects different results:
+
+```json
+"response": {"select": [
+  {"when": {"profile.client_statuses": false},
+   "then": {"status": 501, "headers": {"RPP-Code": "02102"}}},
+  {"then": {"status": 200, "body": {"status": ["clientHold"]}}}
+]}
+```
+
+and how a request differs, e.g. the contact roles of a domain create:
+
+```json
+"contacts": {"select": [
+  {"when": {"profile.contact_labels": {"contains": "admin"}}, "then": [{"label": "admin", "object": {"@type": "contact", "id": "{handle:a:cr1}"}}]},
+  {"then": [{"label": "abuse", "object": {"@type": "contact", "id": "{handle:a:ab1}"}}]}
+]}
+```
+
+The selectors are resolved first, then the placeholders, then the captures. A case skipped by a selector is reported
+with the facts that did not hold (`skipped: profile.host_objects is false`). The runner fails a case whose selectors
+skip it in every known environment, because it never runs.
+
+`any_of` stays for what the protocol leaves to the server, and `select` is for what differs by backend or server.
+The existing `"skip": "#<issue>"` stays for a known defect.
+
+### 5.3 Test environments
+
+A test environment is one backend server the suite runs against. It is chosen with `RPP_TEST_ENV` (default
+`epp-docker`) and described in `tests/integration/environments/<name>.yaml`:
+
+```yaml
+# tests/integration/environments/rri-mtest.yaml
+config: config.rri-mtest.yaml       # RPP_CONFIG_FILE of the app under test
+max_workers: 4                      # MTEST allows 4 sessions per RegAcc
+rpp_requests_per_minute: 25         # paced per registrar, under the ACL of 100 RRI requests a minute
+registrars:                         # the slots the cases name
+  a: {user: RRI_MTEST_A_USER, password: RRI_MTEST_A_PASSWORD}
+  b: {user: RRI_MTEST_B_USER, password: RRI_MTEST_B_PASSWORD}
+handle: "{regacc}-{random_id_10}{suffix}"   # a handle starts with the RegAccId
+facts:
+  tld: de
+  restore_within_run: false         # the RGP lasts 1 day on MTEST
+  failed_logins_lock: true          # 10 failed LOGINs lock the user for an hour
+```
+
+`epp-docker.yaml` describes today's backend: `config.yaml`, 8 workers, registrars `a` = `foo`/`bar` and `b` =
+`baz`/`qux`, handles `FO-…` and `BZ-…`, TLD `example`, and the facts the cases depend on today, such as the RGP in
+minutes and the defects listed in [testing.project.md](../agents/testing.project.md#backend) (`env.contact_chg_of_missing_form_ignored`, …).
+
+New placeholders take the place of what the cases hard-code:
+
+| Placeholder | EPP test server | MTEST |
+|---|---|---|
+| `{auth:a}`, `{auth:b}` | `Basic` of `foo:bar`, `baz:qux` | `Basic` of the credentials in `.env` |
+| `{auth:a:wrong_password}`, `{auth:unknown_user}` | `foo:cat`, `ghost:nope` | the same forms; these cases select `{"env.failed_logins_lock": false}` and do not run on MTEST |
+| `{handle:a:ud1}` | `FO-{random_id_10}ud1` | `DENIC-<n>-{random_id_10}ud1` |
+| `{tld}` | `example` | `de` |
+| `{regacc:a}` | `foo` | `DENIC-<n>` |
+
+The credentials go into `.env` in the repository root, which the runner loads with python-dotenv (in
+`requirements.txt` already). The proxy never reads it. `.env` goes into `.gitignore`, and a committed `.env.example`
+names the variables with no values. The runner puts a credential into a request header when it sends the request,
+never into the case dictionary, so a failure report cannot print it ([security.md](../agents/security.md)).
+
+### 5.4 RRI integration tests on MTEST
+
+- **Access.** MTEST is `rri.test.denic.de:51131`. It needs a DENIC membership, two RegAccs with an RRI login each,
+  and the IPv4 address of the test machine on the allowlist of both (ref §2.1). The devcontainer behind NAT has the
+  host's address. Where it has none, the MTEST run is not possible, and the plan of the phase says so.
+- **Two RegAccs** stand for the two registrars `a` and `b` the cases already use: the sponsor checks (403), a
+  handle of another RegAcc (`63200020603`), and a transfer once Q3 allows one.
+- **Limits.** MTEST allows 4 sessions per RegAcc and 100 requests a minute. The run uses at most 4 workers, each
+  holding one session per registrar, and the runner paces each registrar's RPP requests to
+  `rpp_requests_per_minute`, because one RPP request can cost up to four RRI commands (§3.5.3). An ACL refusal
+  fails the step with a message that names the limit.
+- **Lockout.** A wrong password counts towards the lock of 10 failed LOGINs an hour, so no case with wrong
+  credentials runs on MTEST, and the runner refuses to start when `.env` lacks a variable rather than log in with an
+  empty one.
+- **Periods.** The RGP lasts a day, so restore cases select `env.restore_within_run` and RRI's RESTORE is covered
+  by unit tests. DENIC's mock-up scenarios (special names such as `NISpendingCreate`) can drive the NIS2 statuses
+  later (Q16).
+- **Data.** MTEST keeps what the cases create. Cases delete the domains they create. RRI cannot delete a contact,
+  so the handles stay, which the random part of each handle keeps from colliding.
+- **When it runs (P3).** The EPP run stays the check of [process.project.md](../agents/process.project.md#checks-before-done)
+  for every change. From R3 on, a change to `registry_adapter/rri/`, `core` or `rpp` also needs a passing MTEST run,
+  from a machine on the allowlist, **before it is merged**. Coding and review do not wait for it: a coder without an
+  allowlisted machine runs the unit tests with `FakeRriClient`, and its plan says that the MTEST run is pending. The
+  PR leaves draft only once the MTEST result is recorded in the plan. R3 adds this check to
+  `process.project.md`, when there is RRI code for it to check.
+
+### 5.5 Moving the existing cases
+
+The cases move in R1, on EPP alone, so the EPP run proves the move:
+
+1. A script rewrites the hard-coded values into placeholders: `Authorization` into `{auth:…}`, `FO-…`/`BZ-…` into
+   `{handle:…}`, `.example` into `.{tld}`.
+2. `_group.json` for the groups that need a fact (`host_*`, `draft_host`, transfers, renew, contact delete).
+3. Selectors on the steps and results that depend on a defect or a period of the EPP test server, by its `env` fact.
+4. The EPP run passes with the same number of passed and skipped cases as before. The plan records both counts.
+
+The cases for RRI behaviour (several holders, `generalRequest`/`abuse`, `a`/`aaaa`/`mx` records, refused host
+objects) are added in the RRI phases, as `select` entries in the existing files where the request is the same, and
+as new files with a `when` where it is not.
 
 ## 6. Migration plan
 
-One PR per phase, each following [process.md](../agents/process.md), with a branch, a `.plan/` file and the full
-`pytest` run. The prerequisite and phases 1–3 change no behaviour.
+One PR per phase, each following [process.md](../agents/process.md), with a branch, a `.plan/` file and the checks
+of §5.4. From R3 on, a PR is merged only after a recorded MTEST pass.
 
 | Phase | Content | Behaviour change |
 |---|---|---|
-| 0 | **Prerequisite**, [issue #108](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/108) ("Keep full and partial updates apart down to the model"): split full and partial updates (§3.5). Add the `*Replacement` types. Move the differences to `models/`, the domain one from RPP dictionaries to models. Add `apply`. EPP gets `replace` as a derived method. The commands sent to EPP stay the same. | None |
-| 1 | Add the `registry/` port and the EPP adapter. Move the derivation of phase 0 to `registry/derived_update.py`. Controllers and flows call `get_backend()`. Rename the authenticator and `raise_registry_error`. | None |
-| 2 | Add `BackendProfile`, inject it, and rename `NotSupportedByEpp` → `NotSupportedByBackend` with the same texts for EPP. Move the EPP-only checks behind the profile. Discovery reads it. | None |
-| 3 | Add `TCPClient` framing. Widen the models as in §3.6, with the EPP mapping unchanged. | None |
-| 4 | Add `rriclient` with session, framing, LOGIN/LOGOUT, CTID rules, the result-code table and `FakeRriClient`. | New backend, off by default |
-| 5 | RRI domains: CHECK, INFO, CREATE (+AuthInfo1), UPDATE/CHHOLDER, DELETE, and RESTORE per gap Q6. | RRI only |
-| 6 | RRI contacts: CHECK, INFO, CREATE, UPDATE (with verification carried over). | RRI only |
-| 7 | RRI messages: QUEUE-READ/DELETE and the type mapping. | RRI only |
-| 8 | Transfer per gap Q3, and anything decided for Q8–Q10 and Q16. | RRI only |
-| 9 | Docs: `architecture.project.md` (the request lifecycle gains the port and the adapters), `testing.project.md` (the RRI backend), `security.project.md` (RRI credentials, the login lockout risk), `overview.project.md`, and the README. | — |
+| R0 | **Prerequisite**: #120 merged. | — |
+| R1 | Test environments, `.env`, the placeholders and the selectors (§5.2, §5.3). The cases moved (§5.5). The new profile facts of §3.7, read by the handlers and mappers, with the EPP values. `testing.project.md` describes the selectors and the environments. | None for EPP |
+| R2 | `TCPClient` framing. The models widened as in §3.6, with the EPP mapping unchanged. | None |
+| R3 | `rri/session`, `rri/xml` with the generated code, CTIDs, the result-code table, `FakeRriClient`, `RriSettings`, `RRI_PROFILE`, the composition in `main.py`. `rri-mtest.yaml`. On MTEST: LOGIN and LOGOUT for both RegAccs. Then the session behaviour that EPP and RRI share moves to `common`. | New backend, off by default |
+| R4 | RRI domains: CHECK, INFO, CREATE (+AuthInfo1), UPDATE/CHHOLDER, DELETE, RESTORE (Q6). `derived_update.update`. | RRI only |
+| R5 | RRI contacts: CHECK, INFO, CREATE, UPDATE with verification carried over. | RRI only |
+| R6 | RRI messages: QUEUE-READ, QUEUE-DELETE and the type mapping. | RRI only |
+| R7 | Transfer per Q3, and what is decided for Q8–Q10 and Q16. | RRI only |
+| R8 | Docs: `architecture.project.md` (the RRI adapter), `testing.project.md` (MTEST), `security.project.md` (RRI credentials, the lockout), `overview.project.md`, the README. | — |
 
 ## 7. Risks
 
 | Risk | Mitigation |
 |---|---|
-| A full-replacement update loses data the proxy did not read or does not know. | XML with strict XSDs. Carry over unknown and NIS2 data. Unit tests that INFO → UPDATE round-trips every field. |
-| Read and write are not atomic, so a concurrent change between them is lost. | Same as the EPP path today (`architecture.project.md`). Document it, and map `53000000012` to a retryable status. |
-| Moving the domain difference from RPP dictionaries to models changes EPP behaviour unnoticed. | Done on its own as the prerequisite (phase 0). The mapper tests move to model level with the same cases. The `apply`/`difference` round-trip tests and the EPP integration suite run unchanged (§3.5.4). |
-| Multi-command requests partly fail. | Gap Q7. Tests for every split point. |
-| Anyone with network access can lock the registrar out of RRI with bad logins. After 10 failed LOGINs DENIC blocks the user for an hour, and every HTTP Basic attempt with a wrong password for a username without a session costs a LOGIN. | **Not addressed for now.** Accepted as a known risk. A later step could add a per-username failure counter with back-off that answers 401 locally ([security.md](../agents/security.md)). |
-| Writes are non-idempotent, so a retry after a timeout duplicates or fails. | Never retry a command that was written. CTIDs unique per command. |
-| Quota and ACL use grows, because a PATCH costs 3–4 requests. | Count requests per RPP operation in the tests. Read-backs stay optional (202 on failure). |
+| A full-replacement update loses data the proxy did not read or does not know. | XML with strict XSDs. Verification and unknown data carried over. Unit tests that INFO → UPDATE round-trips every field. |
+| Read and write are not atomic, so a concurrent change between them is lost. | As on EPP today. Map `53000000012` to a status a client can retry (Q19). |
+| A request of several commands fails part way. | Gap Q7. Tests for every split point. |
+| Anyone with network access can lock a RegAcc out of RRI with bad logins: 10 failed LOGINs lock the user for an hour, and every HTTP Basic attempt with a wrong password for a user without a session costs a LOGIN. | **Not addressed for now**, accepted as a known risk. In the tests, no case with wrong credentials runs on MTEST (§5.4). |
+| Writes are not idempotent, so a retry after a timeout duplicates or fails. | Never retry a written command. A new CTID per command. |
+| An MTEST run uses up the ACL or the sessions and fails for reasons unrelated to the change. | At most 4 workers, requests paced per registrar, an ACL refusal reported as such. |
+| The MTEST run needs an allowlisted machine, so RRI work could stall or be merged untested. | Coding and review go on with the `FakeRriClient` unit tests. Nothing merges without a recorded MTEST pass (§5.4). |
+| Selectors make cases skip where they should run, and a regression hides behind a skip. | Unknown facts fail at load. Every skip names its facts. A case skipped in every environment fails. R1 compares the counts before and after. |
+| The profile collects test-only facts. | The rule of §3.7: protocol facts in the profile, server facts in the environment. |
 | NIS2 verification is not reachable through RPP, so domains end in `serverHold`. | State it in discovery and the README. Gap Q16. |
-| The DENIC docs contain errors (ref §0.3). | The XSDs and recorded real responses are authoritative. Mark each doc-based assumption in the tests. |
+| The DENIC docs contain errors (ref §0.3). | The XSDs and recorded MTEST replies are authoritative. Each assumption from the docs is marked in its test. |
+
+## 8. Open questions of this plan
+
+Besides [gap-analysis.md §7](gap-analysis.md#7-open-questions):
+
+| # | Question | Proposal | Decision |
+|---|---|---|---|
+| P1 | Is the RegAccId of an RRI session always the prefix of its login (§3.2)? | Derive it from the login. | **Yes** (maintainer). Derived from the login, no setting. |
+| P2 | `includeElements=authInfo` on RRI, which never returns authInfo. | 501 `02102` through `auth_info_readable`, so a client is not told there is none. | **Accepted** (maintainer). |
+| P3 | Is the MTEST run a required check for RRI phases, or best effort when an allowlisted machine is at hand? | Required for R3–R7, recorded in the plan. | **Required before merge** (maintainer): coding and review go on without it, the PR leaves draft only after a recorded MTEST pass (§5.4). |
+| P4 | The licence of the DENIC XSDs in [docs/rri/xsd/](xsd/). DENIC publishes them openly but states no licence. | Keep them checked in. | **Accepted** (maintainer). |

@@ -128,7 +128,7 @@ cases to define:
 Today `flows/domains.py` turns PUT and PATCH into an EPP `DomainUpdate` delta (add/remove/change), and it reads
 first only when it must. RRI needs the full wanted state. The refactoring keeps partial (PATCH) and full (PUT)
 updates apart down to the model and the port. RRI implements the full update natively, and derives the partial
-one from it ([refactoring.md §3.5](refactoring.md#35-full-and-partial-update-as-separate-paths)):
+one from it ([refactoring.md §3.5](refactoring.md#35-full-and-partial-updates)):
 
 1. INFO (own, `recursive=false`) gives the current domain. On RRI this read is always needed, which includes the
    PATCHes `domain_patch.rpp_to_model` maps without a read today.
@@ -186,7 +186,7 @@ not return it, but it is the RegAccId encoded in the handle prefix. `upDate` ←
 `status` is required in RPP but RRI has no contact status, so the proxy would synthesise `ok`, see Q14.
 
 **Update**: full replacement in RRI (§3.1 has the pattern). `contact_difference.py` makes an EPP delta and refuses
-what EPP cannot clear. After the split ([refactoring.md §3.5](refactoring.md#35-full-and-partial-update-as-separate-paths)),
+what EPP cannot clear. After the split ([refactoring.md §3.5](refactoring.md#35-full-and-partial-updates)),
 a PUT reaches the RRI adapter as a `ContactReplacement`, which it sends whole with the verification blocks
 carried over. A PATCH reaches it as a delta, which is applied to the contact it read. A contact UPDATE starts a new NIS2 risk assessment for every domain that uses the contact as holder
 (ref §6.4). That is a significant side effect of a PATCH, and the response cannot express it.
@@ -314,10 +314,10 @@ Until then the adapter must at least keep the stored verification blocks across 
 
 ### 4.6 Sponsor identity
 
-`flows/sponsor.py` compares the sponsor of the object with `epp_client.username`, and in EPP the login id is the
+`core/flows/sponsor.py` compares the sponsor of the object with `backend.sponsor_id`, and in EPP the login id is the
 `clID`. In RRI the login (`DENIC-1000022-RRI`) is not the RegAccId (`DENIC-1000022`). The backend session must
-expose a sponsor id of its own. It could be derived from the login handle (`DENIC-<n>`) or set in configuration.
-The derivation is not confirmed by DENIC, see Q17.
+expose a sponsor id of its own. It is derived from the login handle (`DENIC-<n>`), not set in configuration, because one
+deployment can serve several RegAccs. The maintainer confirmed the derivation, see Q17.
 
 ### 4.7 Client transaction id
 
@@ -372,7 +372,7 @@ messages (for example the predelegation warnings) has no RPP place except the re
 
 | Constraint (ref §2) | Effect on the proxy |
 |---|---|
-| TLS on `rri.denic.de:51131`, test `rri.test.denic.de:51131`. IPv4 allowlist (mandatory). | The proxy host must be allowlisted. The devcontainer cannot reach DENIC test without that, see [refactoring.md](refactoring.md#5-testing). |
+| TLS on `rri.denic.de:51131`, test `rri.test.denic.de:51131`. IPv4 allowlist (mandatory). | The proxy host must be allowlisted. The MTEST integration run needs an allowlisted machine, see [refactoring.md §5.4](refactoring.md#54-rri-integration-tests-on-mtest). |
 | Framing: 4-byte length counts the **payload only**. | EPP (RFC 5734) counts the header too. `TCPClient` adds 4 today, so the framing must become a parameter. |
 | No greeting. | `EPPClient.connect` reads a greeting first. An RRI client must not. |
 | 64 KB maximum request. | Fine for single objects. |
@@ -404,7 +404,7 @@ Each needs the maintainer's decision before implementation.
 | Q14 | Contact `status` (required in RPP, absent in RRI). | Synthesise `ok`. |
 | Q15 | Message type names for the RPP `type` filter, and `domainStatusUpdate` → `reviewResponseMessage` or `serviceNoticeMessage`. | `serviceNoticeMessage` for everything except `chprovAuthInfo` and `expire`/`domainDelete`. Ignore `type`, as the EPP profile does. |
 | Q16 | NIS2 verification and deadlines in RPP. | An RPP extension or DENIC profile. Out of scope for the first version. Spec issue. |
-| Q17 | The sponsor id of an RRI session. | Configuration (`rpp_rri_regacc_id`), checked against the handle prefix. |
+| Q17 | The sponsor id of an RRI session. | Per session, derived from the login handle (`DENIC-<n>`), because one deployment serves several RegAccs (the MTEST run uses two). Confirmed by the maintainer, see [refactoring.md §3.2](refactoring.md#32-session-and-authentication) (P1). |
 | Q18 | The CTID echo when a request causes several commands. | Echo the client's `RPP-Cltrid` unchanged and send `<cltrid>-n` on the extra commands. |
 | Q19 | Concurrent write `53000000012`: 409 or 500. | 409 (`2304`?), because the client may retry. |
 | Q20 | K/V or XML on the wire. | XML, see [refactoring.md](refactoring.md#33-rri-wire-format). |
