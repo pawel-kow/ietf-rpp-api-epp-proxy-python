@@ -8,7 +8,7 @@ Issue #115: a session the backend closed after idling gives a 500.
 - [x] `EPPClient.send_and_get_response`: log in again before sending when the session was closed; on a failed send, log in again and send once more; never retry after the command was sent. Raise when no session can be opened (also `supports_extension`).
 - [x] Fake transports get `closed_by_peer`.
 - [x] Unit tests `tests/unit/test_eppclient_reconnect.py` with a loopback server that closes the session.
-- [~] Run `pytest -n 8`, and the serial `pytest` once (`message/test1-query_head`).
+- [x] Run `pytest -n 8`, and the serial `pytest` once (`message/test1-query_head`).
 - [x] Docs: architecture.project.md (eppclient).
 
 ## Findings
@@ -20,3 +20,9 @@ Issue #115: a session the backend closed after idling gives a 500.
 ## Decisions
 
 - Accepted by the maintainer: check before sending, retry once after a failed send, never after the command was sent (a create or transfer may have run).
+
+## Results
+
+- `pytest -n 8`: 2110 passed, 5 skipped.
+- Serial `pytest`: 2110 passed, 5 skipped in 19 min, `message/test1-query_head` included.
+- The new unit tests fail without the change in `eppclient.py` (5 of 7) and pass with it.
