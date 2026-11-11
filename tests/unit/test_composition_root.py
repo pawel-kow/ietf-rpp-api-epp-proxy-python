@@ -4,8 +4,8 @@ from types import SimpleNamespace
 from config import Config, config
 from registry_adapter.epp.gateways.epp_backend import EppBackend
 from registry_adapter.common.transport.tcp_client import TCPClient
-import run
-from run import new_backend, new_epp_client, tls_context, tls_context_from_config
+import main
+from main import new_backend, new_epp_client, tls_context, tls_context_from_config
 
 
 def test_default_factory_connects_to_the_configured_backend():
@@ -81,11 +81,11 @@ def test_the_composition_root_gives_discovery_the_configuration():
 
 
 def test_the_composition_root_hands_the_configuration_to_the_app():
-    assert run.app.app.config["RPP_DISCOVERY_SETTINGS"] is config
+    assert main.app.app.config["RPP_DISCOVERY_SETTINGS"] is config
 
 
 def test_the_app_maps_lgr_to_the_configured_idn_tables():
-    tables = run.app.app.config["RPP_IDN_TABLES"]
+    tables = main.app.app.config["RPP_IDN_TABLES"]
 
     for lgr, table in (config.rpp_idn_lgr_tables or {}).items():
         assert tables.table(lgr) == table

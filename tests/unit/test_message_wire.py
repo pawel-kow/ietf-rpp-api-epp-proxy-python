@@ -4,13 +4,13 @@ import pytest
 from tests.helper.captured_log import capture_log
 
 from registry_adapter.epp.profile import EPP_PROFILE
-from app import create_app
+from rpp.http.app import create_app
 from connexion import ProblemException
-from controller.helper.rpp_response import problem_headers
-from controller.messages import _require_valid_id
+from rpp.http.headers import problem_headers
+from rpp.handlers.message.message_handlers import _require_valid_id
 from core.result.result_code import ResultCode
 from tests.helper.captured_log import capture_log
-from controller.session_authenticator import SessionAuthenticator
+from core.session.session_pool import SessionPool
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.unit.test_message_xml import DOMAIN, contact_trn, domain_trn, msg_q, pan, reply
@@ -34,7 +34,7 @@ def factory(username, password):
 
 @pytest.fixture(scope="module")
 def http():
-    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client()
+    return create_app(SessionPool(epp_backends(factory)), EPP_PROFILE).test_client()
 
 
 def answer(http, method, url, *replies, **kwargs):

@@ -5,7 +5,7 @@ from core.model.domain.domains import (
     DomainUpdate, DomainUpdateAdd, DomainUpdateChange, DomainUpdateRemove, HostAttr, NS,
 )
 from core.model.domain.ds_data import DsData
-from rpp_to_model_mapper import domain_patch
+from rpp.mapping.domain import domain_patch
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 

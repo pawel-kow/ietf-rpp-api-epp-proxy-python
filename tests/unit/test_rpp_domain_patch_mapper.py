@@ -6,7 +6,7 @@ from core.model.contact.contacts import ContactMinimal
 from core.model.domain.domains import ContactReferenceNew, HostObj
 from core.model.shared.common import AuthInfo
 from core.capabilities.unsupported_feature import UnsupportedFeature
-from rpp_to_model_mapper import domain_patch
+from rpp.mapping.domain import domain_patch
 
 CONTACT = {"@type": "contact", "id": "SH-8014"}
 HOST = {"@type": "host", "hostName": "ns1.foo.example"}

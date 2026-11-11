@@ -7,8 +7,8 @@ from core.model.message.queue_message import QueueMessage
 from core.model.message.transfer_event import TransferEvent
 from core.model.shared.contact_transfer_process import ContactTransferProcess
 from core.model.shared.domain_transfer_process import DomainTransferProcess
-from rpp_schema_validator import validate_schema
-from rpp_to_model_mapper import messages
+from rpp.schema.validator import validate_schema
+from rpp.mapping.message import messages
 
 DATE = "2026-11-05T16:49:34.000000Z"
 

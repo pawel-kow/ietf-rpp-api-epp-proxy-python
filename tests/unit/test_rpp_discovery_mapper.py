@@ -2,7 +2,7 @@ import pytest
 from jsonschema import ValidationError
 
 from core.model.shared.discovery import Discovery
-from rpp_to_model_mapper import discovery
+from rpp.mapping.discovery import discovery
 
 
 def a_discovery(**changes):

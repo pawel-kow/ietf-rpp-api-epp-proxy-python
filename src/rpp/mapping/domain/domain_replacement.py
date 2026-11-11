@@ -1,0 +1,30 @@
+from core.model.domain.domain_replacement import DomainReplacement
+from core.capabilities.backend_profile import BackendProfile
+from rpp.schema.validator import validate_schema
+from rpp.mapping.domain import domain_wanted
+from rpp.mapping.shared import auth_info, include_elements
+from rpp.mapping.shared.common import parse_rpp
+from rpp.mapping.domain.domain_wanted import CHANGEABLE
+from rpp.dto.rpp_auth_info import RPPAuthInfo
+from rpp.dto.rpp_domain import RPPDomain
+
+TYPE = "@type"
+OBJECT = "domainName"
+AUTH_INFO = "authInfo"
+
+
+def rpp_to_model(
+    domain_name: str, rpp: dict, requested: frozenset[str] = frozenset(), *, profile: BackendProfile,
+) -> DomainReplacement:
+    """Converts a full update to the domain it asks for. What it omits is cleared, except the data elements with
+    onDemand Visibility that `requested` (the `includeElements` of the request) does not name.
+
+    A member outside `domainName.update` is rejected, also a create-only or a read-only one (json §4.4, core §16.8).
+    """
+    validate_schema("domainName.update", rpp)
+    for member in rpp.keys() - {TYPE, *CHANGEABLE}:
+        raise ValueError(f"'{member}' cannot be sent in a full update")
+    parse_rpp(RPPDomain, {**rpp, "name": domain_name})  # rejects undeclared properties at any depth (json §4.9.1)
+    unchanged = include_elements.left_alone(OBJECT, rpp, requested)
+    password = auth_info.rpp_to_model(parse_rpp(RPPAuthInfo, rpp[AUTH_INFO])) if AUTH_INFO in rpp else None
+    return domain_wanted.rpp_to_model(domain_name, rpp, password, unchanged, profile=profile)

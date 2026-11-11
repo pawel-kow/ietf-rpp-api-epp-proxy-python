@@ -3,7 +3,7 @@ import jsonschema
 import pytest
 from connexion import ProblemException
 
-from controller.helper.rpp_response import map_request
+from rpp.http.operation import map_request
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 from core.model.domain import domain_difference
 from core.model.domain.dns_sec import DnsSec
@@ -12,7 +12,8 @@ from core.model.domain.ds_data import DsData
 from core.model.shared.common import AuthInfo
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
-from rpp_to_model_mapper import PatchNotApplicable, domain_patch, domains
+from rpp.mapping.domain import domain_patch, domains
+from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
 
 pytestmark = pytest.mark.usefixtures("epp_app_context")
 

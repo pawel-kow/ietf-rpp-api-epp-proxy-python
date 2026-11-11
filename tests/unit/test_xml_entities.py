@@ -3,8 +3,8 @@ import base64
 import pytest
 
 from registry_adapter.epp.profile import EPP_PROFILE
-from app import create_app
-from controller.session_authenticator import SessionAuthenticator
+from rpp.http.app import create_app
+from core.session.session_pool import SessionPool
 from tests.helper.epp_backends import epp_backends
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
 from registry_adapter.epp.xml.codec import str_to_epp
@@ -65,7 +65,7 @@ def client(*replies):
     def factory(username, password):
         return FakeEppClient(username, password, replies=list(replies))
 
-    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client()
+    return create_app(SessionPool(epp_backends(factory)), EPP_PROFILE).test_client()
 
 
 def test_a_message_with_an_entity_does_not_leak_through_the_api(secret_file):

@@ -3,8 +3,8 @@ import base64
 import pytest
 
 from registry_adapter.epp.profile import EPP_PROFILE
-from app import create_app
-from controller.session_authenticator import SessionAuthenticator
+from rpp.http.app import create_app
+from core.session.session_pool import SessionPool
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
@@ -45,7 +45,7 @@ def put(*replies, body=BODY):
     def factory(username, password):
         return FakeEppClient(username, password, replies=replies)
 
-    http = create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client()
+    http = create_app(SessionPool(epp_backends(factory)), EPP_PROFILE).test_client()
     return http.put(f"/domainNames/{NAME}", json=body, headers=AUTH)
 
 

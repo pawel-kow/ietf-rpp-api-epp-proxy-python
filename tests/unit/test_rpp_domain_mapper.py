@@ -8,7 +8,8 @@ from core.model.domain.domain_idn import DomainIdn
 from core.model.domain.domains import ContactReference, Domain, HostObj, NS
 from core.model.shared.common import AuthInfo
 from core.capabilities.unsupported_feature import UnsupportedFeature
-from rpp_to_model_mapper import IdnTables, domains
+from rpp.mapping.domain import domains
+from rpp.mapping.domain.idn_tables import IdnTables
 
 TABLES = IdnTables({"latn-1.0": "de"})
 

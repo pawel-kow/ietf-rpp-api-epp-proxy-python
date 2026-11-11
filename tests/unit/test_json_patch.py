@@ -1,7 +1,8 @@
 import pytest
 
-from rpp_to_model_mapper import PatchNotApplicable, json_patch
-from rpp_to_model_mapper.rpp_models import RPPPatchOperation
+from rpp.mapping.shared import json_patch
+from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
+from rpp.dto.rpp_patch_operation import RPPPatchOperation
 
 DOCUMENT = {
     "name": "foo.example",

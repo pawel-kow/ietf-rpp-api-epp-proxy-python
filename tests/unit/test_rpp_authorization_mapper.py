@@ -2,7 +2,7 @@ import pytest
 
 from core.model.shared.common import AuthInfo
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
-from rpp_to_model_mapper import rpp_authorization
+from rpp.mapping.shared import rpp_authorization
 
 SECRET = "TXkgU2VjcmV0IFRva2Vu"  # "My Secret Token", core §6.1
 

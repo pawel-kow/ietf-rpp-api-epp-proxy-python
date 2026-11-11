@@ -3,7 +3,9 @@ from registry_adapter.epp.profile import EPP_PROFILE
 import pytest
 
 from core.model.shared.common import AuthInfo
-from rpp_to_model_mapper import contact_replacement, domain_replacement, include_elements
+from rpp.mapping.contact import contact_replacement
+from rpp.mapping.domain import domain_replacement
+from rpp.mapping.shared import include_elements
 from tests.helper.contact_fixtures import put_body
 
 PASSWORD = {"@type": "authInfo", "method": "authinfo", "authdata": "NewSecret1!x"}

@@ -7,8 +7,8 @@ import pytest
 import uvicorn
 
 from registry_adapter.epp.profile import EPP_PROFILE
-from app import create_app
-from controller.session_authenticator import SessionAuthenticator
+from rpp.http.app import create_app
+from core.session.session_pool import SessionPool
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
@@ -38,7 +38,7 @@ def setup():
         clients.append(FakeEppClient(username, password, reply=EPP_OK))
         return clients[-1]
 
-    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE), clients
+    return create_app(SessionPool(epp_backends(factory)), EPP_PROFILE), clients
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +48,7 @@ def shared():
 
 
 def forget(clients):
-    """The authenticator keeps one session per user, so keep the client and clear what it recorded."""
+    """The session pool keeps one session per user, so keep the client and clear what it recorded."""
     for client in clients:
         client.sent.clear()
 

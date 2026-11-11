@@ -2,7 +2,7 @@ import pytest
 import connexion
 import json
 import uuid
-from run import app
+from main import app
 import datetime
 from tests.helper.integration_api_test import endpoint_test
 from tests.helper.check_datetime import check_datetime_format_utc_and_delta

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from registry_adapter.epp.profile import EPP_PROFILE
-from app import create_app
+from rpp.http.app import create_app
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
@@ -20,16 +20,16 @@ SETTINGS = SimpleNamespace(
 FACTORY_CALLS = []
 
 
-class NoEppAuthenticator:
+class NoSessions:
     """Fails the test if discovery asks for a session."""
 
-    def authenticate(self, username, password):
+    def session(self, username, password):
         FACTORY_CALLS.append((username, password))
         return None
 
 
 def app_with(settings):
-    return create_app(NoEppAuthenticator(), EPP_PROFILE, discovery_settings=settings).test_client()
+    return create_app(NoSessions(), EPP_PROFILE, discovery_settings=settings).test_client()
 
 
 @pytest.fixture(scope="module")
@@ -197,7 +197,7 @@ def test_bad_configuration_is_a_500_that_names_and_shows_nothing(key, value, cap
 
 
 def test_no_settings_at_all_is_a_500():
-    response = create_app(NoEppAuthenticator(), EPP_PROFILE).test_client().get("/.well-known/rpp", headers=HEADERS)
+    response = create_app(NoSessions(), EPP_PROFILE).test_client().get("/.well-known/rpp", headers=HEADERS)
 
     assert response.status_code == 500
     assert response.headers["RPP-Code"] == "02400"
@@ -219,7 +219,7 @@ def test_an_unexpected_failure_is_still_a_problem_detail_with_an_rpp_code():
 
 def test_the_objects_and_profiles_are_the_backends():
     profile = replace(EPP_PROFILE, objects=("domainName", "contact"), profiles=("urn:example:profile",))
-    http = create_app(NoEppAuthenticator(), profile, discovery_settings=SETTINGS).test_client()
+    http = create_app(NoSessions(), profile, discovery_settings=SETTINGS).test_client()
 
     body = http.get("/.well-known/rpp", headers=HEADERS).json()
 

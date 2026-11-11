@@ -5,7 +5,7 @@ from core.model.host.host import Host
 from core.model.host.host_check_response import HostCheckResponse
 from core.result.result_code import ResultCode
 from core.capabilities.unsupported_feature import UnsupportedFeature
-from rpp_to_model_mapper import host_availability, host_replacement, hosts
+from rpp.mapping.host import host_availability, host_replacement, hosts
 
 NAME = "ns1.example.example"
 

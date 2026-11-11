@@ -3,7 +3,7 @@ import pytest
 from core.model.domain.domains import DomainCheckResponseSingle
 from core.result.result_code import ResultCode
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
-from rpp_to_model_mapper import domain_availability
+from rpp.mapping.domain import domain_availability
 
 
 def availability(available, reason):

@@ -9,9 +9,9 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       from the defining module; star imports become the names used
 - [x] T1 Phase 2: `eppclient`, `epp_to_model_mapper`, `helpers` → `registry_adapter/{epp,common}`; `ns_map` passed in;
       `commands/not_used/` deleted; contracts renamed
-- [~] T2 Phase 3: `models`, `registry`, `flows` → `core/` per object; explicit imports; `BackendProfile` and the
+- [x] T2 Phase 3: `models`, `registry`, `flows` → `core/` per object; explicit imports; `BackendProfile` and the
       refusals → `core/capabilities`
-- [ ] T3 Phase 4: `controller` → `rpp/http` + `rpp/handlers`; mappers and schema validator → `rpp/`; session pool →
+- [~] T3 Phase 4: `controller` → `rpp/http` + `rpp/handlers`; mappers and schema validator → `rpp/`; session pool →
       `core/session`; `run.py` → `main.py`; `copy_models.sh`, Dockerfile and docs for `uvicorn main:app`
 - [ ] T4 Phase 5: `IdnTables` → `epp/`; read-back once (closes #17); settings passed in
 - [ ] T5 Phase 6: result envelope for gateway results
@@ -49,3 +49,13 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
 - D10 `DomainTransferProcess` and `ContactTransferProcess` go to `core/model/shared`, because `message`'s
       `TransferEvent` holds them and the object packages import only `shared` (besides `domain → contact`).
 - D11 `UnsupportedRppFeature` → `core/capabilities/UnsupportedFeature`: core does not name RPP.
+- D12 `controller/helper/rpp_response.py` is split into `rpp/http/{headers,problem,context,operation}.py`;
+      `handle_rpp_error` moves from `app.py` to `problem.py`, `get_backend` from `auth.py` to `context.py`.
+      `requested_elements` goes to `rpp/handlers/shared/`, because it calls a mapper and `http` must not.
+- D13 `SessionAuthenticator.authenticate` → `core/session/SessionPool.session`, which answers the backend; the token
+      info `{"backend": …}` is made by `rpp/http/security/SessionSecurityHandler` (was `EppBasicSecurityHandler`), and
+      `create_app(sessions, profile, …)`.
+- D14 `rpp/handlers/__init__.py` re-exports the 41 handlers by name (checked: the same set as before), for
+      `RelativeResolver('rpp.handlers')`. `rpp/dto/__init__.py` is empty.
+- D15 `tests/unit/test_openapi_spec.py` had to change for the renames, so it is repaired in passing: #124 is fixed.
+- D16 `rpp.http.app → rpp.mapping.domain.idn_tables` is an ignored import until phase 5 (finding 6).

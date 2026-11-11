@@ -1,6 +1,6 @@
 from core.model.contact.contact_check_response import ContactCheckResponse
 from core.result.result_code import ResultCode
-from rpp_to_model_mapper import contact_availability
+from rpp.mapping.contact import contact_availability
 
 
 def availability(available, reason=None):

@@ -5,7 +5,8 @@ from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.domain_restore_process import DomainRestoreProcess
 from core.model.domain.restore_report import RestoreReport
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
-from rpp_to_model_mapper import PatchNotApplicable, domain_restore_patch, domain_restore_process, domain_restore_report
+from rpp.mapping.domain import domain_restore_patch, domain_restore_process, domain_restore_report
+from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
 
 REPORT = {
     "@type": "restoreReport",

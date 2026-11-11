@@ -13,7 +13,9 @@ from core.model.domain.ds_data import DsData
 from core.model.host import host_application, host_difference
 from core.model.host.host import Host
 from core.model.shared.common import AuthInfo
-from rpp_to_model_mapper import contact_patch, domain_patch, host_patch
+from rpp.mapping.contact import contact_patch
+from rpp.mapping.domain import domain_patch
+from rpp.mapping.host import host_patch
 
 DOMAIN = "foo.example"
 HOST = "ns1.foo.example"

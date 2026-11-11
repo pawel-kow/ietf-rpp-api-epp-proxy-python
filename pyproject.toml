@@ -17,11 +17,10 @@ pythonpath = [
 addopts = "--strict-markers --tb=short -p no:warnings"
 
 # Module boundaries of #120, checked by `PYTHONPATH=src lint-imports` (docs/agents/architecture.project.md).
-# Written against today's package names; each phase of #120 renames them as it moves the code.
 [tool.importlinter]
-# app, config and run are modules, which import-linter cannot take as roots. An import of config or run is
-# therefore seen as external and forbidden by name. app and run as importers are checked once phase 4 moves them.
-root_packages = ["controller", "core", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper"]
+# main and config are modules, which import-linter cannot take as roots. An import of them is therefore seen as
+# external and forbidden by name.
+root_packages = ["core", "registry_adapter", "rpp"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
@@ -30,7 +29,7 @@ name = "core imports only the standard library"
 type = "forbidden"
 source_modules = ["core"]
 forbidden_modules = [
-    "app", "config", "controller", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper", "run",
+    "config", "main", "registry_adapter", "rpp",
     "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
 ]
 
@@ -57,27 +56,35 @@ forbidden_modules = ["core.model.contact", "core.model.domain", "core.model.host
 
 [[tool.importlinter.contracts]]
 id = "rpp-not-registry-adapter"
-name = "rpp (controller, rpp_to_model_mapper, rpp_schema_validator) never imports the registry adapter or XML"
+name = "rpp imports core only, never registry_adapter, XML or settings"
 type = "forbidden"
-source_modules = ["controller", "rpp_schema_validator", "rpp_to_model_mapper"]
-forbidden_modules = ["registry_adapter", "lxml", "xsdata"]
+source_modules = ["rpp"]
+forbidden_modules = ["config", "main", "registry_adapter", "lxml", "xsdata"]
+
+[[tool.importlinter.contracts]]
+id = "rpp-layers"
+name = "Inside rpp: handlers -> mapping, http; mapping -> dto, schema"
+type = "layers"
+containers = ["rpp"]
+layers = ["handlers", "mapping | http", "dto | schema"]
+ignore_imports = [
+    # Known debt (#120 finding 6): create_app builds the default IdnTables. Phase 5 moves them to the EPP adapter.
+    "rpp.http.app -> rpp.mapping.domain.idn_tables",
+]
 
 [[tool.importlinter.contracts]]
 id = "rpp-mapping-no-http"
-name = "rpp.mapping (rpp_to_model_mapper, rpp_schema_validator) never imports rpp.http, Flask or Connexion"
+name = "rpp.mapping never imports rpp.http, Flask or Connexion"
 type = "forbidden"
-source_modules = ["rpp_schema_validator", "rpp_to_model_mapper"]
-forbidden_modules = ["app", "controller", "connexion", "flask", "starlette", "werkzeug"]
+source_modules = ["rpp.mapping", "rpp.dto", "rpp.schema"]
+forbidden_modules = ["rpp.handlers", "rpp.http", "connexion", "flask", "starlette", "werkzeug"]
 
 [[tool.importlinter.contracts]]
 id = "registry-adapter-not-rpp"
-name = "registry_adapter never imports rpp, core.flows or a web framework"
+name = "registry_adapter never imports rpp, core.flows, core.session, settings or a web framework"
 type = "forbidden"
 source_modules = ["registry_adapter"]
-forbidden_modules = [
-    "app", "controller", "core.flows", "rpp_schema_validator", "rpp_to_model_mapper", "run",
-    "connexion", "dataclasses_json", "flask", "jsonschema", "starlette", "werkzeug",
-]
+forbidden_modules = ["config", "core.flows", "core.session", "main", "rpp", "connexion", "dataclasses_json", "flask", "jsonschema", "starlette", "werkzeug"]
 
 [[tool.importlinter.contracts]]
 id = "epp-layers"
@@ -102,14 +109,4 @@ id = "registry-adapter-common-standalone"
 name = "registry_adapter.common imports no project package"
 type = "forbidden"
 source_modules = ["registry_adapter.common"]
-forbidden_modules = [
-    "app", "config", "controller", "core", "registry_adapter.epp", "rpp_schema_validator", "rpp_to_model_mapper",
-    "run",
-]
-
-[[tool.importlinter.contracts]]
-id = "only-main-imports-settings"
-name = "Only main (run) imports settings (config), and nobody imports main"
-type = "forbidden"
-source_modules = ["controller", "core", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper"]
-forbidden_modules = ["config", "run"]
+forbidden_modules = ["config", "core", "main", "registry_adapter.epp", "rpp"]

@@ -6,7 +6,7 @@ from core.model.domain.domains import Domain, HostAttr, HostObj, NS
 from core.model.domain.ds_data import DsData
 from core.model.domain.key_data import KeyData
 from core.capabilities.unsupported_feature import UnsupportedFeature
-from rpp_to_model_mapper import domains
+from rpp.mapping.domain import domains
 
 DS_RDATA = {"keyTag": "12345", "algorithm": "3", "digestType": "1", "digest": "49FD46E6C4B45C55D4AC"}
 KEY_RDATA = {"flags": "257", "protocol": "3", "algorithm": "8", "publicKey": "AQPJ////4Q=="}

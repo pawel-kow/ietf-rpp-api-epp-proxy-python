@@ -3,14 +3,14 @@ import copy
 import pytest
 from connexion import ProblemException
 
-from controller.helper.rpp_response import map_request
+from rpp.http.operation import map_request
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 from core.model.contact.address import Address
 from core.model.contact.contacts import Contact, ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from core.model.shared.common import AuthInfo
-from rpp_schema_validator import validate_schema
-from rpp_to_model_mapper import contacts
+from rpp.schema.validator import validate_schema
+from rpp.mapping.contact import contacts
 
 pytestmark = pytest.mark.usefixtures("epp_app_context")
 

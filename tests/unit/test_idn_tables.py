@@ -1,6 +1,6 @@
 import pytest
 
-from rpp_to_model_mapper import IdnTables
+from rpp.mapping.domain.idn_tables import IdnTables
 
 TABLES = IdnTables({"latn-1.0": "de", "spa-1.0": "es"})
 

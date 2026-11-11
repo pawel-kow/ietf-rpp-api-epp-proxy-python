@@ -1,4 +1,4 @@
-from controller.helper.rpp_response import raise_registry_error
+from rpp.http.problem import raise_registry_error
 from registry_adapter.epp import contact_refusal
 from core.model.contact import contact_difference, contact_localization
 from core.model.contact.address import Address
