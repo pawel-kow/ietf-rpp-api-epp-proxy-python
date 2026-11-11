@@ -1,13 +1,7 @@
 from core.model.domain.domain_renew import DomainRenew
-from core.model.domain.domain_renew_response import DomainRenewResponse
 from core.model.domain.domain_restore import DomainRestore
-from core.model.domain.domain_restore_response import DomainRestoreResponse
 from core.model.domain.domain_transfer import DomainTransfer
-from core.model.domain.domain_transfer_response import DomainTransferResponse
-from core.model.domain.domains import (
-    Domain, DomainCheckResponseSingle, DomainCreateResponse, DomainDeleteResponse, DomainInfoResponse, DomainUpdate,
-    DomainUpdateResponse,
-)
+from core.model.domain.domains import (Domain, DomainUpdate)
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
 from registry_adapter.epp.commands.domain.domain_xml import (
@@ -16,12 +10,16 @@ from registry_adapter.epp.commands.domain.domain_xml import (
     parse_domain_response, parse_domain_restore_response, parse_domain_transfer_response,
     parse_domain_update_response, renew_domain_xml, restore_domain_xml, transfer_domain_xml,
 )
-from registry_adapter.epp.commands.domain.epp_request import domain_update
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
 from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.session.epp_client import EPPClient, IDN_EXTENSION, RGP_EXTENSION, SEC_DNS_EXTENSION
 import os
 from typing import Union
+from core.model.shared.availability import Availability
+from core.model.domain.domain_renew_process import DomainRenewProcess
+from core.model.domain.domain_restore_process import DomainRestoreProcess
+from core.model.shared.domain_transfer_process import DomainTransferProcess
+from core.result.operation_response import OperationResponse
 
 def _missing_extension(epp_client: EPPClient, uri: str, feature: str, data, client_transaction_id) -> ErrorResponse | None:
     """The error for data that needs an extension the server does not offer, or None."""
@@ -35,7 +33,7 @@ def _missing_extension(epp_client: EPPClient, uri: str, feature: str, data, clie
     )
 
 
-def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[DomainCreateResponse, ErrorResponse]:
+def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[OperationResponse[Domain], ErrorResponse]:
     """
     Creates a domain using EPP commands.
     Args:
@@ -43,7 +41,7 @@ def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction
         domain (Domain): The domain object to be created.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainCreateResponse: The response from the EPP server.
+        OperationResponse[Domain]: The response from the EPP server.
     """
     missing = (
         _missing_extension(epp_client, SEC_DNS_EXTENSION, "DNSSEC", domain.dnsSEC, client_transaction_id)
@@ -61,7 +59,7 @@ def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Info(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[DomainInfoResponse, ErrorResponse]:
+def epp_domains_Info(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[OperationResponse[Domain], ErrorResponse]:
     """
     Retrieves information about a domain using EPP commands.
     Args:
@@ -69,7 +67,7 @@ def epp_domains_Info(epp_client: EPPClient, domain_name: str, client_transaction
         domain_name (str): The name of the domain to be retrieved.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainInfoResponse: The response from the EPP server.
+        OperationResponse[Domain]: The response from the EPP server.
     """
     eppxml = info_domain_xml(domain_name, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -81,7 +79,7 @@ def epp_domains_Info(epp_client: EPPClient, domain_name: str, client_transaction
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Delete(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainDeleteResponse, ErrorResponse]:
+def epp_domains_Delete(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[None], ErrorResponse]:
     """
     Deletes a domain using EPP commands.
     Args:
@@ -89,7 +87,7 @@ def epp_domains_Delete(epp_client: EPPClient, domain_name: str, client_transacti
         domain_name (str): The name of the domain to be deleted.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainDeleteResponse: The response from the EPP server.
+        OperationResponse[None]: The response from the EPP server.
     """
     eppxml = delete_domain_xml(domain_name, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -101,7 +99,7 @@ def epp_domains_Delete(epp_client: EPPClient, domain_name: str, client_transacti
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Check(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainCheckResponseSingle, ErrorResponse]:
+def epp_domains_Check(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[Availability], ErrorResponse]:
     """
     Deletes a domain using EPP commands.
     Args:
@@ -109,7 +107,7 @@ def epp_domains_Check(epp_client: EPPClient, domain_name: str, client_transactio
         domain_name (str): The name of the domain to be deleted.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainDeleteResponse: The response from the EPP server.
+        OperationResponse[None]: The response from the EPP server.
     """
     eppxml = domain_check_xml(domain_name, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -121,7 +119,7 @@ def epp_domains_Check(epp_client: EPPClient, domain_name: str, client_transactio
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainUpdateResponse, ErrorResponse]:
+def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[None], ErrorResponse]:
     """
     Updates a domain using EPP commands.
     Args:
@@ -129,7 +127,7 @@ def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, clien
         domain_update (DomainUpdate): The domain update object.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainCreateResponse: The response from the EPP server.
+        OperationResponse[Domain]: The response from the EPP server.
     """
     dns_sec = (domain_update.add and domain_update.add.dnsSEC) or (domain_update.remove and domain_update.remove.dnsSEC)
     missing = _missing_extension(epp_client, SEC_DNS_EXTENSION, "DNSSEC", dns_sec, client_transaction_id)
@@ -145,7 +143,7 @@ def epp_domains_Update(epp_client: EPPClient, domain_update: DomainUpdate, clien
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Transfer(epp_client: EPPClient, transfer: DomainTransfer, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainTransferResponse, ErrorResponse]:
+def epp_domains_Transfer(epp_client: EPPClient, transfer: DomainTransfer, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[DomainTransferProcess], ErrorResponse]:
     """
     Runs one operation on the transfer of a domain using EPP commands.
     Args:
@@ -153,7 +151,7 @@ def epp_domains_Transfer(epp_client: EPPClient, transfer: DomainTransfer, client
         transfer (DomainTransfer): The transfer operation.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainTransferResponse: The state of the transfer after the operation.
+        OperationResponse[DomainTransferProcess]: The state of the transfer after the operation.
     """
     eppxml = transfer_domain_xml(transfer, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -162,7 +160,7 @@ def epp_domains_Transfer(epp_client: EPPClient, transfer: DomainTransfer, client
         return parse_domain_transfer_response(response, client_transaction_id=client_transaction_id)
     else:
         return get_epp_error_response(response, client_transaction_id=client_transaction_id)
-def epp_domains_Renew(epp_client: EPPClient, renew: DomainRenew, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainRenewResponse, ErrorResponse]:
+def epp_domains_Renew(epp_client: EPPClient, renew: DomainRenew, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[DomainRenewProcess], ErrorResponse]:
     """
     Renews a domain using the EPP renew command.
     Args:
@@ -170,7 +168,7 @@ def epp_domains_Renew(epp_client: EPPClient, renew: DomainRenew, client_transact
         renew (DomainRenew): The renewal, with the current expiry date.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainRenewResponse: The new expiry date, when the registry reports it.
+        OperationResponse[DomainRenewProcess]: The new expiry date, when the registry reports it.
     """
     eppxml = renew_domain_xml(renew, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -181,7 +179,7 @@ def epp_domains_Renew(epp_client: EPPClient, renew: DomainRenew, client_transact
         return get_epp_error_response(response, client_transaction_id=client_transaction_id)
 
 
-def epp_domains_Restore(epp_client: EPPClient, restore: DomainRestore, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainRestoreResponse, ErrorResponse]:
+def epp_domains_Restore(epp_client: EPPClient, restore: DomainRestore, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[DomainRestoreProcess], ErrorResponse]:
     """
     Requests the restore of a deleted domain, or sends its report (RFC 3915).
     Args:
@@ -189,7 +187,7 @@ def epp_domains_Restore(epp_client: EPPClient, restore: DomainRestore, client_tr
         restore (DomainRestore): The request, or the report.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainRestoreResponse: The RGP state of the domain after the command.
+        OperationResponse[DomainRestoreProcess]: The RGP state of the domain after the command.
     """
     missing = _missing_extension(epp_client, RGP_EXTENSION, "A restore", True, client_transaction_id)
     if missing:
@@ -203,7 +201,7 @@ def epp_domains_Restore(epp_client: EPPClient, restore: DomainRestore, client_tr
         return get_epp_error_response(response, client_transaction_id=client_transaction_id)
 
 
-def epp_domains_RestoreInfo(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[DomainInfoResponse, ErrorResponse]:
+def epp_domains_RestoreInfo(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[OperationResponse[Domain], ErrorResponse]:
     """
     Reads a domain for its RGP statuses (RFC 3915 §4.1.2), which a server without the extension does not give.
     Args:
@@ -211,7 +209,7 @@ def epp_domains_RestoreInfo(epp_client: EPPClient, domain_name: str, client_tran
         domain_name (str): The name of the domain.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        DomainInfoResponse: The domain, with its RGP statuses.
+        OperationResponse[Domain]: The domain, with its RGP statuses.
     """
     missing = _missing_extension(epp_client, RGP_EXTENSION, "A restore", True, client_transaction_id)
     if missing:

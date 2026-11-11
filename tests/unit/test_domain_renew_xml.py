@@ -56,25 +56,25 @@ def test_ren_data_is_parsed():
     """RFC 5731 §3.2.3."""
     response = parse_domain_renew_response(reply(1000, REN_DATA), "rn32-cl-1")
     assert response.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
-    assert response.renewal.name == "FOO.EXAMPLE"
-    assert response.renewal.expiryDate == "2010-04-03T22:00:00.000000Z"
+    assert response.payload.name == "FOO.EXAMPLE"
+    assert response.payload.expiryDate == "2010-04-03T22:00:00.000000Z"
     assert response.server_transaction_id == "sv-1"
 
 
 def test_reply_without_ren_data_has_no_expiry():
     response = parse_domain_renew_response(reply(1000), "rn32-cl-1")
-    assert response.renewal.expiryDate is None
-    assert response.renewal.name is None
+    assert response.payload.expiryDate is None
+    assert response.payload.name is None
 
 
 def test_pending_reply():
     response = parse_domain_renew_response(reply(1001), "rn32-cl-1")
     assert response.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING
-    assert response.renewal.expiryDate is None
+    assert response.payload.expiryDate is None
 
 
 def test_pending_reply_with_ren_data_has_no_expiry():
     """The renewal has not completed (data-objects §10.3), so its new expiry is not reported."""
     response = parse_domain_renew_response(reply(1001, REN_DATA), "rn32-cl-1")
     assert response.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING
-    assert response.renewal.expiryDate is None
+    assert response.payload.expiryDate is None

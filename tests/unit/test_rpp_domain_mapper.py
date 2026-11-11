@@ -1,5 +1,4 @@
 from registry_adapter.epp.profile import EPP_PROFILE
-import logging
 from dataclasses import replace
 
 import pytest

@@ -87,7 +87,7 @@ def test_info_reads_a_status_reason_but_not_the_repeated_label():
         '<contact:status s="ok">ok</contact:status><contact:status s="clientUpdateProhibited">why</contact:status>',
     )
 
-    contact = parse_contact_response(reply, "cl-1").contact
+    contact = parse_contact_response(reply, "cl-1").payload
 
     assert contact.status_reasons == {"clientUpdateProhibited": "why"}
 
@@ -100,6 +100,6 @@ def test_info_reads_empty_address_members_as_absent():
         '</contact:postalInfo>'
     )
 
-    contact = parse_contact_response(reply, "cl-1").contact
+    contact = parse_contact_response(reply, "cl-1").payload
 
     assert contact.address == Address(street=["1 Main"], city="Berlin", country="DE")

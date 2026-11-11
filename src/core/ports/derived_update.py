@@ -14,7 +14,7 @@ def replace(
         current = steps.read(key)
         if isinstance(current, ErrorResponse):
             return current
-    stored = steps.object_of(current)
+    stored = current.payload
     wanted = steps.prepare(wanted, stored)
     refused = steps.refuse(stored, wanted)
     if refused:

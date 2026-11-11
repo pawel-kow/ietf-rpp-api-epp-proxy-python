@@ -6,16 +6,10 @@ from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_idn import DomainIdn
 from core.model.domain.domain_renew import DomainRenew
 from core.model.domain.domain_renew_process import DomainRenewProcess
-from core.model.domain.domain_renew_response import DomainRenewResponse
 from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.domain_restore_process import DomainRestoreProcess
-from core.model.domain.domain_restore_response import DomainRestoreResponse
 from core.model.domain.domain_transfer import DomainTransfer
-from core.model.domain.domain_transfer_response import DomainTransferResponse
-from core.model.domain.domains import (
-    ContactReference, Domain, DomainCheckResponseBulk, DomainCheckResponseSingle, DomainCreateResponse,
-    DomainDeleteResponse, DomainUpdate, DomainUpdateResponse, HostAttr, HostObj, NS,
-)
+from core.model.domain.domains import ContactReference, Domain, DomainUpdate, HostAttr, HostObj, NS
 from core.model.domain.ds_data import DsData
 from core.model.domain.key_data import KeyData
 from core.model.shared.common import AuthInfo
@@ -37,6 +31,8 @@ from registry_adapter.epp.xml.generated.epp_1_0 import Epp
 from registry_adapter.epp.xml.generated.idn_1_0 import Data as IdnData
 from registry_adapter.epp.xml.generated.rgp_1_0 import InfData as RgpInfData, UpData as RgpUpData
 from registry_adapter.epp.xml.generated.sec_dns_1_1 import InfData as SecDnsInfData
+from core.model.shared.availability import Availability
+from core.result.operation_response import OperationResponse
 
 
 logger = logging.getLogger(__name__)
@@ -135,8 +131,8 @@ def _idn_from_epp(epp: Epp, idn_tables: IdnTables) -> Union[DomainIdn, None]:
 
 def parse_domain_response(
     xml_string: str, client_transaction_id: str, *, idn_tables: IdnTables,
-) -> Union[DomainCreateResponse, ErrorResponse]:
-    """Parses an EPP domain create/info response into a DomainCreateResponse."""
+) -> Union[OperationResponse[Domain], ErrorResponse]:
+    """Parses an EPP domain create/info response: the payload is the domain."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
     if client_transaction_id is None:
@@ -185,28 +181,28 @@ def parse_domain_response(
         rgpStatus=_rgp_status(find_extension(epp, RgpInfData)),
         subordinateHosts=(getattr(data, "host", None) or None) if data else None,
     )
-    return DomainCreateResponse(domain=domain, **header)
+    return OperationResponse(payload=domain, **header)
 
 
-def parse_domain_delete_response(xml_string: str, client_transaction_id: str) -> Union[DomainDeleteResponse, ErrorResponse]:
+def parse_domain_delete_response(xml_string: str, client_transaction_id: str) -> Union[OperationResponse[None], ErrorResponse]:
     """Parses an EPP domain delete response."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
     if client_transaction_id is None:
         header["client_transaction_id"] = None
-    return DomainDeleteResponse(**header)
+    return OperationResponse(**header)
 
 
-def parse_domain_update_response(xml_string: str, client_transaction_id: str | None) -> Union[DomainUpdateResponse, ErrorResponse]:
+def parse_domain_update_response(xml_string: str, client_transaction_id: str | None) -> Union[OperationResponse[None], ErrorResponse]:
     """Parses an EPP domain update response."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
     if client_transaction_id is None:
         header["client_transaction_id"] = None
-    return DomainUpdateResponse(**header)
+    return OperationResponse(**header)
 
 
-def parse_domain_transfer_response(xml_string: str, client_transaction_id: str | None) -> DomainTransferResponse:
+def parse_domain_transfer_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[DomainTransferProcess]:
     """Parses an EPP domain transfer response, which is the same for every operation."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
@@ -214,9 +210,8 @@ def parse_domain_transfer_response(xml_string: str, client_transaction_id: str |
         header["client_transaction_id"] = None
     data = find_res_data(epp, TrnData)
     if data is None:  # applied, but EPP gave no state
-        return DomainTransferResponse(transfer=None, **header)
-    return DomainTransferResponse(
-        transfer=DomainTransferProcess(
+        return OperationResponse(payload=None, **header)
+    return OperationResponse(payload=DomainTransferProcess(
             name=data.name,
             trStatus=data.tr_status.value,
             reqClientId=data.re_id,
@@ -224,12 +219,10 @@ def parse_domain_transfer_response(xml_string: str, client_transaction_id: str |
             actClientId=data.ac_id,
             actionDate=epp_datetime(data.ac_date),
             expiryDate=epp_datetime(data.ex_date),
-        ),
-        **header,
-    )
+        ), **header)
 
 
-def parse_domain_renew_response(xml_string: str, client_transaction_id: str | None) -> DomainRenewResponse:
+def parse_domain_renew_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[DomainRenewProcess]:
     """Parses an EPP domain renew response. A pending renewal has not completed, so it has no new expiry date."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
@@ -237,16 +230,13 @@ def parse_domain_renew_response(xml_string: str, client_transaction_id: str | No
         header["client_transaction_id"] = None
     data = find_res_data(epp, RenData)
     completed = header["code"] != ResultCode.COMMAND_COMPLETED_ACTION_PENDING
-    return DomainRenewResponse(
-        renewal=DomainRenewProcess(
+    return OperationResponse(payload=DomainRenewProcess(
             name=data.name if data else None,
             expiryDate=epp_datetime(data.ex_date) if data and completed else None,
-        ),
-        **header,
-    )
+        ), **header)
 
 
-def parse_domain_restore_response(xml_string: str, restore: DomainRestore, client_transaction_id: str | None) -> DomainRestoreResponse:
+def parse_domain_restore_response(xml_string: str, restore: DomainRestore, client_transaction_id: str | None) -> OperationResponse[DomainRestoreProcess]:
     """Parses the reply to a restore. Without rgp:upData, an accepted request (RFC 3915 §3.2) and a pending report
     leave the domain in pendingRestore, and a completed report restores it."""
     epp = str_to_epp(xml_string)
@@ -260,48 +250,39 @@ def parse_domain_restore_response(xml_string: str, restore: DomainRestore, clien
         rgp_status = ["pendingRestore"]
     else:
         rgp_status = []
-    return DomainRestoreResponse(restore=DomainRestoreProcess(rgpStatus=rgp_status), **header)
+    return OperationResponse(payload=DomainRestoreProcess(rgpStatus=rgp_status), **header)
 
 
-def parse_domain_check_response_single(xml_string: str, domain_name: str, client_transaction_id: str) -> Union[DomainCheckResponseSingle, ErrorResponse]:
+def parse_domain_check_response_single(xml_string: str, domain_name: str, client_transaction_id: str) -> Union[OperationResponse[Availability], ErrorResponse]:
     response = parse_domain_check_response_bulk(xml_string, client_transaction_id)
-    if isinstance(response, DomainCheckResponseBulk):
-        if domain_name in response.responses:
-            return DomainCheckResponseSingle(
-                domain_name=domain_name,
-                available=response.responses[domain_name].available,
-                reason=response.responses[domain_name].reason,
-                code=response.code,
-                msg=response.msg,
-                server_transaction_id=response.server_transaction_id,
-                client_transaction_id=client_transaction_id,
-            )
-        else:
-            return ErrorResponse(
-                code=map_epp_code(ResultCode.COMMAND_FAILED.value[0]),
-                msg=f"Requested domain name not in the reponse. Original code: {response.code}.",
-                server_transaction_id=response.server_transaction_id,
-                client_transaction_id=response.client_transaction_id,
-            )
-    else:
+    if isinstance(response, ErrorResponse):
         return response
-
-
-def parse_domain_check_response_bulk(xml_string: str, client_transaction_id: str) -> Union[DomainCheckResponseBulk, ErrorResponse]:
-    epp_response = str_to_epp(xml_string)
-    res = DomainCheckResponseBulk(
-        **parse_epp_response_header(epp_response),
-        responses={},
+    if domain_name not in response.payload:
+        return ErrorResponse(
+            code=map_epp_code(ResultCode.COMMAND_FAILED.value[0]),
+            msg=f"Requested domain name not in the reponse. Original code: {response.code}.",
+            server_transaction_id=response.server_transaction_id,
+            client_transaction_id=response.client_transaction_id,
+        )
+    return OperationResponse(
+        code=response.code,
+        msg=response.msg,
+        server_transaction_id=response.server_transaction_id,
+        client_transaction_id=client_transaction_id,
+        payload=response.payload[domain_name],
     )
+
+
+def parse_domain_check_response_bulk(xml_string: str, client_transaction_id: str) -> Union[OperationResponse[dict[str, Availability]], ErrorResponse]:
+    epp_response = str_to_epp(xml_string)
+    availability = {}
     for item in epp_response.response.res_data.other_element:
         for check_res in item.cd:
-            res.responses[check_res.name.value.lower()] = DomainCheckResponseSingle(
-                domain_name=check_res.name.value.lower(),
+            availability[check_res.name.value.lower()] = Availability(
+                name=check_res.name.value.lower(),
                 available=check_res.name.avail,
                 reason=check_res.reason.value if check_res.reason else None,
-                **parse_epp_response_header(epp_response),
             )
-
-    return res
+    return OperationResponse(payload=availability, **parse_epp_response_header(epp_response))
 
 

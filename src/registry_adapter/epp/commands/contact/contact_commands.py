@@ -1,9 +1,6 @@
-from core.model.contact.contact_check_response import ContactCheckResponse
 from core.model.contact.contact_transfer import ContactTransfer
-from core.model.contact.contact_transfer_response import ContactTransferResponse
 from core.model.contact.contact_update import ContactUpdate
-from core.model.contact.contact_update_response import ContactUpdateResponse
-from core.model.contact.contacts import Contact, ContactCreateResponse, ContactDeleteResponse
+from core.model.contact.contacts import Contact
 from core.result.error_response import ErrorResponse
 from registry_adapter.epp.commands.contact.contact_xml import (
     contact_check_xml, create_contact_xml, delete_contact_xml, info_contact_xml, parse_contact_check_response,
@@ -14,8 +11,11 @@ from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
 from registry_adapter.epp.session.epp_client import EPPClient
 import os
 from typing import Union
+from core.model.shared.availability import Availability
+from core.model.shared.contact_transfer_process import ContactTransferProcess
+from core.result.operation_response import OperationResponse
 
-def epp_contacts_Create(epp_client: EPPClient, contact: Contact, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[ContactCreateResponse, ErrorResponse]:
+def epp_contacts_Create(epp_client: EPPClient, contact: Contact, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[Contact], ErrorResponse]:
     """
     Creates a contact using EPP commands.
     Args:
@@ -23,7 +23,7 @@ def epp_contacts_Create(epp_client: EPPClient, contact: Contact, client_transact
         contact (Contact): The contact object to be created.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        ContactCreateResponse: The response from the EPP server.
+        OperationResponse[Contact]: The response from the EPP server.
     """
     eppxml = create_contact_xml(contact, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -35,7 +35,7 @@ def epp_contacts_Create(epp_client: EPPClient, contact: Contact, client_transact
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_contacts_Info(epp_client: EPPClient, id: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[ContactCreateResponse, ErrorResponse]:
+def epp_contacts_Info(epp_client: EPPClient, id: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[Contact], ErrorResponse]:
     """
     Retrieves information about a contact using EPP commands.
     Args:
@@ -43,7 +43,7 @@ def epp_contacts_Info(epp_client: EPPClient, id: str, client_transaction_id=None
         id (str): The id of the contact to be retrieved.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        ContactCreateResponse: The response from the EPP server.
+        OperationResponse[Contact]: The response from the EPP server.
     """
     eppxml = info_contact_xml(id, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -55,7 +55,7 @@ def epp_contacts_Info(epp_client: EPPClient, id: str, client_transaction_id=None
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_contacts_Delete(epp_client: EPPClient, id: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[ContactDeleteResponse, ErrorResponse]:
+def epp_contacts_Delete(epp_client: EPPClient, id: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[None], ErrorResponse]:
     """
     Deletes a contact using EPP commands.
     Args:
@@ -63,7 +63,7 @@ def epp_contacts_Delete(epp_client: EPPClient, id: str, client_transaction_id=No
         id (str): The id of the contact to be deleted.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        ContactDeleteResponse: The response from the EPP server.
+        OperationResponse[None]: The response from the EPP server.
     """
     eppxml = delete_contact_xml(id, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -76,7 +76,7 @@ def epp_contacts_Delete(epp_client: EPPClient, id: str, client_transaction_id=No
         return errorresp
 
 
-def epp_contacts_Update(epp_client: EPPClient, update: ContactUpdate, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[ContactUpdateResponse, ErrorResponse]:
+def epp_contacts_Update(epp_client: EPPClient, update: ContactUpdate, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[None], ErrorResponse]:
     """
     Updates a contact using EPP commands.
     Args:
@@ -84,7 +84,7 @@ def epp_contacts_Update(epp_client: EPPClient, update: ContactUpdate, client_tra
         update (ContactUpdate): The statuses to add and remove and the data to change.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        ContactUpdateResponse: The response from the EPP server.
+        OperationResponse[None]: The response from the EPP server.
     """
     eppxml = update_contact_xml(update, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -95,7 +95,7 @@ def epp_contacts_Update(epp_client: EPPClient, update: ContactUpdate, client_tra
         return get_epp_error_response(response, client_transaction_id=client_transaction_id)
 
 
-def epp_contacts_Transfer(epp_client: EPPClient, transfer: ContactTransfer, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[ContactTransferResponse, ErrorResponse]:
+def epp_contacts_Transfer(epp_client: EPPClient, transfer: ContactTransfer, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[ContactTransferProcess], ErrorResponse]:
     """
     Runs one operation on the transfer of a contact using EPP commands.
     Args:
@@ -103,7 +103,7 @@ def epp_contacts_Transfer(epp_client: EPPClient, transfer: ContactTransfer, clie
         transfer (ContactTransfer): The transfer operation.
         client_transaction_id (str): The client transaction ID for the request.
     Returns:
-        ContactTransferResponse: The state of the transfer after the operation.
+        OperationResponse[ContactTransferProcess]: The state of the transfer after the operation.
     """
     eppxml = transfer_contact_xml(transfer, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)
@@ -113,7 +113,7 @@ def epp_contacts_Transfer(epp_client: EPPClient, transfer: ContactTransfer, clie
     else:
         return get_epp_error_response(response, client_transaction_id=client_transaction_id)
 
-def epp_contacts_Check(epp_client: EPPClient, id: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[ContactCheckResponse, ErrorResponse]:
+def epp_contacts_Check(epp_client: EPPClient, id: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[Availability], ErrorResponse]:
     """Checks whether a contact id can be created. Returns the check result or the EPP error."""
     eppxml = contact_check_xml(id, client_request_id=client_transaction_id, ns_map=ns_map)
     success, code, response = epp_client.send_and_get_response(eppxml)

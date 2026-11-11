@@ -1,10 +1,7 @@
 from core.model.contact.address import Address
-from core.model.contact.contact_check_response import ContactCheckResponse
 from core.model.contact.contact_transfer import ContactTransfer
-from core.model.contact.contact_transfer_response import ContactTransferResponse
 from core.model.contact.contact_update import ContactUpdate
-from core.model.contact.contact_update_response import ContactUpdateResponse
-from core.model.contact.contacts import Contact, ContactCreateResponse, ContactDeleteResponse, ContactType
+from core.model.contact.contacts import Contact, ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from core.model.shared.common import AuthInfo
 from core.model.shared.contact_transfer_process import ContactTransferProcess
@@ -19,6 +16,8 @@ from registry_adapter.epp.commands.contact.epp_request import (
 from registry_adapter.epp.xml.codec import epp_to_str, str_to_epp
 from registry_adapter.epp.xml.generated.contact_1_0 import ChkData, CreData, InfData, PostalInfoEnumType, TrnData
 from registry_adapter.epp.xml.generated.epp_1_0 import Epp
+from core.model.shared.availability import Availability
+from core.result.operation_response import OperationResponse
 
 
 def _phone(e164):
@@ -61,7 +60,7 @@ def transfer_contact_xml(transfer: ContactTransfer, client_request_id=None, *, n
     return epp_to_str(contact_transfer(transfer, cl_trid(client_request_id)), ns_map)
 
 
-def parse_contact_transfer_response(xml_string: str, client_transaction_id: str | None) -> ContactTransferResponse:
+def parse_contact_transfer_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[ContactTransferProcess]:
     """Parses an EPP contact transfer response, which is the same for every operation."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
@@ -69,31 +68,28 @@ def parse_contact_transfer_response(xml_string: str, client_transaction_id: str 
         header["client_transaction_id"] = None
     data = find_res_data(epp, TrnData)
     if data is None:  # applied, but EPP gave no state
-        return ContactTransferResponse(transfer=None, **header)
-    return ContactTransferResponse(
-        transfer=ContactTransferProcess(
+        return OperationResponse(payload=None, **header)
+    return OperationResponse(payload=ContactTransferProcess(
             id=data.id,
             trStatus=data.tr_status.value,
             reqClientId=data.re_id,
             requestDate=epp_datetime(data.re_date),
             actClientId=data.ac_id,
             actionDate=epp_datetime(data.ac_date),
-        ),
-        **header,
-    )
+        ), **header)
 
 
-def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[ContactDeleteResponse, ErrorResponse]:
+def parse_contact_delete_response(xml_string: str, client_transaction_id: str) -> Union[OperationResponse[None], ErrorResponse]:
     """Parses an EPP contact delete response."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
     if client_transaction_id is None:
         header["client_transaction_id"] = None
-    return ContactDeleteResponse(**header)
+    return OperationResponse(**header)
 
 
-def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union[ContactCreateResponse, ErrorResponse]:
-    """Parses an EPP contact create/info response into a ContactCreateResponse."""
+def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union[OperationResponse[Contact], ErrorResponse]:
+    """Parses an EPP contact create/info response: the payload is the contact."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
     if client_transaction_id is None:
@@ -149,31 +145,29 @@ def parse_contact_response(xml_string: str, client_transaction_id: str) -> Union
         authInfo=AuthInfo(pw=pw, hash=None) if pw is not None else None,
     )
 
-    return ContactCreateResponse(contact=contact, **header)
+    return OperationResponse(payload=contact, **header)
 
 
 def update_contact_xml(update: ContactUpdate, client_request_id=None, *, ns_map: dict[str, str]) -> str:
     return epp_to_str(contact_update(update, cl_trid(client_request_id)), ns_map)
 
 
-def parse_contact_update_response(xml_string: str, client_transaction_id: str | None) -> ContactUpdateResponse:
+def parse_contact_update_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[None]:
     """Parses an EPP contact update response."""
     header = parse_epp_response_header(str_to_epp(xml_string))
     if client_transaction_id is None:
         header["client_transaction_id"] = None
-    return ContactUpdateResponse(**header)
+    return OperationResponse(**header)
 
 
-def parse_contact_check_response(xml_string: str, contact_id: str, client_transaction_id: str | None) -> ContactCheckResponse:
+def parse_contact_check_response(xml_string: str, contact_id: str, client_transaction_id: str | None) -> OperationResponse[Availability]:
     """Parses the answer to a single-id check. The backend can change the case of the id."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
     if client_transaction_id is None:
         header["client_transaction_id"] = None
     result = find_res_data(epp, ChkData).cd[0]
-    return ContactCheckResponse(
-        contact_id=contact_id,
-        available=result.id.avail,
-        reason=result.reason.value if result.reason else None,
+    return OperationResponse(
+        payload=Availability(name=contact_id, available=result.id.avail, reason=result.reason.value if result.reason else None),
         **header,
     )

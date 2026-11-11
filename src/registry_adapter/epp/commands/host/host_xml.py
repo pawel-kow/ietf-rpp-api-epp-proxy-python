@@ -1,10 +1,5 @@
 from core.model.host.host import Host
-from core.model.host.host_check_response import HostCheckResponse
-from core.model.host.host_create_response import HostCreateResponse
-from core.model.host.host_delete_response import HostDeleteResponse
-from core.model.host.host_info_response import HostInfoResponse
 from core.model.host.host_update import HostUpdate
-from core.model.host.host_update_response import HostUpdateResponse
 from core.result.error_response import ErrorResponse
 from registry_adapter.epp.xml.codec import epp_to_str, str_to_epp
 from registry_adapter.epp.commands.host.epp_request import host_check, host_create, host_delete, host_info, host_update
@@ -13,6 +8,8 @@ from registry_adapter.epp.xml.generated.host_1_0 import ChkData, CreData, InfDat
 from registry_adapter.epp.commands.shared.epp_response import (
     cl_trid, epp_datetime, find_res_data, parse_epp_response_header, status_reasons,
 )
+from core.model.shared.availability import Availability
+from core.result.operation_response import OperationResponse
 
 
 def create_host_xml(host: Host, client_request_id=None, *, ns_map: dict[str, str]) -> str:
@@ -50,7 +47,7 @@ def _addresses(data: InfData) -> tuple[list[str] | None, list[str] | None]:
     return addresses[IpType.V4] or None, addresses[IpType.V6] or None
 
 
-def parse_host_response(xml_string: str, client_transaction_id: str | None) -> HostInfoResponse | ErrorResponse:
+def parse_host_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[Host] | ErrorResponse:
     """Parses an EPP host info response."""
     epp = str_to_epp(xml_string)
     data = find_res_data(epp, InfData)
@@ -69,34 +66,32 @@ def parse_host_response(xml_string: str, client_transaction_id: str | None) -> H
         upDate=epp_datetime(data.up_date),
         trDate=epp_datetime(data.tr_date),
     )
-    return HostInfoResponse(host=host, **_header(epp, client_transaction_id))
+    return OperationResponse(payload=host, **_header(epp, client_transaction_id))
 
 
-def parse_host_create_response(xml_string: str, client_transaction_id: str | None) -> HostCreateResponse:
+def parse_host_create_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[Host]:
     """Parses an EPP host create response."""
     epp = str_to_epp(xml_string)
     data = find_res_data(epp, CreData)
     host = Host(name=data.name, crDate=epp_datetime(data.cr_date))
-    return HostCreateResponse(host=host, **_header(epp, client_transaction_id))
+    return OperationResponse(payload=host, **_header(epp, client_transaction_id))
 
 
-def parse_host_check_response(xml_string: str, host_name: str, client_transaction_id: str | None) -> HostCheckResponse:
+def parse_host_check_response(xml_string: str, host_name: str, client_transaction_id: str | None) -> OperationResponse[Availability]:
     """Parses the answer to a single-name check. The backend can change the case of the name."""
     epp = str_to_epp(xml_string)
     result = find_res_data(epp, ChkData).cd[0]
-    return HostCheckResponse(
-        host_name=host_name,
-        available=result.name.avail,
-        reason=result.reason.value if result.reason else None,
+    return OperationResponse(
+        payload=Availability(name=host_name, available=result.name.avail, reason=result.reason.value if result.reason else None),
         **_header(epp, client_transaction_id),
     )
 
 
-def parse_host_update_response(xml_string: str, client_transaction_id: str | None) -> HostUpdateResponse:
+def parse_host_update_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[None]:
     """Parses an EPP host update response."""
-    return HostUpdateResponse(**_header(str_to_epp(xml_string), client_transaction_id))
+    return OperationResponse(**_header(str_to_epp(xml_string), client_transaction_id))
 
 
-def parse_host_delete_response(xml_string: str, client_transaction_id: str | None) -> HostDeleteResponse:
+def parse_host_delete_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[None]:
     """Parses an EPP host delete response."""
-    return HostDeleteResponse(**_header(str_to_epp(xml_string), client_transaction_id))
+    return OperationResponse(**_header(str_to_epp(xml_string), client_transaction_id))

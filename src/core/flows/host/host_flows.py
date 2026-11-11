@@ -11,14 +11,14 @@ from core.flows.sponsor import require_sponsor
 
 
 def _read_back(backend: RegistryBackend, host_name: str, mutation) -> MutationResult:
-    return read_back(backend.hosts.info, host_name, mutation, lambda info: info.host)
+    return read_back(backend.hosts.info, host_name, mutation)
 
 
 def create_host(backend: RegistryBackend, host: Host, client_transaction_id) -> MutationResult | ErrorResponse:
     created = backend.hosts.create(host, client_transaction_id=client_transaction_id)
     if isinstance(created, ErrorResponse):
         return created
-    return _read_back(backend, created.host.name, created)
+    return _read_back(backend, created.payload.name, created)
 
 
 def update_host(backend: RegistryBackend, update: HostUpdate, client_transaction_id) -> MutationResult | ErrorResponse:
@@ -34,8 +34,8 @@ def _replaced(backend: RegistryBackend, outcome, client_transaction_id) -> Mutat
         return outcome
     if outcome.unchanged:
         current = outcome.current
-        refused = require_sponsor(backend, current.host.clID, current, client_transaction_id, "host")
-        return refused or MutationResult(mutation=current, stored=current.host)
+        refused = require_sponsor(backend, current.payload.clID, current, client_transaction_id, "host")
+        return refused or MutationResult(mutation=current, stored=current.payload)
     return _read_back(backend, outcome.update.new_name or outcome.update.name, outcome.mutation)
 
 
@@ -54,7 +54,7 @@ def patch_host(
     if isinstance(current, ErrorResponse):
         return current
     outcome = backend.hosts.replace(
-        wanted_from_current(current.host), current=current, client_transaction_id=client_transaction_id,
+        wanted_from_current(current.payload), current=current, client_transaction_id=client_transaction_id,
     )
     return _replaced(backend, outcome, client_transaction_id)
 

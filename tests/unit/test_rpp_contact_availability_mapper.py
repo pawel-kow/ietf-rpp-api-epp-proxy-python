@@ -1,13 +1,9 @@
-from core.model.contact.contact_check_response import ContactCheckResponse
-from core.result.result_code import ResultCode
 from rpp.mapping.contact import contact_availability
+from core.model.shared.availability import Availability
 
 
 def availability(available, reason=None):
-    return ContactCheckResponse(
-        contact_id="JD-1234", available=available, reason=reason, code=ResultCode.COMMAND_COMPLETED_SUCCESSFULLY,
-        msg="ok", server_transaction_id="sv", client_transaction_id=None,
-    )
+    return Availability(name="JD-1234", available=available, reason=reason)
 
 
 def test_available_contact():

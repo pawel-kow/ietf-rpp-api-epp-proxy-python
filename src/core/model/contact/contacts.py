@@ -3,7 +3,6 @@ from typing import List, Optional, Dict
 from core.model.contact.address import Address
 from core.model.shared.common import ProvisioningObject
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
-from core.result.operation_response import OperationResponse
 from enum import Enum
 
 class ContactType(Enum):
@@ -46,16 +45,3 @@ class Contact(ProvisioningObject, ContactMinimal):
             if not self.address:
                 self.address = Address()
             self.address.update(contact.address)
-
-
-@dataclass(kw_only=True)
-class ContactCreateResponse(OperationResponse):
-    contact: Contact
-
-@dataclass(kw_only=True)
-class ContactInfoResponse(OperationResponse):
-    contact: Contact
-
-@dataclass(kw_only=True)
-class ContactDeleteResponse(OperationResponse):
-    pass

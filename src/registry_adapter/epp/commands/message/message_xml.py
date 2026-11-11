@@ -4,9 +4,7 @@ import re
 from xsdata.models.datatype import XmlDateTime
 
 from registry_adapter.common.xmlsafe.xml_helper import decode_xml
-from core.model.message.ack_response import AckResponse
 from core.model.message.pending_action_event import PendingActionEvent
-from core.model.message.poll_response import PollResponse
 from core.model.message.queue_message import QueueMessage
 from core.model.message.transfer_event import TransferEvent
 from core.model.shared.contact_transfer_process import ContactTransferProcess
@@ -20,6 +18,8 @@ from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
 from registry_adapter.epp.xml.generated import contact_1_0, domain_1_0, host_1_0
 from registry_adapter.epp.xml.generated.epp_1_0 import Epp
 from registry_adapter.epp.commands.shared.epp_response import cl_trid, epp_datetime, parse_epp_response_header
+from core.model.message.message_queue import MessageQueue
+from core.result.operation_response import OperationResponse
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -217,8 +217,8 @@ def _qnames(root, parent: str) -> list[str]:
     return [] if element is None else [child.tag for child in element if isinstance(child.tag, str)]
 
 
-def _no_message(header, size) -> PollResponse:
-    return PollResponse(queue_size=size, message=None, **header)
+def _no_message(header, size) -> OperationResponse[MessageQueue]:
+    return OperationResponse(payload=MessageQueue(queue_size=size, message=None), **header)
 
 
 def _unreadable(header, client_transaction_id) -> ErrorResponse:
@@ -247,7 +247,7 @@ def parse_error_response(xml_string: str, client_transaction_id: str | None) -> 
     return ErrorResponse(**header)
 
 
-def _poll_from_markup(xml_string: str, client_transaction_id) -> PollResponse | ErrorResponse:
+def _poll_from_markup(xml_string: str, client_transaction_id) -> OperationResponse[MessageQueue] | ErrorResponse:
     """What can be read of a reply the typed parser rejects: the message as a notice that names its data."""
     root = _decode(xml_string)
     header = _raw_header(root, client_transaction_id)
@@ -277,10 +277,10 @@ def _poll_from_markup(xml_string: str, client_transaction_id) -> PollResponse | 
         text="".join(msg.itertext()).strip() if msg is not None else "",
         unmapped=", ".join(left_out) or "the reply, which does not follow the EPP schema",
     )
-    return PollResponse(queue_size=_count(msg_q), message=message, **header)
+    return OperationResponse(payload=MessageQueue(queue_size=_count(msg_q), message=message), **header)
 
 
-def parse_poll_response(xml_string: str, client_transaction_id: str | None) -> PollResponse | ErrorResponse:
+def parse_poll_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[MessageQueue] | ErrorResponse:
     """Parses the reply to poll req: 1300 has no message, 1301 has the head of the queue.
 
     A reply that does not follow the EPP schema still gives its message, as a notice, because a
@@ -311,13 +311,13 @@ def parse_poll_response(xml_string: str, client_transaction_id: str | None) -> P
             unmapped=unmapped,
             data_name=data_name,
         )
-        return PollResponse(queue_size=msg_q.count, message=message, **header)
+        return OperationResponse(payload=MessageQueue(queue_size=msg_q.count, message=message), **header)
     except Exception as e:
         logger.warning("Poll reply does not follow the EPP schema: %s", type(e).__name__)
         return _poll_from_markup(xml_string, client_transaction_id)
 
 
-def parse_ack_response(xml_string: str, client_transaction_id: str | None) -> AckResponse | ErrorResponse:
+def parse_ack_response(xml_string: str, client_transaction_id: str | None) -> OperationResponse[MessageQueue] | ErrorResponse:
     """Parses the reply to poll ack, whose msgQ, when present, counts what is left.
 
     A reply without a readable result code is an error, as nothing says what happened to the message.
@@ -328,7 +328,7 @@ def parse_ack_response(xml_string: str, client_transaction_id: str | None) -> Ac
         if client_transaction_id is None:
             header["client_transaction_id"] = None
         msg_q = epp.response.msg_q
-        return AckResponse(queue_size=None if msg_q is None else msg_q.count, **header)
+        return OperationResponse(payload=MessageQueue(queue_size=None if msg_q is None else msg_q.count), **header)
     except Exception as e:
         logger.warning("Poll ack reply does not follow the EPP schema: %s", type(e).__name__)
         root = _decode(xml_string)
@@ -336,4 +336,4 @@ def parse_ack_response(xml_string: str, client_transaction_id: str | None) -> Ac
         if header is None:
             return _unreadable(header, client_transaction_id)
         msg_q = root.find("./epp:response/epp:msgQ", EPP_NS)
-        return AckResponse(queue_size=None if msg_q is None else _count(msg_q), **header)
+        return OperationResponse(payload=MessageQueue(queue_size=None if msg_q is None else _count(msg_q)), **header)

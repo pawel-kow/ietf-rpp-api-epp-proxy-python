@@ -40,7 +40,7 @@ def _language(value) -> str | None:
 def _headers(resp, language=None) -> dict:
     """Core §6.2: RPP-Queue-Size is the size of the queue the reply reported, and the language is the message's."""
     headers = generate_rpp_response_headers(resp)
-    size = _queue_size(resp.queue_size)
+    size = _queue_size(resp.payload.queue_size)
     if size is not None:
         headers["RPP-Queue-Size"] = size
     if _language(language):
@@ -74,9 +74,9 @@ def messages_query():
     resp = get_backend().messages.poll(client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
-    if resp.message is None:
+    if resp.payload.message is None:
         return [], 200, _headers(resp)
-    return [messages.model_to_rpp(resp.message)], 200, _headers(resp, resp.message.lang)
+    return [messages.model_to_rpp(resp.payload.message)], 200, _headers(resp, resp.payload.message.lang)
 
 
 @rpp_operation
@@ -85,7 +85,7 @@ def messages_read(id):
     resp = read_message(get_backend(), id, client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
-    return messages.model_to_rpp(resp.message), 200, _headers(resp, resp.message.lang)
+    return messages.model_to_rpp(resp.payload.message), 200, _headers(resp, resp.payload.message.lang)
 
 
 @rpp_operation

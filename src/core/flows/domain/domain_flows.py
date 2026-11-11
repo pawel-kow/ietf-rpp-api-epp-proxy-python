@@ -2,10 +2,8 @@ from dataclasses import replace
 from typing import Callable
 
 from core.model.domain.domain_renew import DomainRenew
-from core.model.domain.domain_renew_response import DomainRenewResponse
 from core.model.domain.domain_replacement import DomainReplacement
 from core.model.domain.domain_restore_process import DomainRestoreProcess
-from core.model.domain.domain_restore_response import DomainRestoreResponse
 from core.model.domain.domains import Domain, DomainUpdate
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
@@ -13,10 +11,12 @@ from core.ports.registry_backend import RegistryBackend
 from core.flows.mutation_result import MutationResult
 from core.flows.read_back import read_back
 from core.flows.sponsor import require_sponsor
+from core.model.domain.domain_renew_process import DomainRenewProcess
+from core.result.operation_response import OperationResponse
 
 
 def _read_back(backend: RegistryBackend, domain_name: str, mutation) -> MutationResult:
-    return read_back(backend.domains.info, domain_name, mutation, lambda info: info.domain)
+    return read_back(backend.domains.info, domain_name, mutation)
 
 
 def create_domain(backend: RegistryBackend, domain: Domain, client_transaction_id) -> MutationResult | ErrorResponse:
@@ -24,7 +24,7 @@ def create_domain(backend: RegistryBackend, domain: Domain, client_transaction_i
     created = backend.domains.create(domain, client_transaction_id=client_transaction_id)
     if isinstance(created, ErrorResponse):
         return created
-    return _read_back(backend, created.domain.name, created)
+    return _read_back(backend, created.payload.name, created)
 
 
 def _replaced(backend: RegistryBackend, domain_name: str, outcome, client_transaction_id) -> MutationResult | ErrorResponse:
@@ -33,8 +33,8 @@ def _replaced(backend: RegistryBackend, domain_name: str, outcome, client_transa
         return outcome
     if outcome.unchanged:
         current = outcome.current
-        refused = require_sponsor(backend, current.domain.clID, current, client_transaction_id, "domain")
-        return refused or MutationResult(mutation=current, stored=current.domain)
+        refused = require_sponsor(backend, current.payload.clID, current, client_transaction_id, "domain")
+        return refused or MutationResult(mutation=current, stored=current.payload)
     return _read_back(backend, domain_name, outcome.mutation)
 
 
@@ -56,7 +56,7 @@ def patch_domain(
     if isinstance(current, ErrorResponse):
         return current
     outcome = backend.domains.replace(
-        wanted_from_current(current.domain), current=current, client_transaction_id=client_transaction_id,
+        wanted_from_current(current.payload), current=current, client_transaction_id=client_transaction_id,
     )
     return _replaced(backend, domain_name, outcome, client_transaction_id)
 
@@ -67,31 +67,31 @@ def replace_domain(backend: RegistryBackend, wanted: DomainReplacement, client_t
     return _replaced(backend, wanted.name, outcome, client_transaction_id)
 
 
-def renew_domain(backend: RegistryBackend, renew: DomainRenew, client_transaction_id) -> DomainRenewResponse | ErrorResponse:
+def renew_domain(backend: RegistryBackend, renew: DomainRenew, client_transaction_id) -> OperationResponse[DomainRenewProcess] | ErrorResponse:
     """Renews a domain. EPP needs the current expiry date, so a client that gave none has it read (json §8.1.7).
     The read and the renew are not atomic, and without the client's date nothing guards against a double renewal."""
     if renew.curExpDate is None:
         current = backend.domains.info(renew.name)
         if isinstance(current, ErrorResponse):
             return current
-        if not current.domain.exDate:
+        if not current.payload.exDate:
             return ErrorResponse(
                 code=ResultCode.COMMAND_FAILED,
                 msg="The registry reports no expiry date for the domain",
                 server_transaction_id=current.server_transaction_id,
                 client_transaction_id=client_transaction_id,
             )
-        renew = replace(renew, curExpDate=current.domain.exDate[:10])
+        renew = replace(renew, curExpDate=current.payload.exDate[:10])
     return backend.domains.renew(renew, client_transaction_id=client_transaction_id)
 
 
-def read_domain_restore(backend: RegistryBackend, domain_name: str, client_transaction_id) -> DomainRestoreResponse | ErrorResponse:
+def read_domain_restore(backend: RegistryBackend, domain_name: str, client_transaction_id) -> OperationResponse[DomainRestoreProcess] | ErrorResponse:
     """The restore of a domain, from its RGP statuses. EPP keeps no restore process and cannot tell a restored domain
     from one never deleted, so a domain without a restore under way has none (spec-issues.md, "Restore process")."""
     info = backend.domains.restore_info(domain_name, client_transaction_id=client_transaction_id)
     if isinstance(info, ErrorResponse):
         return info
-    restore = DomainRestoreProcess(rgpStatus=info.domain.rgpStatus)
+    restore = DomainRestoreProcess(rgpStatus=info.payload.rgpStatus)
     if not restore.under_way():
         return ErrorResponse(
             code=ResultCode.OBJECT_DOES_NOT_EXIST,
@@ -99,11 +99,8 @@ def read_domain_restore(backend: RegistryBackend, domain_name: str, client_trans
             server_transaction_id=info.server_transaction_id,
             client_transaction_id=info.client_transaction_id,
         )
-    return DomainRestoreResponse(
-        restore=restore,
-        code=info.code,
-        msg=info.msg,
-        server_transaction_id=info.server_transaction_id,
-        client_transaction_id=info.client_transaction_id,
+    return OperationResponse(
+        code=info.code, msg=info.msg, server_transaction_id=info.server_transaction_id,
+        client_transaction_id=info.client_transaction_id, payload=restore,
     )
 

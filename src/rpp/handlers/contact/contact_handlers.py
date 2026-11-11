@@ -39,7 +39,7 @@ def contacts_read(id):
     contactresp = get_backend().contacts.info(id, client_transaction_id=client_transaction_id())
     if isinstance(contactresp, ErrorResponse):
         raise_registry_error(contactresp)
-    return _contact_output(contactresp.contact, requested), 200, generate_rpp_response_headers(contactresp)
+    return _contact_output(contactresp.payload, requested), 200, generate_rpp_response_headers(contactresp)
 
 
 def _mutation_answer(result, requested, status=200, extra_headers=None):
@@ -81,9 +81,9 @@ def contacts_availabilityHead(id):
     ret = _availability(id)
     headers = generate_rpp_response_headers(ret)
     del headers["Content-Type"]  # the OpenAPI defines no content for HEAD
-    return None, 200 if ret.available else 404, headers
+    return None, 200 if ret.payload.available else 404, headers
 
 @rpp_operation
 def contacts_availability(id):
     ret = _availability(id)
-    return contact_availability.model_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)
+    return contact_availability.model_to_rpp(ret.payload), 200 if ret.payload.available else 404, generate_rpp_response_headers(ret)

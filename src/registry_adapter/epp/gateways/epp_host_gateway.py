@@ -1,5 +1,4 @@
 from core.model.host import host_difference
-from core.model.host.host_info_response import HostInfoResponse
 from core.model.host.host_replacement import HostReplacement
 from core.result.error_response import ErrorResponse
 from core.ports import derived_update
@@ -9,6 +8,8 @@ from registry_adapter.epp.commands.host.host_commands import (
     epp_hosts_Check, epp_hosts_Create, epp_hosts_Delete, epp_hosts_Info, epp_hosts_Update,
 )
 from registry_adapter.epp.session.epp_client import EPPClient
+from core.model.host.host import Host
+from core.result.operation_response import OperationResponse
 
 
 class EppHostGateway:
@@ -19,7 +20,6 @@ class EppHostGateway:
         self._ns_map = ns_map
         self._steps = ReplacementSteps(
             read=self.info,
-            object_of=lambda info: info.host,
             difference=host_difference.difference,
             changes_nothing=host_difference.changes_nothing,
             update=self.update,
@@ -38,7 +38,7 @@ class EppHostGateway:
         return epp_hosts_Update(self._epp_client, update, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
 
     def replace(
-        self, wanted: HostReplacement, current: HostInfoResponse | None = None, client_transaction_id=None,
+        self, wanted: HostReplacement, current: OperationResponse[Host] | None = None, client_transaction_id=None,
     ) -> ReplaceOutcome | ErrorResponse:
         return derived_update.replace(self._steps, wanted.name, wanted, client_transaction_id, current)
 

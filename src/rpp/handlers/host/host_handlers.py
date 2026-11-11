@@ -44,13 +44,13 @@ def hosts_availabilityHead(hostName):
     ret = _availability(hostName)
     headers = generate_rpp_response_headers(ret)
     del headers["Content-Type"]  # the OpenAPI defines no content for HEAD
-    return None, 200 if ret.available else 404, headers
+    return None, 200 if ret.payload.available else 404, headers
 
 
 @rpp_operation
 def hosts_availability(hostName):
     ret = _availability(hostName)
-    return host_availability.model_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)
+    return host_availability.model_to_rpp(ret.payload), 200 if ret.payload.available else 404, generate_rpp_response_headers(ret)
 
 
 @rpp_operation
@@ -67,7 +67,7 @@ def hosts_read(hostName):
     hostresp = get_backend().hosts.info(hostName, client_transaction_id=client_transaction_id())
     if isinstance(hostresp, ErrorResponse):
         raise_registry_error(hostresp)
-    return _host_output(hostresp.host, requested), 200, generate_rpp_response_headers(hostresp)
+    return _host_output(hostresp.payload, requested), 200, generate_rpp_response_headers(hostresp)
 
 
 @rpp_operation

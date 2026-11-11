@@ -5,7 +5,6 @@ from core.model.contact.contacts import ContactMinimal
 from core.model.shared.common import AuthInfo, Process, ProvisioningObject
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_idn import DomainIdn
-from core.result.operation_response import OperationResponse
 
 @dataclass(kw_only=True)
 class HostObj:
@@ -86,29 +85,3 @@ class DomainUpdate:
     add: Optional[DomainUpdateAdd] = None
     remove: Optional[DomainUpdateRemove] = None
     change: Optional[DomainUpdateChange] = None
-
-@dataclass(kw_only=True)
-class DomainCreateResponse(OperationResponse):
-    domain: Domain
-
-@dataclass(kw_only=True)
-class DomainCheckResponseSingle(OperationResponse):
-    domain_name: str
-    available: bool
-    reason: str
-
-@dataclass(kw_only=True)
-class DomainCheckResponseBulk(OperationResponse):
-    responses: dict[str, DomainCheckResponseSingle]
-
-@dataclass(kw_only=True)
-class DomainInfoResponse(OperationResponse):
-    domain: Domain
-
-@dataclass(kw_only=True)
-class DomainDeleteResponse(OperationResponse):
-    pass
-
-@dataclass(kw_only=True)
-class DomainUpdateResponse(OperationResponse):
-    pass

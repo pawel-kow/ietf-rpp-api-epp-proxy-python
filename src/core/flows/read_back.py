@@ -5,9 +5,8 @@ from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 
 
-def read_back(read: Callable[[str], object], key: str, mutation: OperationResponse, object_of: Callable) -> MutationResult:
-    """Reads an object after a mutation the registry has already applied, with `read` (a gateway's `info`), and
-    `object_of` takes the object from its answer.
+def read_back(read: Callable[[str], OperationResponse], key: str, mutation: OperationResponse) -> MutationResult:
+    """Reads an object after a mutation the registry has already applied, with `read` (a gateway's `info`).
 
     A failed readback must not look like a failed mutation. It uses its own clTRID: the client's is spent.
     """
@@ -17,4 +16,4 @@ def read_back(read: Callable[[str], object], key: str, mutation: OperationRespon
         return MutationResult(mutation=mutation)
     if isinstance(info, ErrorResponse):
         return MutationResult(mutation=mutation)
-    return MutationResult(mutation=mutation, stored=object_of(info))
+    return MutationResult(mutation=mutation, stored=info.payload)

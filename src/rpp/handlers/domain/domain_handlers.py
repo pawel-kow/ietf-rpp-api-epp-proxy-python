@@ -46,12 +46,12 @@ def domainNames_availabilityHead(name, uName=None, lgr=None):
     ret = _availability(name, uName, lgr)
     headers = generate_rpp_response_headers(ret)
     del headers["Content-Type"]  # the OpenAPI defines no content for HEAD
-    return None, 200 if ret.available else 404, headers
+    return None, 200 if ret.payload.available else 404, headers
 
 @rpp_operation
 def domainNames_availability(name, uName=None, lgr=None):
     ret = _availability(name, uName, lgr)
-    return domain_availability.model_to_rpp(ret), 200 if ret.available else 404, generate_rpp_response_headers(ret)
+    return domain_availability.model_to_rpp(ret.payload), 200 if ret.payload.available else 404, generate_rpp_response_headers(ret)
 
 @rpp_operation
 def domainNames_create(body):
@@ -81,7 +81,7 @@ def domainNames_read(name):
     domainresp = get_backend().domains.info(name, client_transaction_id=client_transaction_id())
     if isinstance(domainresp, ErrorResponse):
         raise_registry_error(domainresp)
-    return _domain_output(domainresp.domain, requested), 200, generate_rpp_response_headers(domainresp)
+    return _domain_output(domainresp.payload, requested), 200, generate_rpp_response_headers(domainresp)
 
 @rpp_operation
 def domainNames_updatePartial(name, body):
@@ -112,14 +112,14 @@ def domainNameRenewProcesses_renewCreate(name, body):
     resp = renew_domain(get_backend(), renew, client_transaction_id())
     if isinstance(resp, ErrorResponse):
         raise_registry_error(resp)
-    return domain_renew_process.model_to_rpp(resp.renewal), 200, generate_rpp_response_headers(resp)
+    return domain_renew_process.model_to_rpp(resp.payload), 200, generate_rpp_response_headers(resp)
 
 
 def _restore(restore):
     resp = get_backend().domains.restore(restore, client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         raise_registry_error(resp)
-    return domain_restore_process.model_to_rpp(resp.restore), 200, generate_rpp_response_headers(resp)
+    return domain_restore_process.model_to_rpp(resp.payload), 200, generate_rpp_response_headers(resp)
 
 
 @rpp_operation
@@ -143,4 +143,4 @@ def domainNameRestoreProcesses_read(name):
     resp = read_domain_restore(get_backend(), name, client_transaction_id())
     if isinstance(resp, ErrorResponse):
         raise_registry_error(resp)
-    return domain_restore_process.model_to_rpp(resp.restore), 200, generate_rpp_response_headers(resp)
+    return domain_restore_process.model_to_rpp(resp.payload), 200, generate_rpp_response_headers(resp)

@@ -1,7 +1,7 @@
-from core.model.domain.domains import DomainCheckResponseSingle
 from rpp.schema.validator import validate_schema
 from rpp.mapping.shared.common import reject_set
 from rpp.dto.rpp_domain_name_availability import RPPDomainNameAvailability
+from core.model.shared.availability import Availability
 
 
 def rpp_to_model(u_name: str | None, lgr: str | None) -> None:
@@ -10,7 +10,7 @@ def rpp_to_model(u_name: str | None, lgr: str | None) -> None:
     reject_set(uName=u_name, lgr=lgr)
 
 
-def model_to_rpp(check: DomainCheckResponseSingle) -> dict:
+def model_to_rpp(check: Availability) -> dict:
     availability = RPPDomainNameAvailability(available=check.available, reason=None if check.available else check.reason).to_rpp()
     validate_schema("domainNameAvailability.read", availability)
     return availability

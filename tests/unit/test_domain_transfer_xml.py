@@ -68,7 +68,7 @@ def test_trn_data_is_parsed():
     )
     assert response.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING
     assert response.server_transaction_id == "sv-1"
-    assert response.transfer == DomainTransferProcess(
+    assert response.payload == DomainTransferProcess(
         name="FOO.EXAMPLE",
         trStatus="pending",
         reqClientId="ClientX",
@@ -80,4 +80,4 @@ def test_trn_data_is_parsed():
 
 
 def test_expiry_date_is_optional():
-    assert parse_domain_transfer_response(reply(1000), "cl-1").transfer.expiryDate is None
+    assert parse_domain_transfer_response(reply(1000), "cl-1").payload.expiryDate is None

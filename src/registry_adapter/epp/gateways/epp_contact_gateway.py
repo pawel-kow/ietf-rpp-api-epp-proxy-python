@@ -1,6 +1,5 @@
 from core.model.contact import contact_difference, contact_localization
 from core.model.contact.contact_replacement import ContactReplacement
-from core.model.contact.contacts import ContactCreateResponse
 from core.result.error_response import ErrorResponse
 from core.ports import derived_update
 from core.ports.replace_outcome import ReplaceOutcome
@@ -11,6 +10,8 @@ from registry_adapter.epp.commands.contact.contact_commands import (
     epp_contacts_Update,
 )
 from registry_adapter.epp.session.epp_client import EPPClient
+from core.model.contact.contacts import Contact
+from core.result.operation_response import OperationResponse
 
 
 class EppContactGateway:
@@ -22,7 +23,6 @@ class EppContactGateway:
         self._ns_map = ns_map
         self._steps = ReplacementSteps(
             read=self.info,
-            object_of=lambda info: info.contact,
             prepare=contact_localization.as_stored,
             refuse=contact_refusal.refuse,
             difference=contact_difference.difference,
@@ -43,7 +43,7 @@ class EppContactGateway:
         return epp_contacts_Update(self._epp_client, update, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
 
     def replace(
-        self, wanted: ContactReplacement, current: ContactCreateResponse | None = None, client_transaction_id=None,
+        self, wanted: ContactReplacement, current: OperationResponse[Contact] | None = None, client_transaction_id=None,
     ) -> ReplaceOutcome | ErrorResponse:
         return derived_update.replace(self._steps, wanted.id, wanted, client_transaction_id, current)
 

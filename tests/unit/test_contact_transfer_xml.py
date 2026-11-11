@@ -58,7 +58,7 @@ def test_trn_data_is_parsed():
     response = parse_contact_transfer_response(reply(1001), "cl-1")
     assert response.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING
     assert response.server_transaction_id == "sv-1"
-    assert response.transfer == ContactTransferProcess(
+    assert response.payload == ContactTransferProcess(
         id="FO-1",
         trStatus="pending",
         reqClientId="ClientX",

@@ -12,7 +12,7 @@ from core.flows.sponsor import require_sponsor
 
 
 def _read_back(backend: RegistryBackend, contact_id: str, mutation) -> MutationResult:
-    return read_back(backend.contacts.info, contact_id, mutation, lambda info: info.contact)
+    return read_back(backend.contacts.info, contact_id, mutation)
 
 
 def create_contact(backend: RegistryBackend, contact: Contact, client_transaction_id) -> MutationResult | ErrorResponse:
@@ -20,7 +20,7 @@ def create_contact(backend: RegistryBackend, contact: Contact, client_transactio
     created = backend.contacts.create(contact, client_transaction_id=client_transaction_id)
     if isinstance(created, ErrorResponse):
         return created
-    return _read_back(backend, created.contact.id, created)
+    return _read_back(backend, created.payload.id, created)
 
 
 def _has_form(contact: Contact, form: str) -> bool:
@@ -55,10 +55,10 @@ def _replaced(backend: RegistryBackend, contact_id: str, outcome, client_transac
         return outcome
     current = outcome.current
     if outcome.unchanged:
-        refused = require_sponsor(backend, current.contact.clID, current, client_transaction_id, "contact")
-        return refused or MutationResult(mutation=current, stored=current.contact)
+        refused = require_sponsor(backend, current.payload.clID, current, client_transaction_id, "contact")
+        return refused or MutationResult(mutation=current, stored=current.payload)
     result = _read_back(backend, contact_id, outcome.mutation)
-    return _lost_form(outcome.update, current.contact, result, client_transaction_id) or result
+    return _lost_form(outcome.update, current.payload, result, client_transaction_id) or result
 
 
 def patch_contact(
@@ -79,7 +79,7 @@ def patch_contact(
     if isinstance(current, ErrorResponse):
         return current
     outcome = backend.contacts.replace(
-        wanted_from_current(current.contact), current=current, client_transaction_id=client_transaction_id,
+        wanted_from_current(current.payload), current=current, client_transaction_id=client_transaction_id,
     )
     return _replaced(backend, contact_id, outcome, client_transaction_id)
 

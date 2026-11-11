@@ -42,7 +42,7 @@ class TransferHandlers:
 
     def _process(self, transfer):
         resp = self._run(transfer)
-        if resp.transfer is None:
+        if resp.payload is None:
             if transfer.operation == TransferOperation.QUERY:  # nothing was applied, so there is nothing to confirm
                 raise_registry_error(ErrorResponse(
                     code=ResultCode.COMMAND_FAILED,
@@ -51,7 +51,7 @@ class TransferHandlers:
                     client_transaction_id=resp.client_transaction_id,
                 ))
             return None, 202, generate_rpp_response_headers(resp)  # applied, but EPP gave no state to show
-        return self._response_mapper(resp.transfer), 200, generate_rpp_response_headers(resp)
+        return self._response_mapper(resp.payload), 200, generate_rpp_response_headers(resp)
 
     def _operation(self, id, operation):
         auth_info = map_request(rpp_authorization.rpp_to_model, self._authorization())
@@ -60,9 +60,9 @@ class TransferHandlers:
     def create(self, id, body):
         resp = self._run(map_request(self._create_mapper, id, body, self._authorization()))
         headers = generate_rpp_response_headers(resp)
-        if resp.transfer is None:  # applied, but EPP gave no state to show
+        if resp.payload is None:  # applied, but EPP gave no state to show
             return None, 202, headers
-        process = self._response_mapper(resp.transfer)
+        process = self._response_mapper(resp.payload)
         if resp.code != ResultCode.COMMAND_COMPLETED_ACTION_PENDING:
             return process, 200, headers  # completed at once: EPP exposes no process (core §16.1.4)
         return process, 201, {**headers, "Location": f"{str(request.url).rstrip('/')}/{LATEST}"}

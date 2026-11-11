@@ -63,7 +63,7 @@ def test_info_reads_the_lgr_of_the_table_and_uname():
         '<idn:uname>bücher.example</idn:uname></idn:data></extension>'
     )
 
-    domain = parse_domain_response(info(extension), "cl-1", idn_tables=TABLES).domain
+    domain = parse_domain_response(info(extension), "cl-1", idn_tables=TABLES).payload
 
     assert domain.idn == DomainIdn(lgr="latn-1.0", uname="bücher.example")
 
@@ -71,11 +71,11 @@ def test_info_reads_the_lgr_of_the_table_and_uname():
 def test_info_reads_the_lgr_of_the_table_alone():
     extension = f'<extension><idn:data {IDN_NS}><idn:table>de</idn:table></idn:data></extension>'
 
-    assert parse_domain_response(info(extension), "cl-1", idn_tables=TABLES).domain.idn == DomainIdn(lgr="latn-1.0")
+    assert parse_domain_response(info(extension), "cl-1", idn_tables=TABLES).payload.idn == DomainIdn(lgr="latn-1.0")
 
 
 def test_info_without_the_extension_has_no_idn():
-    assert parse_domain_response(info(), "cl-1", idn_tables=TABLES).domain.idn is None
+    assert parse_domain_response(info(), "cl-1", idn_tables=TABLES).payload.idn is None
 
 
 def test_info_leaves_out_an_idn_whose_table_has_no_lgr(caplog):
@@ -86,7 +86,7 @@ def test_info_leaves_out_an_idn_whose_table_has_no_lgr(caplog):
     )
 
     with caplog.at_level(logging.WARNING):
-        domain = parse_domain_response(info(extension), "cl-1", idn_tables=TABLES).domain
+        domain = parse_domain_response(info(extension), "cl-1", idn_tables=TABLES).payload
 
     assert domain.idn is None
     assert "es" in caplog.text

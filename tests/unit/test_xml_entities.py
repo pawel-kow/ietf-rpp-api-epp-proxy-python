@@ -57,7 +57,7 @@ def test_error_replies_do_not_resolve_entities(secret_file):
 
 def test_a_message_with_an_entity_reaches_the_raw_path_and_does_not_leak(secret_file):
     resp = parse_poll_response(hostile(secret_file, MSG), "xxe-cl-1")
-    assert resp.message.id == "5"
+    assert resp.payload.message.id == "5"
     assert SECRET not in repr(resp)
 
 

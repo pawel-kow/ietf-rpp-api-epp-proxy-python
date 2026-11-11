@@ -7,14 +7,11 @@ from registry_adapter.epp.commands.host.host_xml import (
 )
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
 from core.model.host.host import Host
-from core.model.host.host_check_response import HostCheckResponse
-from core.model.host.host_create_response import HostCreateResponse
-from core.model.host.host_delete_response import HostDeleteResponse
-from core.model.host.host_info_response import HostInfoResponse
 from core.model.host.host_update import HostUpdate
-from core.model.host.host_update_response import HostUpdateResponse
 from core.result.error_response import ErrorResponse
 from registry_adapter.epp.session.epp_client import EPPClient
+from core.model.shared.availability import Availability
+from core.result.operation_response import OperationResponse
 
 
 def _send(epp_client: EPPClient, eppxml: str, parse: Callable[[str], object], client_transaction_id):
@@ -25,7 +22,7 @@ def _send(epp_client: EPPClient, eppxml: str, parse: Callable[[str], object], cl
     return get_epp_error_response(response, client_transaction_id=client_transaction_id)
 
 
-def epp_hosts_Create(epp_client: EPPClient, host: Host, client_transaction_id=None, *, ns_map: dict[str, str]) -> HostCreateResponse | ErrorResponse:
+def epp_hosts_Create(epp_client: EPPClient, host: Host, client_transaction_id=None, *, ns_map: dict[str, str]) -> OperationResponse[Host] | ErrorResponse:
     return _send(
         epp_client,
         create_host_xml(host, client_request_id=client_transaction_id, ns_map=ns_map),
@@ -34,7 +31,7 @@ def epp_hosts_Create(epp_client: EPPClient, host: Host, client_transaction_id=No
     )
 
 
-def epp_hosts_Info(epp_client: EPPClient, host_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> HostInfoResponse | ErrorResponse:
+def epp_hosts_Info(epp_client: EPPClient, host_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> OperationResponse[Host] | ErrorResponse:
     return _send(
         epp_client,
         info_host_xml(host_name, client_request_id=client_transaction_id, ns_map=ns_map),
@@ -43,7 +40,7 @@ def epp_hosts_Info(epp_client: EPPClient, host_name: str, client_transaction_id=
     )
 
 
-def epp_hosts_Delete(epp_client: EPPClient, host_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> HostDeleteResponse | ErrorResponse:
+def epp_hosts_Delete(epp_client: EPPClient, host_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> OperationResponse[None] | ErrorResponse:
     return _send(
         epp_client,
         delete_host_xml(host_name, client_request_id=client_transaction_id, ns_map=ns_map),
@@ -52,7 +49,7 @@ def epp_hosts_Delete(epp_client: EPPClient, host_name: str, client_transaction_i
     )
 
 
-def epp_hosts_Check(epp_client: EPPClient, host_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> HostCheckResponse | ErrorResponse:
+def epp_hosts_Check(epp_client: EPPClient, host_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> OperationResponse[Availability] | ErrorResponse:
     return _send(
         epp_client,
         host_check_xml(host_name, client_request_id=client_transaction_id, ns_map=ns_map),
@@ -61,7 +58,7 @@ def epp_hosts_Check(epp_client: EPPClient, host_name: str, client_transaction_id
     )
 
 
-def epp_hosts_Update(epp_client: EPPClient, update: HostUpdate, client_transaction_id=None, *, ns_map: dict[str, str]) -> HostUpdateResponse | ErrorResponse:
+def epp_hosts_Update(epp_client: EPPClient, update: HostUpdate, client_transaction_id=None, *, ns_map: dict[str, str]) -> OperationResponse[None] | ErrorResponse:
     return _send(
         epp_client,
         create_host_update_xml(update, client_request_id=client_transaction_id, ns_map=ns_map),

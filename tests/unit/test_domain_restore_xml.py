@@ -87,29 +87,29 @@ def test_request_reply_with_up_data():
     resp = parse_domain_restore_response(reply(1000, up_data("pendingRestore")), DomainRestore(name="foo.example"), "rs35-cl-1")
     assert resp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
     assert resp.server_transaction_id == "sv-1"
-    assert resp.restore.rgpStatus == ["pendingRestore"]
+    assert resp.payload.rgpStatus == ["pendingRestore"]
 
 
 def test_request_reply_without_up_data_is_pending_restore():
     """RFC 3915 §3.2: an accepted request puts the domain in pendingRestore."""
     resp = parse_domain_restore_response(reply(1000), DomainRestore(name="foo.example"), "rs35-cl-1")
-    assert resp.restore.rgpStatus == ["pendingRestore"]
+    assert resp.payload.rgpStatus == ["pendingRestore"]
 
 
 def test_report_reply_without_up_data_is_restored():
     resp = parse_domain_restore_response(reply(1000), DomainRestore(name="foo.example", report=REPORT), "rs35-cl-1")
-    assert resp.restore.rgpStatus == []
+    assert resp.payload.rgpStatus == []
 
 
 def test_pending_report_reply_is_pending_restore():
     resp = parse_domain_restore_response(reply(1001), DomainRestore(name="foo.example", report=REPORT), "rs35-cl-1")
-    assert resp.restore.rgpStatus == ["pendingRestore"]
+    assert resp.payload.rgpStatus == ["pendingRestore"]
 
 
 def test_report_reply_with_up_data_follows_it():
     restore = DomainRestore(name="foo.example", report=REPORT)
     resp = parse_domain_restore_response(reply(1000, up_data("pendingRestore")), restore, "rs35-cl-1")
-    assert resp.restore.rgpStatus == ["pendingRestore"]
+    assert resp.payload.rgpStatus == ["pendingRestore"]
 
 
 def info_reply(extension=""):
@@ -125,8 +125,8 @@ def info_reply(extension=""):
 def test_info_reads_the_rgp_status():
     """RFC 3915 §4.1.2."""
     extension = f'<extension><rgp:infData xmlns:rgp="{RGP}"><rgp:rgpStatus s="redemptionPeriod"/></rgp:infData></extension>'
-    assert parse_domain_response(info_reply(extension), "rs35-cl-1", idn_tables=IdnTables()).domain.rgpStatus == ["redemptionPeriod"]
+    assert parse_domain_response(info_reply(extension), "rs35-cl-1", idn_tables=IdnTables()).payload.rgpStatus == ["redemptionPeriod"]
 
 
 def test_info_without_rgp_data_has_no_rgp_status():
-    assert parse_domain_response(info_reply(), "rs35-cl-1", idn_tables=IdnTables()).domain.rgpStatus == []
+    assert parse_domain_response(info_reply(), "rs35-cl-1", idn_tables=IdnTables()).payload.rgpStatus == []

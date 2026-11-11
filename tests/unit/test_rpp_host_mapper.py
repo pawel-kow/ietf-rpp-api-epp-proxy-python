@@ -2,10 +2,9 @@ import jsonschema
 import pytest
 
 from core.model.host.host import Host
-from core.model.host.host_check_response import HostCheckResponse
-from core.result.result_code import ResultCode
 from core.capabilities.unsupported_feature import UnsupportedFeature
 from rpp.mapping.host import host_availability, host_replacement, hosts
+from core.model.shared.availability import Availability
 
 NAME = "ns1.example.example"
 
@@ -208,10 +207,7 @@ def test_host_without_addresses_has_its_ns_record():
 
 
 def availability(available, reason=None):
-    return HostCheckResponse(
-        host_name=NAME, available=available, reason=reason, code=ResultCode.COMMAND_COMPLETED_SUCCESSFULLY,
-        msg="ok", server_transaction_id="sv", client_transaction_id=None,
-    )
+    return Availability(name=NAME, available=available, reason=reason)
 
 
 def test_available_host():

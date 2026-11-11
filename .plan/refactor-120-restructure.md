@@ -14,8 +14,8 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
 - [x] T3 Phase 4: `controller` → `rpp/http` + `rpp/handlers`; mappers and schema validator → `rpp/`; session pool →
       `core/session`; `run.py` → `main.py`; `copy_models.sh`, Dockerfile and docs for `uvicorn main:app`
 - [x] T4 Phase 5: `IdnTables` → `epp/`; read-back once (closes #17); settings passed in
-- [~] T5 Phase 6: result envelope for gateway results
-- [ ] T6 Docs (`architecture.project.md`, `testing.project.md`, `process.project.md`, README), import-linter contracts
+- [x] T5 Phase 6: result envelope for gateway results
+- [~] T6 Docs (`architecture.project.md`, `testing.project.md`, `process.project.md`, README), import-linter contracts
       for the target, final checks, draft PR
 
 ## Findings (evidence)
@@ -71,3 +71,7 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       read the app configuration only through `rpp/http/context.py`.
 - D20 `NotSupportedByProxy` takes the backend name in `detail()`, as `NotSupportedByBackend` does, so core does not
       name EPP; the answer is the same.
+- D21 Phase 6: `OperationResponse[T]` carries `payload: T` (None for a command that carries nothing). The 22 `*Response`
+      classes are gone; checks carry `core/model/shared/Availability(name, available, reason)`, poll and ack
+      `core/model/message/MessageQueue(queue_size, message)`. `ErrorResponse` and `MessageErrorResponse` stay as they
+      are. `ReplacementSteps.object_of` is gone: a read's object is its payload.

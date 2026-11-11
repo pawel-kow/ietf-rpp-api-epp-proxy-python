@@ -1,6 +1,5 @@
 from core.model.domain import domain_difference
 from core.model.domain.domain_replacement import DomainReplacement
-from core.model.domain.domains import DomainInfoResponse
 from core.result.error_response import ErrorResponse
 from core.ports import derived_update
 from core.ports.replace_outcome import ReplaceOutcome
@@ -11,6 +10,8 @@ from registry_adapter.epp.commands.domain.domain_commands import (
 )
 from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.session.epp_client import EPPClient
+from core.model.domain.domains import Domain
+from core.result.operation_response import OperationResponse
 
 
 class EppDomainGateway:
@@ -22,7 +23,6 @@ class EppDomainGateway:
         self._idn_tables = idn_tables
         self._steps = ReplacementSteps(
             read=self.info,
-            object_of=lambda info: info.domain,
             difference=domain_difference.difference,
             changes_nothing=domain_difference.changes_nothing,
             update=self.update,
@@ -41,7 +41,7 @@ class EppDomainGateway:
         return epp_domains_Update(self._epp_client, update, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
 
     def replace(
-        self, wanted: DomainReplacement, current: DomainInfoResponse | None = None, client_transaction_id=None,
+        self, wanted: DomainReplacement, current: OperationResponse[Domain] | None = None, client_transaction_id=None,
     ) -> ReplaceOutcome | ErrorResponse:
         return derived_update.replace(self._steps, wanted.name, wanted, client_transaction_id, current)
 

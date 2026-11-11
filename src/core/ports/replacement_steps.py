@@ -8,12 +8,11 @@ from core.result.error_response import ErrorResponse
 class ReplacementSteps:
     """How one kind of object is replaced by a backend that updates only partially.
 
-    `read(key)` and `update(delta, client_transaction_id=...)` run the backend's commands, and `object_of` takes the
-    object from a read. `prepare(wanted, current)` puts the wanted state in the terms of the stored one,
+    `read(key)` and `update(delta, client_transaction_id=...)` run the backend's commands; a read carries the object
+    as its payload. `prepare(wanted, current)` puts the wanted state in the terms of the stored one,
     `refuse(current, wanted)` says what the backend cannot do, and `difference` and `changes_nothing` are the model's.
     """
     read: Callable
-    object_of: Callable[[Any], Any]
     difference: Callable[[Any, Any], Any]
     changes_nothing: Callable[[Any], bool]
     update: Callable
