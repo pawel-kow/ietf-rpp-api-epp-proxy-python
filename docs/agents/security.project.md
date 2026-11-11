@@ -14,9 +14,9 @@ Generic rules are in [security.md](security.md).
 Read in the code, not reproduced.
 
 - **Credentials in stdout:** `TCPClient` prints every sent message
-  ([tcpclient.py:77](../../src/eppclient/tcpclient.py#L77)), including the login
+  ([tcp_client.py:72](../../src/registry_adapter/common/transport/tcp_client.py#L72)), including the login
   XML with `<pw>`. Received EPP messages are printed too. (#14)
 - **Unescaped XML:** `_send_login` interpolates the username and password into the
-  login XML ([eppclient.py:143](../../src/eppclient/eppclient.py#L143)). (#9)
+  login XML ([epp_client.py:175](../../src/registry_adapter/epp/session/epp_client.py#L175)). (#9)
 - **Raw exception text in 500 responses:** `rpp_operation` passes `detail=str(e)` in
-  [rpp_response.py](../../src/controller/helper/rpp_response.py). (#15)
+  [operation.py](../../src/rpp/http/operation.py). (#15)

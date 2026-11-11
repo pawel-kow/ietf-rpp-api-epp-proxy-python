@@ -17,8 +17,8 @@ The system `python --version` is 3.9, but the code uses 3.10+ syntax (`str | Non
 python -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt     # requirements.txt plus the development tools
 
-# Run the server (must run from src/: the app resolves openapi.yaml and config.yaml relative to CWD)
-cd src && uvicorn run:app        # Swagger UI at http://127.0.0.1:8000/ui/
+# Run the server (from src/: config.yaml is read relative to the working directory)
+cd src && uvicorn main:app        # Swagger UI at http://127.0.0.1:8000/ui/
 
 # Docker
 docker build . -f ./.docker/Dockerfile -t pawelk/rpp_server_epp_proxy

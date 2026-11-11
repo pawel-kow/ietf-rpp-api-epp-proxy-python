@@ -75,3 +75,5 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       classes are gone; checks carry `core/model/shared/Availability(name, available, reason)`, poll and ack
       `core/model/message/MessageQueue(queue_size, message)`. `ErrorResponse` and `MessageErrorResponse` stay as they
       are. `ReplacementSteps.object_of` is gone: a read's object is its payload.
+- D22 Follow-ups filed: #128 (EPP still named in `rpp/mapping` and `core` messages), #129 (EPP commands grouped by
+      object, not by operation, D4).
