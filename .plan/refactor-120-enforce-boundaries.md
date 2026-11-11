@@ -33,3 +33,9 @@ check them with `import-linter`. No code in `src/` changes.
   `only-main-imports-settings`.
 - D7 The devcontainer installs `requirements-dev.txt`. Finding 5 (mapper imports the `registry` package, and so the
   gateways) is not a contract yet: it would break today, and phase 3 fixes it. Listed as known debt with finding 6.
+
+## Corrections
+
+- C1 Full `pytest -n 8`: 2132 passed, 5 skipped, 1 collection error in `tests/unit/test_openapi_spec.py`, which also
+  fails on `main` @ cc7a2f2 (it imports the removed `controller.epp_session_authenticator`). Not caused by this
+  branch, filed as #124.
