@@ -89,13 +89,27 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
   be refused. Accept this edge, or keep a `checked` decision by letting the EPP side re-check dns against `current`?
 - **Q4** `with_stored_localization` is a consequence of how RPP renders a localization, not of EPP. #108 moves it to
   the EPP side; keep it in the mapper path instead?
-- **Q5** Host PUT that changes nothing (finding 4): keep sending the empty update (`2003`), as "must not change"
+- **Q6** Domain/contact PUT without `authInfo`: stays `KEEP` (spec-issues: json §4.9.3 forbids sending it, so C1's
+  rule would wipe the password on every PUT of a read), or becomes `CLEAR`?
+- **Q7** Host PUT/PATCH that changes nothing by a non-sponsor: 403 via `require_sponsor` as domains/contacts, or 200?
+- ~~**Q5**~~ Decided, D2. Host PUT that changes nothing (finding 4): keep sending the empty update (`2003`), as "must not change"
   requires? Then `replace` takes a flag to send even when unchanged, for hosts only.
 
 ## Decisions
 
-(none yet)
+- **D1 (Q1)** Flows return typed results or `ErrorResponse` only; they raise nothing HTTP and import no web
+  framework (checked: `src/flows/*.py`). EPP refusals in the derivation follow that: `ErrorResponse`, rendered by
+  `raise_epp_error`. Pending maintainer confirmation.
+- **D2 (Q5)** A host PUT that changes nothing sends no update and answers 200 with the current host, as domains and
+  contacts. Behaviour change: `spec-issues.md` "Full update without a change", host integration case(s) and
+  `test_host_flows.py` updated.
 
 ## Corrections
 
-(none yet)
+- **C1 (Q2)** A PUT is the wanted state: after it, the read-write members of the object equal the request. An omitted
+  contact name, address, email or localization means "clear", as for the organisation and the numbers. EPP cannot
+  clear them, so the EPP side refuses with 501 (`02102`), as a PATCH that removes them does today. `KEEP` for these
+  members and `_keeping_what_epp_cannot_clear` / `_kept_localization` go away. Behaviour change: `spec-issues.md`
+  "Full update of a contact", `contact_update/test5-put_keeps_what_epp_cannot_clear`, `test9-put_keeps_the_localization`,
+  `draft_contact/test5-update` (the json §8.2.4 example omits `name` and becomes 501) and the replacement mapper tests.
+  Open: does `authInfo` on PUT stay `KEEP` (Q6)?
