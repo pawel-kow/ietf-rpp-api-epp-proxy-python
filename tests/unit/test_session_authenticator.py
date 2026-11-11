@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from controller.session_authenticator import SessionAuthenticator
 from tests.helper.fake_epp_client import FakeEppClient
 
 
@@ -19,57 +19,57 @@ class RecordingFactory:
 def test_first_login_returns_a_connected_client_from_the_factory():
     factory = RecordingFactory()
 
-    result = EppSessionAuthenticator(factory).authenticate("user", "pw")
+    result = SessionAuthenticator(factory).authenticate("user", "pw")
 
-    assert result == {"epp_client": factory.created[0]}
+    assert result == {"backend": factory.created[0]}
     assert factory.created[0].connected
 
 
 def test_factory_receives_the_request_credentials():
     factory = RecordingFactory()
 
-    EppSessionAuthenticator(factory).authenticate("user", "pw")
+    SessionAuthenticator(factory).authenticate("user", "pw")
 
     assert (factory.created[0].username, factory.created[0].password) == ("user", "pw")
 
 
 def test_second_login_reuses_the_session():
     factory = RecordingFactory()
-    authenticator = EppSessionAuthenticator(factory)
+    authenticator = SessionAuthenticator(factory)
 
     first = authenticator.authenticate("user", "pw")
     second = authenticator.authenticate("user", "pw")
 
-    assert second["epp_client"] is first["epp_client"]
+    assert second["backend"] is first["backend"]
     assert len(factory.created) == 1
 
 
 def test_each_user_gets_a_separate_session():
     factory = RecordingFactory()
-    authenticator = EppSessionAuthenticator(factory)
+    authenticator = SessionAuthenticator(factory)
 
     first = authenticator.authenticate("user1", "pw")
     second = authenticator.authenticate("user2", "pw")
 
-    assert second["epp_client"] is not first["epp_client"]
+    assert second["backend"] is not first["backend"]
 
 
 def test_failed_connect_is_rejected():
-    assert EppSessionAuthenticator(RecordingFactory(reachable=False)).authenticate("user", "pw") is None
+    assert SessionAuthenticator(RecordingFactory(reachable=False)).authenticate("user", "pw") is None
 
 
 def test_failed_connect_is_not_cached():
     factory = RecordingFactory(reachable=False)
-    authenticator = EppSessionAuthenticator(factory)
+    authenticator = SessionAuthenticator(factory)
 
     authenticator.authenticate("user", "pw")
     factory.reachable = True
 
-    assert authenticator.authenticate("user", "pw") == {"epp_client": factory.created[1]}
+    assert authenticator.authenticate("user", "pw") == {"backend": factory.created[1]}
 
 
 def test_wrong_password_on_a_cached_session_is_rejected():
-    authenticator = EppSessionAuthenticator(RecordingFactory())
+    authenticator = SessionAuthenticator(RecordingFactory())
     authenticator.authenticate("user", "pw")
 
     assert authenticator.authenticate("user", "wrong") is None
@@ -78,8 +78,8 @@ def test_wrong_password_on_a_cached_session_is_rejected():
 def test_sessions_are_not_shared_between_authenticators():
     factory = RecordingFactory()
 
-    EppSessionAuthenticator(factory).authenticate("user", "pw")
-    EppSessionAuthenticator(factory).authenticate("user", "pw")
+    SessionAuthenticator(factory).authenticate("user", "pw")
+    SessionAuthenticator(factory).authenticate("user", "pw")
 
     assert len(factory.created) == 2
 
@@ -99,12 +99,12 @@ def test_concurrent_first_logins_keep_one_session_and_disconnect_the_rest():
         created.append(client)
         return client
 
-    authenticator = EppSessionAuthenticator(factory)
+    authenticator = SessionAuthenticator(factory)
 
     with ThreadPoolExecutor(2) as pool:
         results = list(pool.map(lambda _: authenticator.authenticate("user", "pw"), range(2)))
 
-    kept = results[0]["epp_client"]
-    assert results[1]["epp_client"] is kept
+    kept = results[0]["backend"]
+    assert results[1]["backend"] is kept
     assert [c.disconnect_calls for c in created if c is not kept] == [1]
     assert kept.disconnect_calls == 0

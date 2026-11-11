@@ -90,11 +90,16 @@ The backend refuses a renew period under one year (`2306`), so month periods are
 Unit tests in `tests/unit/` inject test doubles through constructors:
 
 - `EPPClient(transport, username, password)` takes a fake transport.
-- `EppSessionAuthenticator(client_factory)` takes a factory returning a fake client,
-  such as [FakeEppClient](../../tests/helper/fake_epp_client.py).
-- `create_app(authenticator)` builds a full app around that authenticator, so a
-  handler can be tested through `test_client()` without a registry. See
+- `EppBackend(epp_client)` takes a fake client, such as
+  [FakeEppClient](../../tests/helper/fake_epp_client.py), and a flow takes that backend.
+- `SessionAuthenticator(backend_factory)` takes a factory returning a backend.
+  [epp_backends](../../tests/helper/epp_backends.py) turns a factory of fake EPP clients into one, so the test still
+  sees the clients.
+- `create_app(authenticator, profile)` builds a full app around that authenticator and a `BackendProfile`
+  (`EPP_PROFILE`), so a handler can be tested through `test_client()` without a registry. See
   [test_app_injection.py](../../tests/unit/test_app_injection.py).
+- The domain mappers take `profile=EPP_PROFILE`. A test that calls `map_request` directly uses the fixture of
+  [epp_app_context](../../tests/helper/epp_app_context.py), from which `map_request` names the backend.
 - `TCPClient(host, port, tls_context)` connects to a
   [LoopbackEppServer](../../tests/helper/loopback_epp_server.py). Its certificate is
   generated per test session with the `openssl` CLI, so no key is in the repository.

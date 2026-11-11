@@ -5,10 +5,10 @@ from flask import request as flask_request
 from models import ErrorResponse, ResultCode, TransferOperation
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import (
-    client_transaction_id, generate_rpp_response_headers, map_request, raise_epp_error, request_has_content,
+    client_transaction_id, generate_rpp_response_headers, map_request, raise_registry_error, request_has_content,
     require_empty_body,
 )
-from .auth import get_epp_client
+from .auth import get_backend
 
 LATEST = "latest"
 
@@ -16,13 +16,13 @@ LATEST = "latest"
 class TransferHandlers:
     """The operations on the transfer of one kind of object, which EPP runs with one command.
 
-    `run(epp_client, transfer, client_transaction_id=...)` runs a transfer, `create_mapper`,
+    `gateway_of(backend)` is the gateway of the object, whose `transfer` runs a transfer, `create_mapper`,
     `approve_mapper` and `reject_mapper` convert a request, `response_mapper` a process, and `make_transfer(id, operation,
     auth_info)` builds a transfer without content.
     """
 
-    def __init__(self, run, create_mapper, approve_mapper, reject_mapper, response_mapper, make_transfer):
-        self._run_epp = run
+    def __init__(self, gateway_of, create_mapper, approve_mapper, reject_mapper, response_mapper, make_transfer):
+        self._gateway_of = gateway_of
         self._create_mapper = create_mapper
         self._approve_mapper = approve_mapper
         self._reject_mapper = reject_mapper
@@ -34,16 +34,16 @@ class TransferHandlers:
         return request.headers.get("RPP-Authorization")
 
     def _run(self, transfer):
-        resp = self._run_epp(get_epp_client(), transfer, client_transaction_id=client_transaction_id())
+        resp = self._gateway_of(get_backend()).transfer(transfer, client_transaction_id=client_transaction_id())
         if isinstance(resp, ErrorResponse):
-            raise_epp_error(resp)
+            raise_registry_error(resp)
         return resp
 
     def _process(self, transfer):
         resp = self._run(transfer)
         if resp.transfer is None:
             if transfer.operation == TransferOperation.QUERY:  # nothing was applied, so there is nothing to confirm
-                raise_epp_error(ErrorResponse(
+                raise_registry_error(ErrorResponse(
                     code=ResultCode.COMMAND_FAILED,
                     msg="The EPP server gave no transfer state",
                     server_transaction_id=resp.server_transaction_id,

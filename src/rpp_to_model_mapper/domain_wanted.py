@@ -1,4 +1,5 @@
 from models import AuthInfo, ContactMinimal, ContactReferenceNew, DomainReplacement, HostObj, NS
+from registry import BackendProfile
 from . import domain_dns
 from .common import parse_rpp, reject_set
 from .domains import check_contact_label
@@ -34,12 +35,12 @@ def _client_statuses(domain: dict) -> dict[str, str | None]:
     return reasons
 
 
-def _ns(domain_name: str, domain: dict):
+def _ns(domain_name: str, domain: dict, profile: BackendProfile):
     host_names = [host["hostName"] for host in domain.get("nameservers") or []]
     if not domain.get("dns"):
         attrs, dns_sec = [], None
     else:
-        ns, dns_sec = domain_dns.rpp_to_model(domain_name, parse_rpp(RPPDnsData, domain["dns"]))
+        ns, dns_sec = domain_dns.rpp_to_model(domain_name, parse_rpp(RPPDnsData, domain["dns"]), profile=profile)
         attrs = ns.host_attrs if ns else []
     if host_names:
         return NS(host_objs=[HostObj(id=name) for name in host_names], host_attrs=None), dns_sec
@@ -47,20 +48,20 @@ def _ns(domain_name: str, domain: dict):
 
 
 def rpp_to_model(
-    domain_name: str, domain: dict, auth_info: AuthInfo | None, unchanged: frozenset[str],
+    domain_name: str, domain: dict, auth_info: AuthInfo | None, unchanged: frozenset[str], *, profile: BackendProfile,
 ) -> DomainReplacement:
     """The replacement a domain representation asks for: a full update, or a read with a patch applied. Its read-only
     members and server statuses are not the client's and are left out. The caller converts `authInfo`, which a read
     need not show, and names the members the request leaves `unchanged`."""
     _reject_nameservers_with_records(domain)
-    ns, dns_sec = _ns(domain_name, domain)
+    ns, dns_sec = _ns(domain_name, domain, profile)
     statuses = _client_statuses(domain)
     return DomainReplacement(
         name=domain_name,
         ns=ns,
         registrant=(domain.get("registrant") or {}).get("id"),
         contacts=[
-            ContactReferenceNew(type=check_contact_label(contact["label"]), contact=ContactMinimal(id=contact["object"]["id"]))
+            ContactReferenceNew(type=check_contact_label(contact["label"], profile), contact=ContactMinimal(id=contact["object"]["id"]))
             for contact in domain.get("contacts") or []
         ],
         dnsSEC=dns_sec,

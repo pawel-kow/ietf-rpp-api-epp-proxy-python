@@ -2,8 +2,10 @@
 treats it as part of the representation only then (see spec-issues.md)."""
 import base64
 
+from eppclient.epp_profile import EPP_PROFILE
 from app import create_app
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from controller.session_authenticator import SessionAuthenticator
+from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'
@@ -42,7 +44,7 @@ def http(*replies):
         clients.append(FakeEppClient(username, password, replies=replies))
         return clients[-1]
 
-    return create_app(EppSessionAuthenticator(factory)).test_client(), clients
+    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client(), clients
 
 
 def test_a_read_leaves_out_auth_info_unless_it_is_included():

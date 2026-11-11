@@ -1,3 +1,4 @@
+from dataclasses import replace
 import logging
 import re
 import time
@@ -6,6 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from eppclient.epp_profile import EPP_PROFILE
 from app import create_app
 from tests.helper.fake_epp_client import FakeEppClient
 
@@ -27,7 +29,7 @@ class NoEppAuthenticator:
 
 
 def app_with(settings):
-    return create_app(NoEppAuthenticator(), discovery_settings=settings).test_client()
+    return create_app(NoEppAuthenticator(), EPP_PROFILE, discovery_settings=settings).test_client()
 
 
 @pytest.fixture(scope="module")
@@ -195,7 +197,7 @@ def test_bad_configuration_is_a_500_that_names_and_shows_nothing(key, value, cap
 
 
 def test_no_settings_at_all_is_a_500():
-    response = create_app(NoEppAuthenticator()).test_client().get("/.well-known/rpp", headers=HEADERS)
+    response = create_app(NoEppAuthenticator(), EPP_PROFILE).test_client().get("/.well-known/rpp", headers=HEADERS)
 
     assert response.status_code == 500
     assert response.headers["RPP-Code"] == "02400"
@@ -213,3 +215,13 @@ def test_an_unexpected_failure_is_still_a_problem_detail_with_an_rpp_code():
     assert response.status_code == 500
     assert response.headers["RPP-Code"] == "02400"
     assert response.headers["Content-Type"].startswith("application/problem+json")
+
+
+def test_the_objects_and_profiles_are_the_backends():
+    profile = replace(EPP_PROFILE, objects=("domainName", "contact"), profiles=("urn:example:profile",))
+    http = create_app(NoEppAuthenticator(), profile, discovery_settings=SETTINGS).test_client()
+
+    body = http.get("/.well-known/rpp", headers=HEADERS).json()
+
+    assert body["objects"] == ["domainName", "contact"]
+    assert body["profiles"] == ["urn:example:profile"]

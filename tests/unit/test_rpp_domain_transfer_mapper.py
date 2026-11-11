@@ -2,7 +2,7 @@ import pytest
 from jsonschema import ValidationError
 
 from models import AuthInfo, DomainTransfer, DomainTransferProcess, TransferOperation
-from rpp_to_model_mapper import NotSupportedByEpp, domain_transfer_approve, domain_transfer_process, domain_transfer_reject
+from rpp_to_model_mapper import NotSupportedByBackend, domain_transfer_approve, domain_transfer_process, domain_transfer_reject
 
 PROCESS = {"@type": "domainTransferProcess"}
 
@@ -33,12 +33,12 @@ def test_request_keeps_the_period_and_the_authorization():
 
 def test_push_cannot_reach_epp():
     rpp = {**PROCESS, "transferDir": "push", "gainingClientId": "ClientX"}
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         domain_transfer_process.rpp_to_model("foo.example", rpp, None)
 
 
 def test_gaining_client_without_direction_cannot_reach_epp():
-    with pytest.raises(NotSupportedByEpp, match="gainingClientId"):
+    with pytest.raises(NotSupportedByBackend, match="gainingClientId"):
         domain_transfer_process.rpp_to_model("foo.example", {**PROCESS, "gainingClientId": "ClientX"}, None)
 
 
@@ -54,7 +54,7 @@ def test_reject_body_is_optional(no_body):
 
 
 def test_reject_reason_is_not_allowed_in_the_epp_profile():
-    with pytest.raises(NotSupportedByEpp, match="reason"):
+    with pytest.raises(NotSupportedByBackend, match="reason"):
         domain_transfer_reject.rpp_to_model("foo.example", {**PROCESS, "reason": "No"}, None)
 
 
@@ -99,5 +99,5 @@ def test_approve_body_is_validated(body):
 
 
 def test_approve_reason_is_not_allowed_in_the_epp_profile():
-    with pytest.raises(NotSupportedByEpp, match="reason"):
+    with pytest.raises(NotSupportedByBackend, match="reason"):
         domain_transfer_approve.rpp_to_model("foo.example", {**PROCESS, "reason": "ok"}, None)

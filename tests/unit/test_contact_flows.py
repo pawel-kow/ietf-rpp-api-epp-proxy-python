@@ -1,3 +1,4 @@
+from eppclient.epp_backend import EppBackend
 from flows import patch_contact, replace_contact
 from models import (
     Address, Contact, ContactReplacement, ContactUpdate, ContactUpdateChange, ErrorResponse, PostalInfoChange, ResultCode,
@@ -50,7 +51,7 @@ def kinds(epp):
 def test_a_direct_update_is_not_preceded_by_a_read():
     epp = client(DONE, info())
 
-    result = patch_contact(epp, ID, EMAIL_CHANGE, never_called, "cl-1")
+    result = patch_contact(EppBackend(epp), ID, EMAIL_CHANGE, never_called, "cl-1")
 
     assert kinds(epp) == [(False, True), (True, False)]
     assert result.contact.id == "JD-1"
@@ -64,7 +65,7 @@ def test_a_patch_needing_the_contact_reads_it_first():
         seen.append(contact)
         return contact_application.apply(contact, EMAIL_CHANGE)
 
-    result = patch_contact(epp, ID, None, from_current, "cl-1")
+    result = patch_contact(EppBackend(epp), ID, None, from_current, "cl-1")
 
     assert seen[0].name == "Joe"
     assert kinds(epp) == [(True, False), (False, True), (True, False)]
@@ -73,11 +74,11 @@ def test_a_patch_needing_the_contact_reads_it_first():
 
 
 def test_a_failed_read_is_returned():
-    assert isinstance(patch_contact(client(MISSING), ID, None, never_called, "cl-1"), ErrorResponse)
+    assert isinstance(patch_contact(EppBackend(client(MISSING)), ID, None, never_called, "cl-1"), ErrorResponse)
 
 
 def test_a_failed_update_is_returned():
-    result = patch_contact(client(reply(2201)), ID, EMAIL_CHANGE, never_called, "cl-1")
+    result = patch_contact(EppBackend(client(reply(2201))), ID, EMAIL_CHANGE, never_called, "cl-1")
 
     assert isinstance(result, ErrorResponse) and result.code == ResultCode.AUTHORIZATION_ERROR
 
@@ -85,33 +86,33 @@ def test_a_failed_update_is_returned():
 def test_a_replacement_that_changes_nothing_sends_no_update():
     epp = client(info())
 
-    result = replace_contact(epp, UNCHANGED, "cl-1")
+    result = replace_contact(EppBackend(epp), UNCHANGED, "cl-1")
 
     assert kinds(epp) == [(True, False)]
     assert result.contact.id == "JD-1" and result.mutation.server_transaction_id == "sv-1"
 
 
 def test_an_unchanged_contact_of_another_client_is_a_403():
-    result = replace_contact(client(info("ClientY")), UNCHANGED, "cl-1")
+    result = replace_contact(EppBackend(client(info("ClientY"))), UNCHANGED, "cl-1")
 
     assert isinstance(result, ErrorResponse) and result.code == ResultCode.AUTHORIZATION_ERROR
     assert result.client_transaction_id == "cl-1"
 
 
 def test_the_sponsor_is_compared_without_regard_to_case():
-    result = replace_contact(client(info(), username="clientx"), UNCHANGED, "cl-1")
+    result = replace_contact(EppBackend(client(info(), username="clientx")), UNCHANGED, "cl-1")
 
     assert result.contact is not None
 
 
 def test_a_failed_read_back_leaves_the_mutation_without_a_contact():
-    result = patch_contact(client(DONE, MISSING), ID, EMAIL_CHANGE, never_called, "cl-1")
+    result = patch_contact(EppBackend(client(DONE, MISSING)), ID, EMAIL_CHANGE, never_called, "cl-1")
 
     assert result.contact is None and result.mutation.server_transaction_id == "sv-1"
 
 
 def test_a_read_back_that_raises_leaves_the_mutation_without_a_contact():
-    result = patch_contact(client(DONE, ConnectionError()), ID, EMAIL_CHANGE, never_called, "cl-1")
+    result = patch_contact(EppBackend(client(DONE, ConnectionError())), ID, EMAIL_CHANGE, never_called, "cl-1")
 
     assert result.contact is None
 
@@ -132,7 +133,7 @@ BOTH = info_with(postal("int", "Joe", "Berlin"), postal("loc", "Jörg", "Berlin"
 
 
 def test_a_form_the_registry_did_not_add_is_an_error_naming_it():
-    result = patch_contact(client(INT_ONLY, DONE, INT_ONLY), ID, None, applying(ADD_LOC), "cl-1")
+    result = patch_contact(EppBackend(client(INT_ONLY, DONE, INT_ONLY)), ID, None, applying(ADD_LOC), "cl-1")
 
     assert isinstance(result, ErrorResponse) and result.code == ResultCode.COMMAND_FAILED
     assert "loc" in result.msg
@@ -140,13 +141,13 @@ def test_a_form_the_registry_did_not_add_is_an_error_naming_it():
 
 
 def test_an_int_form_the_registry_did_not_add_to_a_loc_only_contact_is_an_error():
-    result = patch_contact(client(LOC_ONLY, DONE, LOC_ONLY), ID, None, applying(ADD_INT), "cl-1")
+    result = patch_contact(EppBackend(client(LOC_ONLY, DONE, LOC_ONLY)), ID, None, applying(ADD_INT), "cl-1")
 
     assert isinstance(result, ErrorResponse) and "int" in result.msg
 
 
 def test_a_form_the_registry_added_is_a_success():
-    result = patch_contact(client(INT_ONLY, DONE, BOTH), ID, None, applying(ADD_LOC), "cl-1")
+    result = patch_contact(EppBackend(client(INT_ONLY, DONE, BOTH)), ID, None, applying(ADD_LOC), "cl-1")
 
     assert result.contact is not None
 
@@ -157,18 +158,18 @@ def test_a_form_that_was_there_and_is_changed_is_not_checked():
         localizedPostalInfo=LocalizedPostalInfo(name="Jörgen", address=BERLIN),
     )
 
-    result = replace_contact(client(BOTH, DONE, BOTH), changed, "cl-1")
+    result = replace_contact(EppBackend(client(BOTH, DONE, BOTH)), changed, "cl-1")
 
     assert result.contact is not None
 
 
 def test_a_form_that_cannot_be_read_back_is_not_an_error():
-    result = patch_contact(client(INT_ONLY, DONE, MISSING), ID, None, applying(ADD_LOC), "cl-1")
+    result = patch_contact(EppBackend(client(INT_ONLY, DONE, MISSING)), ID, None, applying(ADD_LOC), "cl-1")
 
     assert result.contact is None
 
 
 def test_a_direct_update_has_nothing_to_compare_with():
-    result = patch_contact(client(DONE, INT_ONLY), ID, ADD_LOC, never_called, "cl-1")
+    result = patch_contact(EppBackend(client(DONE, INT_ONLY)), ID, ADD_LOC, never_called, "cl-1")
 
     assert result.contact is not None

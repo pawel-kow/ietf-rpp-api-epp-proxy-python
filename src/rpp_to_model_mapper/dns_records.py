@@ -1,6 +1,6 @@
 import ipaddress
 
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPDnsRecord
 
@@ -19,7 +19,7 @@ def record_type(record: RPPDnsRecord) -> str:
 
 def check_record_class(record: RPPDnsRecord):
     if record.record_class not in (None, RECORD_CLASS_INTERNET):
-        raise NotSupportedByEpp(f"DNS class '{record.record_class}'")
+        raise NotSupportedByBackend(f"DNS class '{record.record_class}'")
 
 
 def reject_ttl(controls: dict):

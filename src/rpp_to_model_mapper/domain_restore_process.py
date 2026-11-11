@@ -2,7 +2,7 @@ from models import DomainRestore, DomainRestoreProcess
 from models.domain_restore_process import PENDING_DELETE, PENDING_RESTORE
 from rpp_schema_validator import validate_schema
 from .common import parse_rpp
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPRestoreProcess
 
 def parse_request(schema: str, rpp: dict) -> RPPRestoreProcess:
@@ -19,7 +19,7 @@ def rpp_to_model(name: str, rpp: dict) -> DomainRestore:
     so a report inside the request has no place in EPP."""
     process_rpp = parse_request("restoreProcess.create", rpp)
     if process_rpp.restoreReport is not None:
-        raise NotSupportedByEpp("A 'restoreReport' in a restore request")
+        raise NotSupportedByBackend("A 'restoreReport' in a restore request")
     return DomainRestore(name=name)
 
 

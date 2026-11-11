@@ -2,7 +2,7 @@ from models import Address, Contact, ContactType, LocalizedPostalInfo
 from rpp_schema_validator import validate_schema
 from . import auth_info, phones, prov_metadata, statuses
 from .common import parse_rpp, reject_set
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import (
     RPPCard, RPPCardAddress, RPPCardAddressComponent, RPPCardEmail, RPPCardLocalization, RPPCardName,
@@ -61,13 +61,13 @@ def _check_profile(card: RPPCard):
 def _reject_additional(entries: dict | None, member: str):
     """EPP holds only the entry under the predefined key."""
     if any("-" in key for key in entries or {}):
-        raise NotSupportedByEpp(f"Additional entries in '{member}'")
+        raise NotSupportedByBackend(f"Additional entries in '{member}'")
 
 
 def _rpp_to_type(card: RPPCard) -> ContactType:
     kind = card.kind or KIND_INDIVIDUAL
     if kind == KIND_INDIVIDUAL and card.organizations:
-        raise NotSupportedByEpp("'organizations' on an individual")
+        raise NotSupportedByBackend("'organizations' on an individual")
     return KIND_TO_TYPE[kind]
 
 
@@ -82,7 +82,7 @@ def _rpp_to_address(addresses: dict[str, RPPCardAddress] | None) -> Address | No
         else:
             setattr(address, COMPONENT_TO_ADDRESS[component.kind], component.value)
     if len(address.street) > MAX_STREET_LINES:
-        raise NotSupportedByEpp(f"More than {MAX_STREET_LINES} street lines")
+        raise NotSupportedByBackend(f"More than {MAX_STREET_LINES} street lines")
     address.street = address.street or None
     return address
 
@@ -95,7 +95,7 @@ def _rpp_to_phone(card: RPPCard, key: str) -> list[str] | None:
 def _reject_multiple_features(card: RPPCard):
     for key, phone in (card.phones or {}).items():
         if set(phone.features or {}) == {PHONE_VOICE, PHONE_FAX}:
-            raise NotSupportedByEpp(f"Phone '{key}' with both 'voice' and 'fax'")
+            raise NotSupportedByBackend(f"Phone '{key}' with both 'voice' and 'fax'")
 
 
 def _organisation_name(organizations: dict | None) -> str | None:
@@ -106,14 +106,14 @@ def _rpp_to_localized(card: RPPCard) -> LocalizedPostalInfo | None:
     """The localized form. EPP needs it complete, so what it leaves out comes from the Card."""
     localizations = card.localizations or {}
     if len(localizations) > 1:
-        raise NotSupportedByEpp("More than one localization")
+        raise NotSupportedByBackend("More than one localization")
     localization = next(iter(localizations.values()), RPPCardLocalization())
     if localization == RPPCardLocalization():
         return None
     if localization.emails:
-        raise NotSupportedByEpp("A localized email")
+        raise NotSupportedByBackend("A localized email")
     if localization.organizations and (card.kind or KIND_INDIVIDUAL) == KIND_INDIVIDUAL:
-        raise NotSupportedByEpp("'organizations' on an individual")
+        raise NotSupportedByBackend("'organizations' on an individual")
     name = localization.name or card.name
     return LocalizedPostalInfo(
         name=name.full if name else None,

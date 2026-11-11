@@ -2,6 +2,7 @@ from models import (
     ContactMinimal, ContactReferenceNew, DomainReplacement, DomainUpdate, DomainUpdateAdd,
     DomainUpdateChange, DomainUpdateRemove, HostObj, NS,
 )
+from registry import BackendProfile
 from rpp_schema_validator import validate_schema
 from . import auth_info, domain_wanted, include_elements, json_patch, patch_statuses
 from .common import parse_rpp
@@ -30,18 +31,19 @@ def _contact(label: str, contact_id: str) -> ContactReferenceNew:
     return ContactReferenceNew(type=label, contact=ContactMinimal(id=contact_id))
 
 
-def _matched_contact(match: dict) -> ContactReferenceNew | None:
+def _matched_contact(match: dict, profile: BackendProfile) -> ContactReferenceNew | None:
     """EPP removes a contact by role and id, so the match must name both."""
     target = match.get("object")
     if "label" not in match or not isinstance(target, dict) or "id" not in target:
         return None
-    return _contact(check_contact_label(match["label"]), target["id"])
+    return _contact(check_contact_label(match["label"], profile), target["id"])
 
 
 class _PatchedUpdate:
     """Collects the effect of the patch operations on a DomainUpdate."""
 
-    def __init__(self):
+    def __init__(self, profile: BackendProfile):
+        self.profile = profile
         self.add_hosts: list[HostObj] = []
         self.remove_hosts: list[HostObj] = []
         self.add_contacts: list[ContactReferenceNew] = []
@@ -79,7 +81,7 @@ class _PatchedUpdate:
         else:
             _validated("contacts", [operation.value])
             contact = parse_rpp(RPPLabelledContact, operation.value)
-            self.add_contacts.append(_contact(check_contact_label(contact.label), contact.object.id))
+            self.add_contacts.append(_contact(check_contact_label(contact.label, self.profile), contact.object.id))
 
     def _remove_element(self, operation: RPPPatchOperation):
         if operation.path == "/nameservers":
@@ -87,7 +89,7 @@ class _PatchedUpdate:
                 raise NeedsCurrentState()
             self.remove_hosts.append(HostObj(id=operation.match["hostName"]))
         else:
-            contact = _matched_contact(operation.match)
+            contact = _matched_contact(operation.match, self.profile)
             if contact is None:
                 raise NeedsCurrentState()
             self.remove_contacts.append(contact)
@@ -137,12 +139,12 @@ def _operations(rpp: list) -> list[RPPPatchOperation]:
     return [parse_rpp(RPPPatchOperation, operation) for operation in rpp]
 
 
-def rpp_to_model(domain_name: str, rpp: list) -> DomainUpdate | None:
+def rpp_to_model(domain_name: str, rpp: list, *, profile: BackendProfile) -> DomainUpdate | None:
     """Converts a partial update (JSON Patch, json draft §5.2) to a DomainUpdate.
 
     None when an operation needs the current domain, then `rpp_to_model_with_current` converts it.
     """
-    update = _PatchedUpdate()
+    update = _PatchedUpdate(profile)
     try:
         for operation in _operations(rpp):
             update.apply(operation)
@@ -151,7 +153,7 @@ def rpp_to_model(domain_name: str, rpp: list) -> DomainUpdate | None:
     return update.to_domain_update(domain_name)
 
 
-def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict) -> DomainReplacement:
+def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict, *, profile: BackendProfile) -> DomainReplacement:
     """Applies the patch to the current domain (its read representation) and returns the domain it asks for.
 
     A read need not show a data element with onDemand Visibility (`authInfo`), so its operations are converted as
@@ -165,9 +167,9 @@ def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict) -> Dom
     patched = patch_statuses.with_server_statuses(patched, current, "domainStatus")
     validate_schema("domainName.read", patched)
     domain_wanted.reject_other_changes(current, patched)
-    auth_info_update = _PatchedUpdate()
+    auth_info_update = _PatchedUpdate(profile)
     for operation in operations:
         if operation.path == AUTH_INFO_PATH:
             auth_info_update.apply(operation)
     unchanged = include_elements.left_alone_by_patch(OBJECT, [operation.path for operation in operations])
-    return domain_wanted.rpp_to_model(domain_name, patched, auth_info_update.auth_info, unchanged)
+    return domain_wanted.rpp_to_model(domain_name, patched, auth_info_update.auth_info, unchanged, profile=profile)
