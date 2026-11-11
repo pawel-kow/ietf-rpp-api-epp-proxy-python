@@ -128,7 +128,10 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
   Output: an `onDemand` element is left out unless listed (GET, create, PUT, PATCH responses). PUT: listed → part of the
   wanted state (present = SET, absent = CLEAR); not listed → KEEP, and present in the body → 400. PATCH unchanged.
   `spec-issues.md` entry asks whether this is wanted (data-objects §2.4 says Visibility affects output only), and
-  notes core §16.1.7 (repeated parameter) vs data-objects §2.7.3 (comma list; the OpenAPI uses the comma list).
+  notes core §16.1.7 (repeated parameter) vs data-objects §2.7.3 and the OpenAPI (`explode: false`, one
+  comma-separated string). Maintainer: follow core, one identifier per repeated `includeElements`, read from the raw
+  query (Connexion accepts a repeated parameter, checked: GET with two `includeElements` answers 200).
+  `openapi.yaml` is generated and stays as it is; the spec-issues entry records the mismatch.
   Integration cases that assert `authInfo` in a read add `includeElements=authInfo`.
 
 ## Corrections
