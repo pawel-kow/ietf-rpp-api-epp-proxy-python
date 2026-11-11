@@ -22,6 +22,9 @@ class FakeTransport:
         with self.guard:
             self.pending.append(message)
 
+    def closed_by_peer(self):
+        return False
+
     def receive(self):
         time.sleep(0.005)
         with self.guard:
