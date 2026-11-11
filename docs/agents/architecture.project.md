@@ -4,49 +4,50 @@ Generic rules are in [architecture.md](architecture.md).
 
 ## Module boundaries
 
-`src/` is being restructured into a protocol-free core, the RPP adapter that receives requests, and the registry
-adapters, each split by registry object (#120). The target, the rules and the check below are binding now. Until a
-phase of #120 moves a package, the check applies them to today's packages through the
-[mapping](#today-to-target).
+`src/` holds a protocol-free core, the RPP adapter that receives requests, and the registry adapters, each split by
+registry object (#120). The rules below are checked by `import-linter`.
 
-### Target
+### Structure
 
 ```
 src/
 ├── main.py                  composition root, the only module that knows all others
-├── settings/                loads config once; typed sections, passed in by main.py
+├── settings/                loads config.yaml once into typed sections, which main.py passes on
 ├── core/                    pure Python: no I/O, no framework, no protocol
 │   ├── model/{shared,domain,contact,host,message}/
-│   ├── result/              ResultCode, UnknownResultCode, ErrorResponse, OperationResponse
+│   ├── result/              ResultCode, UnknownResultCode, OperationResponse, ErrorResponse
 │   ├── capabilities/        BackendProfile, NotSupportedByBackend, NotSupportedByProxy
 │   ├── ports/               RegistryBackend, *Gateway, ReplaceOutcome, ReplacementSteps, derived_update
 │   ├── session/             SessionPool
-│   └── flows/               read_back.py, sponsor.py, {domain,contact,host,message}/
+│   └── flows/               read_back.py, mutation_result.py, sponsor.py, {domain,contact,host,message}/
 ├── rpp/                     receiving adapter: RPP over HTTP
-│   ├── http/                create_app, middleware/, validators/, security/, problem.py, headers.py, context.py, operation.py
-│   ├── handlers/            {domain,contact,host,message}/, discovery.py
+│   ├── http/                app (create_app), middleware/, validators/, security/, problem, headers, context, operation
+│   ├── handlers/            {domain,contact,host,message}/, shared/, discovery.py
 │   ├── mapping/             shared/, {domain,contact,host,message,discovery}/
-│   ├── dto/                 RPP dataclasses
+│   ├── dto/                 the RPP dataclasses
 │   ├── schema/              validator, data_objects, schemas/ (generated)
 │   └── openapi.yaml         (generated)
 └── registry_adapter/
     ├── epp/
     │   ├── session/         EPPClient: greeting, login, extensions
     │   ├── xml/             codec (ns_map passed in), generated/
-    │   ├── commands/        {domain,contact,host,message}/: build and parse kept together per operation
+    │   ├── commands/        {domain,contact,host,message}/<operation>.py, shared/
     │   ├── gateways/        EppBackend, Epp*Gateway
     │   ├── idn_tables.py    lgr <-> EPP IDN table
-    │   ├── profile.py       EPP_PROFILE
-    │   └── refusals.py
-    ├── rri/                 same shape as epp/
+    │   ├── profile.py       EPP_PROFILE, epp_profile
+    │   └── refusals.py, contact_refusal.py
+    ├── rri/                 later, same shape as epp/
     └── common/
-        ├── transport/       TCP client (framing with or without the length header), TLS
+        ├── transport/       TCP client, TLS context
         └── xmlsafe/         hardened parser, decode_xml
 ```
 
 `registry_adapter/common` holds only protocol-agnostic infrastructure. The full update derived from partial ones is
 domain logic and stays in `core/ports`. The connection behaviour (lock, reconnect, re-login) differs between EPP and
 RRI, so it moves to `common` only when the RRI client is its second user ([rule 6](architecture.md#same-pattern-for-the-same-thing)).
+
+Package `__init__.py` files are empty, except `rpp/handlers/__init__.py`, which names every handler for Connexion
+(see [Request lifecycle](#request-lifecycle)). Imports are absolute and name the module that defines what they import.
 
 ### Dependency rules
 
@@ -75,189 +76,183 @@ RRI, so it moves to `common` only when the RRI client is its second user ([rule 
 | `registry_adapter.*` | HTTP, RPP JSON, OpenAPI, Problem Details, `includeElements`, config files |
 | `registry_adapter.common` | Which protocol uses it, the model, the result codes |
 
-### Today to target
-
-| Today | Target |
-|---|---|
-| `run.py` | `main.py` |
-| `config.py` | `settings/` |
-| `models/` | `core/model`, `core/result` |
-| `registry/` | `core/ports`, `core/capabilities` (`BackendProfile`) |
-| `flows/` | `core/flows` |
-| `app.py`, `controller/` | `rpp/http`, `rpp/handlers`, `core/session` (`session_authenticator.py`) |
-| `rpp_to_model_mapper/`, `rpp_schema_validator/` | `rpp/mapping`, `rpp/dto`, `rpp/schema`, `core/capabilities` (refusals) |
-| `eppclient/`, `epp_to_model_mapper/` | `registry_adapter/epp` |
-| `helpers/`, `eppclient/tcpclient.py`, `eppclient/tls.py` | `registry_adapter/common` |
-
 ### The check
 
 `import-linter` checks the rules, one contract per rule, configured in `[tool.importlinter]` of
 [pyproject.toml](../../pyproject.toml) and run with `PYTHONPATH=src lint-imports` (see
-[process.project.md](process.project.md#checks-before-done)). The contracts name today's packages, and each phase of
-#120 renames them as it moves the code. A forbidden contract also follows indirect imports. Every `ignore_imports`
-entry is known debt below; never add one for new code.
-
-`app.py`, `config.py` and `run.py` are modules, which import-linter cannot take as roots: an import of `config` or
-`run` is forbidden by name, and what `app.py` and `run.py` import is checked once they move into packages (#120
-phase 4). Rules that need the target structure (object sub-packages, `rpp` inner layers, only `session` sends) get
-their contracts in the phase that creates it.
+[process.project.md](process.project.md#checks-before-done)). A forbidden contract also follows indirect imports.
+`main.py` is a module, which import-linter cannot take as a root, so an import of `main` is forbidden by name and what
+`main` imports is not checked. A contract for "never another protocol" comes with the second protocol. Every
+`ignore_imports` entry is known debt below; never add one for new code. The "must never know" table is not checked
+by imports where it is about names and messages; see the known debt.
 
 ## Request lifecycle
 
-A request flows through distinct layers, each in its own package under `src/`. A
-single feature (e.g. "domain update") touches every layer:
+A request flows through the layers below. A single feature (e.g. "domain update") touches a handler, a mapper, a
+flow, the port and the EPP commands of one object.
 
-1. **`openapi.yaml`:** the API contract. Connexion routes operations to controller
-   functions by `operationId` (e.g. `domainNames_updatePartial` →
-   `controller.domains.domainNames_updatePartial`) via
-   `RelativeResolver('controller')` in [src/app.py](../../src/app.py). An operation
-   without a controller function answers 501 (`02101`). Generated, see below.
-2. **`controller/`:** HTTP handlers. Parse the request, call the RPP→model mapper,
-   call a flow or the request's backend (`get_backend()` in `controller/auth.py`) and map the result back to RPP.
-   Registry errors go through `raise_registry_error` in
-   [rpp_response.py](../../src/controller/helper/rpp_response.py), which applies core
-   §18.1, and `handle_rpp_error` in [src/app.py](../../src/app.py) renders every error
-   as a core §9 Problem Detail.
-3. **`rpp_to_model_mapper/`:** converts inbound RPP JSON dicts ↔ internal `models`
-   dataclasses, through the RPP dataclasses in `rpp_models/`. Validates every payload
-   against a JSON Schema via `validate_schema(...)` before mapping. Also does the
+1. **`rpp/openapi.yaml`:** the API contract. Connexion routes an operation by its `operationId` (e.g.
+   `domainNames_updatePartial`) to the function of that name in `rpp.handlers`, via `RelativeResolver('rpp.handlers')`
+   in [app.py](../../src/rpp/http/app.py). [rpp/handlers/\_\_init\_\_.py](../../src/rpp/handlers/__init__.py) names
+   every handler for it. An operation without a handler answers 501 (`02101`). Generated, see below.
+2. **`rpp/handlers/<object>/`:** the handlers, thin presenters. They parse the request, call the mapper, call a flow
+   or the request's backend (`get_backend()` in [context.py](../../src/rpp/http/context.py)) and map the result
+   back to RPP. `requested_elements` and `TransferHandlers` are in `rpp/handlers/shared/`.
+3. **`rpp/http/`:** what every handler shares. `operation.py` holds `rpp_operation` (anything unexpected is a 500
+   Problem Detail) and `map_request`, which runs a mapper and turns what it refuses into a Problem Detail.
+   `problem.py` applies core §18.1 to registry errors (`raise_registry_error`) and renders every error as a core §9
+   Problem Detail (`handle_rpp_error`). `headers.py` builds the `RPP-*` headers. `context.py` is the only reader of
+   the app configuration and the request context: the backend, the `BackendProfile` and the discovery settings.
+4. **`rpp/mapping/`:** converts inbound RPP JSON dicts ↔ the `core.model` dataclasses, through the RPP dataclasses in
+   `rpp/dto/`. Validates every payload against a JSON Schema via `validate_schema(...)` (`rpp/schema/validator.py`)
+   before mapping. Also does the
    reverse and re-validates the outbound dict. Every module converts one thing through
    `rpp_to_model` and `model_to_rpp`, so the module name selects the conversion, and
-   callers write `rpp_mapper.domains.rpp_to_model`. Valid input that cannot reach the
+   handlers write `domain_patch.rpp_to_model`. Valid input that cannot reach the
    backend answers 501, so nothing is dropped silently, see
    [Unsupported input](#unsupported-input). The one exception is the self-referencing `ns` record of a
    host, which EPP represents implicitly: it is mandatory on input and goes no further, see
-   [spec-issues.md](../../.spec/spec-issues.md#the-own-ns-record-of-a-host). `dns_records.py` holds what hosts and domains share for DNS
-   records, and `domain_dns.py` maps a domain's `dns` to `hostAttr` and secDNS.
+   [spec-issues.md](../../.spec/spec-issues.md#the-own-ns-record-of-a-host). `shared/dns_records.py` holds what hosts
+   and domains share for DNS records, and `domain/domain_dns.py` maps a domain's `dns` to `hostAttr` and secDNS.
    A mapper returns the intent it got, and never a mix: a partial update is a delta (`DomainUpdate`,
    `ContactUpdate`, `HostUpdate`), a full update is the wanted state (`DomainReplacement`,
    `ContactReplacement`, `HostReplacement`). `domain_patch.py` turns a JSON Patch into a `DomainUpdate`
    without reading the object, and answers `None` when an operation needs the current state (whole-array
    `replace` or `remove`, `replace` with `match`, a partial `match`, `/status`, `/dns`, `/dns/records`,
    `/dns/controls`). `rpp_to_model_with_current` then applies the patch to the read representation of the domain
-   with `json_patch.py` (json §5.2.2), and `domain_wanted.py` turns the patched representation into the
+   with `shared/json_patch.py` (json §5.2.2), and `domain_wanted.py` turns the patched representation into the
    `DomainReplacement`. A patch that matches no element, or matches several for a `replace`, is
    `PatchNotApplicable` (`02308`, 422). `host_patch.py` and `contact_patch.py` do the same for hosts and contacts.
    `domain_replacement.py`, `contact_replacement.py` and `host_replacement.py` turn a PUT into the replacement
    without a read: they reject members outside the `.update` schema, and what the body omits is cleared. An
    `onDemand` data element (`authInfo`) is part of a PUT only when the request includes it, see
    [spec-issues.md](../../.spec/spec-issues.md#visibility-and-includeelements).
-   `contacts.py` also holds `contact_from_rpp`, the Card conversion that create, PUT and PATCH share.
+   `contact/contacts.py` also holds `contact_from_rpp`, the Card conversion that create, PUT and PATCH share.
    `contact_patch.py` sends `/status`, `/authInfo`, and an `add` or `replace` of a phone or the email without a
    read, and reads for the rest of `/contactInfo`, see
    [spec-issues.md](../../.spec/spec-issues.md#full-update-of-a-contact).
-   `include_elements.py` checks the `includeElements` of a request against the data model and hides an `onDemand`
-   element the request does not include, for every object, from the Visibility in
-   `rpp_schema_validator/schemas/draft-ietf-rpp-data-objects.yaml`.
-   `idn_tables.py` holds `IdnTables`, the map between a domain's `lgr` and the table of the EPP IDN extension, which
-   `domains.rpp_to_model` and `domains.model_to_rpp` take from the handler. `domain_availability.rpp_to_model` refuses
-   the `uName` and `lgr` parameters of a check, see [spec-issues.md](../../.spec/spec-issues.md#idn).
-   `patch_statuses.py` hides server statuses from a patch, on hosts, domains and contacts, see
+   `shared/include_elements.py` checks the `includeElements` of a request against the data model and hides an
+   `onDemand` element the request does not include, for every object, from the Visibility in
+   `rpp/schema/schemas/draft-ietf-rpp-data-objects.yaml`.
+   A domain's `lgr` must be one of `BackendProfile.lgrs`, the LGRs the backend offers; `domain_availability.rpp_to_model`
+   refuses the `uName` and `lgr` parameters of a check, see [spec-issues.md](../../.spec/spec-issues.md#idn).
+   `shared/patch_statuses.py` hides server statuses from a patch, on hosts, domains and contacts, see
    [spec-issues.md](../../.spec/spec-issues.md#status-in-json-patch).
-   `rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
+   `shared/rpp_authorization.py` converts the `RPP-Authorization` header to an `AuthInfo`, and
    `domain_transfer_process.py` and `domain_transfer_reject.py` convert a domain transfer,
    `contact_transfer_process.py` and `contact_transfer_reject.py` a contact transfer, and
    `domain_renew_process.py` a renewal. `domain_restore_process.py` converts a restore request and renders a restore,
    `domain_restore_report.py` a report (PUT) and `domain_restore_patch.py` a report sent as a JSON Patch (PATCH).
-   `date_time.py` checks an RFC 3339 date-time.
-4. **`models/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
+   `shared/date_time.py` checks an RFC 3339 date-time.
+5. **`core/model/`:** the internal domain model (plain `@dataclass(kw_only=True)`),
    provider-neutral. Next to the classes it holds the pure conversions between the two kinds of update, written
    once per object: `<object>_difference.difference(current, wanted)` gives the delta that turns the stored
    object into the replacement, and `<object>_application.apply(current, delta)` the replacement a delta amounts
    to (unused by EPP, for a backend that updates by replacement). A replacement's `unchanged` names the members
    it does not state, which stay as stored: the data elements with onDemand Visibility the request did not include
-   (`stated_members.stated` fills them in from the stored object). Nothing in this is specific to `authInfo`. `contact_localization.as_stored` puts a wanted
-   contact in the terms of the stored one, because a read shows a localization by its differences from the card. `ResultCode` (an `Enum` of EPP codes with `(code, text)`
-   tuples) and `OperationResponse`/`ErrorResponse` live in
-   [src/models/response.py](../../src/models/response.py).
-5. **`registry/`:** the backend port, which imports `models` only. `RegistryBackend` is one user's session with
+   (`shared/stated_members.stated` fills them in from the stored object). Nothing in this is specific to `authInfo`.
+   `contact/contact_localization.as_stored` puts a wanted contact in the terms of the stored one, because a read
+   shows a localization by its differences from the card. A domain's IDN is its `lgr` and `uname` (`DomainIdn`).
+6. **`core/result/`:** the answer of the registry. `OperationResponse` carries the `ResultCode` (an `Enum` of EPP
+   codes with `(code, text)` tuples), the message and the transaction ids, and as its `payload` what the command
+   carries back: the object of a read or create, the `Availability` of a check, the process of a transfer, renewal or
+   restore, the `MessageQueue` of a poll or ack, and None for a delete or update. `ErrorResponse` is a refusal, and
+   `MessageErrorResponse` (in `core/model/message`) one that knows the size of the queue. A code the proxy has no name
+   for is an `UnknownResultCode`.
+7. **`core/ports/`:** the backend port. `RegistryBackend` is one user's session with
    the registry: `domains`, `contacts`, `hosts` and `messages` are its gateways (`DomainGateway` …, each a
-   `typing.Protocol`), `sponsor_id` is the id the registry stores as sponsor, and `profile` the `BackendProfile`. A gateway method returns a typed
-   `*Response` model or an `ErrorResponse`, and callers branch on `isinstance`. `update(delta)` is a partial update and
+   `typing.Protocol`), `sponsor_id` is the id the registry stores as sponsor, and `profile` the `BackendProfile`. A
+   gateway method returns an `OperationResponse` or an `ErrorResponse`, and callers branch on `isinstance`.
+   `update(delta)` is a partial update and
    `replace(wanted, current=None)` a full one, which answers a `ReplaceOutcome`. `derived_update.replace` derives a
    full update from a partial one, once for every object and backend: it reads the object (unless the caller has
    read it), lets the object's `ReplacementSteps` prepare the wanted state and refuse what the backend cannot clear,
    sends the `difference` as one update, and answers the `ReplaceOutcome`. When nothing changes it sends nothing and
    the outcome is `unchanged`. The read and the update are not atomic.
-6. **`eppclient/`:** the EPP adapter. `EppBackend` in `epp_backend.py` is the `RegistryBackend` over one
-   `EPPClient`, whose login is the sponsor id, and `EppDomainGateway`, `EppContactGateway`, `EppHostGateway` and
-   `EppMessageGateway` call the `epp_*` functions. EPP has no full update, so each `replace` goes through
-   `derived_update.replace`, with the refusal of what RFC 5733 cannot clear on a contact (`epp_contact_refusal.py`).
-   An `epp_*` function runs one EPP operation: build XML → `send_and_get_response` → parse.
-   [eppclient.py](../../src/eppclient/eppclient.py) is the raw TCP+XML client
+8. **`core/flows/`:** multi-step operations over a `RegistryBackend`, free of the web framework and of the protocol. A
+   flow returns a typed result or an `ErrorResponse`, and the handler renders it. `create_<object>`, `patch_<object>`
+   and `replace_<object>` in `core/flows/<object>/<object>_flows.py` create, take a delta (`update`) or a
+   replacement, and call the gateway's `create`, `update` or `replace`, then read the object back with `read_back`,
+   once for every object. A PATCH that needs the current state passes the read it made as `current`. When the
+   outcome is `unchanged`, `sponsor.py` holds the 403 for a client that is not the sponsor (`backend.sponsor_id`),
+   which sends no command to say so.
+9. **`registry_adapter/epp/`:** the EPP adapter. `EppBackend` in `gateways/` is the `RegistryBackend` over one
+   `EPPClient`, whose login is the sponsor id, with the namespace map the commands render with and the `IdnTables`.
+   `EppDomainGateway`, `EppContactGateway`, `EppHostGateway` and `EppMessageGateway` call the `epp_*` functions of
+   `commands/<object>/<operation>.py` (`commands/domain/create.py`, `commands/message/poll.py` …). EPP has no full update, so each `replace` goes through
+   `derived_update.replace`, with the refusal of what RFC 5733 cannot clear on a contact (`contact_refusal.py`).
+   An operation's module holds all of it: the xsdata request (`domain_create`), its XML (`create_domain_xml`), the
+   parser of the reply and the `epp_*` function that runs it: build XML → `send_and_get_response` → parse. What
+   several operations of an object share is in its `common.py` (the create reply is parsed as an info reply, so
+   `create.py` imports `parse_domain_response` from `info.py`). `commands/shared/` reads the result and transaction
+   ids of a reply. [epp_client.py](../../src/registry_adapter/epp/session/epp_client.py) is the raw TCP+XML client
    (login/logout, `_parse_epp_response` reads the `<result code>`; codes matching
    `1xxx` = success). It keeps the extensions of the greeting for
-   `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` (secDNS, IDN and RGP) the server offers. Before a command it asks the transport whether the server has closed the idle
+   `supports_extension`, and logs in with those of `LOGIN_EXTENSIONS` (secDNS, IDN and RGP) the server offers. Before
+   a command it asks the transport whether the server has closed the idle
    session (`closed_by_peer`) and logs in again if so. A failed send is sent once more on a new session, a failed
-   receive never, because the server may have run the command.
-6. **`flows/`:** multi-step operations, free of the web framework. A flow returns a
-   typed result or an `ErrorResponse`, and the handler renders it. `patch_<object>` and `replace_<object>` in
-   `flows/domains.py`, `flows/contacts.py` and `flows/hosts.py` take a delta (`update`) or a replacement. A delta
-   is sent as it is, then the object is read back. EPP has no full update, so a replacement goes through
-   `derived_update.replace`, the one derivation for every object: it reads the object (unless a PATCH has read it
-   already), lets the object's `ReplacementSteps` prepare the wanted state and refuse what EPP cannot clear
-   (`epp_contact_refusal.py`, as an `ErrorResponse`), sends the `difference` as one update, and answers a
-   `ReplaceOutcome`. When nothing changes it sends nothing and the outcome is `unchanged`. `flows/sponsor.py`
-   then holds the 403 for a client that is not the sponsor, which sends no EPP command to say so. The read and the
-   update are not atomic.
-7. **`flows/`:** multi-step operations over a `RegistryBackend`, free of the web framework and of the protocol. A
-   flow returns a typed result or an `ErrorResponse`, and the handler renders it. `patch_<object>` and
-   `replace_<object>` in `flows/domains.py`, `flows/contacts.py` and `flows/hosts.py` take a delta (`update`) or a
-   replacement, and call the gateway's `update` or `replace`, then read the object back. A PATCH that needs the
-   current state passes the read it made as `current`. When the outcome is `unchanged`, `flows/sponsor.py` holds the
-   403 for a client that is not the sponsor (`backend.sponsor_id`), which sends no command to say so.
-8. **`epp_to_model_mapper/`:** builds outbound EPP XML from models and parses
-   inbound EPP XML into models. `epp_model/` holds xsdata-generated dataclasses for
-   the EPP XSDs (domain-1.0, contact-1.0, secDNS-1.1, etc.). `commands/not_used/`
-   is dead code: ignore it.
+   receive never, because the server may have run the command. `xml/codec.py` renders a request with the namespace
+   map it is given and parses a reply; `xml/generated/` holds xsdata-generated dataclasses for the EPP XSDs
+   (domain-1.0, contact-1.0, secDNS-1.1, etc.). `idn_tables.py` maps a domain's `lgr` to the table of the EPP IDN
+   extension and back, for the domain commands.
+10. **`registry_adapter/common/`:** `transport/tcp_client.py` and `transport/tls.py` carry the bytes, and
+    `xmlsafe/xml_helper.py` reads XML without entities or a DTD.
 
-`domainNames_create`, `domainNames_updatePartial`, `domainNames_update` and the host mutations do not build
-their response from the create/update reply. They issue a **follow-up EPP Info** call and
-map that to RPP, because EPP mutation responses don't echo full object state. If that Info fails, the
+`domainNames_create`, `domainNames_updatePartial`, `domainNames_update`, `contacts_create`, the contact updates and
+the host mutations do not build
+their response from the create/update reply. Their flow issues a **follow-up EPP Info** call, `read_back`, and the
+handler maps that to RPP, because EPP mutation responses don't echo full object state. If that Info fails, the
 mutation has still been applied, so the handler answers **202** with no body and the
 mutation's `RPP-*` headers. `openapi.yaml` does not define this 202 (#23 tracks the
 question for the spec).
 
-Transfer handlers are in `controller/domain_transfers.py` and `controller/contact_transfers.py`, thin
-functions over `TransferHandlers` in `controller/transfer_handlers.py`. An EPP `<transfer>` reply carries
+Transfer handlers are in `rpp/handlers/domain/domain_transfer_handlers.py` and
+`rpp/handlers/contact/contact_transfer_handlers.py`, thin
+functions over `TransferHandlers` in `rpp/handlers/shared/transfer_handlers.py`. An EPP `<transfer>` reply carries
 the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer` and
 `epp_contacts_Transfer` run all five operations, chosen by the model's `operation`. EPP has no process ids, so only
 `latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process).
 
-Messages are in `controller/messages.py`. `GET /messages` is EPP `poll req`, `DELETE /messages/{id}` is
-`poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in `flows/messages.py`,
-because EPP cannot read past the head. `str_to_epp` and `decode_xml` read EPP replies without entities or a DTD, and a DOCTYPE is refused. `epp_to_model_mapper/messages.py` turns the reply into a `QueueMessage`
+Messages are in `rpp/handlers/message/message_handlers.py`. `GET /messages` is EPP `poll req`,
+`DELETE /messages/{id}` is `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in
+`core/flows/message/message_flows.py`,
+because EPP cannot read past the head. `str_to_epp` and `decode_xml` read EPP replies without entities or a DTD, and
+a DOCTYPE is refused. `commands/message/poll.py` turns the reply into a `QueueMessage`
 whose `event` is a `TransferEvent` (domain and contact `trnData`) or a `PendingActionEvent` (`panData`), and
-`rpp_to_model_mapper/messages.py` renders it. Anything the proxy cannot translate, or that fails the `.read`
+`rpp/mapping/message/messages.py` renders it. Anything the proxy cannot translate, or that fails the `.read`
 schema, or a reply that does not follow the EPP schema, becomes a `serviceNoticeMessage` that names the elements
 (never their content), so a client can always read and acknowledge it. The one exception is a `1301` without a
-message id or an unreadable result, which is a 500. A code the proxy has no name for is an `UnknownResultCode`, which answers by Table 10. `Content-Language` is the `lang` of the `msg` (`en` when absent), see
+message id or an unreadable result, which is a 500. A code the proxy has no name for is an `UnknownResultCode`, which
+answers by Table 10. `Content-Language` is the `lang` of the `msg` (`en` when absent), see
 [spec-issues.md](../../.spec/spec-issues.md#messages).
 
-`BodyBufferingMiddleware` in `controller/body_buffering_middleware.py` is the middleware that `create_app`
-adds after security and before Connexion's validators, so an anonymous client gets its 401 before its body is read. It reads the whole body of a request that has one before anything else runs, drops the request if the client
+`BodyBufferingMiddleware` in `rpp/http/middleware/` is the middleware that `create_app`
+adds after security and before Connexion's validators, so an anonymous client gets its 401 before its body is read.
+It reads the whole body of a request that has one before anything else runs, drops the request if the client
 disconnects first, and passes on a complete request with a `content-length`. So chunked bodies, late bodies and
 aborted uploads reach no handler half-received. It has no size limit (#93).
 
 The restore handlers are `domainNameRestoreProcesses_create`, `_update`, `_updatePartial` and `_read` in
-`controller/domains.py`. A request and a report are a domain update with the RFC 3915 `rgp:restore` extension, sent by
-`epp_domains_Restore`, and answer 200 without `Location`. `read_domain_restore` in `flows/domains.py` reads the domain
+`rpp/handlers/domain/domain_handlers.py`. A request and a report are a domain update with the RFC 3915 `rgp:restore`
+extension, sent by `epp_domains_Restore`, and answer 200 without `Location`. `read_domain_restore` in
+`core/flows/domain/domain_flows.py` reads the domain
 and answers 404 when its RGP statuses show no restore under way. Only domains have a restore, see
 [spec-issues.md](../../.spec/spec-issues.md#restore-process).
 
-The renew handler is `domainNameRenewProcesses_renewCreate` in `controller/domains.py`, and `renew_domain` in
-`flows/domains.py` runs it. EPP needs `curExpDate`, so a request without `expiryDate` first has the domain read.
+The renew handler is `domainNameRenewProcesses_renewCreate` in `rpp/handlers/domain/domain_handlers.py`, and
+`renew_domain` in `core/flows/domain/domain_flows.py` runs it. EPP needs `curExpDate`, so a request without
+`expiryDate` first has the domain read.
 The EPP renew reply carries the new expiry date, so there is no read-back, and the answer is a 200 without
 `Location`, see [spec-issues.md](../../.spec/spec-issues.md#renew-process).
 
-`RppRequestBodyValidator` and `RppResponseBodyValidator` let a body be absent where the
+`RppRequestBodyValidator` and `RppResponseBodyValidator` in `rpp/http/validators/` let a body be absent where the
 OpenAPI allows it, which Connexion's validators do not. The handler then gets an empty dict.
 
 ## Generated artifacts: do not hand-edit
 
-`src/openapi.yaml` and `src/rpp_schema_validator/schemas/rpp.schema.normalized.json`
+`src/rpp/openapi.yaml` and `src/rpp/schema/schemas/rpp.schema.normalized.json`
 are copied verbatim from `.spec/auto/` by [copy_models.sh](../../copy_models.sh), and
-`src/rpp_schema_validator/schemas/draft-ietf-rpp-data-objects.yaml` from `.spec/`. The
+`src/rpp/schema/schemas/draft-ietf-rpp-data-objects.yaml` from `.spec/`. The
 JSON schema is the single source of truth for request/response validation, the data model for the Visibility of
 the data elements (`visibility_of`). `$defs`
 names (e.g. `"domainName.read"`) are passed by string to `validate_schema`. If
@@ -275,7 +270,7 @@ Points in the drafts that cannot be implemented or are unclear go to
 A Card's internationalized form is the EPP `postalInfo type="int"` on `Contact`, and
 its one localization is `postalInfo type="loc"` in `Contact.localizedPostalInfo`. What
 the JSContact profile requires beyond the schema (key sequence, US-ASCII, key against
-features) is checked in `rpp_to_model_mapper/contacts.py` on requests, before anything
+features) is checked in `rpp/mapping/contact/contacts.py` on requests, before anything
 the model cannot hold is rejected, so a profile violation is a 400 and not a 501.
 
 ## Unsupported input
@@ -286,15 +281,23 @@ its own message:
 | Kind | Raised as | RPP code |
 |---|---|---|
 | The backend has no place for it, in the core or in an extension the proxy knows of | `NotSupportedByBackend` | `02102` |
-| EPP can hold it, but the proxy does not map it | `NotSupportedByProxy` | `02103` if it names an extension, otherwise `02102` |
+| The backend can hold it, but the proxy does not map it | `NotSupportedByProxy` | `02103` if it names an extension, otherwise `02102` |
 | The proxy uses an extension the server does not offer | `ErrorResponse` from `epp_*` | `02103` |
 
-A mapper raises `NotSupportedByBackend` with the feature only, and `map_request` names the backend of the
-application's `BackendProfile`: `… cannot be expressed in EPP`. What a backend can hold, where it differs between
-backends, is a fact of the `BackendProfile` (`registry/backend_profile.py`), not a constant of a mapper: the contact
-labels (`domains.check_contact_label`) and the record types at the apex of a domain (`domain_dns`). The domain mappers
+A mapper raises `NotSupportedByBackend` or `NotSupportedByProxy` (`core/capabilities/`) with the feature only, and
+`map_request` names the backend of the application's `BackendProfile`: `… cannot be expressed in EPP`, `… can be
+expressed in EPP, but not by this proxy`. What a backend can hold, where it differs between
+backends, is a fact of the `BackendProfile` (`core/capabilities/backend_profile.py`), not a constant of a mapper: the
+contact labels (`domains.check_contact_label`), the record types at the apex of a domain (`domain_dns`) and the LGRs
+it offers (`domains.rpp_to_model`). The domain mappers
 take the profile as the keyword `profile`, from `backend_profile()` in the handler. The EPP values are `EPP_PROFILE`
-in `eppclient/epp_profile.py`. Some of its facts are not read yet, they are for a backend that differs.
+in `registry_adapter/epp/profile.py`, and `epp_profile(idn_tables)` adds the LGRs of the configured IDN tables. Some
+of its facts are not read yet, they are for a backend that differs.
+
+A value that is not in the form the backend requires (a phone number, the parts of a restore report) is a 400. The
+mapper raises `BackendRequirement` (`core/capabilities/`) with `{backend}` in its text, and `map_request` names the
+backend; a value read from the backend that cannot be shown is a 500 named the same way by `rpp_operation`.
+Messages that flows and handlers make name the backend from its profile as well.
 
 An extension the proxy does not know of cannot be told apart from no extension, so it
 counts as the first kind. A PATCH that EPP could do once the proxy has read the object
@@ -311,47 +314,48 @@ leading `0`.
 
 ## Configuration
 
-`Config` in [src/config.py](../../src/config.py) loads `config.yaml` at import time
-(path overridable via `RPP_CONFIG_FILE`). `rpp_epp_connection_cache` (default
-`false`) toggles between stateless per-request EPP connections and a cached,
-stateful connection. The EPP backend host and port come from `rpp_epp_host` and
-`rpp_epp_port`, and `new_epp_client` in [src/run.py](../../src/run.py) uses them to
-open the connection. `rpp_idn_lgr_tables` maps an LGR name to an IDN table id, one to one. `run.py` turns it into
-`IdnTables`, which refuses a map that is not one to one, so the app does not start with one. Without it no `lgr` is
-accepted. `rpp_epp_use_tls` (default `true`) connects over TLS with the
-certificate and hostname verified. `rpp_epp_tls_insecure_skip_verify` (default `false`)
-turns both checks off, for test backends only.
+`load_settings` in [settings/load_settings.py](../../src/settings/load_settings.py) reads `config.yaml` (path
+overridable via `RPP_CONFIG_FILE`, and an untracked `<name>.local.yaml` next to it replaces the keys it has) into
+`Settings`, whose sections are `EppSettings` and `DiscoverySettings`; the section fields are the config.yaml keys.
+`main.py` loads it once and passes each section on; nothing else imports `settings`. The EPP backend host and port
+come from `rpp_epp_host` and `rpp_epp_port`, and `new_epp_client` in [main.py](../../src/main.py) uses them to open
+the connection. `rpp_epp_ns_map` is the namespace map the EPP commands render with. `rpp_idn_lgr_tables` maps an LGR
+name to an IDN table id, one to one. `main.py` turns it into `IdnTables`, which refuses a map that is not one to one,
+so the app does not start with one. Without it no `lgr` is accepted. `rpp_epp_use_tls` (default `true`) connects
+over TLS with the certificate and hostname verified. `rpp_epp_tls_insecure_skip_verify` (default `false`)
+turns both checks off, for test backends only, and `main.py` warns when it is on. `rpp_epp_timeout`,
+`rpp_epp_objects`, `rpp_epp_extensions` and `rpp_epp_connection_cache` are read into `EppSettings`, but nothing uses
+them.
 
 `rpp_base_url`, `rpp_tlds`, `rpp_environment_name` and `rpp_environment_status` are what the
-discovery document (`GET /.well-known/rpp`, no authentication, no EPP) states. `controller/discovery.py`
-adds the RPP version, a constant, and the supported objects and profiles of the `BackendProfile`. Without all four, it answers
-500 (`02400`) and logs the keys, never the values. A setting is also missing when it has the wrong shape: `rpp_base_url` must be an absolute `https` URL, `rpp_tlds` a non-empty list of non-empty strings. For EPP, `profiles` is `epp-compatibility`, though `GET /profiles/{name}` is 501. The base URL is never taken from the request. The proxy does not
-check the `version` parameter of the media type, so core §12's 406 is not enforced (#41). See
+discovery document (`GET /.well-known/rpp`, no authentication, no EPP) states. `rpp/handlers/discovery.py`
+adds the RPP version, a constant, and the supported objects and profiles of the `BackendProfile`. Without all four, it
+answers 500 (`02400`) and logs the keys, never the values. A setting is also missing when it has the wrong shape:
+`rpp_base_url` must be an absolute `https` URL, `rpp_tlds` a non-empty list of non-empty strings. For EPP, `profiles`
+is `epp-compatibility`, though `GET /profiles/{name}` is 501. The base URL is never taken from the request. The proxy
+does not check the `version` parameter of the media type, so core §12's 406 is not enforced (#41). See
 [spec-issues.md](../../.spec/spec-issues.md#discovery).
 
 ## Composition
 
-[src/run.py](../../src/run.py) is the composition root: `new_backend` builds an `EppBackend` over the default
-`EPPClient`, and is the factory it passes to
-[`SessionAuthenticator`](../../src/controller/session_authenticator.py), which keeps one backend per user, the
-token info key `backend`, and
-goes to `create_app` in [src/app.py](../../src/app.py), with the `BackendProfile` (`EPP_PROFILE`), which the handlers
-read from the app configuration (`backend_profile()`), `config` as the settings of the discovery document, which the handler reads from the app configuration, and the `IdnTables`, which the domain handlers read from it the same way. `create_app` hands
-`authenticate` to Connexion through `security_map`, because Connexion would otherwise
-resolve the function by name and it could not receive dependencies.
+[src/main.py](../../src/main.py) is the composition root: `new_backend` builds an `EppBackend` over the default
+`EPPClient`, with the namespace map and the `IdnTables`, and is the factory it passes to
+[`SessionPool`](../../src/core/session/session_pool.py), which keeps one backend per user. The pool goes to
+`create_app` in [app.py](../../src/rpp/http/app.py), with the `BackendProfile` (`epp_profile(idn_tables)`) and the
+`DiscoverySettings`, which the handlers read through [context.py](../../src/rpp/http/context.py). `create_app` hands
+`SessionSecurityHandler` to Connexion through `security_map`, because Connexion would otherwise resolve the function
+by name and it could not receive dependencies; the handler puts the user's backend into the token info (key
+`backend`).
 
 ## Known debt
 
 Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
 
-- **Several classes per file:** `src/models/domains.py` (17),
-  `src/models/contacts.py` (7), `src/models/response.py` (3),
-  `src/models/common.py` (3), `src/eppclient/tcpclient.py` (2).
-  Generated `epp_model/` is exempt. (#20)
-- **Settings read at import time:** `epp_to_model_mapper/commands/helper.py` imports `config` for `ns_map`, the one
-  `ignore_imports` of `only-main-imports-settings` (#120 finding 2, phase 2).
-- **Boundaries not yet checkable:** `rpp_to_model_mapper` imports the `registry` package for `BackendProfile`, and so
-  its gateways through the re-exports (#120 finding 5, phase 3). `rpp_to_model_mapper/idn_tables.py` holds the EPP IDN
-  table ids (#120 finding 6, phase 5).
-- **Flows in handlers:** the mutate-then-Info orchestration sits inside
-  `domainNames_create`, `domainNames_updatePartial` and `contacts_create`. (#17)
+- **Several classes per file:** `src/core/model/domain/domains.py` (11), `src/core/model/contact/contacts.py` (3),
+  `src/core/model/shared/common.py` (3), `src/registry_adapter/common/transport/tcp_client.py` (2).
+  Generated `registry_adapter/epp/xml/generated/` is exempt. (#20)
+- **EPP limits in the mappers:** `rpp/mapping` refuses what EPP has no place for as constants of the mappers (pull
+  transfers only, no reason on approve and reject, the parts of a restore report, the phone number form …), and its
+  docstrings say so by name. With a second backend they become facts of the `BackendProfile`, as the contact labels
+  did. `core`, `rpp/http` and `rpp/handlers` no longer name EPP, which `tests/unit/test_protocol_names.py` checks
+  (#128).

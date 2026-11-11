@@ -1,12 +1,15 @@
 from dataclasses import dataclass, field
 
-from models import ErrorResponse, OperationResponse, ResultCode
-from registry import ReplacementSteps, derived_update
+from core.ports import derived_update
+from core.ports.replacement_steps import ReplacementSteps
+from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
+from core.result.result_code import ResultCode
 
 
-@dataclass(kw_only=True)
-class Read(OperationResponse):
-    value: str = ""
+def Read(value: str, **header) -> OperationResponse:
+    """A read of the object `value`."""
+    return OperationResponse(payload=value, **header)
 
 
 def ok() -> dict:
@@ -32,7 +35,6 @@ class Registry:
     def steps(self) -> ReplacementSteps:
         return ReplacementSteps(
             read=self.read,
-            object_of=lambda read: read.value,
             difference=lambda current, wanted: (current, wanted),
             changes_nothing=lambda delta: delta[0] == delta[1],
             update=self.update,
@@ -63,7 +65,7 @@ def test_nothing_is_sent_when_nothing_changes():
     outcome = derived_update.replace(registry.steps(), "k", "a", "cl-1")
 
     assert registry.commands == [("read", "k")]
-    assert outcome.unchanged and outcome.current.value == "a"
+    assert outcome.unchanged and outcome.current.payload == "a"
 
 
 def test_a_refusal_sends_nothing():

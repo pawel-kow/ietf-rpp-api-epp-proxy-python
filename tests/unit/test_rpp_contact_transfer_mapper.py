@@ -1,8 +1,12 @@
 import pytest
 from jsonschema import ValidationError
 
-from models import AuthInfo, ContactTransfer, ContactTransferProcess, TransferOperation
-from rpp_to_model_mapper import NotSupportedByBackend, contact_transfer_approve, contact_transfer_process, contact_transfer_reject
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.model.contact.contact_transfer import ContactTransfer
+from core.model.shared.common import AuthInfo
+from core.model.shared.contact_transfer_process import ContactTransferProcess
+from core.model.shared.transfer_operation import TransferOperation
+from rpp.mapping.contact import contact_transfer_approve, contact_transfer_process, contact_transfer_reject
 
 PROCESS = {"@type": "transferProcess"}
 

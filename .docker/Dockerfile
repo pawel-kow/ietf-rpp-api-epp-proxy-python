@@ -15,4 +15,4 @@ COPY ./src .
 EXPOSE 8000
 
 # Command to run the application
-CMD ["python", "-m", "uvicorn", "--host", "0.0.0.0", "--port", "8091", "run:app"]
+CMD ["python", "-m", "uvicorn", "--host", "0.0.0.0", "--port", "8091", "main:app"]

@@ -1,8 +1,10 @@
 import pytest
 from jsonschema import ValidationError
 
-from models import DomainRenew, DomainRenewProcess
-from rpp_to_model_mapper import NotSupportedByBackend, domain_renew_process
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.model.domain.domain_renew import DomainRenew
+from core.model.domain.domain_renew_process import DomainRenewProcess
+from rpp.mapping.domain import domain_renew_process
 
 REQUEST = {"@type": "renewProcess"}
 

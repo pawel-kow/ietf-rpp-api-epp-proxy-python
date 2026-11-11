@@ -1,17 +1,26 @@
-from eppclient.epp_profile import EPP_PROFILE
 import jsonschema
 import pytest
 from connexion import ProblemException
 
-from controller.helper.rpp_response import map_request
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
+from core.model.domain import domain_difference
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domains import ContactReference, Domain, HostAttr, HostObj, NS
+from core.model.domain.ds_data import DsData
+from core.model.shared.common import AuthInfo
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.http.operation import map_request
+from rpp.mapping.domain import domain_patch, domains
+from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
-from models import AuthInfo, ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
-from rpp_to_model_mapper import NotSupportedByBackend, NotSupportedByProxy, PatchNotApplicable, domain_patch, domains
 
 pytestmark = pytest.mark.usefixtures("epp_app_context")
 
 NAME = "foo.example"
+
 HOST = {"@type": "host", "hostName": "ns3.foo.example"}
+
 STATUS = {"@type": "domainStatus", "label": "clientHold"}
 
 

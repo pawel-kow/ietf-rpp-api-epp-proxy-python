@@ -1,14 +1,19 @@
-from epp_to_model_mapper import parse_contact_response, parse_contact_update_response, update_contact_xml
-from models import (
-    Address, AuthInfo, ContactUpdate, ContactUpdateChange, ContactUpdateChanges, PostalInfoChange,
-)
+from core.model.contact.address import Address
+from core.model.contact.contact_update import ContactUpdate
+from core.model.contact.contact_update_change import ContactUpdateChange
+from core.model.contact.contact_update_changes import ContactUpdateChanges
+from core.model.contact.postal_info_change import PostalInfoChange
+from core.model.shared.common import AuthInfo
+from registry_adapter.epp.commands.contact.info import parse_contact_response
+from registry_adapter.epp.commands.contact.update import parse_contact_update_response, update_contact_xml
+from tests.helper.epp_ns_map import EPP_NS_MAP
 from tests.unit.test_contact_xml import info_reply, postal
 
 ADDRESS = Address(street=["1 Main"], city="Berlin", stateProvince="BE", postalCode="10115", country="DE")
 
 
 def xml(**members):
-    return update_contact_xml(ContactUpdate(id="JD-1", **members), client_request_id="cl-1")
+    return update_contact_xml(ContactUpdate(id="JD-1", **members), client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
 
 def test_status_is_added_and_removed_with_its_reason():
@@ -81,7 +86,7 @@ def test_info_reads_a_status_reason_but_not_the_repeated_label():
         '<contact:status s="ok">ok</contact:status><contact:status s="clientUpdateProhibited">why</contact:status>',
     )
 
-    contact = parse_contact_response(reply, "cl-1").contact
+    contact = parse_contact_response(reply, "cl-1").payload
 
     assert contact.status_reasons == {"clientUpdateProhibited": "why"}
 
@@ -94,6 +99,6 @@ def test_info_reads_empty_address_members_as_absent():
         '</contact:postalInfo>'
     )
 
-    contact = parse_contact_response(reply, "cl-1").contact
+    contact = parse_contact_response(reply, "cl-1").payload
 
     assert contact.address == Address(street=["1 Main"], city="Berlin", country="DE")

@@ -1,17 +1,28 @@
 """`apply` turns a partial update into the full one it amounts to, `difference` the other way round. For every update
 the direct mappers produce, the round trip gives the update back, up to order (#108)."""
-from eppclient.epp_profile import EPP_PROFILE
 import pytest
 
-from models import (
-    Address, AuthInfo, Contact, ContactReference, ContactType, Domain, DsData, DnsSec, Host, HostObj, NS,
-    contact_application, contact_difference, domain_application, domain_difference, host_application, host_difference,
-)
-from rpp_to_model_mapper import contact_patch, domain_patch, host_patch
+from core.model.contact import contact_application, contact_difference
+from core.model.contact.address import Address
+from core.model.contact.contacts import Contact, ContactType
+from core.model.domain import domain_application, domain_difference
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domains import ContactReference, Domain, HostObj, NS
+from core.model.domain.ds_data import DsData
+from core.model.host import host_application, host_difference
+from core.model.host.host import Host
+from core.model.shared.common import AuthInfo
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.mapping.contact import contact_patch
+from rpp.mapping.domain import domain_patch
+from rpp.mapping.host import host_patch
 
 DOMAIN = "foo.example"
+
 HOST = "ns1.foo.example"
+
 CONTACT = "JD-1"
+
 PASSWORD = {"@type": "authInfo", "method": "authinfo", "authdata": "NewSecret1!x"}
 
 

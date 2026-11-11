@@ -2,17 +2,18 @@ import base64
 
 import pytest
 
-from eppclient.epp_profile import EPP_PROFILE
-from app import create_app
-from controller.session_authenticator import SessionAuthenticator
+from core.session.session_pool import SessionPool
+from registry_adapter.common.xmlsafe.xml_helper import decode_xml
+from registry_adapter.epp.commands.message.poll import parse_poll_response
+from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
+from registry_adapter.epp.profile import EPP_PROFILE
+from registry_adapter.epp.xml.codec import str_to_epp
+from rpp.http.app import create_app
 from tests.helper.epp_backends import epp_backends
-from epp_to_model_mapper import get_epp_error_response
-from epp_to_model_mapper.commands.helper import str_to_epp
-from epp_to_model_mapper.messages import parse_poll_response
-from helpers import decode_xml
 from tests.helper.fake_epp_client import FakeEppClient
 
 SECRET = "SECRET-FILE-CONTENT-8f3a"
+
 HEADERS = {
     "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
     "Accept": "application/rpp+json",
@@ -57,7 +58,7 @@ def test_error_replies_do_not_resolve_entities(secret_file):
 
 def test_a_message_with_an_entity_reaches_the_raw_path_and_does_not_leak(secret_file):
     resp = parse_poll_response(hostile(secret_file, MSG), "xxe-cl-1")
-    assert resp.message.id == "5"
+    assert resp.payload.message.id == "5"
     assert SECRET not in repr(resp)
 
 
@@ -65,7 +66,7 @@ def client(*replies):
     def factory(username, password):
         return FakeEppClient(username, password, replies=list(replies))
 
-    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client()
+    return create_app(SessionPool(epp_backends(factory)), EPP_PROFILE).test_client()
 
 
 def test_a_message_with_an_entity_does_not_leak_through_the_api(secret_file):

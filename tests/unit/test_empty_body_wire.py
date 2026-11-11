@@ -6,15 +6,18 @@ import time
 import pytest
 import uvicorn
 
-from eppclient.epp_profile import EPP_PROFILE
-from app import create_app
-from controller.session_authenticator import SessionAuthenticator
+from core.session.session_pool import SessionPool
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.http.app import create_app
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
+
 CREDENTIALS = "Basic " + base64.b64encode(b"user:pw").decode()
+
 HEADERS = {"Authorization": CREDENTIALS, "Accept": MEDIA_TYPE, "RPP-Cltrid": "cl-1", "Content-Type": MEDIA_TYPE}
+
 EPP_OK = (True, "1000", (
     '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><response><result code="1000"><msg>Message</msg></result>'
     '<trID><clTRID>cl-1</clTRID><svTRID>sv-1</svTRID></trID></response></epp>'
@@ -28,6 +31,7 @@ DELETES = [
     "/contacts/FO-1/processes/transferProcesses/latest",
     "/domainNames/foo.example/processes/transferProcesses/latest",
 ]
+
 BODIES = [b"{}", b"null", b"[]", b"0", b"false", b'""', b" ", b"\n", b"{bad"]
 
 
@@ -38,7 +42,7 @@ def setup():
         clients.append(FakeEppClient(username, password, reply=EPP_OK))
         return clients[-1]
 
-    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE), clients
+    return create_app(SessionPool(epp_backends(factory)), EPP_PROFILE), clients
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +52,7 @@ def shared():
 
 
 def forget(clients):
-    """The authenticator keeps one session per user, so keep the client and clear what it recorded."""
+    """The session pool keeps one session per user, so keep the client and clear what it recorded."""
     for client in clients:
         client.sent.clear()
 

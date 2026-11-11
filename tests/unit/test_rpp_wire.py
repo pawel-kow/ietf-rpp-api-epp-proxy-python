@@ -2,20 +2,23 @@ import base64
 
 import pytest
 
-from eppclient.epp_profile import EPP_PROFILE
-from app import create_app
-from controller.session_authenticator import SessionAuthenticator
+from core.result.result_code import ResultCode
+from core.session.session_pool import SessionPool
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.http.app import create_app
+from rpp.http.headers import rpp_code
+from rpp.http.problem import http_status
 from tests.helper.epp_backends import epp_backends
-from controller.helper.rpp_response import http_status, rpp_code
-from models import ResultCode
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
+
 HEADERS = {
     "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
     "Accept": MEDIA_TYPE,
     "RPP-Cltrid": "cl-1",
 }
+
 BODY_HEADERS = {**HEADERS, "Content-Type": MEDIA_TYPE}
 
 
@@ -38,7 +41,7 @@ def client_with(*replies):
     def factory(username, password):
         return FakeEppClient(username, password, replies=list(replies))
 
-    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client()
+    return create_app(SessionPool(epp_backends(factory)), EPP_PROFILE).test_client()
 
 
 @pytest.mark.parametrize("available, status", [(True, 200), (False, 404)])
@@ -139,7 +142,7 @@ def test_dnssec_on_a_server_without_the_extension_is_a_501_unimplemented_extensi
     def factory(username, password):
         return FakeEppClient(username, password, extensions=())
 
-    client = create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client()
+    client = create_app(SessionPool(epp_backends(factory)), EPP_PROFILE).test_client()
     record = {
         "@type": "dnsRecord", "name": "@", "type": "ds",
         "rdata": {"keyTag": "1", "algorithm": "3", "digestType": "1", "digest": "AB"},

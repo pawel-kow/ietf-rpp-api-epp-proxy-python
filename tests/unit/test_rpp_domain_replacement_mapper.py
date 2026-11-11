@@ -1,13 +1,21 @@
-from eppclient.epp_profile import EPP_PROFILE
 import pytest
 from jsonschema import ValidationError
 
-from models import AuthInfo, ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
-from rpp_to_model_mapper import NotSupportedByBackend, NotSupportedByProxy, domain_replacement, domains
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
+from core.model.domain import domain_difference
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domains import ContactReference, Domain, HostAttr, HostObj, NS
+from core.model.domain.ds_data import DsData
+from core.model.shared.common import AuthInfo
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.mapping.domain import domain_replacement, domains
 
 NAME = "foo.example"
+
 DS = {"@type": "dnsRecord", "name": "@", "type": "ds", "rdata": {
     "keyTag": "1", "algorithm": "8", "digestType": "2", "digest": "AB"}}
+
 NS_RECORD = {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": "ns9.foo.example."}}
 
 

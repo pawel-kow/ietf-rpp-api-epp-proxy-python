@@ -1,9 +1,10 @@
 import pytest
 
-from eppclient.eppclient import EPPClient, IDN_EXTENSION, RGP_EXTENSION, SEC_DNS_EXTENSION
-from eppclient.tcpclient import ConnectionException
+from registry_adapter.common.transport.tcp_client import ConnectionException
+from registry_adapter.epp.session.epp_client import EPPClient, IDN_EXTENSION, RGP_EXTENSION, SEC_DNS_EXTENSION
 
 OTHER_EXTENSION = "urn:ietf:params:xml:ns:launch-1.0"
+
 LOGIN_OK = (
     '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><response>'
     '<result code="1000"><msg>ok</msg></result></response></epp>'

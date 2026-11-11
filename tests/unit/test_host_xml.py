@@ -1,11 +1,14 @@
 import pytest
 
-from models import Host, HostUpdate, HostUpdateChanges
-from epp_to_model_mapper import (
-    create_host_update_xml, create_host_xml, delete_host_xml, host_check_xml, info_host_xml,
-    parse_host_check_response, parse_host_create_response, parse_host_delete_response, parse_host_response,
-    parse_host_update_response,
-)
+from core.model.host.host import Host
+from core.model.host.host_update import HostUpdate
+from core.model.host.host_update_changes import HostUpdateChanges
+from registry_adapter.epp.commands.host.check import host_check_xml, parse_host_check_response
+from registry_adapter.epp.commands.host.create import create_host_xml, parse_host_create_response
+from registry_adapter.epp.commands.host.delete import delete_host_xml, parse_host_delete_response
+from registry_adapter.epp.commands.host.info import info_host_xml, parse_host_response
+from registry_adapter.epp.commands.host.update import create_host_update_xml, parse_host_update_response
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 HOST_NS = 'xmlns:host="urn:ietf:params:xml:ns:host-1.0"'
 
@@ -19,7 +22,7 @@ def reply(res_data=""):
 
 
 def test_check():
-    xml = host_check_xml("ns1.example.example", client_request_id="cl-1")
+    xml = host_check_xml("ns1.example.example", client_request_id="cl-1", ns_map=EPP_NS_MAP)
 
     assert "<host:check" in xml
     assert "<host:name>ns1.example.example</host:name>" in xml
@@ -27,22 +30,22 @@ def test_check():
 
 
 def test_info():
-    assert "<host:info" in info_host_xml("ns1.example.example")
+    assert "<host:info" in info_host_xml("ns1.example.example", ns_map=EPP_NS_MAP)
 
 
 def test_delete():
-    assert "<host:delete" in delete_host_xml("ns1.example.example")
+    assert "<host:delete" in delete_host_xml("ns1.example.example", ns_map=EPP_NS_MAP)
 
 
 def test_create_without_addresses():
-    xml = create_host_xml(Host(name="ns1.example.example"))
+    xml = create_host_xml(Host(name="ns1.example.example"), ns_map=EPP_NS_MAP)
 
     assert "<host:create" in xml
     assert "host:addr" not in xml
 
 
 def test_create_with_addresses():
-    xml = create_host_xml(Host(name="ns1.example.example", ipv4=["192.0.2.1"], ipv6=["2001:db8::1"]))
+    xml = create_host_xml(Host(name="ns1.example.example", ipv4=["192.0.2.1"], ipv6=["2001:db8::1"]), ns_map=EPP_NS_MAP)
 
     assert '<host:addr ip="v4">192.0.2.1</host:addr>' in xml
     assert '<host:addr ip="v6">2001:db8::1</host:addr>' in xml
@@ -53,7 +56,7 @@ def test_update_add_and_remove():
         name="ns1.example.example",
         add=HostUpdateChanges(ipv4=["192.0.2.2"], status=["clientUpdateProhibited"]),
         remove=HostUpdateChanges(ipv6=["2001:db8::1"], status=["clientDeleteProhibited"]),
-    ))
+    ), ns_map=EPP_NS_MAP)
 
     add = xml[xml.index("<host:add>"):xml.index("</host:add>")]
     rem = xml[xml.index("<host:rem>"):xml.index("</host:rem>")]
@@ -68,13 +71,13 @@ def test_update_sends_the_status_reason():
     xml = create_host_update_xml(HostUpdate(
         name="ns1.example.example",
         add=HostUpdateChanges(status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "x & y"}),
-    ))
+    ), ns_map=EPP_NS_MAP)
 
     assert ">x &amp; y</host:status>" in xml
 
 
 def test_update_rename():
-    xml = create_host_update_xml(HostUpdate(name="ns1.example.example", new_name="ns2.example.example"))
+    xml = create_host_update_xml(HostUpdate(name="ns1.example.example", new_name="ns2.example.example"), ns_map=EPP_NS_MAP)
 
     assert "<host:chg>" in xml
     assert "<host:name>ns2.example.example</host:name>" in xml
@@ -98,32 +101,32 @@ def parsed_info(addresses=""):
 def test_parse_info():
     response = parsed_info()
 
-    assert response.host.name == "NS1.EXAMPLE.EXAMPLE"
-    assert response.host.status == ["ok", "linked"]
-    assert response.host.clID == "foo"
-    assert response.host.crID == "bar"
-    assert response.host.crDate == "2026-11-04T10:00:00.000000Z"
-    assert response.host.upDate == "2026-11-05T10:00:00.000000Z"
-    assert response.host.trDate == "2026-11-06T10:00:00.000000Z"
+    assert response.payload.name == "NS1.EXAMPLE.EXAMPLE"
+    assert response.payload.status == ["ok", "linked"]
+    assert response.payload.clID == "foo"
+    assert response.payload.crID == "bar"
+    assert response.payload.crDate == "2026-11-04T10:00:00.000000Z"
+    assert response.payload.upDate == "2026-11-05T10:00:00.000000Z"
+    assert response.payload.trDate == "2026-11-06T10:00:00.000000Z"
     assert response.server_transaction_id == "sv-1"
 
 
 def test_parse_info_addresses():
-    host = parsed_info('<host:addr ip="v4">192.0.2.1</host:addr><host:addr ip="v6">2001:db8::1</host:addr>').host
+    host = parsed_info('<host:addr ip="v4">192.0.2.1</host:addr><host:addr ip="v6">2001:db8::1</host:addr>').payload
 
     assert host.ipv4 == ["192.0.2.1"]
     assert host.ipv6 == ["2001:db8::1"]
 
 
 def test_parse_info_sorts_addresses_by_the_ip_attribute():
-    host = parsed_info('<host:addr ip="v6">192.0.2.1</host:addr>').host
+    host = parsed_info('<host:addr ip="v6">192.0.2.1</host:addr>').payload
 
     assert host.ipv4 is None
     assert host.ipv6 == ["192.0.2.1"]
 
 
 def test_parse_info_ip_defaults_to_v4():
-    assert parsed_info('<host:addr>192.0.2.1</host:addr>').host.ipv4 == ["192.0.2.1"]
+    assert parsed_info('<host:addr>192.0.2.1</host:addr>').payload.ipv4 == ["192.0.2.1"]
 
 
 def test_parse_info_does_not_drop_an_address_with_a_malformed_ip_attribute():
@@ -134,13 +137,13 @@ def test_parse_info_does_not_drop_an_address_with_a_malformed_ip_attribute():
 def test_parse_info_status_reason():
     xml = reply(INFO.format(addresses="")).replace('<host:status s="ok"/>', '<host:status s="ok">Checked</host:status>')
 
-    assert parse_host_response(xml, "cl-1").host.status_reasons == {"ok": "Checked"}
+    assert parse_host_response(xml, "cl-1").payload.status_reasons == {"ok": "Checked"}
 
 
 def test_parse_info_status_text_equal_to_the_label_is_no_reason():
     xml = reply(INFO.format(addresses="")).replace('<host:status s="ok"/>', '<host:status s="ok">ok</host:status>')
 
-    assert parse_host_response(xml, "cl-1").host.status_reasons == {}
+    assert parse_host_response(xml, "cl-1").payload.status_reasons == {}
 
 
 def test_parse_create():
@@ -149,7 +152,7 @@ def test_parse_create():
         '<host:crDate>2026-11-04T10:00:00.0Z</host:crDate></host:creData></resData>'
     )
 
-    host = parse_host_create_response(reply(res_data), "cl-1").host
+    host = parse_host_create_response(reply(res_data), "cl-1").payload
 
     assert host.name == "NS1.EXAMPLE.EXAMPLE"
     assert host.crDate == "2026-11-04T10:00:00.000000Z"
@@ -165,9 +168,9 @@ def check_reply(name, avail, reason=""):
 def test_parse_check_available():
     response = parse_host_check_response(check_reply("NS1.EXAMPLE.EXAMPLE", 1), "ns1.example.example", "cl-1")
 
-    assert response.available is True
-    assert response.reason is None
-    assert response.host_name == "ns1.example.example"
+    assert response.payload.available is True
+    assert response.payload.reason is None
+    assert response.payload.name == "ns1.example.example"
 
 
 def test_parse_check_taken():
@@ -175,8 +178,8 @@ def test_parse_check_taken():
 
     response = parse_host_check_response(check_reply("ns1.example.example", 0, reason), "NS1.EXAMPLE.EXAMPLE", "cl-1")
 
-    assert response.available is False
-    assert response.reason == "In use"
+    assert response.payload.available is False
+    assert response.payload.reason == "In use"
 
 
 def test_parse_update_and_delete():
@@ -189,7 +192,7 @@ def test_no_client_transaction_id_is_not_reported():
 
 
 def test_parse_info_reads_the_repository_and_update_client():
-    host = parsed_info().host
+    host = parsed_info().payload
 
     assert host.roid == "H1-EX"
     assert host.upID == "foo"

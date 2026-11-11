@@ -1,12 +1,17 @@
-from eppclient.epp_profile import EPP_PROFILE
 import pytest
 from jsonschema import ValidationError
 
-from models import AuthInfo, ContactMinimal, ContactReferenceNew, HostObj
-from rpp_to_model_mapper import UnsupportedRppFeature, domain_patch
+from core.capabilities.unsupported_feature import UnsupportedFeature
+from core.model.contact.contacts import ContactMinimal
+from core.model.domain.domains import ContactReferenceNew, HostObj
+from core.model.shared.common import AuthInfo
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.mapping.domain import domain_patch
 
 CONTACT = {"@type": "contact", "id": "SH-8014"}
+
 HOST = {"@type": "host", "hostName": "ns1.foo.example"}
+
 AUTH = {"@type": "authInfo", "method": "authinfo", "authdata": "2BARfoo"}
 
 
@@ -117,5 +122,5 @@ def test_values_are_validated_against_the_schema(operation):
 
 
 def test_unknown_contact_label_is_unsupported():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         update({"op": "add", "path": "/contacts", "value": {"label": "reseller", "object": CONTACT}})

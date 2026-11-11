@@ -3,22 +3,28 @@ from functools import partial
 import pytest
 from connexion import ProblemException
 
-from controller.helper.rpp_response import map_request
-from eppclient.epp_profile import EPP_PROFILE
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
+from core.result.result_code import ResultCode
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.http.operation import map_request
+from rpp.mapping.contact import contacts
+from rpp.mapping.domain import domain_patch, domains
+from rpp.mapping.host import host_patch, host_replacement, hosts
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
-from models import ResultCode
-from rpp_to_model_mapper import (
-    NotSupportedByBackend, NotSupportedByProxy, contacts, domain_patch, domains, host_patch, host_replacement, hosts,
-)
 
 pytestmark = pytest.mark.usefixtures("epp_app_context")
 
 create_domain = partial(domains.rpp_to_model, profile=EPP_PROFILE)
 
 DOMAIN = {"@type": "domainName", "name": "foo.example"}
+
 HOST = {"@type": "host", "hostName": "ns1.foo.example"}
+
 EMAIL = {"address": "a@example.com"}
+
 TTL = {"@type": "dnsControls", "ttl": {"a": 3600}}
+
 SIG_LIFETIME = {"@type": "dnsControls", "maxSigLifetime": {"ds": 3600}}
 
 

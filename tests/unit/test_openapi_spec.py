@@ -1,11 +1,12 @@
 import yaml
 
-from app import OPENAPI_SPEC, create_app, parsed_spec
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from core.session.session_pool import SessionPool
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.http.app import create_app, OPENAPI_SPEC, parsed_spec
 
 
 def build_app():
-    return create_app(EppSessionAuthenticator(lambda username, password: None))
+    return create_app(SessionPool(lambda username, password: None), EPP_PROFILE)
 
 
 def test_apps_share_one_parse_of_the_spec():

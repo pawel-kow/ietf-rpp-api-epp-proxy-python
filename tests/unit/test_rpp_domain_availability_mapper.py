@@ -1,14 +1,12 @@
 import pytest
 
-from models import DomainCheckResponseSingle, ResultCode
-from rpp_to_model_mapper import NotSupportedByBackend, domain_availability
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.model.shared.availability import Availability
+from rpp.mapping.domain import domain_availability
 
 
 def availability(available, reason):
-    return DomainCheckResponseSingle(
-        domain_name="foo.example", available=available, reason=reason, code=ResultCode.COMMAND_COMPLETED_SUCCESSFULLY,
-        msg="ok", server_transaction_id="sv", client_transaction_id=None,
-    )
+    return Availability(name="foo.example", available=available, reason=reason)
 
 
 def test_taken_domain_gives_the_reason():

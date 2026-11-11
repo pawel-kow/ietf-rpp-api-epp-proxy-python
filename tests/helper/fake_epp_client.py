@@ -1,4 +1,4 @@
-from eppclient.eppclient import SEC_DNS_EXTENSION
+from registry_adapter.epp.session.epp_client import SEC_DNS_EXTENSION
 
 
 class FakeEppClient:
