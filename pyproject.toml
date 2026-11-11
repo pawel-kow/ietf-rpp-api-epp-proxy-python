@@ -21,43 +21,39 @@ addopts = "--strict-markers --tb=short -p no:warnings"
 [tool.importlinter]
 # app, config and run are modules, which import-linter cannot take as roots. An import of config or run is
 # therefore seen as external and forbidden by name. app and run as importers are checked once phase 4 moves them.
-root_packages = [
-    "controller",
-    "flows",
-    "models",
-    "registry",
-    "registry_adapter",
-    "rpp_schema_validator",
-    "rpp_to_model_mapper",
-]
+root_packages = ["controller", "core", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-id = "core-model-stdlib-only"
-name = "core.model (models) imports only the standard library"
+id = "core-stdlib-only"
+name = "core imports only the standard library"
 type = "forbidden"
-source_modules = ["models"]
+source_modules = ["core"]
 forbidden_modules = [
-    "app", "config", "controller", "flows", "registry", "registry_adapter", "rpp_schema_validator",
-    "rpp_to_model_mapper", "run",
+    "app", "config", "controller", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper", "run",
     "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
 ]
 
 [[tool.importlinter.contracts]]
 id = "core-layers"
-name = "Inside core: flows -> ports (registry) -> model (models)"
+name = "Inside core: flows -> ports -> model, capabilities -> result"
 type = "layers"
-layers = ["flows", "registry", "models"]
+containers = ["core"]
+layers = ["flows", "ports", "model | capabilities", "result"]
 
 [[tool.importlinter.contracts]]
-id = "core-no-adapter"
-name = "core (models, registry, flows) imports no adapter, framework or wire format"
+id = "core-model-objects"
+name = "The object packages of core.model are independent, except domain -> contact"
+type = "independence"
+modules = ["core.model.contact", "core.model.domain", "core.model.host", "core.model.message"]
+ignore_imports = ["core.model.domain.** -> core.model.contact.**"]
+
+[[tool.importlinter.contracts]]
+id = "core-model-shared"
+name = "core.model.shared imports no object package of core.model"
 type = "forbidden"
-source_modules = ["flows", "models", "registry"]
-forbidden_modules = [
-    "app", "config", "controller", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper", "run",
-    "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
-]
+source_modules = ["core.model.shared"]
+forbidden_modules = ["core.model.contact", "core.model.domain", "core.model.host", "core.model.message"]
 
 [[tool.importlinter.contracts]]
 id = "rpp-not-registry-adapter"
@@ -75,11 +71,11 @@ forbidden_modules = ["app", "controller", "connexion", "flask", "starlette", "we
 
 [[tool.importlinter.contracts]]
 id = "registry-adapter-not-rpp"
-name = "registry_adapter never imports rpp, flows or a web framework"
+name = "registry_adapter never imports rpp, core.flows or a web framework"
 type = "forbidden"
 source_modules = ["registry_adapter"]
 forbidden_modules = [
-    "app", "controller", "flows", "rpp_schema_validator", "rpp_to_model_mapper", "run",
+    "app", "controller", "core.flows", "rpp_schema_validator", "rpp_to_model_mapper", "run",
     "connexion", "dataclasses_json", "flask", "jsonschema", "starlette", "werkzeug",
 ]
 
@@ -107,15 +103,13 @@ name = "registry_adapter.common imports no project package"
 type = "forbidden"
 source_modules = ["registry_adapter.common"]
 forbidden_modules = [
-    "app", "config", "controller", "flows", "models", "registry", "registry_adapter.epp", "rpp_schema_validator",
-    "rpp_to_model_mapper", "run",
+    "app", "config", "controller", "core", "registry_adapter.epp", "rpp_schema_validator", "rpp_to_model_mapper",
+    "run",
 ]
 
 [[tool.importlinter.contracts]]
 id = "only-main-imports-settings"
 name = "Only main (run) imports settings (config), and nobody imports main"
 type = "forbidden"
-source_modules = [
-    "controller", "flows", "models", "registry", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper",
-]
+source_modules = ["controller", "core", "registry_adapter", "rpp_schema_validator", "rpp_to_model_mapper"]
 forbidden_modules = ["config", "run"]

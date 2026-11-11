@@ -1,4 +1,6 @@
-from models import DomainTransfer, DomainTransferProcess, TransferOperation
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.shared.domain_transfer_process import DomainTransferProcess
+from core.model.shared.transfer_operation import TransferOperation
 from rpp_schema_validator import validate_schema
 from . import rpp_authorization
 from .common import PULL, parse_rpp, period_duration, reject_push

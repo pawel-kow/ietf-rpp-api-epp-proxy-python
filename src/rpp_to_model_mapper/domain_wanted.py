@@ -1,9 +1,12 @@
-from models import AuthInfo, ContactMinimal, ContactReferenceNew, DomainReplacement, HostObj, NS
-from registry import BackendProfile
+from core.model.contact.contacts import ContactMinimal
+from core.model.domain.domain_replacement import DomainReplacement
+from core.model.domain.domains import ContactReferenceNew, HostObj, NS
+from core.model.shared.common import AuthInfo
+from core.capabilities.backend_profile import BackendProfile
 from . import domain_dns
 from .common import parse_rpp, reject_set
 from .domains import check_contact_label
-from .patch_statuses import is_client_label
+from core.model.shared.client_statuses import is_client_label
 from .rpp_models import RPPDnsData
 
 # Members a client may replace. Any other member of the domain cannot be changed.

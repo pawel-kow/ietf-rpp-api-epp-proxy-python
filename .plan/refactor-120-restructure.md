@@ -7,9 +7,9 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
 
 - [x] T0 Move tool (scratchpad): moves modules and rewrites every import in `src/` and `tests/` as an absolute import
       from the defining module; star imports become the names used
-- [~] T1 Phase 2: `eppclient`, `epp_to_model_mapper`, `helpers` → `registry_adapter/{epp,common}`; `ns_map` passed in;
+- [x] T1 Phase 2: `eppclient`, `epp_to_model_mapper`, `helpers` → `registry_adapter/{epp,common}`; `ns_map` passed in;
       `commands/not_used/` deleted; contracts renamed
-- [ ] T2 Phase 3: `models`, `registry`, `flows` → `core/` per object; explicit imports; `BackendProfile` and the
+- [~] T2 Phase 3: `models`, `registry`, `flows` → `core/` per object; explicit imports; `BackendProfile` and the
       refusals → `core/capabilities`
 - [ ] T3 Phase 4: `controller` → `rpp/http` + `rpp/handlers`; mappers and schema validator → `rpp/`; session pool →
       `core/session`; `run.py` → `main.py`; `copy_models.sh`, Dockerfile and docs for `uvicorn main:app`
@@ -44,3 +44,8 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
 - D7 `registry_adapter/common` must not know its protocol: `EPP_READ_TIMEOUT` → `READ_TIMEOUT`, the docstrings no
       longer name EPP, and the warning that names `rpp_epp_tls_insecure_skip_verify` moves to the composition root.
 - D8 Each phase's full `pytest -n 8` runs on a worktree of its commit, in the background, while the next phase goes on.
+- D9 `models/response.py` is split into `core/result/{result_code,operation_response,error_response}.py`; the
+      duplicate `ErrorResponse` of `models/contacts.py` (finding 5) is deleted, star imports resolved to the other one.
+- D10 `DomainTransferProcess` and `ContactTransferProcess` go to `core/model/shared`, because `message`'s
+      `TransferEvent` holds them and the object packages import only `shared` (besides `domain → contact`).
+- D11 `UnsupportedRppFeature` → `core/capabilities/UnsupportedFeature`: core does not name RPP.

@@ -1,14 +1,14 @@
 import logging
 
-from models import (
-    ContactReference, CreationProcess, DnsSec, Domain, DomainIdn, HostObj, NS,
-)
-from registry import BackendProfile
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domain_idn import DomainIdn
+from core.model.domain.domains import ContactReference, CreationProcess, Domain, HostObj, NS
+from core.capabilities.backend_profile import BackendProfile
 from rpp_schema_validator import validate_schema
 from . import auth_info, domain_dns, prov_metadata, statuses
 from .common import parse_rpp, period_duration, reject_set
 from .idn_tables import IdnTables
-from .not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPContactReference, RPPDomain, RPPHostReference, RPPLabelledContact
 
 logger = logging.getLogger(__name__)

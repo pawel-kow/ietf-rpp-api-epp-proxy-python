@@ -1,8 +1,12 @@
 import pytest
 from jsonschema import ValidationError
 
-from models import AuthInfo, DomainTransfer, DomainTransferProcess, TransferOperation
-from rpp_to_model_mapper import NotSupportedByBackend, domain_transfer_approve, domain_transfer_process, domain_transfer_reject
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.shared.common import AuthInfo
+from core.model.shared.domain_transfer_process import DomainTransferProcess
+from core.model.shared.transfer_operation import TransferOperation
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from rpp_to_model_mapper import domain_transfer_approve, domain_transfer_process, domain_transfer_reject
 
 PROCESS = {"@type": "domainTransferProcess"}
 

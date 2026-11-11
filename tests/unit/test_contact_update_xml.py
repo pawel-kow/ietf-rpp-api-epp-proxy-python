@@ -1,9 +1,12 @@
 from registry_adapter.epp.commands.contact.contact_xml import (
     parse_contact_response, parse_contact_update_response, update_contact_xml,
 )
-from models import (
-    Address, AuthInfo, ContactUpdate, ContactUpdateChange, ContactUpdateChanges, PostalInfoChange,
-)
+from core.model.contact.address import Address
+from core.model.contact.contact_update import ContactUpdate
+from core.model.contact.contact_update_change import ContactUpdateChange
+from core.model.contact.contact_update_changes import ContactUpdateChanges
+from core.model.contact.postal_info_change import PostalInfoChange
+from core.model.shared.common import AuthInfo
 from tests.unit.test_contact_xml import info_reply, postal
 from tests.helper.epp_ns_map import EPP_NS_MAP
 

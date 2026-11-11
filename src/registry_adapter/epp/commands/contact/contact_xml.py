@@ -1,4 +1,14 @@
-from models import *
+from core.model.contact.address import Address
+from core.model.contact.contact_check_response import ContactCheckResponse
+from core.model.contact.contact_transfer import ContactTransfer
+from core.model.contact.contact_transfer_response import ContactTransferResponse
+from core.model.contact.contact_update import ContactUpdate
+from core.model.contact.contact_update_response import ContactUpdateResponse
+from core.model.contact.contacts import Contact, ContactCreateResponse, ContactDeleteResponse, ContactType
+from core.model.contact.localized_postal_info import LocalizedPostalInfo
+from core.model.shared.common import AuthInfo
+from core.model.shared.contact_transfer_process import ContactTransferProcess
+from core.result.error_response import ErrorResponse
 from typing import Union
 from registry_adapter.epp.commands.shared.epp_response import (
     cl_trid, epp_datetime, find_res_data, parse_epp_response_header, status_reasons,

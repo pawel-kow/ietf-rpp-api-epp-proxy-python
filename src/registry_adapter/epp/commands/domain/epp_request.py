@@ -3,7 +3,13 @@ import re
 
 from xsdata.models.datatype import XmlDate, XmlDateTime
 
-from models import AuthInfo, DnsSec, Domain, DomainRenew, DomainRestore, DomainTransfer, DomainUpdate, RestoreReport
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domain_renew import DomainRenew
+from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.domain.domains import Domain, DomainUpdate
+from core.model.domain.restore_report import RestoreReport
+from core.model.shared.common import AuthInfo
 
 from registry_adapter.epp.xml.generated.domain_1_0 import (
     AddRemType, AuthInfoChgType, AuthInfoType, Check, ChgType, ContactAttrType, ContactType, Create, Delete,

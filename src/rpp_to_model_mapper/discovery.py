@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urlsplit
 
-from models import Discovery
+from core.model.shared.discovery import Discovery
 from rpp_schema_validator import validate_schema
 from .rpp_models import RPPDiscovery, RPPDiscoveryEnvironment, RPPDiscoveryVersion
 

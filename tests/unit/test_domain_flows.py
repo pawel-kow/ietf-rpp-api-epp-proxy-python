@@ -1,8 +1,11 @@
 import pytest
 
 from registry_adapter.epp.gateways.epp_backend import EppBackend
-from flows import patch_domain, replace_domain
-from models import Domain, DomainReplacement, DomainUpdate, DomainUpdateRemove, ErrorResponse, HostObj, NS, ResultCode
+from core.flows.domain.domain_flows import patch_domain, replace_domain
+from core.model.domain.domain_replacement import DomainReplacement
+from core.model.domain.domains import Domain, DomainUpdate, DomainUpdateRemove, HostObj, NS
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.helper.epp_ns_map import EPP_NS_MAP
 

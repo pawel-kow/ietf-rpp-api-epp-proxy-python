@@ -1,6 +1,8 @@
 import pytest
 
-from models import Host, HostUpdate, HostUpdateChanges
+from core.model.host.host import Host
+from core.model.host.host_update import HostUpdate
+from core.model.host.host_update_changes import HostUpdateChanges
 from registry_adapter.epp.commands.host.host_xml import (
     create_host_update_xml, create_host_xml, delete_host_xml, host_check_xml, info_host_xml,
     parse_host_check_response, parse_host_create_response, parse_host_delete_response, parse_host_response,

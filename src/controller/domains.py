@@ -1,9 +1,9 @@
 from connexion import request
 from flask import current_app
-from models import *
-import flows
+from core.result.error_response import ErrorResponse
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import *
+from core.flows.domain.domain_flows import patch_domain, read_domain_restore, renew_domain, replace_domain
 from .auth import get_backend
 
 def _idn_tables():
@@ -103,7 +103,7 @@ def domainNames_updatePartial(name, body):
             profile=backend_profile(),
         )
 
-    result = flows.patch_domain(get_backend(), name, update, wanted_from_current, client_transaction_id())
+    result = patch_domain(get_backend(), name, update, wanted_from_current, client_transaction_id())
     return _updated_domain(result, requested)
 
 
@@ -111,14 +111,14 @@ def domainNames_updatePartial(name, body):
 def domainNames_update(name, body):
     requested = requested_elements(OBJECT)
     wanted = map_request(rpp_mapper.domain_replacement.rpp_to_model, name, body, requested, profile=backend_profile())
-    return _updated_domain(flows.replace_domain(get_backend(), wanted, client_transaction_id()), requested)
+    return _updated_domain(replace_domain(get_backend(), wanted, client_transaction_id()), requested)
 
 
 @rpp_operation
 def domainNameRenewProcesses_renewCreate(name, body):
     """EPP exposes no renew process, so the answer is a 200 with no Location (core §16.1.4)."""
     renew = map_request(rpp_mapper.domain_renew_process.rpp_to_model, name, body, request.headers.get("RPP-Authorization"))
-    resp = flows.renew_domain(get_backend(), renew, client_transaction_id())
+    resp = renew_domain(get_backend(), renew, client_transaction_id())
     if isinstance(resp, ErrorResponse):
         raise_registry_error(resp)
     return rpp_mapper.domain_renew_process.model_to_rpp(resp.renewal), 200, generate_rpp_response_headers(resp)
@@ -149,7 +149,7 @@ def domainNameRestoreProcesses_updatePartial(name, body):
 
 @rpp_operation
 def domainNameRestoreProcesses_read(name):
-    resp = flows.read_domain_restore(get_backend(), name, client_transaction_id())
+    resp = read_domain_restore(get_backend(), name, client_transaction_id())
     if isinstance(resp, ErrorResponse):
         raise_registry_error(resp)
     return rpp_mapper.domain_restore_process.model_to_rpp(resp.restore), 200, generate_rpp_response_headers(resp)

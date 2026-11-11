@@ -6,10 +6,14 @@ from registry_adapter.epp.commands.host.host_xml import (
     parse_host_update_response,
 )
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
-from models import (
-    ErrorResponse, Host, HostCheckResponse, HostCreateResponse, HostDeleteResponse, HostInfoResponse,
-    HostUpdate, HostUpdateResponse,
-)
+from core.model.host.host import Host
+from core.model.host.host_check_response import HostCheckResponse
+from core.model.host.host_create_response import HostCreateResponse
+from core.model.host.host_delete_response import HostDeleteResponse
+from core.model.host.host_info_response import HostInfoResponse
+from core.model.host.host_update import HostUpdate
+from core.model.host.host_update_response import HostUpdateResponse
+from core.result.error_response import ErrorResponse
 from registry_adapter.epp.session.epp_client import EPPClient
 
 

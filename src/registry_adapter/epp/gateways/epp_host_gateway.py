@@ -1,5 +1,10 @@
-from models import ErrorResponse, HostInfoResponse, HostReplacement, host_difference
-from registry import ReplaceOutcome, ReplacementSteps, derived_update
+from core.model.host import host_difference
+from core.model.host.host_info_response import HostInfoResponse
+from core.model.host.host_replacement import HostReplacement
+from core.result.error_response import ErrorResponse
+from core.ports import derived_update
+from core.ports.replace_outcome import ReplaceOutcome
+from core.ports.replacement_steps import ReplacementSteps
 from registry_adapter.epp.commands.host.host_commands import (
     epp_hosts_Check, epp_hosts_Create, epp_hosts_Delete, epp_hosts_Info, epp_hosts_Update,
 )

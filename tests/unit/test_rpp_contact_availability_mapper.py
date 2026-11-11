@@ -1,4 +1,5 @@
-from models import ContactCheckResponse, ResultCode
+from core.model.contact.contact_check_response import ContactCheckResponse
+from core.result.result_code import ResultCode
 from rpp_to_model_mapper import contact_availability
 
 

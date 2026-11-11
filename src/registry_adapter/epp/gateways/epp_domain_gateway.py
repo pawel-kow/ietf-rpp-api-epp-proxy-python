@@ -1,5 +1,10 @@
-from models import DomainReplacement, DomainInfoResponse, ErrorResponse, domain_difference
-from registry import ReplaceOutcome, ReplacementSteps, derived_update
+from core.model.domain import domain_difference
+from core.model.domain.domain_replacement import DomainReplacement
+from core.model.domain.domains import DomainInfoResponse
+from core.result.error_response import ErrorResponse
+from core.ports import derived_update
+from core.ports.replace_outcome import ReplaceOutcome
+from core.ports.replacement_steps import ReplacementSteps
 from registry_adapter.epp.commands.domain.domain_commands import (
     epp_domains_Check, epp_domains_Create, epp_domains_Delete, epp_domains_Info, epp_domains_Renew,
     epp_domains_Restore, epp_domains_RestoreInfo, epp_domains_Transfer, epp_domains_Update,

@@ -1,4 +1,5 @@
-from models import DomainTransfer, TransferOperation
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.shared.transfer_operation import TransferOperation
 from . import rpp_authorization
 from .common import reject_reason
 from .rpp_models import RPPDomainTransferReject

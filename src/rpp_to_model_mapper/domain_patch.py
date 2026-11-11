@@ -1,8 +1,9 @@
-from models import (
-    ContactMinimal, ContactReferenceNew, DomainReplacement, DomainUpdate, DomainUpdateAdd,
-    DomainUpdateChange, DomainUpdateRemove, HostObj, NS,
+from core.model.contact.contacts import ContactMinimal
+from core.model.domain.domain_replacement import DomainReplacement
+from core.model.domain.domains import (
+    ContactReferenceNew, DomainUpdate, DomainUpdateAdd, DomainUpdateChange, DomainUpdateRemove, HostObj, NS,
 )
-from registry import BackendProfile
+from core.capabilities.backend_profile import BackendProfile
 from rpp_schema_validator import validate_schema
 from . import auth_info, domain_wanted, include_elements, json_patch, patch_statuses
 from .common import parse_rpp

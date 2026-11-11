@@ -6,10 +6,10 @@ from connexion import ProblemException
 from controller.helper.rpp_response import map_request
 from registry_adapter.epp.profile import EPP_PROFILE
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
-from models import ResultCode
-from rpp_to_model_mapper import (
-    NotSupportedByBackend, NotSupportedByProxy, contacts, domain_patch, domains, host_patch, host_replacement, hosts,
-)
+from core.result.result_code import ResultCode
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
+from rpp_to_model_mapper import contacts, domain_patch, domains, host_patch, host_replacement, hosts
 
 pytestmark = pytest.mark.usefixtures("epp_app_context")
 

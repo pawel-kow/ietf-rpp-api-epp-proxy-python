@@ -1,8 +1,13 @@
 import pytest
 
 from registry_adapter.epp.gateways.epp_backend import EppBackend
-from flows import create_host, patch_host, replace_host, update_host
-from models import ErrorResponse, Host, HostReplacement, HostUpdate, HostUpdateChanges, ResultCode
+from core.flows.host.host_flows import create_host, patch_host, replace_host, update_host
+from core.model.host.host import Host
+from core.model.host.host_replacement import HostReplacement
+from core.model.host.host_update import HostUpdate
+from core.model.host.host_update_changes import HostUpdateChanges
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.helper.epp_ns_map import EPP_NS_MAP
 

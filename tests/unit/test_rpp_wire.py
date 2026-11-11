@@ -7,7 +7,7 @@ from app import create_app
 from controller.session_authenticator import SessionAuthenticator
 from tests.helper.epp_backends import epp_backends
 from controller.helper.rpp_response import http_status, rpp_code
-from models import ResultCode
+from core.result.result_code import ResultCode
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"

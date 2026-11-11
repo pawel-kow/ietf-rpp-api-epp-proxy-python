@@ -1,7 +1,11 @@
-from models import (
-    ErrorResponse, Host, HostCheckResponse, HostCreateResponse, HostDeleteResponse, HostInfoResponse,
-    HostUpdate, HostUpdateResponse,
-)
+from core.model.host.host import Host
+from core.model.host.host_check_response import HostCheckResponse
+from core.model.host.host_create_response import HostCreateResponse
+from core.model.host.host_delete_response import HostDeleteResponse
+from core.model.host.host_info_response import HostInfoResponse
+from core.model.host.host_update import HostUpdate
+from core.model.host.host_update_response import HostUpdateResponse
+from core.result.error_response import ErrorResponse
 from registry_adapter.epp.xml.codec import epp_to_str, str_to_epp
 from registry_adapter.epp.commands.host.epp_request import host_check, host_create, host_delete, host_info, host_update
 from registry_adapter.epp.xml.generated.epp_1_0 import Epp

@@ -1,6 +1,11 @@
 import re
 
-from models import Address, AuthInfo, Contact, ContactTransfer, ContactType, ContactUpdate, ContactUpdateChanges
+from core.model.contact.address import Address
+from core.model.contact.contact_transfer import ContactTransfer
+from core.model.contact.contact_update import ContactUpdate
+from core.model.contact.contact_update_changes import ContactUpdateChanges
+from core.model.contact.contacts import Contact, ContactType
+from core.model.shared.common import AuthInfo
 
 from registry_adapter.epp.xml.generated.contact_1_0 import (
     AddRemType, AddrType, AuthInfoType, Check, ChgPostalInfoType, ChgType, Create, Delete, E164Type, Info,

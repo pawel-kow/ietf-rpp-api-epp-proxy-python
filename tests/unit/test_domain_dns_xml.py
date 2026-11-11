@@ -1,5 +1,8 @@
 from registry_adapter.epp.commands.domain.domain_xml import create_domain_xml, parse_domain_response
-from models import DnsSec, Domain, DsData, HostAttr, KeyData, NS
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domains import Domain, HostAttr, NS
+from core.model.domain.ds_data import DsData
+from core.model.domain.key_data import KeyData
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'

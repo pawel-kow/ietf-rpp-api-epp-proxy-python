@@ -1,7 +1,7 @@
 import pytest
 from jsonschema import ValidationError
 
-from models import Discovery
+from core.model.shared.discovery import Discovery
 from rpp_to_model_mapper import discovery
 
 

@@ -1,7 +1,7 @@
 from dataclasses_json.undefined import UndefinedParameterError
 
 from rpp_schema_validator import validate_schema
-from .not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPPatchOperation, RPPPeriod
 
 

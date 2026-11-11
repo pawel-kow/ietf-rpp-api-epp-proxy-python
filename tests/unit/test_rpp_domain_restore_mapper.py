@@ -1,10 +1,11 @@
 import pytest
 from jsonschema import ValidationError
 
-from models import DomainRestore, DomainRestoreProcess, RestoreReport
-from rpp_to_model_mapper import (
-    NotSupportedByBackend, PatchNotApplicable, domain_restore_patch, domain_restore_process, domain_restore_report,
-)
+from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.domain_restore_process import DomainRestoreProcess
+from core.model.domain.restore_report import RestoreReport
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from rpp_to_model_mapper import PatchNotApplicable, domain_restore_patch, domain_restore_process, domain_restore_report
 
 REPORT = {
     "@type": "restoreReport",

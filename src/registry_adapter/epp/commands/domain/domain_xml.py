@@ -1,7 +1,26 @@
 import base64
 from typing import Union
 
-from models import *
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domain_idn import DomainIdn
+from core.model.domain.domain_renew import DomainRenew
+from core.model.domain.domain_renew_process import DomainRenewProcess
+from core.model.domain.domain_renew_response import DomainRenewResponse
+from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.domain_restore_process import DomainRestoreProcess
+from core.model.domain.domain_restore_response import DomainRestoreResponse
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.domain.domain_transfer_response import DomainTransferResponse
+from core.model.domain.domains import (
+    ContactReference, Domain, DomainCheckResponseBulk, DomainCheckResponseSingle, DomainCreateResponse,
+    DomainDeleteResponse, DomainUpdate, DomainUpdateResponse, HostAttr, HostObj, NS,
+)
+from core.model.domain.ds_data import DsData
+from core.model.domain.key_data import KeyData
+from core.model.shared.common import AuthInfo
+from core.model.shared.domain_transfer_process import DomainTransferProcess
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from registry_adapter.epp.commands.shared.epp_core import map_epp_code
 from registry_adapter.epp.commands.shared.epp_response import (
     cl_trid, epp_datetime, find_extension, find_res_data, parse_epp_response_header, status_reasons,

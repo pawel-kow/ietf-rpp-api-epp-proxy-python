@@ -1,4 +1,4 @@
-from models import HostReplacement
+from core.model.host.host_replacement import HostReplacement
 from rpp_schema_validator import validate_schema
 from .common import parse_rpp
 from .hosts import replacement_from_rpp, require_own_ns

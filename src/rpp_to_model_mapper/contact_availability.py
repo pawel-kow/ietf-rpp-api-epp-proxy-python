@@ -1,4 +1,4 @@
-from models import ContactCheckResponse
+from core.model.contact.contact_check_response import ContactCheckResponse
 from rpp_schema_validator import validate_schema
 from .rpp_models import RPPContactAvailability
 

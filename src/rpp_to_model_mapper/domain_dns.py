@@ -1,14 +1,17 @@
 import base64
 import re
 
-from models import DnsSec, Domain, DsData, HostAttr, KeyData, NS
-from registry import BackendProfile
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domains import Domain, HostAttr, NS
+from core.model.domain.ds_data import DsData
+from core.model.domain.key_data import KeyData
+from core.capabilities.backend_profile import BackendProfile
 from .dns_records import (
     ADDRESS_RECORDS, ORIGIN, check_record_class, nameserver_records, record_address, record_rdata, record_type,
     reject_ttl,
 )
-from .not_supported_by_backend import NotSupportedByBackend
-from .not_supported_by_proxy import NotSupportedByProxy
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPDnsData, RPPDnsRecord
 
 HEX = re.compile(r"(?:[0-9A-Fa-f]{2})+")

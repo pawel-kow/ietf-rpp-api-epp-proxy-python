@@ -1,8 +1,10 @@
 import jsonschema
 import pytest
 
-from models import Host
-from rpp_to_model_mapper import NotSupportedByBackend, NotSupportedByProxy, PatchNotApplicable, host_patch, hosts
+from core.model.host.host import Host
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
+from rpp_to_model_mapper import PatchNotApplicable, host_patch, hosts
 
 NAME = "ns1.foo.example"
 RECORD_A = {"@type": "dnsRecord", "name": "@", "type": "a", "rdata": {"address": "198.51.100.1"}}

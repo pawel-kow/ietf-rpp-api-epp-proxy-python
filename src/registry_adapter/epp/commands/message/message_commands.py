@@ -3,7 +3,9 @@ from typing import Union
 from registry_adapter.epp.commands.message.message_xml import (
     parse_ack_response, parse_error_response, parse_poll_response, poll_ack_xml, poll_request_xml,
 )
-from models import AckResponse, ErrorResponse, PollResponse
+from core.model.message.ack_response import AckResponse
+from core.model.message.poll_response import PollResponse
+from core.result.error_response import ErrorResponse
 from registry_adapter.epp.session.epp_client import EPPClient
 
 def epp_messages_Poll(epp_client: EPPClient, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[PollResponse, ErrorResponse]:

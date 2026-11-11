@@ -6,7 +6,10 @@ from lxml import etree
 from registry_adapter.epp.commands.message.message_xml import (
     parse_ack_response, parse_poll_response, poll_ack_xml, poll_request_xml,
 )
-from models import ErrorResponse, PendingActionEvent, ResultCode, TransferEvent
+from core.model.message.pending_action_event import PendingActionEvent
+from core.model.message.transfer_event import TransferEvent
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"

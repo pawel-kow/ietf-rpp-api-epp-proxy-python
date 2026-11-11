@@ -1,4 +1,4 @@
-from models import ContactTransfer
+from core.model.contact.contact_transfer import ContactTransfer
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import rpp_operation
 from .transfer_handlers import TransferHandlers

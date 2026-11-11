@@ -2,9 +2,11 @@ import pytest
 
 from tests.helper.captured_log import capture_log
 
-from models import (
-    ContactTransferProcess, DomainTransferProcess, PendingActionEvent, QueueMessage, TransferEvent,
-)
+from core.model.message.pending_action_event import PendingActionEvent
+from core.model.message.queue_message import QueueMessage
+from core.model.message.transfer_event import TransferEvent
+from core.model.shared.contact_transfer_process import ContactTransferProcess
+from core.model.shared.domain_transfer_process import DomainTransferProcess
 from rpp_schema_validator import validate_schema
 from rpp_to_model_mapper import messages
 

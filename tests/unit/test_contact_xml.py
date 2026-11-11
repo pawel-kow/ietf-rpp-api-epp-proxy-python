@@ -1,4 +1,6 @@
-from models import Address, Contact, ContactType, LocalizedPostalInfo
+from core.model.contact.address import Address
+from core.model.contact.contacts import Contact, ContactType
+from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from registry_adapter.epp.commands.contact.contact_xml import (
     contact_check_xml, create_contact_xml, parse_contact_check_response, parse_contact_response,
 )

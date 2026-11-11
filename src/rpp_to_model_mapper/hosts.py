@@ -1,9 +1,11 @@
-from models import Host, HostReplacement, HostUpdateChanges
+from core.model.host.host import Host
+from core.model.host.host_replacement import HostReplacement
+from core.model.host.host_update_changes import HostUpdateChanges
 from rpp_schema_validator import validate_schema
 from . import host_dns, prov_metadata
 from .common import parse_rpp, reject_set
 from .dns_records import nameserver_records, reject_ttl
-from .not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPDnsData, RPPHost, RPPStatus
 
 

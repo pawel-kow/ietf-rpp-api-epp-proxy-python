@@ -7,9 +7,13 @@ from connexion import ProblemException, request
 from flask import current_app, request as flask_request
 from jsonschema import ValidationError
 
-from models import ErrorResponse, OperationResponse, ResultCode
-from registry import BackendProfile
-from rpp_to_model_mapper import NotSupportedByBackend, UnsupportedRppFeature, include_elements
+from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
+from core.result.result_code import ResultCode
+from core.capabilities.backend_profile import BackendProfile
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.unsupported_feature import UnsupportedFeature
+from rpp_to_model_mapper import include_elements
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -124,7 +128,7 @@ def backend_profile() -> BackendProfile:
     return current_app.config["RPP_BACKEND_PROFILE"]
 
 
-def _unsupported_detail(e: UnsupportedRppFeature) -> str:
+def _unsupported_detail(e: UnsupportedFeature) -> str:
     """A mapper does not know the backend, so its refusal is named here."""
     if isinstance(e, NotSupportedByBackend):
         return e.detail(backend_profile().name)
@@ -135,7 +139,7 @@ def map_request(mapper, *args, **kwargs):
     """Runs an RPP to model mapper, translating what it rejects."""
     try:
         return mapper(*args, **kwargs)
-    except UnsupportedRppFeature as e:
+    except UnsupportedFeature as e:
         raise ProblemException(
             status=http_status(e.code), title=e.code.value[1], detail=_unsupported_detail(e),
             headers=problem_headers(e.code),

@@ -5,7 +5,10 @@ from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
-from models import Address, AuthInfo, Contact, ContactType, LocalizedPostalInfo
+from core.model.contact.address import Address
+from core.model.contact.contacts import Contact, ContactType
+from core.model.contact.localized_postal_info import LocalizedPostalInfo
+from core.model.shared.common import AuthInfo
 from rpp_schema_validator import validate_schema
 from rpp_to_model_mapper import contacts
 

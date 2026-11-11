@@ -1,4 +1,6 @@
-from models import Host, HostUpdate, HostUpdateChanges
+from core.model.host.host import Host
+from core.model.host.host_update import HostUpdate
+from core.model.host.host_update_changes import HostUpdateChanges
 
 from registry_adapter.epp.xml.generated.epp_1_0 import CommandType, Epp, ReadWriteType
 from registry_adapter.epp.xml.generated.host_1_0 import (

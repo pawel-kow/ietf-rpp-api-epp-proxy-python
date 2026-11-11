@@ -18,8 +18,8 @@ from controller.body_buffering_middleware import BodyBufferingMiddleware
 from controller.rpp_request_body_validator import RppRequestBodyValidator
 from controller.rpp_response_body_validator import RppResponseBodyValidator
 from controller.epp_basic_security_handler import EppBasicSecurityHandler
-from models import ResultCode
-from registry import BackendProfile
+from core.result.result_code import ResultCode
+from core.capabilities.backend_profile import BackendProfile
 from rpp_to_model_mapper import IdnTables
 
 OPENAPI_SPEC = Path(__file__).parent / "openapi.yaml"

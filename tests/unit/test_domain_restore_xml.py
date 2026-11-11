@@ -3,7 +3,9 @@ from lxml import etree
 from registry_adapter.epp.commands.domain.domain_xml import (
     parse_domain_response, parse_domain_restore_response, restore_domain_xml,
 )
-from models import DomainRestore, ResultCode, RestoreReport
+from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.restore_report import RestoreReport
+from core.result.result_code import ResultCode
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"

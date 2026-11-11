@@ -1,4 +1,6 @@
-from models import AuthInfo, Contact, ContactReplacement
+from core.model.contact.contact_replacement import ContactReplacement
+from core.model.contact.contacts import Contact
+from core.model.shared.common import AuthInfo
 from rpp_schema_validator import validate_schema
 from . import auth_info, contacts, include_elements
 from .common import parse_rpp, reject_set

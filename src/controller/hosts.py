@@ -1,8 +1,8 @@
 from connexion import request
 
 import rpp_to_model_mapper as rpp_mapper
-from flows import create_host, patch_host, replace_host
-from models import ErrorResponse
+from core.flows.host.host_flows import create_host, patch_host, replace_host
+from core.result.error_response import ErrorResponse
 from .auth import get_backend
 from .helper.rpp_response import (
     client_transaction_id, generate_rpp_response_headers, map_request, raise_registry_error, require_empty_body,

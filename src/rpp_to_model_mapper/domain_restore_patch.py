@@ -1,4 +1,4 @@
-from models import DomainRestore
+from core.model.domain.domain_restore import DomainRestore
 from . import domain_restore_report, json_patch
 from .common import parse_rpp
 from .rpp_models import RPPPatchOperation

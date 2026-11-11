@@ -1,4 +1,5 @@
-from models import DomainRestore, RestoreReport
+from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.restore_report import RestoreReport
 from .date_time import rfc3339
 from .domain_restore_process import parse_request
 from .rpp_models import RPPRestoreReport

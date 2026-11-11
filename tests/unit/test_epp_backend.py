@@ -1,5 +1,6 @@
 from registry_adapter.epp.gateways.epp_backend import EppBackend
-from models import ErrorResponse, ResultCode
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.helper.epp_ns_map import EPP_NS_MAP
 

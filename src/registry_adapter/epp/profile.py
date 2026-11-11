@@ -1,4 +1,4 @@
-from registry import BackendProfile
+from core.capabilities.backend_profile import BackendProfile
 
 EPP_PROFILE = BackendProfile(
     name="EPP",

@@ -1,9 +1,13 @@
-from models import Contact, ContactReplacement, ContactUpdate, ContactUpdateChange, ContactUpdateChanges
+from core.model.contact.contact_replacement import ContactReplacement
+from core.model.contact.contact_update import ContactUpdate
+from core.model.contact.contact_update_change import ContactUpdateChange
+from core.model.contact.contact_update_changes import ContactUpdateChanges
+from core.model.contact.contacts import Contact
 from rpp_schema_validator import validate_schema
 from . import auth_info, contact_replacement, contacts, include_elements, json_patch, patch_statuses
 from .common import parse_rpp, reject_operation, reject_set
 from .needs_current_state import NeedsCurrentState
-from .not_supported_by_proxy import NotSupportedByProxy
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPAuthInfo, RPPContact, RPPPatchOperation, RPPStatus
 
 CONTACT_INFO_PATH = "/contactInfo"

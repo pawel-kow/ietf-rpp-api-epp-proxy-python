@@ -4,10 +4,11 @@ import logging
 import pytest
 from jsonschema import ValidationError
 
-from models import (
-    AuthInfo, ContactReference, Domain, DomainIdn, HostObj, NS,
-)
-from rpp_to_model_mapper import IdnTables, UnsupportedRppFeature, domains
+from core.model.domain.domain_idn import DomainIdn
+from core.model.domain.domains import ContactReference, Domain, HostObj, NS
+from core.model.shared.common import AuthInfo
+from core.capabilities.unsupported_feature import UnsupportedFeature
+from rpp_to_model_mapper import IdnTables, domains
 
 TABLES = IdnTables({"latn-1.0": "de"})
 
@@ -64,7 +65,7 @@ def test_create_maps_period_to_duration(value, unit, duration):
     {"contacts": [{"label": "reseller", "object": {"@type": "contact", "id": "X"}}]},
 ])
 def test_create_rejects_what_the_model_cannot_hold(extra):
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         domains.rpp_to_model(create_body(**extra), profile=EPP_PROFILE)
 
 
@@ -170,7 +171,7 @@ def test_create_with_uname_and_no_lgr_is_refused():
     with pytest.raises(ValueError) as refused:
         domains.rpp_to_model(idn_body(uName="bücher.example"), TABLES, profile=EPP_PROFILE)
 
-    assert not isinstance(refused.value, UnsupportedRppFeature)
+    assert not isinstance(refused.value, UnsupportedFeature)
 
 
 @pytest.mark.parametrize("tables", [TABLES, IdnTables()])
@@ -178,7 +179,7 @@ def test_create_with_an_lgr_without_a_table_is_refused(tables):
     with pytest.raises(ValueError) as refused:
         domains.rpp_to_model(idn_body(lgr="cyrl-1.0"), tables, profile=EPP_PROFILE)
 
-    assert not isinstance(refused.value, UnsupportedRppFeature)
+    assert not isinstance(refused.value, UnsupportedFeature)
 
 
 def test_create_without_tables_refuses_any_lgr():

@@ -1,5 +1,5 @@
 from .dns_records import ADDRESS_RECORDS, ORIGIN, check_record_class, record_address, record_rdata, record_type
-from .not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPDnsRecord
 
 

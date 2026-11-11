@@ -1,5 +1,5 @@
-from models import DomainReplacement
-from registry import BackendProfile
+from core.model.domain.domain_replacement import DomainReplacement
+from core.capabilities.backend_profile import BackendProfile
 from rpp_schema_validator import validate_schema
 from . import auth_info, domain_wanted, include_elements
 from .common import parse_rpp

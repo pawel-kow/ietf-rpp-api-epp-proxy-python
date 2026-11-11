@@ -6,7 +6,8 @@ from flask import current_app
 from connexion import ProblemException
 
 import rpp_to_model_mapper as rpp_mapper
-from models import Discovery, ResultCode
+from core.model.shared.discovery import Discovery
+from core.result.result_code import ResultCode
 from .helper.rpp_response import (
     RPP_MEDIA_TYPE, backend_profile, client_transaction_id, problem_headers, rpp_code, rpp_operation,
 )

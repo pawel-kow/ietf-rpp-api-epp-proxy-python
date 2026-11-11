@@ -1,8 +1,8 @@
 from connexion import request
-from models import *
-import flows
+from core.result.error_response import ErrorResponse
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import *
+from core.flows.contact.contact_flows import patch_contact, replace_contact
 from .auth import get_backend
 
 OBJECT = "contact"
@@ -56,7 +56,7 @@ def _updated_contact(result, requested):
 def contacts_update(id, body):
     requested = requested_elements(OBJECT)
     wanted = map_request(rpp_mapper.contact_replacement.rpp_to_model, id, body, requested)
-    return _updated_contact(flows.replace_contact(get_backend(), wanted, client_transaction_id()), requested)
+    return _updated_contact(replace_contact(get_backend(), wanted, client_transaction_id()), requested)
 
 
 @rpp_operation
@@ -67,7 +67,7 @@ def contacts_updatePartial(id, body):
     def wanted_from_current(current):
         return map_request(rpp_mapper.contact_patch.rpp_to_model_with_current, id, body, current)
 
-    return _updated_contact(flows.patch_contact(get_backend(), id, update, wanted_from_current, client_transaction_id()), requested)
+    return _updated_contact(patch_contact(get_backend(), id, update, wanted_from_current, client_transaction_id()), requested)
 
 
 def _availability(id):

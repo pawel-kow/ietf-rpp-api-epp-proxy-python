@@ -2,7 +2,8 @@ import pytest
 from lxml import etree
 
 from registry_adapter.epp.commands.domain.domain_xml import parse_domain_renew_response, renew_domain_xml
-from models import DomainRenew, ResultCode
+from core.model.domain.domain_renew import DomainRenew
+from core.result.result_code import ResultCode
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"

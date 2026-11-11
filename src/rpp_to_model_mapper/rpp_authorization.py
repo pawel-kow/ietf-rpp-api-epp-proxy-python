@@ -1,9 +1,9 @@
 import base64
 import binascii
 
-from models import AuthInfo
+from core.model.shared.common import AuthInfo
 from .auth_info import AUTHINFO_METHOD
-from .not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 
 MALFORMED = "Malformed RPP-Authorization header"
 

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
-from models import DomainRenew, DomainRenewProcess
+from core.model.domain.domain_renew import DomainRenew
+from core.model.domain.domain_renew_process import DomainRenewProcess
 from rpp_schema_validator import validate_schema
 from .date_time import rfc3339
 from .common import parse_rpp, period_duration, reject_set

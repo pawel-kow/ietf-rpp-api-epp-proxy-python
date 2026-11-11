@@ -1,4 +1,4 @@
-from models import DomainTransfer
+from core.model.domain.domain_transfer import DomainTransfer
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import rpp_operation
 from .transfer_handlers import TransferHandlers

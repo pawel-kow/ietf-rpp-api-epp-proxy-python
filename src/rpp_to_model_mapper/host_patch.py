@@ -1,11 +1,13 @@
-from models import HostReplacement, HostUpdate, HostUpdateChanges
+from core.model.host.host_replacement import HostReplacement
+from core.model.host.host_update import HostUpdate
+from core.model.host.host_update_changes import HostUpdateChanges
 from rpp_schema_validator import validate_schema
 from . import host_dns, json_patch, patch_statuses
 from .common import parse_rpp, reject_operation
 from .dns_records import ADDRESS_RECORDS, DNS_PARENTS
 from .hosts import add_rpp_status, has_own_ns, replacement_from_rpp
 from .needs_current_state import NeedsCurrentState
-from .not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPDnsRecord, RPPHost, RPPPatchOperation, RPPStatus
 
 HOST_NAME_PATH = "/hostName"

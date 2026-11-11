@@ -1,4 +1,4 @@
-from models.client_statuses import is_client_label
+from core.model.shared.client_statuses import is_client_label
 from rpp_schema_validator import validate_schema
 
 OK = "ok"

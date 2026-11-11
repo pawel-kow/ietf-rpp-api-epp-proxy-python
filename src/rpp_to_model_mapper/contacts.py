@@ -1,9 +1,11 @@
-from models import Address, Contact, ContactType, LocalizedPostalInfo
+from core.model.contact.address import Address
+from core.model.contact.contacts import Contact, ContactType
+from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from rpp_schema_validator import validate_schema
 from . import auth_info, phones, prov_metadata, statuses
 from .common import parse_rpp, reject_set
-from .not_supported_by_backend import NotSupportedByBackend
-from .not_supported_by_proxy import NotSupportedByProxy
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import (
     RPPCard, RPPCardAddress, RPPCardAddressComponent, RPPCardEmail, RPPCardLocalization, RPPCardName,
     RPPCardOrganization, RPPCardPhone, RPPContact,

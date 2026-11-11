@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
 
-from models import ErrorResponse, OperationResponse, ResultCode
-from registry import ReplacementSteps, derived_update
+from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
+from core.result.result_code import ResultCode
+from core.ports import derived_update
+from core.ports.replacement_steps import ReplacementSteps
 
 
 @dataclass(kw_only=True)

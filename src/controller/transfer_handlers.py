@@ -2,7 +2,9 @@ import json
 
 from connexion import request
 from flask import request as flask_request
-from models import ErrorResponse, ResultCode, TransferOperation
+from core.model.shared.transfer_operation import TransferOperation
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 import rpp_to_model_mapper as rpp_mapper
 from .helper.rpp_response import (
     client_transaction_id, generate_rpp_response_headers, map_request, raise_registry_error, request_has_content,

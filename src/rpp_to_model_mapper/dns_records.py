@@ -1,7 +1,7 @@
 import ipaddress
 
-from .not_supported_by_backend import NotSupportedByBackend
-from .not_supported_by_proxy import NotSupportedByProxy
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPDnsRecord
 
 ADDRESS_RECORDS = {"a": ("ipv4", ipaddress.IPv4Address), "aaaa": ("ipv6", ipaddress.IPv6Address)}

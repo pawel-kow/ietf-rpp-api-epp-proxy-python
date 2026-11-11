@@ -1,8 +1,12 @@
 from registry_adapter.epp.profile import EPP_PROFILE
 import pytest
 
-from models import DnsSec, Domain, DsData, HostAttr, HostObj, KeyData, NS
-from rpp_to_model_mapper import UnsupportedRppFeature, domains
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domains import Domain, HostAttr, HostObj, NS
+from core.model.domain.ds_data import DsData
+from core.model.domain.key_data import KeyData
+from core.capabilities.unsupported_feature import UnsupportedFeature
+from rpp_to_model_mapper import domains
 
 DS_RDATA = {"keyTag": "12345", "algorithm": "3", "digestType": "1", "digest": "49FD46E6C4B45C55D4AC"}
 KEY_RDATA = {"flags": "257", "protocol": "3", "algorithm": "8", "publicKey": "AQPJ////4Q=="}
@@ -124,12 +128,12 @@ def test_create_rejects_what_the_draft_forbids(records):
     [record("@", "ds", DS_RDATA, **{"class": "CH"})],
 ])
 def test_create_rejects_what_epp_cannot_hold(records):
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         create(*records)
 
 
 def test_create_rejects_dns_controls():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         create(controls={"@type": "dnsControls", "ttl": {"ds": 3600}})
 
 

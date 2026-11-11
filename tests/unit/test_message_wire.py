@@ -8,7 +8,7 @@ from app import create_app
 from connexion import ProblemException
 from controller.helper.rpp_response import problem_headers
 from controller.messages import _require_valid_id
-from models import ResultCode
+from core.result.result_code import ResultCode
 from tests.helper.captured_log import capture_log
 from controller.session_authenticator import SessionAuthenticator
 from tests.helper.epp_backends import epp_backends

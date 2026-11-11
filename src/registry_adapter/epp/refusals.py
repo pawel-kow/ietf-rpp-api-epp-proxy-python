@@ -1,4 +1,5 @@
-from models import ErrorResponse, ResultCode
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from registry_adapter.epp.profile import EPP_PROFILE
 
 

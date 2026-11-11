@@ -1,4 +1,8 @@
-from models import Contact, ContactReplacement, ErrorResponse, password_of, stated_members
+from core.model.contact.contact_replacement import ContactReplacement
+from core.model.contact.contacts import Contact
+from core.model.shared import stated_members
+from core.model.shared.common import password_of
+from core.result.error_response import ErrorResponse
 from registry_adapter.epp.refusals import not_supported_by_epp
 
 

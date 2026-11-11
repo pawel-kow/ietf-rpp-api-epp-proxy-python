@@ -3,10 +3,16 @@ the direct mappers produce, the round trip gives the update back, up to order (#
 from registry_adapter.epp.profile import EPP_PROFILE
 import pytest
 
-from models import (
-    Address, AuthInfo, Contact, ContactReference, ContactType, Domain, DsData, DnsSec, Host, HostObj, NS,
-    contact_application, contact_difference, domain_application, domain_difference, host_application, host_difference,
-)
+from core.model.contact import contact_application, contact_difference
+from core.model.contact.address import Address
+from core.model.contact.contacts import Contact, ContactType
+from core.model.domain import domain_application, domain_difference
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domains import ContactReference, Domain, HostObj, NS
+from core.model.domain.ds_data import DsData
+from core.model.host import host_application, host_difference
+from core.model.host.host import Host
+from core.model.shared.common import AuthInfo
 from rpp_to_model_mapper import contact_patch, domain_patch, host_patch
 
 DOMAIN = "foo.example"

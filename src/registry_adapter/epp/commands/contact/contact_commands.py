@@ -1,11 +1,10 @@
-from models import *
-from models.contact_check_response import ContactCheckResponse
-from models.contact_transfer import ContactTransfer
-from models.contact_transfer_response import ContactTransferResponse
-from models.contact_update import ContactUpdate
-from models.contact_update_response import ContactUpdateResponse
-from models.contacts import Contact, ContactCreateResponse, ContactDeleteResponse
-from models.response import ErrorResponse
+from core.model.contact.contact_check_response import ContactCheckResponse
+from core.model.contact.contact_transfer import ContactTransfer
+from core.model.contact.contact_transfer_response import ContactTransferResponse
+from core.model.contact.contact_update import ContactUpdate
+from core.model.contact.contact_update_response import ContactUpdateResponse
+from core.model.contact.contacts import Contact, ContactCreateResponse, ContactDeleteResponse
+from core.result.error_response import ErrorResponse
 from registry_adapter.epp.commands.contact.contact_xml import (
     contact_check_xml, create_contact_xml, delete_contact_xml, info_contact_xml, parse_contact_check_response,
     parse_contact_delete_response, parse_contact_response, parse_contact_transfer_response,

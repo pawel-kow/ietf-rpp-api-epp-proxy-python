@@ -1,4 +1,6 @@
-from models import ContactTransfer, ContactTransferProcess, TransferOperation
+from core.model.contact.contact_transfer import ContactTransfer
+from core.model.shared.contact_transfer_process import ContactTransferProcess
+from core.model.shared.transfer_operation import TransferOperation
 from rpp_schema_validator import validate_schema
 from . import rpp_authorization
 from .common import PULL, parse_rpp, reject_push

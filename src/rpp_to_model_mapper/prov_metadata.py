@@ -1,4 +1,4 @@
-from models import ProvisioningObject
+from core.model.shared.common import ProvisioningObject
 from .rpp_models import RPPProvMetadata
 
 

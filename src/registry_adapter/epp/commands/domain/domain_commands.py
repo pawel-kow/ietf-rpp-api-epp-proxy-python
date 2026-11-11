@@ -1,15 +1,15 @@
-from models import *
-from models.domain_renew import DomainRenew
-from models.domain_renew_response import DomainRenewResponse
-from models.domain_restore import DomainRestore
-from models.domain_restore_response import DomainRestoreResponse
-from models.domain_transfer import DomainTransfer
-from models.domain_transfer_response import DomainTransferResponse
-from models.domains import (
+from core.model.domain.domain_renew import DomainRenew
+from core.model.domain.domain_renew_response import DomainRenewResponse
+from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.domain_restore_response import DomainRestoreResponse
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.domain.domain_transfer_response import DomainTransferResponse
+from core.model.domain.domains import (
     Domain, DomainCheckResponseSingle, DomainCreateResponse, DomainDeleteResponse, DomainInfoResponse, DomainUpdate,
     DomainUpdateResponse,
 )
-from models.response import ErrorResponse, ResultCode
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from registry_adapter.epp.commands.domain.domain_xml import (
     create_domain_update_xml, create_domain_xml, delete_domain_xml, domain_check_xml, info_domain_xml,
     parse_domain_check_response_single, parse_domain_delete_response, parse_domain_renew_response,

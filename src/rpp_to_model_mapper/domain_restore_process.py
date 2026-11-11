@@ -1,8 +1,9 @@
-from models import DomainRestore, DomainRestoreProcess
-from models.domain_restore_process import PENDING_DELETE, PENDING_RESTORE
+from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.domain_restore_process import DomainRestoreProcess
+from core.model.domain.domain_restore_process import PENDING_DELETE, PENDING_RESTORE
 from rpp_schema_validator import validate_schema
 from .common import parse_rpp
-from .not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPRestoreProcess
 
 def parse_request(schema: str, rpp: dict) -> RPPRestoreProcess:

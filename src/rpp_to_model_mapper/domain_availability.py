@@ -1,4 +1,4 @@
-from models import DomainCheckResponseSingle
+from core.model.domain.domains import DomainCheckResponseSingle
 from rpp_schema_validator import validate_schema
 from .common import reject_set
 from .rpp_models import RPPDomainNameAvailability

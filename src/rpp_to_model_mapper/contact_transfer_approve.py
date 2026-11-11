@@ -1,4 +1,5 @@
-from models import ContactTransfer, TransferOperation
+from core.model.contact.contact_transfer import ContactTransfer
+from core.model.shared.transfer_operation import TransferOperation
 from . import rpp_authorization
 from .common import reject_reason
 from .rpp_models import RPPTransferReject

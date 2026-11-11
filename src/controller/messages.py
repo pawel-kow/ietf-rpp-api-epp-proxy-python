@@ -5,8 +5,10 @@ from connexion import ProblemException
 from flask import Response
 
 import rpp_to_model_mapper as rpp_mapper
-from flows import read_message
-from models import ErrorResponse, MessageErrorResponse, ResultCode
+from core.flows.message.message_flows import read_message
+from core.model.message.message_error_response import MessageErrorResponse
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from .auth import get_backend
 from .helper.rpp_response import (
     client_transaction_id, generate_rpp_response_headers, problem_headers, raise_registry_error, require_empty_body,

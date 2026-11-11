@@ -4,10 +4,16 @@ import re
 from xsdata.models.datatype import XmlDateTime
 
 from registry_adapter.common.xmlsafe.xml_helper import decode_xml
-from models import (
-    AckResponse, ContactTransferProcess, DomainTransferProcess, ErrorResponse, PendingActionEvent, PollResponse,
-    QueueMessage, ResultCode, TransferEvent, UnknownResultCode,
-)
+from core.model.message.ack_response import AckResponse
+from core.model.message.pending_action_event import PendingActionEvent
+from core.model.message.poll_response import PollResponse
+from core.model.message.queue_message import QueueMessage
+from core.model.message.transfer_event import TransferEvent
+from core.model.shared.contact_transfer_process import ContactTransferProcess
+from core.model.shared.domain_transfer_process import DomainTransferProcess
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
+from core.result.unknown_result_code import UnknownResultCode
 from registry_adapter.epp.xml.codec import epp_to_str, str_to_epp
 from registry_adapter.epp.commands.message.epp_request import poll_ack, poll_request
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response, map_epp_code

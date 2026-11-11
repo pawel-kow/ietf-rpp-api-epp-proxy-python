@@ -1,4 +1,5 @@
-from models import ErrorResponse, ResultCode
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 from registry_adapter.common.xmlsafe.xml_helper import decode_xml
 
 def get_epp_error_response(xml_string: str, client_transaction_id: str | None) -> ErrorResponse:
