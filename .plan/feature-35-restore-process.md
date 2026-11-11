@@ -13,7 +13,7 @@ Branch `feature/35-restore-process`.
 - [x] Integration cases `domain_restore/`
 - [x] Docs: spec-issues "Restore process", architecture.project.md, testing.project.md
 - [x] Follow-up issue: RGP state in the domain `status` (#105)
-- [~] Full pytest run (2008 passed, 8 skipped), PR
+- [~] Full pytest run (2026 passed, 5 skipped, 1 intermittent backend TLS drop in message/test1), PR
 
 ## Decisions (maintainer, 2026-11-09)
 
@@ -38,7 +38,7 @@ Branch `feature/35-restore-process`.
 
 - Backend redeployed with minute RGP periods (EPP-server-docker#5, PR 6), reached as `epp-server` on `epptest_epp_net`; `config.yaml` changed by the maintainer.
 - Probed: delete after 125 s gives `redemptionPeriod` + `pendingDelete`; report before request `2304`; request `1000` without `rgp:upData`; second request `2304`; report `1000`, then status `ok` and no RGP status.
-- [~] Runner `delay_seconds` step; draft_domain test16, test18, test19 enabled; `domain_restore/test12` full cycle with PATCH.
+- [x] Runner `delay_seconds` step; draft_domain test16, test18, test19 enabled; `domain_restore/test12` full cycle with PATCH. Merged main (cases create their own objects, config.local.yaml).
 
 ## Open questions
 
