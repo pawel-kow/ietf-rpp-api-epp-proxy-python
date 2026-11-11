@@ -1,10 +1,10 @@
 import jsonschema
 import pytest
 
-from core.model.host.host import Host
 from core.capabilities.unsupported_feature import UnsupportedFeature
-from rpp.mapping.host import host_availability, host_replacement, hosts
+from core.model.host.host import Host
 from core.model.shared.availability import Availability
+from rpp.mapping.host import host_availability, host_replacement, hosts
 
 NAME = "ns1.example.example"
 

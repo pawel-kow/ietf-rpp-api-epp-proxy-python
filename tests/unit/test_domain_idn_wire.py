@@ -1,23 +1,28 @@
 import pytest
 
-from registry_adapter.epp.profile import epp_profile
-from rpp.http.app import create_app
 from core.session.session_pool import SessionPool
-from tests.helper.epp_backends import epp_backends
-from registry_adapter.epp.session.epp_client import IDN_EXTENSION, SEC_DNS_EXTENSION
 from registry_adapter.epp.idn_tables import IdnTables
+from registry_adapter.epp.profile import epp_profile
+from registry_adapter.epp.session.epp_client import IDN_EXTENSION, SEC_DNS_EXTENSION
+from rpp.http.app import create_app
+from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
-from tests.unit.test_rpp_wire import BODY_HEADERS, HEADERS, check_reply, epp_reply
+from tests.unit.test_rpp_wire import BODY_HEADERS, check_reply, epp_reply, HEADERS
 
 NAME = "xn--bcher-kva.example"
+
 TABLES = IdnTables({"latn-1.0": "de"})
+
 IDN_SERVER = (SEC_DNS_EXTENSION, IDN_EXTENSION)
+
 IDN_BODY = {"@type": "domainName", "name": NAME, "uName": "bücher.example", "lgr": "latn-1.0"}
+
 CREATE_REPLY = (True, "1000", epp_reply(1000, (
     '<resData><domain:creData xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">'
     f'<domain:name>{NAME.upper()}</domain:name><domain:crDate>2026-11-09T00:00:00.0Z</domain:crDate>'
     '</domain:creData></resData>'
 )))
+
 INFO_REPLY = (True, "1000", epp_reply(1000, (
     '<resData><domain:infData xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">'
     f'<domain:name>{NAME.upper()}</domain:name><domain:roid>D1-EX</domain:roid><domain:status s="ok"/>'

@@ -1,9 +1,9 @@
 import ipaddress
 
-from core.model.shared.client_statuses import client_statuses
 from core.model.host.host import Host
 from core.model.host.host_replacement import HostReplacement
 from core.model.host.host_update import HostUpdate
+from core.model.shared.client_statuses import client_statuses
 
 
 def _applied(addresses: list[str] | None, added: list[str], removed: list[str]) -> list[str] | None:

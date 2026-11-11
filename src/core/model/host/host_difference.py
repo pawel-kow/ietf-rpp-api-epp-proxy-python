@@ -1,10 +1,10 @@
 import ipaddress
 
-from core.model.shared.client_statuses import client_statuses, status_changes
 from core.model.host.host import Host
 from core.model.host.host_replacement import HostReplacement
 from core.model.host.host_update import HostUpdate
 from core.model.host.host_update_changes import HostUpdateChanges
+from core.model.shared.client_statuses import client_statuses, status_changes
 
 
 def _addresses_missing_from(addresses: list[str] | None, others: list[str] | None) -> list[str]:

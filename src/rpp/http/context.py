@@ -5,8 +5,10 @@ from core.capabilities.backend_profile import BackendProfile
 
 # The key of the token info that holds the request's backend.
 TOKEN_BACKEND = "backend"
+
 # The keys of the application configuration that hold what create_app is given.
 BACKEND_PROFILE = "RPP_BACKEND_PROFILE"
+
 DISCOVERY_SETTINGS = "RPP_DISCOVERY_SETTINGS"
 
 

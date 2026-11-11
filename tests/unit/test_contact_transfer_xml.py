@@ -1,16 +1,18 @@
 import pytest
 from lxml import etree
 
-from registry_adapter.epp.commands.contact.contact_xml import parse_contact_transfer_response, transfer_contact_xml
 from core.model.contact.contact_transfer import ContactTransfer
 from core.model.shared.common import AuthInfo
 from core.model.shared.contact_transfer_process import ContactTransferProcess
 from core.model.shared.transfer_operation import TransferOperation
 from core.result.result_code import ResultCode
+from registry_adapter.epp.commands.contact.contact_xml import parse_contact_transfer_response, transfer_contact_xml
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
+
 CONTACT = "urn:ietf:params:xml:ns:contact-1.0"
+
 NS = {"epp": EPP, "contact": CONTACT}
 
 

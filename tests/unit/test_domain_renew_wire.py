@@ -2,25 +2,30 @@ import base64
 
 import pytest
 
+from core.session.session_pool import SessionPool
 from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.http.app import create_app
-from core.session.session_pool import SessionPool
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
+
 HEADERS = {
     "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
     "Accept": MEDIA_TYPE,
     "RPP-Cltrid": "rn32-cl-1",
 }
+
 BODY_HEADERS = {**HEADERS, "Content-Type": MEDIA_TYPE}
+
 PROCESSES = "/domainNames/foo.example/processes/renewProcesses"
+
 BODY = {
     "@type": "renewProcess",
     "expiryDate": "2005-04-03T22:00:00.0Z",
     "renewalPeriod": {"@type": "period", "value": 5, "unit": "y"},
 }
+
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'
 
 

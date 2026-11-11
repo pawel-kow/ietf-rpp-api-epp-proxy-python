@@ -1,14 +1,14 @@
 from typing import Callable
 
-from core.model.contact.contact_replacement import ContactReplacement
-from core.model.contact.contact_update import ContactUpdate
-from core.model.contact.contacts import Contact
-from core.result.error_response import ErrorResponse
-from core.result.result_code import ResultCode
-from core.ports.registry_backend import RegistryBackend
 from core.flows.mutation_result import MutationResult
 from core.flows.read_back import read_back
 from core.flows.sponsor import require_sponsor
+from core.model.contact.contact_replacement import ContactReplacement
+from core.model.contact.contact_update import ContactUpdate
+from core.model.contact.contacts import Contact
+from core.ports.registry_backend import RegistryBackend
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
 
 
 def _read_back(backend: RegistryBackend, contact_id: str, mutation) -> MutationResult:

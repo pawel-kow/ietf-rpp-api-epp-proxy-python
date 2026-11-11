@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 from core.model.contact.contacts import ContactMinimal
-from core.model.shared.common import AuthInfo, Process, ProvisioningObject
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_idn import DomainIdn
+from core.model.shared.common import AuthInfo, Process, ProvisioningObject
 
 @dataclass(kw_only=True)
 class HostObj:

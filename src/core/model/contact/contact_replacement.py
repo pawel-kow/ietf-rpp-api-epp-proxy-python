@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from typing import Dict, FrozenSet, List, Optional
 
 from core.model.contact.address import Address
-from core.model.shared.common import AuthInfo
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
+from core.model.shared.common import AuthInfo
 
 
 @dataclass(kw_only=True)

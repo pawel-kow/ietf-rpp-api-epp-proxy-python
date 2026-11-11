@@ -2,17 +2,18 @@ import base64
 
 import pytest
 
-from registry_adapter.epp.profile import EPP_PROFILE
-from rpp.http.app import create_app
 from core.session.session_pool import SessionPool
-from tests.helper.epp_backends import epp_backends
-from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
-from registry_adapter.epp.xml.codec import str_to_epp
-from registry_adapter.epp.commands.message.message_xml import parse_poll_response
 from registry_adapter.common.xmlsafe.xml_helper import decode_xml
+from registry_adapter.epp.commands.message.message_xml import parse_poll_response
+from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
+from registry_adapter.epp.profile import EPP_PROFILE
+from registry_adapter.epp.xml.codec import str_to_epp
+from rpp.http.app import create_app
+from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 SECRET = "SECRET-FILE-CONTENT-8f3a"
+
 HEADERS = {
     "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
     "Accept": "application/rpp+json",

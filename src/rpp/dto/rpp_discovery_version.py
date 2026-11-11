@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from dataclasses_json import Undefined, config, dataclass_json
+from dataclasses_json import config, dataclass_json, Undefined
 
 from rpp.dto.rpp_object import RPPObject, type_field
 

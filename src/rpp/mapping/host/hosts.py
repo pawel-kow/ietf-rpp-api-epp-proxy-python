@@ -1,15 +1,15 @@
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.host.host import Host
 from core.model.host.host_replacement import HostReplacement
 from core.model.host.host_update_changes import HostUpdateChanges
-from rpp.schema.validator import validate_schema
+from rpp.dto.rpp_dns_data import RPPDnsData
+from rpp.dto.rpp_host import RPPHost
+from rpp.dto.rpp_status import RPPStatus
 from rpp.mapping.host import host_dns
 from rpp.mapping.shared import prov_metadata
 from rpp.mapping.shared.common import parse_rpp, reject_set
 from rpp.mapping.shared.dns_records import nameserver_records, reject_ttl
-from core.capabilities.not_supported_by_backend import NotSupportedByBackend
-from rpp.dto.rpp_dns_data import RPPDnsData
-from rpp.dto.rpp_host import RPPHost
-from rpp.dto.rpp_status import RPPStatus
+from rpp.schema.validator import validate_schema
 
 
 def add_rpp_status(status: RPPStatus, target: Host | HostUpdateChanges):

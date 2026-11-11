@@ -1,15 +1,19 @@
 import jsonschema
 import pytest
 
+from core.capabilities.unsupported_feature import UnsupportedFeature
 from core.model.host.host_update import HostUpdate
 from core.model.host.host_update_changes import HostUpdateChanges
-from core.capabilities.unsupported_feature import UnsupportedFeature
 from rpp.mapping.host import host_patch
 
 NAME = "ns1.example.example"
+
 A = {"@type": "dnsRecord", "name": f"{NAME}.", "type": "a", "rdata": {"address": "192.0.2.1"}}
+
 AAAA = {"@type": "dnsRecord", "name": "@", "type": "aaaa", "rdata": {"address": "2001:db8::1"}}
+
 NS = {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": f"{NAME}."}}
+
 STATUS = {"@type": "hostStatus", "label": "clientUpdateProhibited"}
 
 

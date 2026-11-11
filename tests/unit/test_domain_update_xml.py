@@ -1,10 +1,10 @@
-from registry_adapter.epp.profile import EPP_PROFILE
-from registry_adapter.epp.commands.domain.domain_xml import create_domain_update_xml
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domains import (
     DomainUpdate, DomainUpdateAdd, DomainUpdateChange, DomainUpdateRemove, HostAttr, NS,
 )
 from core.model.domain.ds_data import DsData
+from registry_adapter.epp.commands.domain.domain_xml import create_domain_update_xml
+from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.mapping.domain import domain_patch
 from tests.helper.epp_ns_map import EPP_NS_MAP
 

@@ -1,9 +1,9 @@
-from core.model.shared.client_statuses import client_statuses
 from core.model.contact.contact_difference import INT, LOC
 from core.model.contact.contact_replacement import ContactReplacement
 from core.model.contact.contact_update import ContactUpdate
 from core.model.contact.contacts import Contact
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
+from core.model.shared.client_statuses import client_statuses
 
 
 def _value(current: list[str] | None, change: str | None) -> list[str] | None:

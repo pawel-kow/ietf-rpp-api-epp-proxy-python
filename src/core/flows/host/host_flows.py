@@ -1,13 +1,13 @@
 from typing import Callable
 
-from core.model.host.host import Host
-from core.model.host.host_replacement import HostReplacement
-from core.model.host.host_update import HostUpdate
-from core.result.error_response import ErrorResponse
-from core.ports.registry_backend import RegistryBackend
 from core.flows.mutation_result import MutationResult
 from core.flows.read_back import read_back
 from core.flows.sponsor import require_sponsor
+from core.model.host.host import Host
+from core.model.host.host_replacement import HostReplacement
+from core.model.host.host_update import HostUpdate
+from core.ports.registry_backend import RegistryBackend
+from core.result.error_response import ErrorResponse
 
 
 def _read_back(backend: RegistryBackend, host_name: str, mutation) -> MutationResult:

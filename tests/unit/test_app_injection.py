@@ -1,9 +1,8 @@
 import base64
 
-
+from core.session.session_pool import SessionPool
 from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.http.app import create_app
-from core.session.session_pool import SessionPool
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 

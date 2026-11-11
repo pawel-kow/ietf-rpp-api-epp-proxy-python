@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from dataclasses_json import Undefined, dataclass_json
+from dataclasses_json import dataclass_json, Undefined
 
-from rpp.dto.rpp_object import RPPObject, type_field
 from rpp.dto.rpp_auth_info import RPPAuthInfo
 from rpp.dto.rpp_card import RPPCard
+from rpp.dto.rpp_object import RPPObject, type_field
 from rpp.dto.rpp_prov_metadata import RPPProvMetadata
 from rpp.dto.rpp_status import RPPStatus
 

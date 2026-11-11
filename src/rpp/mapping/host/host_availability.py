@@ -1,6 +1,6 @@
-from rpp.schema.validator import validate_schema
-from rpp.dto.rpp_host_availability import RPPHostAvailability
 from core.model.shared.availability import Availability
+from rpp.dto.rpp_host_availability import RPPHostAvailability
+from rpp.schema.validator import validate_schema
 
 
 def model_to_rpp(check: Availability) -> dict:

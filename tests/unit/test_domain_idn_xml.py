@@ -1,15 +1,17 @@
 import logging
 
-from registry_adapter.epp.commands.domain.domain_xml import create_domain_xml, parse_domain_response
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_idn import DomainIdn
 from core.model.domain.domains import Domain
 from core.model.domain.ds_data import DsData
+from registry_adapter.epp.commands.domain.domain_xml import create_domain_xml, parse_domain_response
 from registry_adapter.epp.idn_tables import IdnTables
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'
+
 IDN_NS = 'xmlns:idn="urn:ietf:params:xml:ns:idn-1.0"'
+
 TABLES = IdnTables({"latn-1.0": "de"})
 
 

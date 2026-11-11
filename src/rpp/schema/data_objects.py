@@ -3,6 +3,7 @@ import os
 import yaml
 
 DATA_OBJECTS_FILE = os.path.join(os.path.dirname(__file__), 'schemas', 'draft-ietf-rpp-data-objects.yaml')
+
 DEFAULT_VISIBILITY = "default"
 
 with open(DATA_OBJECTS_FILE) as f:

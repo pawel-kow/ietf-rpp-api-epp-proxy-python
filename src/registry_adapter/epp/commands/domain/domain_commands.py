@@ -1,8 +1,16 @@
+import os
+from typing import Union
+
 from core.model.domain.domain_renew import DomainRenew
+from core.model.domain.domain_renew_process import DomainRenewProcess
 from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.domain_restore_process import DomainRestoreProcess
 from core.model.domain.domain_transfer import DomainTransfer
-from core.model.domain.domains import (Domain, DomainUpdate)
+from core.model.domain.domains import Domain, DomainUpdate
+from core.model.shared.availability import Availability
+from core.model.shared.domain_transfer_process import DomainTransferProcess
 from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
 from core.result.result_code import ResultCode
 from registry_adapter.epp.commands.domain.domain_xml import (
     create_domain_update_xml, create_domain_xml, delete_domain_xml, domain_check_xml, info_domain_xml,
@@ -13,13 +21,6 @@ from registry_adapter.epp.commands.domain.domain_xml import (
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
 from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.session.epp_client import EPPClient, IDN_EXTENSION, RGP_EXTENSION, SEC_DNS_EXTENSION
-import os
-from typing import Union
-from core.model.shared.availability import Availability
-from core.model.domain.domain_renew_process import DomainRenewProcess
-from core.model.domain.domain_restore_process import DomainRestoreProcess
-from core.model.shared.domain_transfer_process import DomainTransferProcess
-from core.result.operation_response import OperationResponse
 
 def _missing_extension(epp_client: EPPClient, uri: str, feature: str, data, client_transaction_id) -> ErrorResponse | None:
     """The error for data that needs an extension the server does not offer, or None."""

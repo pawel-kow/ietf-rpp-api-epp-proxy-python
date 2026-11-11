@@ -1,12 +1,12 @@
 from typing import Union
 
+from core.model.message.message_queue import MessageQueue
+from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
 from registry_adapter.epp.commands.message.message_xml import (
     parse_ack_response, parse_error_response, parse_poll_response, poll_ack_xml, poll_request_xml,
 )
-from core.result.error_response import ErrorResponse
 from registry_adapter.epp.session.epp_client import EPPClient
-from core.model.message.message_queue import MessageQueue
-from core.result.operation_response import OperationResponse
 
 def epp_messages_Poll(epp_client: EPPClient, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[MessageQueue], ErrorResponse]:
     """

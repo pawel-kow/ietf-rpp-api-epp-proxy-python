@@ -7,7 +7,7 @@ from connexion import ProblemException
 from core.model.shared.discovery import Discovery
 from core.result.result_code import ResultCode
 from rpp.http.context import backend_profile, discovery_settings
-from rpp.http.headers import RPP_MEDIA_TYPE, client_transaction_id, problem_headers, rpp_code
+from rpp.http.headers import client_transaction_id, problem_headers, rpp_code, RPP_MEDIA_TYPE
 from rpp.http.operation import rpp_operation
 from rpp.mapping.discovery import discovery
 

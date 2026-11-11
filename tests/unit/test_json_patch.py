@@ -1,8 +1,8 @@
 import pytest
 
+from rpp.dto.rpp_patch_operation import RPPPatchOperation
 from rpp.mapping.shared import json_patch
 from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
-from rpp.dto.rpp_patch_operation import RPPPatchOperation
 
 DOCUMENT = {
     "name": "foo.example",
@@ -14,6 +14,7 @@ DOCUMENT = {
     ],
     "registrant": {"id": "REG-1"},
 }
+
 ARRAYS = ("/nameservers", "/contacts", "/status")
 
 

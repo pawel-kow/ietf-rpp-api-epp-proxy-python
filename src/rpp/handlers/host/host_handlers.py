@@ -2,12 +2,11 @@ from connexion import request
 
 from core.flows.host.host_flows import create_host, patch_host, replace_host
 from core.result.error_response import ErrorResponse
-from rpp.http.context import get_backend
 from rpp.handlers.shared.requested_elements import requested_elements
+from rpp.http.context import get_backend
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers
 from rpp.http.operation import map_request, require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
-
 from rpp.mapping.host import host_availability, host_patch, host_replacement, hosts
 from rpp.mapping.shared import include_elements
 

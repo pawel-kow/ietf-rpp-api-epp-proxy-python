@@ -11,10 +11,9 @@ from core.model.domain.domains import Domain, DomainUpdate
 from core.model.domain.restore_report import RestoreReport
 from core.model.shared.common import AuthInfo
 from registry_adapter.epp.idn_tables import IdnTables
-
 from registry_adapter.epp.xml.generated.domain_1_0 import (
     AddRemType, AuthInfoChgType, AuthInfoType, Check, ChgType, ContactAttrType, ContactType, Create, Delete,
-    HostAttrType, HostsType, Info, InfoNameType, NsType, PUnitType, PeriodType, Renew, StatusType, StatusValueType,
+    HostAttrType, HostsType, Info, InfoNameType, NsType, PeriodType, PUnitType, Renew, StatusType, StatusValueType,
     Transfer, Update,
 )
 from registry_adapter.epp.xml.generated.epp_1_0 import (
@@ -23,13 +22,13 @@ from registry_adapter.epp.xml.generated.epp_1_0 import (
 from registry_adapter.epp.xml.generated.eppcom_1_0 import PwAuthInfoType
 from registry_adapter.epp.xml.generated.host_1_0 import AddrType, IpType
 from registry_adapter.epp.xml.generated.idn_1_0 import Data as IdnData
-from registry_adapter.epp.xml.generated.rgp_1_0 import MixedType, ReportTextType, ReportType, RestoreType, RgpOpType
-from registry_adapter.epp.xml.generated.rgp_1_0 import Update as RgpUpdate
-from registry_adapter.epp.xml.generated.sec_dns_1_1 import Create as SecdnsCreateType
-from registry_adapter.epp.xml.generated.sec_dns_1_1 import (
-    DsDataType, DsOrKeyType, KeyDataType, RemType as SecdnsRemType,
+from registry_adapter.epp.xml.generated.rgp_1_0 import (
+    MixedType, ReportTextType, ReportType, RestoreType, RgpOpType, Update as RgpUpdate,
 )
-from registry_adapter.epp.xml.generated.sec_dns_1_1 import Update as SecdnsUpdateType
+from registry_adapter.epp.xml.generated.sec_dns_1_1 import (
+    Create as SecdnsCreateType, DsDataType, DsOrKeyType, KeyDataType, RemType as SecdnsRemType,
+    Update as SecdnsUpdateType,
+)
 
 
 def _ns_type(ns) -> NsType:

@@ -2,10 +2,10 @@ from datetime import datetime, timezone
 
 from core.model.domain.domain_renew import DomainRenew
 from core.model.domain.domain_renew_process import DomainRenewProcess
-from rpp.schema.validator import validate_schema
-from rpp.mapping.shared.date_time import rfc3339
-from rpp.mapping.shared.common import parse_rpp, period_duration, reject_set
 from rpp.dto.rpp_domain_renew_process import RPPDomainRenewProcess
+from rpp.mapping.shared.common import parse_rpp, period_duration, reject_set
+from rpp.mapping.shared.date_time import rfc3339
+from rpp.schema.validator import validate_schema
 
 
 def _utc_date(timestamp: str) -> str:

@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Dict, FrozenSet, List, Optional
 
-from core.model.shared.common import AuthInfo
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domains import ContactReferenceNew, NS
+from core.model.shared.common import AuthInfo
 
 
 @dataclass(kw_only=True)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from dataclasses_json import Undefined, dataclass_json
+from dataclasses_json import dataclass_json, Undefined
 
 from rpp.dto.rpp_discovery_environment import RPPDiscoveryEnvironment
 from rpp.dto.rpp_discovery_version import RPPDiscoveryVersion

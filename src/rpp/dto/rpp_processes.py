@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from dataclasses_json import Undefined, dataclass_json
+from dataclasses_json import dataclass_json, Undefined
 
-from rpp.dto.rpp_object import RPPObject, type_field
 from rpp.dto.rpp_domain_create_process import RPPDomainCreateProcess
+from rpp.dto.rpp_object import RPPObject, type_field
 
 
 @dataclass_json(undefined=Undefined.RAISE)

@@ -1,22 +1,24 @@
 import base64
 import re
 
+from core.capabilities.backend_profile import BackendProfile
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domains import Domain, HostAttr, NS
 from core.model.domain.ds_data import DsData
 from core.model.domain.key_data import KeyData
-from core.capabilities.backend_profile import BackendProfile
-from rpp.mapping.shared.dns_records import (
-    ADDRESS_RECORDS, ORIGIN, check_record_class, nameserver_records, record_address, record_rdata, record_type,
-    reject_ttl,
-)
-from core.capabilities.not_supported_by_backend import NotSupportedByBackend
-from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from rpp.dto.rpp_dns_data import RPPDnsData
 from rpp.dto.rpp_dns_record import RPPDnsRecord
+from rpp.mapping.shared.dns_records import (
+    ADDRESS_RECORDS, check_record_class, nameserver_records, ORIGIN, record_address, record_rdata, record_type,
+    reject_ttl,
+)
 
 HEX = re.compile(r"(?:[0-9A-Fa-f]{2})+")
+
 MAX_BYTE = 255
+
 MAX_SHORT = 65535
 
 

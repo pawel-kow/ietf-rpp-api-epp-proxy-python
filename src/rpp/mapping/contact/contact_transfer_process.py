@@ -1,11 +1,11 @@
 from core.model.contact.contact_transfer import ContactTransfer
 from core.model.shared.contact_transfer_process import ContactTransferProcess
 from core.model.shared.transfer_operation import TransferOperation
-from rpp.schema.validator import validate_schema
-from rpp.mapping.shared import rpp_authorization
-from rpp.mapping.shared.common import PULL, parse_rpp, reject_push
 from rpp.dto.rpp_transfer_process import RPPTransferProcess
 from rpp.dto.rpp_transfer_request import RPPTransferRequest
+from rpp.mapping.shared import rpp_authorization
+from rpp.mapping.shared.common import parse_rpp, PULL, reject_push
+from rpp.schema.validator import validate_schema
 
 
 def rpp_to_model(id: str, rpp: dict, authorization: str | None) -> ContactTransfer:

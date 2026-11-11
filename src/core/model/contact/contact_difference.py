@@ -1,15 +1,17 @@
-from core.model.shared.client_statuses import client_statuses, status_changes
-from core.model.shared.common import password_of
 from core.model.contact.contact_replacement import ContactReplacement
 from core.model.contact.contact_update import ContactUpdate
 from core.model.contact.contact_update_change import ContactUpdateChange
 from core.model.contact.contact_update_changes import ContactUpdateChanges
 from core.model.contact.contacts import Contact
 from core.model.contact.postal_info_change import PostalInfoChange
+from core.model.shared.client_statuses import client_statuses, status_changes
+from core.model.shared.common import password_of
 from core.model.shared.stated_members import stated
 
 INT = "int"
+
 LOC = "loc"
+
 CLEAR = ""  # an empty value clears the organisation or a number (RFC 5733 chgPostalInfoType, e164Type)
 
 

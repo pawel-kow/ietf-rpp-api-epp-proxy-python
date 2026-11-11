@@ -2,24 +2,31 @@ import base64
 
 import pytest
 
-from registry_adapter.epp.profile import EPP_PROFILE
-from rpp.http.app import create_app
 from core.session.session_pool import SessionPool
-from tests.helper.epp_backends import epp_backends
+from registry_adapter.epp.profile import EPP_PROFILE
 from registry_adapter.epp.session.epp_client import RGP_EXTENSION, SEC_DNS_EXTENSION
+from rpp.http.app import create_app
+from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
+
 HEADERS = {
     "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
     "Accept": MEDIA_TYPE,
     "RPP-Cltrid": "rs35-cl-1",
 }
+
 BODY_HEADERS = {**HEADERS, "Content-Type": MEDIA_TYPE}
+
 PROCESSES = "/domainNames/foo.example/processes/restoreProcesses"
+
 LATEST = PROCESSES + "/latest"
+
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'
+
 RGP_NS = 'xmlns:rgp="urn:ietf:params:xml:ns:rgp-1.0"'
+
 REPORT = {
     "@type": "restoreReport",
     "preData": "Pre-delete registration data.",
@@ -29,6 +36,7 @@ REPORT = {
     "restoreReason": "Domain deleted in error by client operator.",
     "statements": ["First statement.", "Second statement."],
 }
+
 UPDATE = {"@type": "restoreProcess", "restoreReport": REPORT}
 
 

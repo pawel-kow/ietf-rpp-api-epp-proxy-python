@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from dataclasses_json import Undefined, dataclass_json
+from dataclasses_json import dataclass_json, Undefined
 
-from rpp.dto.rpp_object import RPPObject, type_field
 from rpp.dto.rpp_auth_info import RPPAuthInfo
 from rpp.dto.rpp_contact_reference import RPPContactReference
 from rpp.dto.rpp_dns_data import RPPDnsData
 from rpp.dto.rpp_host_reference import RPPHostReference
 from rpp.dto.rpp_labelled_contact import RPPLabelledContact
+from rpp.dto.rpp_object import RPPObject, type_field
 from rpp.dto.rpp_processes import RPPProcesses
 from rpp.dto.rpp_prov_metadata import RPPProvMetadata
 from rpp.dto.rpp_status import RPPStatus

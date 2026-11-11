@@ -1,11 +1,11 @@
 import ssl
 from types import SimpleNamespace
 
-from settings.load_settings import load_settings
-from registry_adapter.epp.gateways.epp_backend import EppBackend
-from registry_adapter.common.transport.tcp_client import TCPClient
 import main
 from main import new_backend, new_epp_client, settings, tls_context, tls_context_from_config
+from registry_adapter.common.transport.tcp_client import TCPClient
+from registry_adapter.epp.gateways.epp_backend import EppBackend
+from settings.load_settings import load_settings
 
 
 def test_default_factory_connects_to_the_configured_backend():

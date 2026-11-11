@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict
-from core.model.contact.address import Address
-from core.model.shared.common import ProvisioningObject
-from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from enum import Enum
+from typing import Dict, List, Optional
+
+from core.model.contact.address import Address
+from core.model.contact.localized_postal_info import LocalizedPostalInfo
+from core.model.shared.common import ProvisioningObject
 
 class ContactType(Enum):
     UNDEFINED = "UNDEFINED"

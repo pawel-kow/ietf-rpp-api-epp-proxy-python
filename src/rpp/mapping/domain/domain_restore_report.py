@@ -1,11 +1,12 @@
 from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.restore_report import RestoreReport
-from rpp.mapping.shared.date_time import rfc3339
-from rpp.mapping.domain.domain_restore_process import parse_request
 from rpp.dto.rpp_restore_report import RPPRestoreReport
+from rpp.mapping.domain.domain_restore_process import parse_request
+from rpp.mapping.shared.date_time import rfc3339
 
 # RFC 3915 §4.2.5 requires every member of the report but `other`, and exactly two statements.
 REQUIRED = ("preData", "postData", "deleteTime", "restoreTime", "restoreReason")
+
 STATEMENTS = 2
 
 

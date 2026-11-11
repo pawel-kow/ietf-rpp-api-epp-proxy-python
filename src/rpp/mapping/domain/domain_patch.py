@@ -1,27 +1,32 @@
+from core.capabilities.backend_profile import BackendProfile
 from core.model.contact.contacts import ContactMinimal
 from core.model.domain.domain_replacement import DomainReplacement
 from core.model.domain.domains import (
     ContactReferenceNew, DomainUpdate, DomainUpdateAdd, DomainUpdateChange, DomainUpdateRemove, HostObj, NS,
 )
-from core.capabilities.backend_profile import BackendProfile
-from rpp.schema.validator import validate_schema
-from rpp.mapping.domain import domain_wanted
-from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
-from rpp.mapping.shared.common import parse_rpp
-from rpp.mapping.shared.dns_records import DNS_PARENTS
-from rpp.mapping.domain.domains import REGISTRANT, check_contact_label
-from rpp.mapping.shared.needs_current_state import NeedsCurrentState
 from rpp.dto.rpp_auth_info import RPPAuthInfo
 from rpp.dto.rpp_contact_reference import RPPContactReference
 from rpp.dto.rpp_host_reference import RPPHostReference
 from rpp.dto.rpp_labelled_contact import RPPLabelledContact
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
+from rpp.mapping.domain import domain_wanted
+from rpp.mapping.domain.domains import check_contact_label, REGISTRANT
+from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
+from rpp.mapping.shared.common import parse_rpp
+from rpp.mapping.shared.dns_records import DNS_PARENTS
+from rpp.mapping.shared.needs_current_state import NeedsCurrentState
+from rpp.schema.validator import validate_schema
 
 ARRAY_PATHS = ("/nameservers", "/contacts")
+
 READ_ARRAY_PATHS = ARRAY_PATHS + ("/status", "/dns/records")
+
 OBJECT_PATHS = ("/registrant", "/authInfo")
+
 STATE_PATHS = ("/status", "/dns", "/dns/records", "/dns/controls")
+
 AUTH_INFO_PATH = "/authInfo"
+
 OBJECT = "domainName"
 
 

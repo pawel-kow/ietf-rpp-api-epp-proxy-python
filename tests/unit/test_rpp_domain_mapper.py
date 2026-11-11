@@ -1,13 +1,13 @@
-from registry_adapter.epp.profile import EPP_PROFILE
 from dataclasses import replace
 
 import pytest
 from jsonschema import ValidationError
 
+from core.capabilities.unsupported_feature import UnsupportedFeature
 from core.model.domain.domain_idn import DomainIdn
 from core.model.domain.domains import ContactReference, Domain, HostObj, NS
 from core.model.shared.common import AuthInfo
-from core.capabilities.unsupported_feature import UnsupportedFeature
+from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.mapping.domain import domains
 
 IDN_PROFILE = replace(EPP_PROFILE, lgrs=frozenset({"latn-1.0"}))

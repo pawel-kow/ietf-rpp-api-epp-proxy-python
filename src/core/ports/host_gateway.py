@@ -3,9 +3,9 @@ from typing import Protocol
 from core.model.host.host import Host
 from core.model.host.host_replacement import HostReplacement
 from core.model.host.host_update import HostUpdate
-from core.result.error_response import ErrorResponse
-from core.ports.replace_outcome import ReplaceOutcome
 from core.model.shared.availability import Availability
+from core.ports.replace_outcome import ReplaceOutcome
+from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 
 

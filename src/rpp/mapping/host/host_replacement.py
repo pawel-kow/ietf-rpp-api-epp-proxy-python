@@ -1,8 +1,8 @@
 from core.model.host.host_replacement import HostReplacement
-from rpp.schema.validator import validate_schema
-from rpp.mapping.shared.common import parse_rpp
-from rpp.mapping.host.hosts import replacement_from_rpp, require_own_ns
 from rpp.dto.rpp_host import RPPHost
+from rpp.mapping.host.hosts import replacement_from_rpp, require_own_ns
+from rpp.mapping.shared.common import parse_rpp
+from rpp.schema.validator import validate_schema
 
 
 def rpp_to_model(host_name: str, rpp: dict) -> HostReplacement:

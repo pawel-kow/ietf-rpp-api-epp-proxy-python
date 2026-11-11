@@ -1,8 +1,8 @@
-from registry_adapter.epp.gateways.epp_backend import EppBackend
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
-from tests.helper.fake_epp_client import FakeEppClient
+from registry_adapter.epp.gateways.epp_backend import EppBackend
 from tests.helper.epp_ns_map import EPP_NS_MAP
+from tests.helper.fake_epp_client import FakeEppClient
 
 MISSING = (False, "2303", (
     '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><response><result code="2303"><msg>Missing</msg></result>'

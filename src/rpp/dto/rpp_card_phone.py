@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from dataclasses_json import Undefined, dataclass_json
+from dataclasses_json import dataclass_json, Undefined
 
-from rpp.dto.rpp_object import RPPObject, optional_type_field
+from rpp.dto.rpp_object import optional_type_field, RPPObject
 
 
 @dataclass_json(undefined=Undefined.RAISE)

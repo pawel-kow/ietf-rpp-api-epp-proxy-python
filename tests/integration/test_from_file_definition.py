@@ -1,17 +1,18 @@
-from typing import List
-import pytest
-import connexion
-import json
-import uuid
-import re
-from main import app
 import datetime
-from tests.helper.integration_api_test import endpoint_test, replace_upper_placeholders
+import json
+import os
+import re
+import uuid
+from pathlib import Path
+from typing import List
+
+import connexion
+import pytest
+
+from main import app
 from tests.helper.check_datetime import check_datetime_format_utc_and_delta
 from tests.helper.idn_labels import replace_idn_placeholders
-import os
-from pathlib import Path
-
+from tests.helper.integration_api_test import endpoint_test, replace_upper_placeholders
 
 app.app.config.update({
         "TESTING": True,

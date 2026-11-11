@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
 
+from core.ports import derived_update
+from core.ports.replacement_steps import ReplacementSteps
 from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 from core.result.result_code import ResultCode
-from core.ports import derived_update
-from core.ports.replacement_steps import ReplacementSteps
 
 
 def Read(value: str, **header) -> OperationResponse:

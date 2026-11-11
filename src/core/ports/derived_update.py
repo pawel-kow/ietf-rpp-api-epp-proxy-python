@@ -1,7 +1,7 @@
-from core.result.error_response import ErrorResponse
-from core.result.operation_response import OperationResponse
 from core.ports.replace_outcome import ReplaceOutcome
 from core.ports.replacement_steps import ReplacementSteps
+from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
 
 
 def replace(

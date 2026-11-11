@@ -1,7 +1,7 @@
 from core.model.contact.contact_transfer import ContactTransfer
+from rpp.handlers.shared.transfer_handlers import TransferHandlers
 from rpp.http.operation import rpp_operation
 from rpp.mapping.contact import contact_transfer_approve, contact_transfer_process, contact_transfer_reject
-from rpp.handlers.shared.transfer_handlers import TransferHandlers
 
 _handlers = TransferHandlers(
     gateway_of=lambda backend: backend.contacts,

@@ -1,5 +1,5 @@
-from core.model.shared.common import AuthInfo
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.model.shared.common import AuthInfo
 from rpp.dto.rpp_auth_info import RPPAuthInfo
 
 AUTHINFO_METHOD = "authinfo"

@@ -1,9 +1,9 @@
 from dataclasses_json.undefined import UndefinedParameterError
 
-from rpp.schema.validator import validate_schema
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
 from rpp.dto.rpp_period import RPPPeriod
+from rpp.schema.validator import validate_schema
 
 
 def parse_rpp(rpp_class, rpp: dict):

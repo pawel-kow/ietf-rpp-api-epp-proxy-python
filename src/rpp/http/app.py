@@ -10,13 +10,14 @@ from connexion.middleware import MiddlewarePosition
 from connexion.resolver import RelativeResolver
 from connexion.validators import VALIDATOR_MAP
 from starlette.middleware.cors import CORSMiddleware
+
+from core.capabilities.backend_profile import BackendProfile
 from rpp.http.context import BACKEND_PROFILE, DISCOVERY_SETTINGS
-from rpp.http.problem import handle_rpp_error
 from rpp.http.middleware.body_buffering_middleware import BodyBufferingMiddleware
+from rpp.http.problem import handle_rpp_error
+from rpp.http.security.session_security_handler import SessionSecurityHandler
 from rpp.http.validators.rpp_request_body_validator import RppRequestBodyValidator
 from rpp.http.validators.rpp_response_body_validator import RppResponseBodyValidator
-from rpp.http.security.session_security_handler import SessionSecurityHandler
-from core.capabilities.backend_profile import BackendProfile
 
 OPENAPI_SPEC = Path(__file__).parent.parent / "openapi.yaml"
 

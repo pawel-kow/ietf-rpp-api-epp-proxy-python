@@ -1,15 +1,15 @@
 from dataclasses import replace
 
-from core.model.shared.client_statuses import client_statuses, status_changes
-from core.model.shared.common import password_of
 from core.model.contact.contacts import ContactMinimal
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_replacement import DomainReplacement
-from core.model.shared.stated_members import stated
 from core.model.domain.domains import (
     ContactReferenceNew, Domain, DomainUpdate, DomainUpdateAdd, DomainUpdateChange, DomainUpdateRemove, HostAttr,
     HostObj, NS,
 )
+from core.model.shared.client_statuses import client_statuses, status_changes
+from core.model.shared.common import password_of
+from core.model.shared.stated_members import stated
 
 REGISTRANT = "registrant"
 

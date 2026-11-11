@@ -6,7 +6,6 @@ from core.model.contact.contact_update import ContactUpdate
 from core.model.contact.contact_update_changes import ContactUpdateChanges
 from core.model.contact.contacts import Contact, ContactType
 from core.model.shared.common import AuthInfo
-
 from registry_adapter.epp.xml.generated.contact_1_0 import (
     AddRemType, AddrType, AuthInfoType, Check, ChgPostalInfoType, ChgType, Create, Delete, E164Type, Info,
     PostalInfoEnumType, PostalInfoType, StatusType, StatusValueType, Transfer, Update,

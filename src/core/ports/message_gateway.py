@@ -1,7 +1,7 @@
 from typing import Protocol
 
-from core.result.error_response import ErrorResponse
 from core.model.message.message_queue import MessageQueue
+from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 
 

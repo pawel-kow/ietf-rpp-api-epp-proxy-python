@@ -1,23 +1,24 @@
+from typing import Union
+
 from core.model.contact.address import Address
 from core.model.contact.contact_transfer import ContactTransfer
 from core.model.contact.contact_update import ContactUpdate
 from core.model.contact.contacts import Contact, ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
+from core.model.shared.availability import Availability
 from core.model.shared.common import AuthInfo
 from core.model.shared.contact_transfer_process import ContactTransferProcess
 from core.result.error_response import ErrorResponse
-from typing import Union
-from registry_adapter.epp.commands.shared.epp_response import (
-    cl_trid, epp_datetime, find_res_data, parse_epp_response_header, status_reasons,
-)
+from core.result.operation_response import OperationResponse
 from registry_adapter.epp.commands.contact.epp_request import (
     contact_check, contact_create, contact_delete, contact_info, contact_transfer, contact_update,
+)
+from registry_adapter.epp.commands.shared.epp_response import (
+    cl_trid, epp_datetime, find_res_data, parse_epp_response_header, status_reasons,
 )
 from registry_adapter.epp.xml.codec import epp_to_str, str_to_epp
 from registry_adapter.epp.xml.generated.contact_1_0 import ChkData, CreData, InfData, PostalInfoEnumType, TrnData
 from registry_adapter.epp.xml.generated.epp_1_0 import Epp
-from core.model.shared.availability import Availability
-from core.result.operation_response import OperationResponse
 
 
 def _phone(e164):

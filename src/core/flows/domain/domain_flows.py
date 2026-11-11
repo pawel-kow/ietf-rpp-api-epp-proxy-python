@@ -1,18 +1,18 @@
 from dataclasses import replace
 from typing import Callable
 
-from core.model.domain.domain_renew import DomainRenew
-from core.model.domain.domain_replacement import DomainReplacement
-from core.model.domain.domain_restore_process import DomainRestoreProcess
-from core.model.domain.domains import Domain, DomainUpdate
-from core.result.error_response import ErrorResponse
-from core.result.result_code import ResultCode
-from core.ports.registry_backend import RegistryBackend
 from core.flows.mutation_result import MutationResult
 from core.flows.read_back import read_back
 from core.flows.sponsor import require_sponsor
+from core.model.domain.domain_renew import DomainRenew
 from core.model.domain.domain_renew_process import DomainRenewProcess
+from core.model.domain.domain_replacement import DomainReplacement
+from core.model.domain.domain_restore_process import DomainRestoreProcess
+from core.model.domain.domains import Domain, DomainUpdate
+from core.ports.registry_backend import RegistryBackend
+from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
+from core.result.result_code import ResultCode
 
 
 def _read_back(backend: RegistryBackend, domain_name: str, mutation) -> MutationResult:

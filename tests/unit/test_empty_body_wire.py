@@ -6,15 +6,18 @@ import time
 import pytest
 import uvicorn
 
+from core.session.session_pool import SessionPool
 from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.http.app import create_app
-from core.session.session_pool import SessionPool
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
+
 CREDENTIALS = "Basic " + base64.b64encode(b"user:pw").decode()
+
 HEADERS = {"Authorization": CREDENTIALS, "Accept": MEDIA_TYPE, "RPP-Cltrid": "cl-1", "Content-Type": MEDIA_TYPE}
+
 EPP_OK = (True, "1000", (
     '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><response><result code="1000"><msg>Message</msg></result>'
     '<trID><clTRID>cl-1</clTRID><svTRID>sv-1</svTRID></trID></response></epp>'
@@ -28,6 +31,7 @@ DELETES = [
     "/contacts/FO-1/processes/transferProcesses/latest",
     "/domainNames/foo.example/processes/transferProcesses/latest",
 ]
+
 BODIES = [b"{}", b"null", b"[]", b"0", b"false", b'""', b" ", b"\n", b"{bad"]
 
 

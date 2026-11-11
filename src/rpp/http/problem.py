@@ -6,7 +6,6 @@ from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
 from rpp.http.headers import problem_headers
 
-
 RPP_ERROR_TYPE = "urn:ietf:params:rpp:error"
 
 # Core §18.1 Table 9, for the codes the proxy can receive or produce.

@@ -1,5 +1,5 @@
-from core.result.result_code import ResultCode
 from core.capabilities.unsupported_feature import UnsupportedFeature
+from core.result.result_code import ResultCode
 
 
 class NotSupportedByProxy(UnsupportedFeature):

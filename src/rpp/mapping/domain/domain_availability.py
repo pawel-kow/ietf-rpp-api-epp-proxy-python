@@ -1,7 +1,7 @@
-from rpp.schema.validator import validate_schema
-from rpp.mapping.shared.common import reject_set
-from rpp.dto.rpp_domain_name_availability import RPPDomainNameAvailability
 from core.model.shared.availability import Availability
+from rpp.dto.rpp_domain_name_availability import RPPDomainNameAvailability
+from rpp.mapping.shared.common import reject_set
+from rpp.schema.validator import validate_schema
 
 
 def rpp_to_model(u_name: str | None, lgr: str | None) -> None:

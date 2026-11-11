@@ -1,18 +1,22 @@
 from lxml import etree
 
-from registry_adapter.epp.commands.domain.domain_xml import (
-    parse_domain_response, parse_domain_restore_response, restore_domain_xml,
-)
 from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.restore_report import RestoreReport
 from core.result.result_code import ResultCode
+from registry_adapter.epp.commands.domain.domain_xml import (
+    parse_domain_response, parse_domain_restore_response, restore_domain_xml,
+)
 from registry_adapter.epp.idn_tables import IdnTables
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
+
 DOMAIN = "urn:ietf:params:xml:ns:domain-1.0"
+
 RGP = "urn:ietf:params:xml:ns:rgp-1.0"
+
 NS = {"epp": EPP, "domain": DOMAIN, "rgp": RGP}
+
 REPORT = RestoreReport(
     preData="Pre-delete registration data.",
     postData="Post-restore registration data.",

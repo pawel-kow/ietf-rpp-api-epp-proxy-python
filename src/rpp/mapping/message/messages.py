@@ -6,18 +6,19 @@ from core.model.message.pending_action_event import PendingActionEvent
 from core.model.message.queue_message import QueueMessage
 from core.model.message.transfer_event import TransferEvent
 from core.model.shared.contact_transfer_process import ContactTransferProcess
-from rpp.schema.validator import validate_schema
-from rpp.mapping.contact import contact_transfer_process
-from rpp.mapping.domain import domain_transfer_process
 from rpp.dto.rpp_message import RPPMessage
 from rpp.dto.rpp_review_response_message import RPPReviewResponseMessage
 from rpp.dto.rpp_service_notice_message import RPPServiceNoticeMessage
 from rpp.dto.rpp_transfer_outcome_message import RPPTransferOutcomeMessage
 from rpp.dto.rpp_transfer_request_message import RPPTransferRequestMessage
+from rpp.mapping.contact import contact_transfer_process
+from rpp.mapping.domain import domain_transfer_process
+from rpp.schema.validator import validate_schema
 
 logger = logging.getLogger("uvicorn.error")
 
 QUEUED = "queued"  # core §16.10.1: in the EPP Compatibility Profile the messages remain queued
+
 PENDING = "pending"
 
 

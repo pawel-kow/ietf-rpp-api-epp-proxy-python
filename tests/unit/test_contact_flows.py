@@ -1,4 +1,3 @@
-from registry_adapter.epp.gateways.epp_backend import EppBackend
 from core.flows.contact.contact_flows import create_contact, patch_contact, replace_contact
 from core.model.contact import contact_application
 from core.model.contact.address import Address
@@ -10,13 +9,17 @@ from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from core.model.contact.postal_info_change import PostalInfoChange
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
+from registry_adapter.epp.gateways.epp_backend import EppBackend
+from tests.helper.epp_ns_map import EPP_NS_MAP
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.unit.test_contact_xml import info_reply, postal
-from tests.helper.epp_ns_map import EPP_NS_MAP
 
 ID = "JD-1"
+
 EMAIL_CHANGE = ContactUpdate(id=ID, change=ContactUpdateChange(email="b@example.example"))
+
 BERLIN = Address(street=None, city="Berlin", country="DE")
+
 # The contact of `info()`.
 UNCHANGED = ContactReplacement(id=ID, name="Joe", address=BERLIN, email=["a@example.example"])
 

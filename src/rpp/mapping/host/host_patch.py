@@ -1,24 +1,29 @@
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.host.host_replacement import HostReplacement
 from core.model.host.host_update import HostUpdate
 from core.model.host.host_update_changes import HostUpdateChanges
-from rpp.schema.validator import validate_schema
-from rpp.mapping.host import host_dns
-from rpp.mapping.shared import json_patch, patch_statuses
-from rpp.mapping.shared.common import parse_rpp, reject_operation
-from rpp.mapping.shared.dns_records import ADDRESS_RECORDS, DNS_PARENTS
-from rpp.mapping.host.hosts import add_rpp_status, has_own_ns, replacement_from_rpp
-from rpp.mapping.shared.needs_current_state import NeedsCurrentState
-from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from rpp.dto.rpp_dns_record import RPPDnsRecord
 from rpp.dto.rpp_host import RPPHost
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
 from rpp.dto.rpp_status import RPPStatus
+from rpp.mapping.host import host_dns
+from rpp.mapping.host.hosts import add_rpp_status, has_own_ns, replacement_from_rpp
+from rpp.mapping.shared import json_patch, patch_statuses
+from rpp.mapping.shared.common import parse_rpp, reject_operation
+from rpp.mapping.shared.dns_records import ADDRESS_RECORDS, DNS_PARENTS
+from rpp.mapping.shared.needs_current_state import NeedsCurrentState
+from rpp.schema.validator import validate_schema
 
 HOST_NAME_PATH = "/hostName"
+
 STATUS_PATH = "/status"
+
 RECORDS_PATH = "/dns/records"
+
 ARRAY_PATHS = (STATUS_PATH, RECORDS_PATH)
+
 STATE_PATHS = ("/dns", "/dns/controls")
+
 READ_ONLY_MEMBER = "provMetadata"
 
 

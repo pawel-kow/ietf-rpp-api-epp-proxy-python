@@ -1,7 +1,13 @@
+import os
+from typing import Union
+
 from core.model.contact.contact_transfer import ContactTransfer
 from core.model.contact.contact_update import ContactUpdate
 from core.model.contact.contacts import Contact
+from core.model.shared.availability import Availability
+from core.model.shared.contact_transfer_process import ContactTransferProcess
 from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
 from registry_adapter.epp.commands.contact.contact_xml import (
     contact_check_xml, create_contact_xml, delete_contact_xml, info_contact_xml, parse_contact_check_response,
     parse_contact_delete_response, parse_contact_response, parse_contact_transfer_response,
@@ -9,11 +15,6 @@ from registry_adapter.epp.commands.contact.contact_xml import (
 )
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
 from registry_adapter.epp.session.epp_client import EPPClient
-import os
-from typing import Union
-from core.model.shared.availability import Availability
-from core.model.shared.contact_transfer_process import ContactTransferProcess
-from core.result.operation_response import OperationResponse
 
 def epp_contacts_Create(epp_client: EPPClient, contact: Contact, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[OperationResponse[Contact], ErrorResponse]:
     """

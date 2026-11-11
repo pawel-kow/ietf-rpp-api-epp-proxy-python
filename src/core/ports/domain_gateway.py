@@ -1,16 +1,16 @@
 from typing import Protocol
 
 from core.model.domain.domain_renew import DomainRenew
+from core.model.domain.domain_renew_process import DomainRenewProcess
 from core.model.domain.domain_replacement import DomainReplacement
 from core.model.domain.domain_restore import DomainRestore
-from core.model.domain.domain_transfer import DomainTransfer
-from core.model.domain.domains import (Domain, DomainUpdate)
-from core.result.error_response import ErrorResponse
-from core.ports.replace_outcome import ReplaceOutcome
-from core.model.shared.availability import Availability
-from core.model.domain.domain_renew_process import DomainRenewProcess
 from core.model.domain.domain_restore_process import DomainRestoreProcess
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.domain.domains import Domain, DomainUpdate
+from core.model.shared.availability import Availability
 from core.model.shared.domain_transfer_process import DomainTransferProcess
+from core.ports.replace_outcome import ReplaceOutcome
+from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 
 

@@ -5,9 +5,13 @@ from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from rpp.dto.rpp_dns_record import RPPDnsRecord
 
 ADDRESS_RECORDS = {"a": ("ipv4", ipaddress.IPv4Address), "aaaa": ("ipv6", ipaddress.IPv6Address)}
+
 ORIGIN = "@"
+
 RECORD_CLASS_INTERNET = "IN"
+
 TTL_EXTENSION = "RFC 9803"
+
 # For JSON Patch: the object an operation on a member of `dns` starts from when the object has no `dns`.
 DNS_PARENTS = {"/dns": {"@type": "dnsData"}}
 

@@ -4,10 +4,10 @@ from core.model.contact.contact_replacement import ContactReplacement
 from core.model.contact.contact_transfer import ContactTransfer
 from core.model.contact.contact_update import ContactUpdate
 from core.model.contact.contacts import Contact
-from core.result.error_response import ErrorResponse
-from core.ports.replace_outcome import ReplaceOutcome
 from core.model.shared.availability import Availability
 from core.model.shared.contact_transfer_process import ContactTransferProcess
+from core.ports.replace_outcome import ReplaceOutcome
+from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 
 

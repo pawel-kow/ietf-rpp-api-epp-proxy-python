@@ -1,14 +1,17 @@
-from registry_adapter.epp.commands.domain.domain_xml import create_domain_xml, parse_domain_response
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domains import Domain, HostAttr, NS
 from core.model.domain.ds_data import DsData
 from core.model.domain.key_data import KeyData
+from registry_adapter.epp.commands.domain.domain_xml import create_domain_xml, parse_domain_response
 from registry_adapter.epp.idn_tables import IdnTables
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'
+
 SEC_DNS_NS = 'xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1"'
+
 DS = DsData(keyTag=12345, algorithm=3, digestType=1, digest="49FD46E6C4B45C55D4AC")
+
 KEY = KeyData(flags=257, protocol=3, algorithm=8, publicKey="AQPJ////4Q==")
 
 

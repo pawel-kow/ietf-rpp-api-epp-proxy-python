@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from core.model.shared.common import AuthInfo
 from core.model.contact.postal_info_change import PostalInfoChange
+from core.model.shared.common import AuthInfo
 
 
 @dataclass(kw_only=True)

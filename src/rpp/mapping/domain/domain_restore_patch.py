@@ -1,11 +1,12 @@
 from core.model.domain.domain_restore import DomainRestore
+from rpp.dto.rpp_patch_operation import RPPPatchOperation
 from rpp.mapping.domain import domain_restore_report
 from rpp.mapping.shared import json_patch
 from rpp.mapping.shared.common import parse_rpp
-from rpp.dto.rpp_patch_operation import RPPPatchOperation
 
 # EPP keeps no report, so a patch applies to a restore process that has none.
 EMPTY = {"@type": "restoreProcess"}
+
 ABSENT_PARENTS = {"/restoreReport": {"@type": "restoreReport"}}
 
 

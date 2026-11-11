@@ -2,10 +2,10 @@ import re
 from urllib.parse import urlsplit
 
 from core.model.shared.discovery import Discovery
-from rpp.schema.validator import validate_schema
 from rpp.dto.rpp_discovery import RPPDiscovery
 from rpp.dto.rpp_discovery_environment import RPPDiscoveryEnvironment
 from rpp.dto.rpp_discovery_version import RPPDiscoveryVersion
+from rpp.schema.validator import validate_schema
 
 
 def model_to_rpp(discovery: Discovery) -> dict:

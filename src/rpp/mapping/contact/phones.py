@@ -1,7 +1,9 @@
 import re
 
 TEL_URI = re.compile(r"tel:(\+(\d{1,3})\.(\d{1,14}))(?:;ext=(\d+))?")
+
 EPP_NUMBER = re.compile(r"(\+\d{1,3}\.\d+)(?:x(\d+))?")
+
 MAX_DIGITS = 15
 
 

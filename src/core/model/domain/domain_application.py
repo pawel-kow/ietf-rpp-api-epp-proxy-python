@@ -1,10 +1,10 @@
-from core.model.shared.client_statuses import client_statuses
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_difference import (
-    REGISTRANT, contacts_of, dns_sec_of, host_attributes_of, host_objects_of, registrant_of,
+    contacts_of, dns_sec_of, host_attributes_of, host_objects_of, REGISTRANT, registrant_of,
 )
 from core.model.domain.domain_replacement import DomainReplacement
 from core.model.domain.domains import Domain, DomainUpdate, DomainUpdateChange, HostObj, NS
+from core.model.shared.client_statuses import client_statuses
 
 
 def _without(values: list, removed: list, key) -> list:

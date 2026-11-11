@@ -1,11 +1,11 @@
 from core.model.domain.domain_transfer import DomainTransfer
 from core.model.shared.domain_transfer_process import DomainTransferProcess
 from core.model.shared.transfer_operation import TransferOperation
-from rpp.schema.validator import validate_schema
-from rpp.mapping.shared import rpp_authorization
-from rpp.mapping.shared.common import PULL, parse_rpp, period_duration, reject_push
 from rpp.dto.rpp_domain_transfer_process import RPPDomainTransferProcess
 from rpp.dto.rpp_domain_transfer_request import RPPDomainTransferRequest
+from rpp.mapping.shared import rpp_authorization
+from rpp.mapping.shared.common import parse_rpp, period_duration, PULL, reject_push
+from rpp.schema.validator import validate_schema
 
 
 def rpp_to_model(name: str, rpp: dict, authorization: str | None) -> DomainTransfer:

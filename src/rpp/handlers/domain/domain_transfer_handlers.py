@@ -1,7 +1,7 @@
 from core.model.domain.domain_transfer import DomainTransfer
+from rpp.handlers.shared.transfer_handlers import TransferHandlers
 from rpp.http.operation import rpp_operation
 from rpp.mapping.domain import domain_transfer_approve, domain_transfer_process, domain_transfer_reject
-from rpp.handlers.shared.transfer_handlers import TransferHandlers
 
 _handlers = TransferHandlers(
     gateway_of=lambda backend: backend.domains,

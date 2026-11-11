@@ -1,13 +1,14 @@
-import pytest
-import connexion
+import datetime
 import json
 import uuid
-from main import app
-import datetime
-from tests.helper.integration_api_test import endpoint_test
-from tests.helper.check_datetime import check_datetime_format_utc_and_delta
 from pathlib import Path
 
+import connexion
+import pytest
+
+from main import app
+from tests.helper.check_datetime import check_datetime_format_utc_and_delta
+from tests.helper.integration_api_test import endpoint_test
 
 app.app.config.update({
         "TESTING": True,

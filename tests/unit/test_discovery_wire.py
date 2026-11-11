@@ -1,7 +1,7 @@
-from dataclasses import replace
 import logging
 import re
 import time
+from dataclasses import replace
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
@@ -12,11 +12,14 @@ from rpp.http.app import create_app
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
+
 HEADERS = {"Accept": MEDIA_TYPE, "RPP-Cltrid": "disc-wire-1"}
+
 SETTINGS = SimpleNamespace(
     rpp_base_url="https://rpp.example/rpp", rpp_tlds=["example", "test"],
     rpp_environment_name="rpp.example", rpp_environment_status="test",
 )
+
 FACTORY_CALLS = []
 
 

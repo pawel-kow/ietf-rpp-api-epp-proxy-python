@@ -1,8 +1,8 @@
 import copy
 from typing import Any
 
-from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
+from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
 
 OPERATIONS = ("add", "remove", "replace")
 

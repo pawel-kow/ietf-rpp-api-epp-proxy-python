@@ -1,8 +1,8 @@
 import yaml
 
-from rpp.http.app import OPENAPI_SPEC, create_app, parsed_spec
 from core.session.session_pool import SessionPool
 from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.http.app import create_app, OPENAPI_SPEC, parsed_spec
 
 
 def build_app():

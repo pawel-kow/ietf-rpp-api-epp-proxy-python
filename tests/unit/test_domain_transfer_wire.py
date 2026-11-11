@@ -2,22 +2,28 @@ import base64
 
 import pytest
 
+from core.session.session_pool import SessionPool
 from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.http.app import create_app
-from core.session.session_pool import SessionPool
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 MEDIA_TYPE = "application/rpp+json"
+
 HEADERS = {
     "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
     "Accept": MEDIA_TYPE,
     "RPP-Cltrid": "cl-1",
 }
+
 BODY_HEADERS = {**HEADERS, "Content-Type": MEDIA_TYPE}
+
 PROCESSES = "/domainNames/foo.example/processes/transferProcesses"
+
 LATEST = f"{PROCESSES}/latest"
+
 CREATE_BODY = {"@type": "domainTransferProcess", "transferDir": "pull"}
+
 TYPE_ONLY = {"@type": "domainTransferProcess"}
 
 

@@ -1,17 +1,17 @@
 from core.model.contact import contact_difference, contact_localization
 from core.model.contact.contact_replacement import ContactReplacement
-from core.result.error_response import ErrorResponse
+from core.model.contact.contacts import Contact
 from core.ports import derived_update
 from core.ports.replace_outcome import ReplaceOutcome
 from core.ports.replacement_steps import ReplacementSteps
+from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
 from registry_adapter.epp import contact_refusal
 from registry_adapter.epp.commands.contact.contact_commands import (
     epp_contacts_Check, epp_contacts_Create, epp_contacts_Delete, epp_contacts_Info, epp_contacts_Transfer,
     epp_contacts_Update,
 )
 from registry_adapter.epp.session.epp_client import EPPClient
-from core.model.contact.contacts import Contact
-from core.result.operation_response import OperationResponse
 
 
 class EppContactGateway:

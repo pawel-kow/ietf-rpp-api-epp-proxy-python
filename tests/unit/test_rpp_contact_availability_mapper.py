@@ -1,5 +1,5 @@
-from rpp.mapping.contact import contact_availability
 from core.model.shared.availability import Availability
+from rpp.mapping.contact import contact_availability
 
 
 def availability(available, reason=None):

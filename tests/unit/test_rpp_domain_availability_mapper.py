@@ -1,8 +1,8 @@
 import pytest
 
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
-from rpp.mapping.domain import domain_availability
 from core.model.shared.availability import Availability
+from rpp.mapping.domain import domain_availability
 
 
 def availability(available, reason):

@@ -1,12 +1,8 @@
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from core.model.contact.address import Address
 from core.model.contact.contacts import Contact, ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
-from rpp.schema.validator import validate_schema
-from rpp.mapping.contact import phones
-from rpp.mapping.shared import auth_info, prov_metadata, statuses
-from rpp.mapping.shared.common import parse_rpp, reject_set
-from core.capabilities.not_supported_by_backend import NotSupportedByBackend
-from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from rpp.dto.rpp_card import RPPCard
 from rpp.dto.rpp_card_address import RPPCardAddress
 from rpp.dto.rpp_card_address_component import RPPCardAddressComponent
@@ -16,15 +12,27 @@ from rpp.dto.rpp_card_name import RPPCardName
 from rpp.dto.rpp_card_organization import RPPCardOrganization
 from rpp.dto.rpp_card_phone import RPPCardPhone
 from rpp.dto.rpp_contact import RPPContact
+from rpp.mapping.contact import phones
+from rpp.mapping.shared import auth_info, prov_metadata, statuses
+from rpp.mapping.shared.common import parse_rpp, reject_set
+from rpp.schema.validator import validate_schema
 
 KIND_INDIVIDUAL = "individual"
+
 KIND_ORG = "org"
+
 KIND_TO_TYPE = {KIND_INDIVIDUAL: ContactType.PERSON, KIND_ORG: ContactType.ORG}
+
 TYPE_TO_KIND = {contact_type: kind for kind, contact_type in KIND_TO_TYPE.items()}
+
 COMPONENT_TO_ADDRESS = {"locality": "city", "region": "stateProvince", "postcode": "postalCode"}
+
 MAX_STREET_LINES = 3  # RFC 5733
+
 PHONE_VOICE = "voice"
+
 PHONE_FAX = "fax"
+
 # EPP keeps no language with its localized form. BCP 47: undetermined.
 LANGUAGE_UNDETERMINED = "und"
 

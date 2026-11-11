@@ -1,14 +1,16 @@
 from core.model.contact.contact_replacement import ContactReplacement
 from core.model.contact.contacts import Contact
 from core.model.shared.common import AuthInfo
-from rpp.schema.validator import validate_schema
+from rpp.dto.rpp_contact import RPPContact
 from rpp.mapping.contact import contacts
 from rpp.mapping.shared import auth_info, include_elements
 from rpp.mapping.shared.common import parse_rpp, reject_set
-from rpp.dto.rpp_contact import RPPContact
+from rpp.schema.validator import validate_schema
 
 TYPE = "@type"
+
 CHANGEABLE = ("contactInfo", "status", "authInfo", "disclose")
+
 OBJECT = "contact"
 
 

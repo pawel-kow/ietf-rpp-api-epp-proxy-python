@@ -3,17 +3,18 @@ from dataclasses import replace
 import pytest
 from connexion import ProblemException
 
-from rpp.http.operation import map_request
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.model.domain.domains import ContactReference
 from registry_adapter.epp.gateways.epp_backend import EppBackend
 from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.profile import EPP_PROFILE
-from core.model.domain.domains import ContactReference
-from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from rpp.http.operation import map_request
 from rpp.mapping.domain import domain_patch, domain_replacement, domains
-from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 from tests.helper.epp_ns_map import EPP_NS_MAP
+from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 
 NAME = "foo.example"
+
 OTHER = replace(
     EPP_PROFILE, name="Other", contact_labels=("generalRequest", "abuse"), domain_record_types=("ns", "dnskey", "mx"),
 )

@@ -1,6 +1,6 @@
-from rpp.schema.validator import validate_schema
-from rpp.dto.rpp_contact_availability import RPPContactAvailability
 from core.model.shared.availability import Availability
+from rpp.dto.rpp_contact_availability import RPPContactAvailability
+from rpp.schema.validator import validate_schema
 
 
 def model_to_rpp(check: Availability) -> dict:

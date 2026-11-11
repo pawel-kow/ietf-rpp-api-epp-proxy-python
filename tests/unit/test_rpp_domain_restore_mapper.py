@@ -1,10 +1,10 @@
 import pytest
 from jsonschema import ValidationError
 
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.domain_restore_process import DomainRestoreProcess
 from core.model.domain.restore_report import RestoreReport
-from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from rpp.mapping.domain import domain_restore_patch, domain_restore_process, domain_restore_report
 from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
 
@@ -20,6 +20,7 @@ REPORT = {
         "I have a valid reason for restoring this domain name.",
     ],
 }
+
 REPORT_MODEL = RestoreReport(
     preData=REPORT["preData"],
     postData=REPORT["postData"],
@@ -28,6 +29,7 @@ REPORT_MODEL = RestoreReport(
     restoreReason=REPORT["restoreReason"],
     statements=REPORT["statements"],
 )
+
 UPDATE = {"@type": "restoreProcess", "restoreReport": REPORT}
 
 

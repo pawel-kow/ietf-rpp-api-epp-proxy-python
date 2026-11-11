@@ -2,15 +2,16 @@ import json
 
 from connexion import request
 from flask import request as flask_request
+
 from core.model.shared.transfer_operation import TransferOperation
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
+from rpp.http.context import get_backend
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers
 from rpp.http.operation import map_request, request_has_content, require_empty_body
 from rpp.http.problem import raise_registry_error
-from rpp.http.context import get_backend
-
 from rpp.mapping.shared import rpp_authorization
+
 LATEST = "latest"
 
 

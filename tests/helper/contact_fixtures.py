@@ -1,5 +1,3 @@
-from rpp.http.problem import raise_registry_error
-from registry_adapter.epp import contact_refusal
 from core.model.contact import contact_difference, contact_localization
 from core.model.contact.address import Address
 from core.model.contact.contact_replacement import ContactReplacement
@@ -7,6 +5,8 @@ from core.model.contact.contact_update import ContactUpdate
 from core.model.contact.contacts import Contact, ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from core.model.shared.common import AuthInfo
+from registry_adapter.epp import contact_refusal
+from rpp.http.problem import raise_registry_error
 
 ADDRESS = Address(street=["1 Main"], city="Berlin", stateProvince="BE", postalCode="10115", country="DE")
 

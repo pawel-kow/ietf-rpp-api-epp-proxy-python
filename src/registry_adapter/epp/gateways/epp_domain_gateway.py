@@ -1,17 +1,17 @@
 from core.model.domain import domain_difference
 from core.model.domain.domain_replacement import DomainReplacement
-from core.result.error_response import ErrorResponse
+from core.model.domain.domains import Domain
 from core.ports import derived_update
 from core.ports.replace_outcome import ReplaceOutcome
 from core.ports.replacement_steps import ReplacementSteps
+from core.result.error_response import ErrorResponse
+from core.result.operation_response import OperationResponse
 from registry_adapter.epp.commands.domain.domain_commands import (
     epp_domains_Check, epp_domains_Create, epp_domains_Delete, epp_domains_Info, epp_domains_Renew,
     epp_domains_Restore, epp_domains_RestoreInfo, epp_domains_Transfer, epp_domains_Update,
 )
 from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.session.epp_client import EPPClient
-from core.model.domain.domains import Domain
-from core.result.operation_response import OperationResponse
 
 
 class EppDomainGateway:

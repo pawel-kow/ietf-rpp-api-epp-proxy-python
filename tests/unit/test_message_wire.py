@@ -1,27 +1,29 @@
 import base64
+
 import pytest
-
-from tests.helper.captured_log import capture_log
-
-from registry_adapter.epp.profile import EPP_PROFILE
-from rpp.http.app import create_app
 from connexion import ProblemException
-from rpp.http.headers import problem_headers
-from rpp.handlers.message.message_handlers import _require_valid_id
+
 from core.result.result_code import ResultCode
-from tests.helper.captured_log import capture_log
 from core.session.session_pool import SessionPool
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.handlers.message.message_handlers import _require_valid_id
+from rpp.http.app import create_app
+from rpp.http.headers import problem_headers
+from tests.helper.captured_log import capture_log
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
-from tests.unit.test_message_xml import DOMAIN, contact_trn, domain_trn, msg_q, pan, reply
+from tests.unit.test_message_xml import contact_trn, DOMAIN, domain_trn, msg_q, pan, reply
 
 MEDIA_TYPE = "application/rpp+json"
+
 HEADERS = {
     "Authorization": "Basic " + base64.b64encode(b"user:pw").decode(),
     "Accept": MEDIA_TYPE,
     "RPP-Cltrid": "msg-cl-1",
 }
+
 BODY_HEADERS = {**HEADERS, "Content-Type": MEDIA_TYPE}
+
 STATE = {"replies": [], "clients": []}
 
 

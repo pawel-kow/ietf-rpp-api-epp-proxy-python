@@ -1,15 +1,18 @@
 import jsonschema
 import pytest
 
-from core.model.host.host import Host
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
+from core.model.host.host import Host
 from rpp.mapping.host import host_patch, hosts
 from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
 
 NAME = "ns1.foo.example"
+
 RECORD_A = {"@type": "dnsRecord", "name": "@", "type": "a", "rdata": {"address": "198.51.100.1"}}
+
 RECORD_NS = {"@type": "dnsRecord", "name": "@", "type": "ns", "rdata": {"nsdname": f"{NAME}."}}
+
 STATUS = {"@type": "hostStatus", "label": "clientUpdateProhibited"}
 
 

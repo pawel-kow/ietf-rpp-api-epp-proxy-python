@@ -1,8 +1,7 @@
 from flask import request as flask_request
 
-from rpp.mapping.shared import include_elements
 from rpp.http.operation import map_request
-
+from rpp.mapping.shared import include_elements
 
 INCLUDE_ELEMENTS = "includeElements"
 

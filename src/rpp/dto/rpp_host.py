@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from dataclasses_json import Undefined, dataclass_json
+from dataclasses_json import dataclass_json, Undefined
 
 from rpp.dto.rpp_dns_data import RPPDnsData
 from rpp.dto.rpp_object import RPPObject, type_field

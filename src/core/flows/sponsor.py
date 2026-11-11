@@ -1,7 +1,7 @@
+from core.ports.registry_backend import RegistryBackend
 from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 from core.result.result_code import ResultCode
-from core.ports.registry_backend import RegistryBackend
 
 
 def require_sponsor(

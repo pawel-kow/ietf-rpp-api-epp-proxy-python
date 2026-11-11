@@ -1,37 +1,47 @@
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from core.model.contact.contact_replacement import ContactReplacement
 from core.model.contact.contact_update import ContactUpdate
 from core.model.contact.contact_update_change import ContactUpdateChange
 from core.model.contact.contact_update_changes import ContactUpdateChanges
 from core.model.contact.contacts import Contact
-from rpp.schema.validator import validate_schema
-from rpp.mapping.contact import contact_replacement, contacts
-from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
-from rpp.mapping.shared.common import parse_rpp, reject_operation, reject_set
-from rpp.mapping.shared.needs_current_state import NeedsCurrentState
-from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from rpp.dto.rpp_auth_info import RPPAuthInfo
 from rpp.dto.rpp_contact import RPPContact
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
 from rpp.dto.rpp_status import RPPStatus
+from rpp.mapping.contact import contact_replacement, contacts
+from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
+from rpp.mapping.shared.common import parse_rpp, reject_operation, reject_set
+from rpp.mapping.shared.needs_current_state import NeedsCurrentState
+from rpp.schema.validator import validate_schema
 
 CONTACT_INFO_PATH = "/contactInfo"
+
 KIND_PATHS = (CONTACT_INFO_PATH, f"{CONTACT_INFO_PATH}/kind")
+
 STATUS_PATH = "/status"
+
 AUTH_INFO_PATH = "/authInfo"
+
 DISCLOSE_PATH = "/disclose"
+
 ARRAY_PATHS = (STATUS_PATH,)
+
 # Objects the schema allows below the Card (json §5.2.2 step 2), which a read leaves out when they are empty.
 ABSENT_PARENTS = {
     f"{CONTACT_INFO_PATH}/{member}": {} for member in ("organizations", "addresses", "phones", "emails", "localizations")
 }
+
 READ_ONLY_MEMBERS = ("provMetadata", "processes")
+
 OBJECT = "contact"
+
 # The entries EPP holds as one value each, with the member of the entry that holds the value.
 ENTRIES = {
     f"{CONTACT_INFO_PATH}/phones/{contacts.PHONE_VOICE}": "number",
     f"{CONTACT_INFO_PATH}/phones/{contacts.PHONE_FAX}": "number",
     f"{CONTACT_INFO_PATH}/emails/email": "address",
 }
+
 FAX_FEATURES = {contacts.PHONE_FAX: True}
 
 

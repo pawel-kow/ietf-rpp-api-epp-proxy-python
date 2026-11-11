@@ -1,8 +1,8 @@
 from core.model.contact.contact_transfer import ContactTransfer
 from core.model.shared.transfer_operation import TransferOperation
+from rpp.dto.rpp_transfer_reject import RPPTransferReject
 from rpp.mapping.shared import rpp_authorization
 from rpp.mapping.shared.common import reject_reason
-from rpp.dto.rpp_transfer_reject import RPPTransferReject
 
 
 def rpp_to_model(id: str, rpp: dict | None, authorization: str | None) -> ContactTransfer:

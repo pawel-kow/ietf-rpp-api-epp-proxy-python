@@ -1,8 +1,8 @@
-from rpp.mapping.shared.dns_records import (
-    ADDRESS_RECORDS, ORIGIN, check_record_class, record_address, record_rdata, record_type,
-)
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from rpp.dto.rpp_dns_record import RPPDnsRecord
+from rpp.mapping.shared.dns_records import (
+    ADDRESS_RECORDS, check_record_class, ORIGIN, record_address, record_rdata, record_type,
+)
 
 
 def _is_host(host_name: str, name: str) -> bool:
