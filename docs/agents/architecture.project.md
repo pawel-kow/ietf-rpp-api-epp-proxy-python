@@ -2,6 +2,106 @@
 
 Generic rules are in [architecture.md](architecture.md).
 
+## Module boundaries
+
+`src/` is being restructured into a protocol-free core, the RPP adapter that receives requests, and the registry
+adapters, each split by registry object (#120). The target, the rules and the check below are binding now. Until a
+phase of #120 moves a package, the check applies them to today's packages through the
+[mapping](#today-to-target).
+
+### Target
+
+```
+src/
+├── main.py                  composition root, the only module that knows all others
+├── settings/                loads config once; typed sections, passed in by main.py
+├── core/                    pure Python: no I/O, no framework, no protocol
+│   ├── model/{shared,domain,contact,host,message}/
+│   ├── result/              ResultCode, UnknownResultCode, ErrorResponse, OperationResponse
+│   ├── capabilities/        BackendProfile, NotSupportedByBackend, NotSupportedByProxy
+│   ├── ports/               RegistryBackend, *Gateway, ReplaceOutcome, ReplacementSteps, derived_update
+│   ├── session/             SessionPool
+│   └── flows/               read_back.py, sponsor.py, {domain,contact,host,message}/
+├── rpp/                     receiving adapter: RPP over HTTP
+│   ├── http/                create_app, middleware/, validators/, security/, problem.py, headers.py, context.py, operation.py
+│   ├── handlers/            {domain,contact,host,message}/, discovery.py
+│   ├── mapping/             shared/, {domain,contact,host,message,discovery}/
+│   ├── dto/                 RPP dataclasses
+│   ├── schema/              validator, data_objects, schemas/ (generated)
+│   └── openapi.yaml         (generated)
+└── registry_adapter/
+    ├── epp/
+    │   ├── session/         EPPClient: greeting, login, extensions
+    │   ├── xml/             codec (ns_map passed in), generated/
+    │   ├── commands/        {domain,contact,host,message}/: build and parse kept together per operation
+    │   ├── gateways/        EppBackend, Epp*Gateway
+    │   ├── idn_tables.py    lgr <-> EPP IDN table
+    │   ├── profile.py       EPP_PROFILE
+    │   └── refusals.py
+    ├── rri/                 same shape as epp/
+    └── common/
+        ├── transport/       TCP client (framing with or without the length header), TLS
+        └── xmlsafe/         hardened parser, decode_xml
+```
+
+`registry_adapter/common` holds only protocol-agnostic infrastructure. The full update derived from partial ones is
+domain logic and stays in `core/ports`. The connection behaviour (lock, reconnect, re-login) differs between EPP and
+RRI, so it moves to `common` only when the RRI client is its second user ([rule 6](architecture.md#same-pattern-for-the-same-thing)).
+
+### Dependency rules
+
+- `core` imports only the standard library.
+- `rpp` imports `core` only, never `registry_adapter`.
+- `registry_adapter/<protocol>` imports `core` and `registry_adapter/common`, never another protocol and never `rpp`.
+- `registry_adapter/common` imports no project package: no `core`, no protocol, no `settings`.
+- Only `main` imports more than one adapter. Nobody but `main` imports `settings`.
+- Inside `core`: `flows → ports → model, result, capabilities`. The object sub-packages of `model` import only
+  `model/shared`, except `domain → contact` for contact references.
+- Inside `rpp`: `handlers → mapping, http`; `mapping → dto, schema`. `mapping` never imports `http`, Flask or
+  Connexion.
+- Inside `epp`: `gateways → commands → xml, session`; `session → common/transport`. Only `session` sends.
+
+### What each module must never know
+
+| Module | Must never know |
+|---|---|
+| `core.model` | HTTP, JSON, RPP field names, JSON Patch, schemas, XML, EPP/RRI names, sockets, config |
+| `core.result` | HTTP status codes, `RPP-*` headers, Problem Details |
+| `core.capabilities` | Which backend it is, beyond the profile's `name` |
+| `core.ports` / `core.flows` | Any concrete backend, wire format, HTTP, RPP representations, `includeElements` |
+| `rpp.mapping` | HTTP objects, EPP/RRI, IDN table ids, the session, the gateways |
+| `rpp.handlers` | XML, the backend protocol, orchestration (that belongs in flows) |
+| `rpp.http` | Object semantics, the backend protocol |
+| `registry_adapter.*` | HTTP, RPP JSON, OpenAPI, Problem Details, `includeElements`, config files |
+| `registry_adapter.common` | Which protocol uses it, the model, the result codes |
+
+### Today to target
+
+| Today | Target |
+|---|---|
+| `run.py` | `main.py` |
+| `config.py` | `settings/` |
+| `models/` | `core/model`, `core/result` |
+| `registry/` | `core/ports`, `core/capabilities` (`BackendProfile`) |
+| `flows/` | `core/flows` |
+| `app.py`, `controller/` | `rpp/http`, `rpp/handlers`, `core/session` (`session_authenticator.py`) |
+| `rpp_to_model_mapper/`, `rpp_schema_validator/` | `rpp/mapping`, `rpp/dto`, `rpp/schema`, `core/capabilities` (refusals) |
+| `eppclient/`, `epp_to_model_mapper/` | `registry_adapter/epp` |
+| `helpers/`, `eppclient/tcpclient.py`, `eppclient/tls.py` | `registry_adapter/common` |
+
+### The check
+
+`import-linter` checks the rules, one contract per rule, configured in `[tool.importlinter]` of
+[pyproject.toml](../../pyproject.toml) and run with `PYTHONPATH=src lint-imports` (see
+[process.project.md](process.project.md#checks-before-done)). The contracts name today's packages, and each phase of
+#120 renames them as it moves the code. A forbidden contract also follows indirect imports. Every `ignore_imports`
+entry is known debt below; never add one for new code.
+
+`app.py`, `config.py` and `run.py` are modules, which import-linter cannot take as roots: an import of `config` or
+`run` is forbidden by name, and what `app.py` and `run.py` import is checked once they move into packages (#120
+phase 4). Rules that need the target structure (object sub-packages, `rpp` inner layers, only `session` sends) get
+their contracts in the phase that creates it.
+
 ## Request lifecycle
 
 A request flows through distinct layers, each in its own package under `src/`. A
@@ -248,5 +348,10 @@ Do not copy these patterns (see [architecture.md](architecture.md#known-debt)).
   `src/models/contacts.py` (7), `src/models/response.py` (3),
   `src/models/common.py` (3), `src/eppclient/tcpclient.py` (2).
   Generated `epp_model/` is exempt. (#20)
+- **Settings read at import time:** `epp_to_model_mapper/commands/helper.py` imports `config` for `ns_map`, the one
+  `ignore_imports` of `only-main-imports-settings` (#120 finding 2, phase 2).
+- **Boundaries not yet checkable:** `rpp_to_model_mapper` imports the `registry` package for `BackendProfile`, and so
+  its gateways through the re-exports (#120 finding 5, phase 3). `rpp_to_model_mapper/idn_tables.py` holds the EPP IDN
+  table ids (#120 finding 6, phase 5).
 - **Flows in handlers:** the mutate-then-Info orchestration sits inside
   `domainNames_create`, `domainNames_updatePartial` and `contacts_create`. (#17)

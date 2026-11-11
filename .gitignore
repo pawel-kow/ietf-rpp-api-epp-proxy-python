@@ -70,3 +70,6 @@ target/
 
 # Per-machine overrides of config.yaml (see src/config.py)
 *.local.yaml
+
+# import-linter cache
+.import_linter_cache/

@@ -15,3 +15,103 @@ pythonpath = [
     "src",
 ]
 addopts = "--strict-markers --tb=short -p no:warnings"
+
+# Module boundaries of #120, checked by `PYTHONPATH=src lint-imports` (docs/agents/architecture.project.md).
+# Written against today's package names; each phase of #120 renames them as it moves the code.
+[tool.importlinter]
+# app, config and run are modules, which import-linter cannot take as roots. An import of config or run is
+# therefore seen as external and forbidden by name. app and run as importers are checked once phase 4 moves them.
+root_packages = [
+    "controller",
+    "epp_to_model_mapper",
+    "eppclient",
+    "flows",
+    "helpers",
+    "models",
+    "registry",
+    "rpp_schema_validator",
+    "rpp_to_model_mapper",
+]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+id = "core-model-stdlib-only"
+name = "core.model (models) imports only the standard library"
+type = "forbidden"
+source_modules = ["models"]
+forbidden_modules = [
+    "app", "config", "controller", "epp_to_model_mapper", "eppclient", "flows", "helpers", "registry",
+    "rpp_schema_validator", "rpp_to_model_mapper", "run",
+    "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
+]
+
+[[tool.importlinter.contracts]]
+id = "core-layers"
+name = "Inside core: flows -> ports (registry) -> model (models)"
+type = "layers"
+layers = ["flows", "registry", "models"]
+
+[[tool.importlinter.contracts]]
+id = "core-no-adapter"
+name = "core (models, registry, flows) imports no adapter, framework or wire format"
+type = "forbidden"
+source_modules = ["flows", "models", "registry"]
+forbidden_modules = [
+    "app", "config", "controller", "epp_to_model_mapper", "eppclient", "helpers", "rpp_schema_validator",
+    "rpp_to_model_mapper", "run",
+    "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
+]
+
+[[tool.importlinter.contracts]]
+id = "rpp-not-registry-adapter"
+name = "rpp (controller, rpp_to_model_mapper, rpp_schema_validator) never imports the registry adapter or XML"
+type = "forbidden"
+source_modules = ["controller", "rpp_schema_validator", "rpp_to_model_mapper"]
+forbidden_modules = ["epp_to_model_mapper", "eppclient", "helpers", "lxml", "xsdata"]
+
+[[tool.importlinter.contracts]]
+id = "rpp-mapping-no-http"
+name = "rpp.mapping (rpp_to_model_mapper, rpp_schema_validator) never imports rpp.http, Flask or Connexion"
+type = "forbidden"
+source_modules = ["rpp_schema_validator", "rpp_to_model_mapper"]
+forbidden_modules = ["app", "controller", "connexion", "flask", "starlette", "werkzeug"]
+
+[[tool.importlinter.contracts]]
+id = "registry-adapter-not-rpp"
+name = "registry_adapter (eppclient, epp_to_model_mapper, helpers) never imports rpp, flows or a web framework"
+type = "forbidden"
+source_modules = ["epp_to_model_mapper", "eppclient", "helpers"]
+forbidden_modules = [
+    "app", "controller", "flows", "rpp_schema_validator", "rpp_to_model_mapper", "run",
+    "connexion", "dataclasses_json", "flask", "jsonschema", "starlette", "werkzeug",
+]
+
+[[tool.importlinter.contracts]]
+id = "epp-layers"
+name = "Inside epp: eppclient -> epp_to_model_mapper -> helpers"
+type = "layers"
+layers = ["eppclient", "epp_to_model_mapper", "helpers"]
+
+[[tool.importlinter.contracts]]
+id = "registry-adapter-common-standalone"
+name = "registry_adapter.common (helpers) imports no project package"
+type = "forbidden"
+source_modules = ["helpers"]
+forbidden_modules = [
+    "app", "config", "controller", "epp_to_model_mapper", "eppclient", "flows", "models", "registry",
+    "rpp_schema_validator", "rpp_to_model_mapper", "run",
+]
+
+[[tool.importlinter.contracts]]
+id = "only-main-imports-settings"
+name = "Only main (run) imports settings (config), and nobody imports main"
+type = "forbidden"
+source_modules = [
+    "controller", "epp_to_model_mapper", "eppclient", "flows", "helpers", "models", "registry",
+    "rpp_schema_validator", "rpp_to_model_mapper",
+]
+forbidden_modules = ["config", "run"]
+ignore_imports = [
+    # Known debt (#120 finding 2): the EPP codec reads ns_map from the global config. Phase 2 passes it in.
+    "epp_to_model_mapper.commands.helper -> config",
+]

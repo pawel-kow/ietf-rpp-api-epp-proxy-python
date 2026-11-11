@@ -5,12 +5,12 @@ check them with `import-linter`. No code in `src/` changes.
 
 ## Tasks
 
-- [~] T1 `requirements-dev.txt` (`-r requirements.txt` + `import-linter`), installed in `.venv`
-- [ ] T2 `[tool.importlinter]` in `pyproject.toml`: one contract per rule, against today's package names
-- [ ] T3 `architecture.project.md`: target tree, dependency rules, "must never know", today → target mapping, the
+- [x] T1 `requirements-dev.txt` (`-r requirements.txt` + `import-linter`), installed in `.venv`
+- [x] T2 `[tool.importlinter]` in `pyproject.toml`: one contract per rule, against today's package names
+- [x] T3 `architecture.project.md`: target tree, dependency rules, "must never know", today → target mapping, the
       check; known debt for every `ignore_imports`
-- [ ] T4 `process.project.md`: setup with `requirements-dev.txt`, `lint-imports` in "Checks before done"
-- [ ] T5 `lint-imports` and full `pytest -n 8` green; draft PR
+- [x] T4 `process.project.md`: setup with `requirements-dev.txt`, `lint-imports` in "Checks before done"
+- [~] T5 `lint-imports` and full `pytest -n 8` green; draft PR
 
 ## Findings (evidence)
 
@@ -25,3 +25,11 @@ check them with `import-linter`. No code in `src/` changes.
 - D3 (maintainer) Config in `pyproject.toml`.
 - D4 (maintainer) Contracts against today's package names; each later phase renames them as it moves code. Today's
   violations are `ignore_imports`, listed as known debt, not fixed here.
+- D5 import-linter cannot take the modules `app.py`, `config.py`, `run.py` as roots. `config` and `run` are
+  forbidden by name (seen as external); what `app.py` and `run.py` import is checked from phase 4. Run as
+  `PYTHONPATH=src lint-imports`, since import-linter puts only the working directory on the path.
+- D6 Each contract was checked to break: an injected `flask` in `eppclient`, `config` in `flows` and `eppclient` in
+  `controller` each broke the expected contracts, and removing the `ignore_imports` breaks
+  `only-main-imports-settings`.
+- D7 The devcontainer installs `requirements-dev.txt`. Finding 5 (mapper imports the `registry` package, and so the
+  gateways) is not a contract yet: it would break today, and phase 3 fixes it. Listed as known debt with finding 6.
