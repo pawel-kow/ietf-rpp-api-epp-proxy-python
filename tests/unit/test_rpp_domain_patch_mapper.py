@@ -1,3 +1,4 @@
+from eppclient.epp_profile import EPP_PROFILE
 import pytest
 from jsonschema import ValidationError
 
@@ -10,7 +11,7 @@ AUTH = {"@type": "authInfo", "method": "authinfo", "authdata": "2BARfoo"}
 
 
 def update(*operations):
-    return domain_patch.rpp_to_model("foo.example", list(operations))
+    return domain_patch.rpp_to_model("foo.example", list(operations), profile=EPP_PROFILE)
 
 
 def reference(label):

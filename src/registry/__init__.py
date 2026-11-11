@@ -1,4 +1,5 @@
 from . import derived_update
+from .backend_profile import BackendProfile
 from .contact_gateway import ContactGateway
 from .domain_gateway import DomainGateway
 from .host_gateway import HostGateway

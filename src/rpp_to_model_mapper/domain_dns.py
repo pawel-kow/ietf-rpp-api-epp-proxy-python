@@ -2,18 +2,18 @@ import base64
 import re
 
 from models import DnsSec, Domain, DsData, HostAttr, KeyData, NS
+from registry import BackendProfile
 from .dns_records import (
     ADDRESS_RECORDS, ORIGIN, check_record_class, nameserver_records, record_address, record_rdata, record_type,
     reject_ttl,
 )
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .not_supported_by_proxy import NotSupportedByProxy
 from .rpp_models import RPPDnsData, RPPDnsRecord
 
 HEX = re.compile(r"(?:[0-9A-Fa-f]{2})+")
 MAX_BYTE = 255
 MAX_SHORT = 65535
-ZONE_APEX_RECORDS = ("ns", "ds", "dnskey")
 
 
 def _number(value: str, maximum: int) -> int:
@@ -66,7 +66,7 @@ def _add_glue(hosts: dict[str, HostAttr], owner: str, record: RPPDnsRecord):
     registry's to decide: what a read can show must be accepted as input."""
     family, address = record_address(record)
     if owner not in hosts:
-        raise NotSupportedByEpp(f"A DNS record for '{record.name}'")
+        raise NotSupportedByBackend(f"A DNS record for '{record.name}'")
     host = hosts[owner]
     setattr(host, family, (getattr(host, family) or []) + [address])
 
@@ -78,8 +78,9 @@ def _reject_controls(controls: dict | None):
         raise NotSupportedByProxy("'dns.controls'")
 
 
-def rpp_to_model(domain_name: str, dns: RPPDnsData) -> tuple[NS | None, DnsSec | None]:
-    """The delegation and DNSSEC data of the records. Delegation goes to EPP as host attributes."""
+def rpp_to_model(domain_name: str, dns: RPPDnsData, *, profile: BackendProfile) -> tuple[NS | None, DnsSec | None]:
+    """The delegation and DNSSEC data of the records, of the types the backend holds at the apex (`profile`).
+    Delegation goes to EPP as host attributes."""
     _reject_controls(dns.controls)
     domain_name = domain_name.lower()
     hosts: dict[str, HostAttr] = {}
@@ -90,10 +91,10 @@ def rpp_to_model(domain_name: str, dns: RPPDnsData) -> tuple[NS | None, DnsSec |
         owner = _owner(domain_name, record.name)
         if kind in ADDRESS_RECORDS:
             glue.append((owner, record))
-        elif kind not in ZONE_APEX_RECORDS:
-            raise NotSupportedByEpp(f"DNS record type '{record.type}'")
+        elif kind not in profile.domain_record_types:
+            raise NotSupportedByBackend(f"DNS record type '{record.type}'")
         elif owner != domain_name:
-            raise NotSupportedByEpp(f"A DNS record for '{record.name}'")
+            raise NotSupportedByBackend(f"A DNS record for '{record.name}'")
         elif kind == "ns":
             host_name = record_rdata(record, "nsdname")[0].removesuffix(".")
             hosts.setdefault(host_name.lower(), HostAttr(id=host_name))

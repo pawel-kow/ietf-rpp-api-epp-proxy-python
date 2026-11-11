@@ -1,11 +1,19 @@
+from functools import partial
+
 import pytest
 from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
+from eppclient.epp_profile import EPP_PROFILE
+from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 from models import ResultCode
 from rpp_to_model_mapper import (
-    NotSupportedByEpp, NotSupportedByProxy, contacts, domain_patch, domains, host_patch, host_replacement, hosts,
+    NotSupportedByBackend, NotSupportedByProxy, contacts, domain_patch, domains, host_patch, host_replacement, hosts,
 )
+
+pytestmark = pytest.mark.usefixtures("epp_app_context")
+
+create_domain = partial(domains.rpp_to_model, profile=EPP_PROFILE)
 
 DOMAIN = {"@type": "domainName", "name": "foo.example"}
 HOST = {"@type": "host", "hostName": "ns1.foo.example"}
@@ -47,13 +55,13 @@ def op(operation, path, **members):
 
 
 NOT_IN_EPP = [
-    (domains.rpp_to_model, {**DOMAIN, "status": DOMAIN_STATUS}),
-    (domains.rpp_to_model, {**DOMAIN, "contacts": [{"label": "reseller", "object": {"@type": "contact", "id": "c1"}}]}),
-    (domains.rpp_to_model, {**DOMAIN, "authInfo": {"@type": "authInfo", "method": "other", "authdata": "x"}}),
-    (domains.rpp_to_model, {**DOMAIN, "dns": dns(record("mx", {"exchange": "a.", "preference": "1"}))}),
-    (domains.rpp_to_model, {**DOMAIN, "dns": dns(record("ns", {"nsdname": "a."}, **{"class": "CH"}))}),
-    (domains.rpp_to_model, {**DOMAIN, "dns": dns(record("a", ADDRESS, name="www"))}),
-    (domains.rpp_to_model, {**DOMAIN, "dns": dns(record("ns", {"nsdname": "a."}, name="sub"))}),
+    (create_domain, {**DOMAIN, "status": DOMAIN_STATUS}),
+    (create_domain, {**DOMAIN, "contacts": [{"label": "reseller", "object": {"@type": "contact", "id": "c1"}}]}),
+    (create_domain, {**DOMAIN, "authInfo": {"@type": "authInfo", "method": "other", "authdata": "x"}}),
+    (create_domain, {**DOMAIN, "dns": dns(record("mx", {"exchange": "a.", "preference": "1"}))}),
+    (create_domain, {**DOMAIN, "dns": dns(record("ns", {"nsdname": "a."}, **{"class": "CH"}))}),
+    (create_domain, {**DOMAIN, "dns": dns(record("a", ADDRESS, name="www"))}),
+    (create_domain, {**DOMAIN, "dns": dns(record("ns", {"nsdname": "a."}, name="sub"))}),
     (hosts.rpp_to_model, {**HOST, "status": [STATUS]}),
     (hosts.rpp_to_model, {**HOST, "dns": dns(record("a", ADDRESS, name="other.example."))}),
     (hosts.rpp_to_model, {**HOST, "dns": dns(record("ns", {"nsdname": "other.example."}))}),
@@ -67,8 +75,8 @@ NOT_IN_EPP = [
 ]
 
 NOT_IN_PROXY = [
-    (domains.rpp_to_model, {**DOMAIN, "dns": dns(controls=SIG_LIFETIME)}),
-    (domains.rpp_to_model, {**DOMAIN, "dns": dns(DS, KEY)}),
+    (create_domain, {**DOMAIN, "dns": dns(controls=SIG_LIFETIME)}),
+    (create_domain, {**DOMAIN, "dns": dns(DS, KEY)}),
     (contacts.rpp_to_model, contact(disclose={"@type": "disclose"})),
 ]
 
@@ -87,14 +95,14 @@ def rejection(mapper, *args):
 
 
 def raised_by(mapper, *args):
-    with pytest.raises((NotSupportedByEpp, NotSupportedByProxy)) as raised:
+    with pytest.raises((NotSupportedByBackend, NotSupportedByProxy)) as raised:
         mapper(*args)
     return raised.value
 
 
 @pytest.mark.parametrize("case", NOT_IN_EPP + NOT_IN_EPP_PATCH)
 def test_what_epp_cannot_hold_is_unimplemented_option(case):
-    assert isinstance(raised_by(*case), NotSupportedByEpp)
+    assert isinstance(raised_by(*case), NotSupportedByBackend)
     problem = rejection(*case)
     assert problem.status == 501
     assert problem.headers["RPP-Code"] == "02102"
@@ -111,8 +119,8 @@ def test_what_only_the_proxy_lacks_is_unimplemented_option(case):
 
 
 @pytest.mark.parametrize("case", [
-    (domains.rpp_to_model, {**DOMAIN, "dns": dns(controls=TTL)}),
-    (domains.rpp_to_model, {**DOMAIN, "dns": dns(controls={**TTL, **SIG_LIFETIME})}),
+    (create_domain, {**DOMAIN, "dns": dns(controls=TTL)}),
+    (create_domain, {**DOMAIN, "dns": dns(controls={**TTL, **SIG_LIFETIME})}),
     (hosts.rpp_to_model, {**HOST, "dns": dns(controls=TTL)}),
     (replace_host, {**HOST, "dns": dns(controls=TTL)}),
 ])

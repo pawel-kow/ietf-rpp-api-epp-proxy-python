@@ -4,11 +4,12 @@ import re
 import uuid
 
 from connexion import ProblemException, request
-from flask import request as flask_request
+from flask import current_app, request as flask_request
 from jsonschema import ValidationError
 
 from models import ErrorResponse, OperationResponse, ResultCode
-from rpp_to_model_mapper import UnsupportedRppFeature, include_elements
+from registry import BackendProfile
+from rpp_to_model_mapper import NotSupportedByBackend, UnsupportedRppFeature, include_elements
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -118,13 +119,26 @@ def require_empty_body():
         raise ProblemException(status=400, title="Bad Request", detail="Request body must be empty for DELETE method")
 
 
-def map_request(mapper, *args):
+def backend_profile() -> BackendProfile:
+    """What the backend of this application can hold."""
+    return current_app.config["RPP_BACKEND_PROFILE"]
+
+
+def _unsupported_detail(e: UnsupportedRppFeature) -> str:
+    """A mapper does not know the backend, so its refusal is named here."""
+    if isinstance(e, NotSupportedByBackend):
+        return e.detail(backend_profile().name)
+    return str(e)
+
+
+def map_request(mapper, *args, **kwargs):
     """Runs an RPP to model mapper, translating what it rejects."""
     try:
-        return mapper(*args)
+        return mapper(*args, **kwargs)
     except UnsupportedRppFeature as e:
         raise ProblemException(
-            status=http_status(e.code), title=e.code.value[1], detail=str(e), headers=problem_headers(e.code),
+            status=http_status(e.code), title=e.code.value[1], detail=_unsupported_detail(e),
+            headers=problem_headers(e.code),
         )
     except ValidationError as e:
         # Only the message: str(e) would print the request, including its authInfo.

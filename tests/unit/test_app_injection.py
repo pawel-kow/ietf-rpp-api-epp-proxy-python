@@ -1,6 +1,7 @@
 import base64
 
 
+from eppclient.epp_profile import EPP_PROFILE
 from app import create_app
 from controller.session_authenticator import SessionAuthenticator
 from tests.helper.epp_backends import epp_backends
@@ -27,7 +28,7 @@ def client_for(**fake_options):
         created.append(client)
         return client
 
-    return create_app(SessionAuthenticator(epp_backends(factory))).test_client(), created
+    return create_app(SessionAuthenticator(epp_backends(factory)), EPP_PROFILE).test_client(), created
 
 
 def test_request_is_served_by_the_injected_client():

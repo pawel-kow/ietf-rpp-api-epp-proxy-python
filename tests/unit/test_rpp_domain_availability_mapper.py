@@ -1,7 +1,7 @@
 import pytest
 
 from models import DomainCheckResponseSingle, ResultCode
-from rpp_to_model_mapper import NotSupportedByEpp, domain_availability
+from rpp_to_model_mapper import NotSupportedByBackend, domain_availability
 
 
 def availability(available, reason):
@@ -29,5 +29,5 @@ def test_a_check_without_uname_and_lgr_is_accepted():
 
 @pytest.mark.parametrize("u_name, lgr", [("bücher.example", None), (None, "latn-1.0"), ("bücher.example", "latn-1.0")])
 def test_a_check_with_uname_or_lgr_is_refused(u_name, lgr):
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         domain_availability.rpp_to_model(u_name, lgr)

@@ -2,6 +2,7 @@ from .epp_contact_gateway import EppContactGateway
 from .epp_domain_gateway import EppDomainGateway
 from .epp_host_gateway import EppHostGateway
 from .epp_message_gateway import EppMessageGateway
+from .epp_profile import EPP_PROFILE
 from .eppclient import EPPClient
 
 
@@ -11,6 +12,7 @@ class EppBackend:
 
     def __init__(self, epp_client: EPPClient):
         self.epp_client = epp_client
+        self.profile = EPP_PROFILE
         self.domains = EppDomainGateway(epp_client)
         self.contacts = EppContactGateway(epp_client)
         self.hosts = EppHostGateway(epp_client)

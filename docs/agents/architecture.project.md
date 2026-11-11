@@ -72,7 +72,7 @@ single feature (e.g. "domain update") touches every layer:
    [src/models/response.py](../../src/models/response.py).
 5. **`registry/`:** the backend port, which imports `models` only. `RegistryBackend` is one user's session with
    the registry: `domains`, `contacts`, `hosts` and `messages` are its gateways (`DomainGateway` …, each a
-   `typing.Protocol`), and `sponsor_id` is the id the registry stores as sponsor. A gateway method returns a typed
+   `typing.Protocol`), `sponsor_id` is the id the registry stores as sponsor, and `profile` the `BackendProfile`. A gateway method returns a typed
    `*Response` model or an `ErrorResponse`, and callers branch on `isinstance`. `update(delta)` is a partial update and
    `replace(wanted, current=None)` a full one, which answers a `ReplaceOutcome`. `derived_update.replace` derives a
    full update from a partial one, once for every object and backend: it reads the object (unless the caller has
@@ -173,9 +173,16 @@ its own message:
 
 | Kind | Raised as | RPP code |
 |---|---|---|
-| EPP has no place for it, in the core or in an extension the proxy knows of | `NotSupportedByEpp` | `02102` |
+| The backend has no place for it, in the core or in an extension the proxy knows of | `NotSupportedByBackend` | `02102` |
 | EPP can hold it, but the proxy does not map it | `NotSupportedByProxy` | `02103` if it names an extension, otherwise `02102` |
 | The proxy uses an extension the server does not offer | `ErrorResponse` from `epp_*` | `02103` |
+
+A mapper raises `NotSupportedByBackend` with the feature only, and `map_request` names the backend of the
+application's `BackendProfile`: `… cannot be expressed in EPP`. What a backend can hold, where it differs between
+backends, is a fact of the `BackendProfile` (`registry/backend_profile.py`), not a constant of a mapper: the contact
+labels (`domains.check_contact_label`) and the record types at the apex of a domain (`domain_dns`). The domain mappers
+take the profile as the keyword `profile`, from `backend_profile()` in the handler. The EPP values are `EPP_PROFILE`
+in `eppclient/epp_profile.py`. Some of its facts are not read yet, they are for a backend that differs.
 
 An extension the proxy does not know of cannot be told apart from no extension, so it
 counts as the first kind. A PATCH that EPP could do once the proxy has read the object
@@ -205,8 +212,8 @@ turns both checks off, for test backends only.
 
 `rpp_base_url`, `rpp_tlds`, `rpp_environment_name` and `rpp_environment_status` are what the
 discovery document (`GET /.well-known/rpp`, no authentication, no EPP) states. `controller/discovery.py`
-adds the RPP version and the supported objects, which are constants. Without all four, it answers
-500 (`02400`) and logs the keys, never the values. A setting is also missing when it has the wrong shape: `rpp_base_url` must be an absolute `https` URL, `rpp_tlds` a non-empty list of non-empty strings. `profiles` is the constant `epp-compatibility`, though `GET /profiles/{name}` is 501. The base URL is never taken from the request. The proxy does not
+adds the RPP version, a constant, and the supported objects and profiles of the `BackendProfile`. Without all four, it answers
+500 (`02400`) and logs the keys, never the values. A setting is also missing when it has the wrong shape: `rpp_base_url` must be an absolute `https` URL, `rpp_tlds` a non-empty list of non-empty strings. For EPP, `profiles` is `epp-compatibility`, though `GET /profiles/{name}` is 501. The base URL is never taken from the request. The proxy does not
 check the `version` parameter of the media type, so core §12's 406 is not enforced (#41). See
 [spec-issues.md](../../.spec/spec-issues.md#discovery).
 
@@ -216,7 +223,8 @@ check the `version` parameter of the media type, so core §12's 406 is not enfor
 `EPPClient`, and is the factory it passes to
 [`SessionAuthenticator`](../../src/controller/session_authenticator.py), which keeps one backend per user, the
 token info key `backend`, and
-goes to `create_app` in [src/app.py](../../src/app.py), with `config` as the settings of the discovery document, which the handler reads from the app configuration, and the `IdnTables`, which the domain handlers read from it the same way. `create_app` hands
+goes to `create_app` in [src/app.py](../../src/app.py), with the `BackendProfile` (`EPP_PROFILE`), which the handlers
+read from the app configuration (`backend_profile()`), `config` as the settings of the discovery document, which the handler reads from the app configuration, and the `IdnTables`, which the domain handlers read from it the same way. `create_app` hands
 `authenticate` to Connexion through `security_map`, because Connexion would otherwise
 resolve the function by name and it could not receive dependencies.
 

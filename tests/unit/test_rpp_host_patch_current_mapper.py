@@ -2,7 +2,7 @@ import jsonschema
 import pytest
 
 from models import Host
-from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, PatchNotApplicable, host_patch, hosts
+from rpp_to_model_mapper import NotSupportedByBackend, NotSupportedByProxy, PatchNotApplicable, host_patch, hosts
 
 NAME = "ns1.foo.example"
 RECORD_A = {"@type": "dnsRecord", "name": "@", "type": "a", "rdata": {"address": "198.51.100.1"}}
@@ -57,12 +57,12 @@ def test_remove_of_all_addresses_gives_no_addresses():
     op("replace", "/dns", value={"@type": "dnsData", "records": [RECORD_A]}),
 ])
 def test_removing_the_own_ns_record_cannot_be_expressed_in_epp(operation):
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         wanted(operation)
 
 
 def test_removing_the_own_ns_record_of_a_host_without_addresses_cannot_be_expressed_in_epp():
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         wanted(op("replace", "/dns/records", value=[RECORD_A]), ipv4=None, ipv6=None)
 
 
@@ -192,7 +192,7 @@ def test_ttl_in_controls_is_for_the_proxy():
 
 
 def test_other_controls_are_for_epp():
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         wanted(op("replace", "/dns/controls", value={"@type": "dnsControls", "maxSigLifetime": {"ds": 3600}}))
 
 
@@ -202,7 +202,7 @@ def test_removing_controls_that_are_not_there_fails():
 
 
 def test_a_record_epp_cannot_hold():
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         wanted(op("remove", "/status"), op("add", "/dns/records", value={**RECORD_A, "name": "www"}))
 
 
@@ -223,5 +223,5 @@ def test_other_paths_cannot_be_changed(path):
 
 
 def test_host_name_cannot_be_removed():
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         wanted(op("remove", "/status"), op("remove", "/hostName"))

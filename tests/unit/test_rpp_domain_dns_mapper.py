@@ -1,3 +1,4 @@
+from eppclient.epp_profile import EPP_PROFILE
 import pytest
 
 from models import DnsSec, Domain, DsData, HostAttr, HostObj, KeyData, NS
@@ -26,7 +27,7 @@ def create(*records, **extra):
         "@type": "domainName",
         "name": "foo.example",
         "dns": {"@type": "dnsData", "records": list(records), **extra},
-    })
+    }, profile=EPP_PROFILE)
 
 
 def read(**extra):
@@ -91,7 +92,7 @@ def test_create_rejects_dns_records_together_with_nameservers():
             "name": "foo.example",
             "nameservers": [{"@type": "host", "hostName": "ns1.foo.example"}],
             "dns": {"@type": "dnsData", "records": [ns()]},
-        })
+        }, profile=EPP_PROFILE)
 
 
 @pytest.mark.parametrize("records", [

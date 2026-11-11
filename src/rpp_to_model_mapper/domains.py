@@ -3,33 +3,33 @@ import logging
 from models import (
     ContactReference, CreationProcess, DnsSec, Domain, DomainIdn, HostObj, NS,
 )
+from registry import BackendProfile
 from rpp_schema_validator import validate_schema
 from . import auth_info, domain_dns, prov_metadata, statuses
 from .common import parse_rpp, period_duration, reject_set
 from .idn_tables import IdnTables
-from .not_supported_by_epp import NotSupportedByEpp
+from .not_supported_by_backend import NotSupportedByBackend
 from .rpp_models import RPPContactReference, RPPDomain, RPPHostReference, RPPLabelledContact
 
 logger = logging.getLogger(__name__)
 
 REGISTRANT = "registrant"
 NO_IDN_TABLES = IdnTables()
-CONTACT_LABELS = ("admin", "billing", "tech")
 
 
-def check_contact_label(label: str) -> str:
-    """EPP knows three contact roles, the RPP label is open."""
-    if label not in CONTACT_LABELS:
-        raise NotSupportedByEpp(f"Contact label '{label}'")
+def check_contact_label(label: str, profile: BackendProfile) -> str:
+    """The RPP label is open, the backend knows a fixed set of contact roles."""
+    if label not in profile.contact_labels:
+        raise NotSupportedByBackend(f"Contact label '{label}'")
     return label
 
 
-def _rpp_to_contacts(domain_rpp: RPPDomain) -> list[ContactReference] | None:
+def _rpp_to_contacts(domain_rpp: RPPDomain, profile: BackendProfile) -> list[ContactReference] | None:
     contacts = []
     if domain_rpp.registrant is not None:
         contacts.append(ContactReference(id=domain_rpp.registrant.id, types=[REGISTRANT]))
     for contact in domain_rpp.contacts or []:
-        contacts.append(ContactReference(id=contact.object.id, types=[check_contact_label(contact.label)]))
+        contacts.append(ContactReference(id=contact.object.id, types=[check_contact_label(contact.label, profile)]))
     return contacts or None
 
 
@@ -45,7 +45,7 @@ def _rpp_to_processes(domain_rpp: RPPDomain) -> dict | None:
     return {"creation": CreationProcess(duration=period_duration(period))}
 
 
-def _rpp_to_delegation(domain_rpp: RPPDomain) -> tuple[NS | None, DnsSec | None]:
+def _rpp_to_delegation(domain_rpp: RPPDomain, profile: BackendProfile) -> tuple[NS | None, DnsSec | None]:
     ns = None
     if domain_rpp.nameservers:
         ns = NS(host_objs=[HostObj(id=h.hostName) for h in domain_rpp.nameservers], host_attrs=None)
@@ -53,7 +53,7 @@ def _rpp_to_delegation(domain_rpp: RPPDomain) -> tuple[NS | None, DnsSec | None]
         return ns, None
     if ns and domain_rpp.dns.records:
         raise ValueError("'nameservers' and records in 'dns' cannot be used together")
-    dns_ns, dns_sec = domain_dns.rpp_to_model(domain_rpp.name, domain_rpp.dns)
+    dns_ns, dns_sec = domain_dns.rpp_to_model(domain_rpp.name, domain_rpp.dns, profile=profile)
     return ns or dns_ns, dns_sec
 
 
@@ -66,18 +66,18 @@ def _rpp_to_idn(domain_rpp: RPPDomain, idn_tables: IdnTables) -> DomainIdn | Non
     return DomainIdn(table=idn_tables.table(domain_rpp.lgr), uname=domain_rpp.uName)
 
 
-def rpp_to_model(rpp: dict, idn_tables: IdnTables = NO_IDN_TABLES) -> Domain:
-    """Converts a create request to a Domain."""
+def rpp_to_model(rpp: dict, idn_tables: IdnTables = NO_IDN_TABLES, *, profile: BackendProfile) -> Domain:
+    """Converts a create request to a Domain, with what the backend of `profile` can hold."""
     validate_schema("domainName.create", rpp)
     domain_rpp = parse_rpp(RPPDomain, rpp)
     reject_set(status=domain_rpp.status)
-    ns, dns_sec = _rpp_to_delegation(domain_rpp)
+    ns, dns_sec = _rpp_to_delegation(domain_rpp, profile)
     return Domain(
         name=domain_rpp.name,
         authInfo=auth_info.rpp_to_model(domain_rpp.authInfo),
         ns=ns,
         dnsSEC=dns_sec,
-        contacts=_rpp_to_contacts(domain_rpp),
+        contacts=_rpp_to_contacts(domain_rpp, profile),
         processes=_rpp_to_processes(domain_rpp),
         idn=_rpp_to_idn(domain_rpp, idn_tables),
     )

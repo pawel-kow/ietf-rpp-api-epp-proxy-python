@@ -2,9 +2,12 @@ import pytest
 from connexion import ProblemException
 
 from controller.helper.rpp_response import map_request
+from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 from models import ContactType
 from rpp_to_model_mapper import contact_patch
 from tests.helper.contact_fixtures import ADDRESS, current_contact, derived_update, localized
+
+pytestmark = pytest.mark.usefixtures("epp_app_context")
 
 ID = "JD-1234"
 STATUS = {"@type": "contactStatus", "label": "clientUpdateProhibited"}

@@ -5,17 +5,17 @@ is merged. Phase 2 of `docs/rri/refactoring.md` (on `feature/denicrri`) §6, §3
 
 ## Tasks
 
-- [~] T1 `registry/backend_profile.py`: `BackendProfile` with every fact of §3.7; `eppclient/epp_profile.py`:
+- [x] T1 `registry/backend_profile.py`: `BackendProfile` with every fact of §3.7; `eppclient/epp_profile.py`:
       `EPP_PROFILE` with today's values; `RegistryBackend.profile`
-- [ ] T2 `NotSupportedByEpp(feature)` → `NotSupportedByBackend(feature)`; `map_request` names the backend from the
+- [x] T2 `NotSupportedByEpp(feature)` → `NotSupportedByBackend(feature)`; `map_request` names the backend from the
       injected profile, so the EPP text stays `… cannot be expressed in EPP`. `epp_refusal.py` uses the same wording
-- [ ] T3 Injection: `run.py` → `create_app(authenticator, profile, …)` → `app.config["RPP_BACKEND_PROFILE"]` →
+- [x] T3 Injection: `run.py` → `create_app(authenticator, profile, …)` → `app.config["RPP_BACKEND_PROFILE"]` →
       handlers → the domain mappers, which check `contact_labels` and `domain_record_types` from the profile
-- [ ] T4 Discovery takes `objects` and `profiles` from the profile
-- [ ] T5 Tests: profile, a domain mapper and discovery with a profile that differs from EPP; existing tests pass
+- [x] T4 Discovery takes `objects` and `profiles` from the profile
+- [x] T5 Tests: profile, a domain mapper and discovery with a profile that differs from EPP; existing tests pass
       `EPP_PROFILE`
-- [ ] T6 Docs: `architecture.project.md` (unsupported input, configuration, composition, discovery), `testing.project.md`
-- [ ] T7 Full `pytest -n 8` green; draft PR
+- [x] T6 Docs: `architecture.project.md` (unsupported input, configuration, composition, discovery), `testing.project.md`
+- [~] T7 Full `pytest -n 8` green; draft PR
 
 ## Findings (evidence)
 
@@ -38,6 +38,10 @@ is merged. Phase 2 of `docs/rri/refactoring.md` (on `feature/denicrri`) §6, §3
   a caller cannot forget it and fall back to EPP's facts silently.
 - D5 `EPP_PROFILE` lives in the EPP adapter (`eppclient/epp_profile.py`); `registry/` holds only the type.
 - D6 `contact_phones_max` counts the voice numbers: EPP holds one (`voice`), a fax is `contact_fax`.
+
+## Results
+
+- `pytest -n 8`: 2120 passed, 5 skipped (7 min), unit and EPP integration (`epptest`).
 
 ## Open questions
 

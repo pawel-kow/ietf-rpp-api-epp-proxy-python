@@ -69,7 +69,7 @@ def domainNames_availability(name, uName=None, lgr=None):
 @rpp_operation
 def domainNames_create(body):
     requested = requested_elements(OBJECT)
-    domain = map_request(rpp_mapper.domains.rpp_to_model, body, _idn_tables())
+    domain = map_request(rpp_mapper.domains.rpp_to_model, body, _idn_tables(), profile=backend_profile())
     domainresp = get_backend().domains.create(domain, client_transaction_id=client_transaction_id())
     if isinstance(domainresp, ErrorResponse):
         raise_registry_error(domainresp)
@@ -95,11 +95,12 @@ def domainNames_read(name):
 @rpp_operation
 def domainNames_updatePartial(name, body):
     requested = requested_elements(OBJECT)
-    update = map_request(rpp_mapper.domain_patch.rpp_to_model, name, body)
+    update = map_request(rpp_mapper.domain_patch.rpp_to_model, name, body, profile=backend_profile())
 
     def wanted_from_current(current):
         return map_request(
             rpp_mapper.domain_patch.rpp_to_model_with_current, name, body, _domain_to_rpp(current),
+            profile=backend_profile(),
         )
 
     result = flows.patch_domain(get_backend(), name, update, wanted_from_current, client_transaction_id())
@@ -109,7 +110,7 @@ def domainNames_updatePartial(name, body):
 @rpp_operation
 def domainNames_update(name, body):
     requested = requested_elements(OBJECT)
-    wanted = map_request(rpp_mapper.domain_replacement.rpp_to_model, name, body, requested)
+    wanted = map_request(rpp_mapper.domain_replacement.rpp_to_model, name, body, requested, profile=backend_profile())
     return _updated_domain(flows.replace_domain(get_backend(), wanted, client_transaction_id()), requested)
 
 

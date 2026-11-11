@@ -14,6 +14,7 @@ from controller.rpp_request_body_validator import RppRequestBodyValidator
 from controller.rpp_response_body_validator import RppResponseBodyValidator
 from controller.epp_basic_security_handler import EppBasicSecurityHandler
 from models import ResultCode
+from registry import BackendProfile
 from rpp_to_model_mapper import IdnTables
 
 
@@ -43,13 +44,14 @@ def handle_rpp_error(request: ConnexionRequest, exc: ProblemException) -> Connex
     )
 
 
-def create_app(authenticator, discovery_settings=None, idn_tables=None):
+def create_app(authenticator, profile: BackendProfile, discovery_settings=None, idn_tables=None):
     """
     Builds the application.
 
     Args:
         authenticator: Provides authenticate(username, password), which returns the
             token info holding the request's registry backend, or None to reject the request.
+        profile: What the backend can hold, which the mappers check, refusals name and discovery states.
         discovery_settings: Has rpp_base_url, rpp_tlds, rpp_environment_name and
             rpp_environment_status, which the discovery document states.
         idn_tables: The IdnTables that map a domain's `lgr` to the IDN table of EPP. Without them no `lgr` is
@@ -76,6 +78,7 @@ def create_app(authenticator, discovery_settings=None, idn_tables=None):
                 })
     app.app.config["RPP_DISCOVERY_SETTINGS"] = discovery_settings
     app.app.config["RPP_IDN_TABLES"] = idn_tables or IdnTables()
+    app.app.config["RPP_BACKEND_PROFILE"] = profile
     app.add_error_handler(ProblemException, handle_rpp_error)
 
     return app

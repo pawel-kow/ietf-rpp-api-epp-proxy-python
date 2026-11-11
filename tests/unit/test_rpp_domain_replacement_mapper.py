@@ -1,8 +1,9 @@
+from eppclient.epp_profile import EPP_PROFILE
 import pytest
 from jsonschema import ValidationError
 
 from models import AuthInfo, ContactReference, Domain, DsData, DnsSec, HostAttr, HostObj, NS, domain_difference
-from rpp_to_model_mapper import NotSupportedByEpp, NotSupportedByProxy, domain_replacement, domains
+from rpp_to_model_mapper import NotSupportedByBackend, NotSupportedByProxy, domain_replacement, domains
 
 NAME = "foo.example"
 DS = {"@type": "dnsRecord", "name": "@", "type": "ds", "rdata": {
@@ -36,7 +37,7 @@ def current(**members):
 def replace(body_members, requested=frozenset(), **domain_members):
     """The update the full update asks for: the mapper gives the wanted domain, and the model the difference."""
     body = {"@type": "domainName", **body_members}
-    return domain_difference.difference(current(**domain_members), domain_replacement.rpp_to_model(NAME, body, requested))
+    return domain_difference.difference(current(**domain_members), domain_replacement.rpp_to_model(NAME, body, requested, profile=EPP_PROFILE))
 
 
 AUTH_INFO = frozenset({"authInfo"})
@@ -126,7 +127,7 @@ def test_dropping_a_reason_is_a_change():
 
 
 def test_a_status_with_a_due_date_is_unsupported():
-    with pytest.raises(NotSupportedByEpp, match="due"):
+    with pytest.raises(NotSupportedByBackend, match="due"):
         replace({**STAYS, "status": [status("clientHold", due="2027-01-01T00:00:00Z")]})
 
 
@@ -140,11 +141,11 @@ def test_a_status_with_a_due_date_is_unsupported():
 ])
 def test_an_undeclared_nested_member_is_rejected(members):
     with pytest.raises(ValueError, match="Undeclared"):
-        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", **members})
+        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", **members}, profile=EPP_PROFILE)
 
 
 def test_an_auth_info_method_other_than_authinfo_is_unsupported():
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         replace({**STAYS, "authInfo": {"@type": "authInfo", "method": "other", "authdata": "x"}}, AUTH_INFO)
 
 
@@ -254,13 +255,13 @@ def test_ds_to_dnskey_removes_the_ds_and_adds_the_key():
 @pytest.mark.parametrize("label", ["ok", "serverHold"])
 def test_a_status_of_the_server_is_rejected(label):
     with pytest.raises(ValidationError):
-        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", "status": [status(label)]})
+        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", "status": [status(label)]}, profile=EPP_PROFILE)
 
 
 @pytest.mark.parametrize("member", ["name", "provMetadata", "expiryDate", "subordinateHosts", "uName", "lgr", "processes"])
 def test_a_member_outside_the_update_is_rejected(member):
     with pytest.raises(ValueError, match=member):
-        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", member: "x"})
+        domain_replacement.rpp_to_model(NAME, {"@type": "domainName", member: "x"}, profile=EPP_PROFILE)
 
 
 def test_included_auth_info_present_is_always_sent():
@@ -329,7 +330,7 @@ def test_ttl_is_unsupported():
 
 
 def test_an_unknown_contact_label_is_unsupported():
-    with pytest.raises(NotSupportedByEpp):
+    with pytest.raises(NotSupportedByBackend):
         replace({**STAYS, "contacts": [contact("other", "REG-2")]})
 
 
