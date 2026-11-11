@@ -26,14 +26,15 @@ Integration tests require a **backend EPP test server**. They do not use test
 doubles: they exercise the full RPP→EPP→RPP round trip against a live registry.
 
 Its host and port come from `config.yaml` (`rpp_epp_host`/`rpp_epp_port`) via
-`new_epp_client` in [src/run.py](../../src/run.py). In the
-devcontainer that is the `epp-server-docker-epp-server-1` container on TLS port `743`,
-reached over the shared `epp-server-docker_epp_net` docker network (attached via
-`postStartCommand` in
-[.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json)). Its certificate
-is self-signed and does not name that host, so `config.yaml` sets
-`rpp_epp_tls_insecure_skip_verify`. Where the backend has another name, put it in an untracked
-`config.local.yaml` (`rpp_epp_host: epp-server`): its top-level keys replace those of `config.yaml`.
+`new_epp_client` in [src/run.py](../../src/run.py). The backend is a docker compose project (today `epptest`),
+and `config.yaml` names its EPP server by the compose service name, `epp-server`, on TLS port `743`. That name
+resolves on the project's network, `<project>_epp_net` (today `epptest_epp_net`), which the devcontainer has to
+join: `postStartCommand` in [.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json) no longer does it
+(#111), so attach it by hand: `docker network connect epptest_epp_net <container>`, where `<container>` is the
+devcontainer's id (`cat /etc/hostname` inside it). Without it every
+integration case fails with 401 (`02200`). Its certificate is self-signed and does not name that host, so
+`config.yaml` sets `rpp_epp_tls_insecure_skip_verify`. Where the backend has another name, put it in an untracked
+`config.local.yaml` (`rpp_epp_host: <name>`): its top-level keys replace those of `config.yaml`.
 
 Auth uses HTTP Basic, and the username and password are passed straight through as
 the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and `baz`
