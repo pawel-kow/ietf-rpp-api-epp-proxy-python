@@ -1,12 +1,12 @@
 # Plan: keep full and partial updates apart down to the model (#108)
 
 Branch `refactor/108-full-and-partial-updates`, from `main` at `2cd0659`.
-Status: **proposal, waiting for the maintainer's acceptance.** No code changes before that.
+Status: accepted by the maintainer with decisions D1–D8 and correction C1.
 
 ## Tasks
 
-- [~] T0 Plan, findings and open questions; maintainer accepts the approach
-- [ ] T1 Models: `AuthInfoIntent`, `DomainReplacement`, `ContactReplacement`, `HostReplacement` (one file each)
+- [x] T0 Plan, findings and open questions; maintainer accepts the approach
+- [~] T1 Models: `AuthInfoIntent`, `DomainReplacement`, `ContactReplacement`, `HostReplacement` (one file each)
 - [ ] T2 Models: `difference` for hosts (moved from `flows/hosts.py` `_difference`), with its tests
 - [ ] T3 Models: `difference` for contacts (moved from `rpp_to_model_mapper/contact_difference.py`, EPP refusals split off)
 - [ ] T4 Models: `difference` for domains (rewritten from RPP dicts to `Domain` / `DomainReplacement`);
@@ -17,6 +17,10 @@ Status: **proposal, waiting for the maintainer's acceptance.** No code changes b
 - [ ] T7 Mappers return intent: PUT → `*Replacement` without a read; PATCH with current → `*Replacement`; direct PATCH → delta
 - [ ] T8 Flows and controllers: `patch_*` / `replace_*` call `update(delta)` or `replace(wanted, current)`; sponsor 403 kept
 - [ ] T9 Docs: `architecture.project.md` (mapper and flow sections), `spec-issues.md` only if wording names moved modules
+- [ ] T11 `onDemand` Visibility and `includeElements` (D6, D7): output filter, PUT input rule, spec-issues entry
+- [ ] T12 Drop the out-of-domain glue refusal and the `checked` flag (D4), spec-issues entry
+- [ ] T13 Contact PATCH of phones and email without a read (D8)
+- [ ] T14 Behaviour changes C1, D2, D3: spec-issues, integration and unit cases
 - [ ] T10 Full `pytest` (unit + EPP integration) unchanged and green; draft PR
 
 ## Findings (evidence)
@@ -133,6 +137,10 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
   query (Connexion accepts a repeated parameter, checked: GET with two `includeElements` answers 200).
   `openapi.yaml` is generated and stays as it is; the spec-issues entry records the mismatch.
   Integration cases that assert `authInfo` in a read add `includeElements=authInfo`.
+- **D7 (Q8)** The `onDemand` elements come from `.spec/draft-ietf-rpp-data-objects.yaml` (`visibility` per element),
+  copied by `copy_models.sh` into `src/` and read at start-up.
+- **D8 (Q9)** In this issue: a contact PATCH of the phones and the email maps directly to EPP `chg` without a read,
+  where EPP can express it.
 
 ## Corrections
 
