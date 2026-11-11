@@ -7,7 +7,35 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "NOT-FREE.EXAMPLE",
+          "name": "c7-{random_name}.example",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Authorization": "Basic Zm9vOmJhcg==",
+          "Accept": "application/rpp+json"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "c7-{random_name}.example",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -28,7 +56,8 @@
           "type": "urn:ietf:params:rpp:error"
         },
         "headers": {
-          "RPP-Cltrid": "test7-{random_name}-clTRID"
+          "RPP-Cltrid": "test7-{random_name}-clTRID",
+          "RPP-Code": "02302"
         }
       }
     }

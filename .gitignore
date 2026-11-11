@@ -67,3 +67,6 @@ target/
 
 # Agent branch mutex (see docs/agents/process.md)
 .agent-sync.yml
+
+# Per-machine overrides of config.yaml (see src/config.py)
+*.local.yaml
