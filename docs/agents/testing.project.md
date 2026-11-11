@@ -15,8 +15,8 @@ pytest -k domain_update                                 # single test group by s
 pytest "tests/integration/test_from_file_definition.py::test_from_file_definition[domain_update-test1-simple_update]"  # one case by id
 ```
 
-Run the full suite with `-n 8`, which takes about 8 minutes where one worker takes about 18. The unit tests are
-bound by CPU (#112), so more workers than cores do not speed them up, and the backend refuses logins under about
+Run the full suite with `-n 8`, which takes about 5.5 minutes on 4 cores. The unit tests are bound by CPU,
+mostly building an app per test from `openapi.yaml`, so more workers than cores do not speed them up, and the backend refuses logins under about
 16 concurrent sessions (pawel-kow/EPP-server-docker#7), so 8 is the most it takes. Every worker makes its own
 `{random_name}`, so cases in different workers do not collide.
 
@@ -26,7 +26,7 @@ Integration tests require a **backend EPP test server**. They do not use test
 doubles: they exercise the full RPP→EPP→RPP round trip against a live registry.
 
 Its host and port come from `config.yaml` (`rpp_epp_host`/`rpp_epp_port`) via
-`new_epp_client` in [src/run.py](../../src/run.py). The backend is a docker compose project (today `epptest`),
+`new_epp_client` in [src/main.py](../../src/main.py). The backend is a docker compose project (today `epptest`),
 and `config.yaml` names its EPP server by the compose service name, `epp-server`, on TLS port `743`. That name
 resolves on the project's network, `<project>_epp_net` (today `epptest_epp_net`), which the devcontainer has to
 join: `postStartCommand` in [.devcontainer/devcontainer.json](../../.devcontainer/devcontainer.json) no longer does it
@@ -90,11 +90,18 @@ The backend refuses a renew period under one year (`2306`), so month periods are
 Unit tests in `tests/unit/` inject test doubles through constructors:
 
 - `EPPClient(transport, username, password)` takes a fake transport.
-- `EppSessionAuthenticator(client_factory)` takes a factory returning a fake client,
-  such as [FakeEppClient](../../tests/helper/fake_epp_client.py).
-- `create_app(authenticator)` builds a full app around that authenticator, so a
-  handler can be tested through `test_client()` without a registry. See
-  [test_app_injection.py](../../tests/unit/test_app_injection.py).
+- `EppBackend(epp_client, ns_map, idn_tables=None)` takes a fake client, such as
+  [FakeEppClient](../../tests/helper/fake_epp_client.py), and a flow takes that backend. Tests pass
+  [EPP_NS_MAP](../../tests/helper/epp_ns_map.py), the namespace map of `config.yaml`, which the XML tests assert;
+  the `*_xml` functions take it as `ns_map`, and the domain ones `IdnTables` as `idn_tables`.
+- `SessionPool(backend_factory)` takes a factory returning a backend.
+  [epp_backends](../../tests/helper/epp_backends.py) turns a factory of fake EPP clients into one, so the test still
+  sees the clients.
+- `create_app(sessions, profile)` builds a full app around that session pool and a `BackendProfile`
+  (`EPP_PROFILE`, or `epp_profile(idn_tables)` for IDNs), so a handler can be tested through `test_client()` without
+  a registry. See [test_app_injection.py](../../tests/unit/test_app_injection.py).
+- The domain mappers take `profile=EPP_PROFILE`. A test that calls `map_request` directly uses the fixture of
+  [epp_app_context](../../tests/helper/epp_app_context.py), from which `map_request` names the backend.
 - `TCPClient(host, port, tls_context)` connects to a
   [LoopbackEppServer](../../tests/helper/loopback_epp_server.py). Its certificate is
   generated per test session with the `openssl` CLI, so no key is in the repository.

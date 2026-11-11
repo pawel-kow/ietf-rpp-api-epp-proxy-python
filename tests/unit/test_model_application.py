@@ -2,15 +2,27 @@
 the direct mappers produce, the round trip gives the update back, up to order (#108)."""
 import pytest
 
-from models import (
-    Address, AuthInfo, Contact, ContactReference, ContactType, Domain, DsData, DnsSec, Host, HostObj, NS,
-    contact_application, contact_difference, domain_application, domain_difference, host_application, host_difference,
-)
-from rpp_to_model_mapper import contact_patch, domain_patch, host_patch
+from core.model.contact import contact_application, contact_difference
+from core.model.contact.address import Address
+from core.model.contact.contacts import Contact, ContactType
+from core.model.domain import domain_application, domain_difference
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domains import ContactReference, Domain, HostObj, NS
+from core.model.domain.ds_data import DsData
+from core.model.host import host_application, host_difference
+from core.model.host.host import Host
+from core.model.shared.common import AuthInfo
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.mapping.contact import contact_patch
+from rpp.mapping.domain import domain_patch
+from rpp.mapping.host import host_patch
 
 DOMAIN = "foo.example"
+
 HOST = "ns1.foo.example"
+
 CONTACT = "JD-1"
+
 PASSWORD = {"@type": "authInfo", "method": "authinfo", "authdata": "NewSecret1!x"}
 
 
@@ -54,14 +66,14 @@ def current_domain() -> Domain:
     ],
 ])
 def test_a_domain_update_survives_the_round_trip(operations):
-    delta = domain_patch.rpp_to_model(DOMAIN, operations)
+    delta = domain_patch.rpp_to_model(DOMAIN, operations, profile=EPP_PROFILE)
     current = current_domain()
 
     assert canonical(domain_difference.difference(current, domain_application.apply(current, delta))) == canonical(delta)
 
 
 def test_applying_a_domain_update_keeps_what_it_does_not_name():
-    delta = domain_patch.rpp_to_model(DOMAIN, [op("remove", "/nameservers", match={"hostName": "ns1.foo.example"})])
+    delta = domain_patch.rpp_to_model(DOMAIN, [op("remove", "/nameservers", match={"hostName": "ns1.foo.example"})], profile=EPP_PROFILE)
 
     wanted = domain_application.apply(current_domain(), delta)
 

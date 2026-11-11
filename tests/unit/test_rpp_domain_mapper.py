@@ -1,14 +1,16 @@
-import logging
+from dataclasses import replace
 
 import pytest
 from jsonschema import ValidationError
 
-from models import (
-    AuthInfo, ContactReference, Domain, DomainIdn, HostObj, NS,
-)
-from rpp_to_model_mapper import IdnTables, UnsupportedRppFeature, domains
+from core.capabilities.unsupported_feature import UnsupportedFeature
+from core.model.domain.domain_idn import DomainIdn
+from core.model.domain.domains import ContactReference, Domain, HostObj, NS
+from core.model.shared.common import AuthInfo
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.mapping.domain import domains
 
-TABLES = IdnTables({"latn-1.0": "de"})
+IDN_PROFILE = replace(EPP_PROFILE, lgrs=frozenset({"latn-1.0"}))
 
 
 def create_body(**extra):
@@ -26,7 +28,7 @@ def info_domain(**extra):
 def test_create_maps_nameservers_to_host_objects():
     body = create_body(nameservers=[{"@type": "host", "hostName": "ns1.foo.example"}])
 
-    assert domains.rpp_to_model(body).ns == NS(host_objs=[HostObj(id="ns1.foo.example")], host_attrs=None)
+    assert domains.rpp_to_model(body, profile=EPP_PROFILE).ns == NS(host_objs=[HostObj(id="ns1.foo.example")], host_attrs=None)
 
 
 def test_create_maps_registrant_and_labelled_contacts():
@@ -35,7 +37,7 @@ def test_create_maps_registrant_and_labelled_contacts():
         contacts=[{"label": "admin", "object": contact("SH-8013")}],
     )
 
-    assert domains.rpp_to_model(body).contacts == [
+    assert domains.rpp_to_model(body, profile=EPP_PROFILE).contacts == [
         ContactReference(id="JD-1234", types=["registrant"]),
         ContactReference(id="SH-8013", types=["admin"]),
     ]
@@ -44,7 +46,7 @@ def test_create_maps_registrant_and_labelled_contacts():
 def test_create_maps_authinfo_method_to_password():
     body = create_body(authInfo={"@type": "authInfo", "method": "authinfo", "authdata": "2fooBAR"})
 
-    assert domains.rpp_to_model(body).authInfo == AuthInfo(pw="2fooBAR")
+    assert domains.rpp_to_model(body, profile=EPP_PROFILE).authInfo == AuthInfo(pw="2fooBAR")
 
 
 @pytest.mark.parametrize("value, unit, duration", [(2, "y", "P2Y"), (6, "m", "P6M")])
@@ -54,7 +56,7 @@ def test_create_maps_period_to_duration(value, unit, duration):
         "period": {"@type": "period", "value": value, "unit": unit},
     }]})
 
-    assert domains.rpp_to_model(body).processes["creation"].duration == duration
+    assert domains.rpp_to_model(body, profile=EPP_PROFILE).processes["creation"].duration == duration
 
 
 @pytest.mark.parametrize("extra", [
@@ -63,18 +65,18 @@ def test_create_maps_period_to_duration(value, unit, duration):
     {"contacts": [{"label": "reseller", "object": {"@type": "contact", "id": "X"}}]},
 ])
 def test_create_rejects_what_the_model_cannot_hold(extra):
-    with pytest.raises(UnsupportedRppFeature):
-        domains.rpp_to_model(create_body(**extra))
+    with pytest.raises(UnsupportedFeature):
+        domains.rpp_to_model(create_body(**extra), profile=EPP_PROFILE)
 
 
 def test_create_rejects_a_schema_violation():
     with pytest.raises(ValidationError):
-        domains.rpp_to_model({"name": "foo.example"})
+        domains.rpp_to_model({"name": "foo.example"}, profile=EPP_PROFILE)
 
 
 def test_create_rejects_undeclared_properties():
     with pytest.raises(ValueError):
-        domains.rpp_to_model(create_body(unknown="x"))
+        domains.rpp_to_model(create_body(unknown="x"), profile=EPP_PROFILE)
 
 
 def test_read_builds_provisioning_metadata():
@@ -150,67 +152,57 @@ def idn_body(**extra):
     return create_body(name="xn--bcher-kva.example", **extra)
 
 
-def test_create_maps_lgr_and_uname_to_the_idn_table_and_uname():
-    domain = domains.rpp_to_model(idn_body(uName="bücher.example", lgr="latn-1.0"), TABLES)
+def test_create_keeps_lgr_and_uname():
+    domain = domains.rpp_to_model(idn_body(uName="bücher.example", lgr="latn-1.0"), profile=IDN_PROFILE)
 
-    assert domain.idn == DomainIdn(table="de", uname="bücher.example")
+    assert domain.idn == DomainIdn(lgr="latn-1.0", uname="bücher.example")
 
 
-def test_create_maps_lgr_alone_to_the_idn_table():
-    assert domains.rpp_to_model(idn_body(lgr="latn-1.0"), TABLES).idn == DomainIdn(table="de")
+def test_create_keeps_lgr_alone():
+    assert domains.rpp_to_model(idn_body(lgr="latn-1.0"), profile=IDN_PROFILE).idn == DomainIdn(lgr="latn-1.0")
 
 
 def test_create_without_lgr_has_no_idn():
-    assert domains.rpp_to_model(idn_body(), TABLES).idn is None
+    assert domains.rpp_to_model(idn_body(), profile=IDN_PROFILE).idn is None
 
 
 def test_create_with_uname_and_no_lgr_is_refused():
     """Json §6.4: lgr MUST be present whenever uName is present."""
     with pytest.raises(ValueError) as refused:
-        domains.rpp_to_model(idn_body(uName="bücher.example"), TABLES)
+        domains.rpp_to_model(idn_body(uName="bücher.example"), profile=IDN_PROFILE)
 
-    assert not isinstance(refused.value, UnsupportedRppFeature)
+    assert not isinstance(refused.value, UnsupportedFeature)
 
 
-@pytest.mark.parametrize("tables", [TABLES, IdnTables()])
-def test_create_with_an_lgr_without_a_table_is_refused(tables):
+@pytest.mark.parametrize("profile", [IDN_PROFILE, EPP_PROFILE])
+def test_create_with_an_lgr_the_backend_does_not_offer_is_refused(profile):
     with pytest.raises(ValueError) as refused:
-        domains.rpp_to_model(idn_body(lgr="cyrl-1.0"), tables)
+        domains.rpp_to_model(idn_body(lgr="cyrl-1.0"), profile=profile)
 
-    assert not isinstance(refused.value, UnsupportedRppFeature)
+    assert not isinstance(refused.value, UnsupportedFeature)
 
 
-def test_create_without_tables_refuses_any_lgr():
+def test_create_on_a_backend_without_lgrs_refuses_any_lgr():
     with pytest.raises(ValueError):
-        domains.rpp_to_model(idn_body(lgr="latn-1.0"))
+        domains.rpp_to_model(idn_body(lgr="latn-1.0"), profile=EPP_PROFILE)
 
 
-def test_read_maps_the_idn_table_and_uname_to_lgr_and_uname():
-    rpp = domains.model_to_rpp(info_domain(idn=DomainIdn(table="de", uname="bücher.example")), TABLES)
+def test_read_has_lgr_and_uname():
+    rpp = domains.model_to_rpp(info_domain(idn=DomainIdn(lgr="latn-1.0", uname="bücher.example")))
 
     assert rpp["uName"] == "bücher.example"
     assert rpp["lgr"] == "latn-1.0"
 
 
-def test_read_maps_the_table_alone_to_lgr():
-    rpp = domains.model_to_rpp(info_domain(idn=DomainIdn(table="de")), TABLES)
+def test_read_has_lgr_alone():
+    rpp = domains.model_to_rpp(info_domain(idn=DomainIdn(lgr="latn-1.0")))
 
     assert rpp["lgr"] == "latn-1.0"
     assert "uName" not in rpp
 
 
-def test_read_leaves_out_an_idn_whose_table_has_no_lgr(caplog):
-    """Json §6.4 does not allow uName without lgr, so both are left out."""
-    with caplog.at_level(logging.WARNING):
-        rpp = domains.model_to_rpp(info_domain(idn=DomainIdn(table="es", uname="español.example")), TABLES)
-
-    assert "uName" not in rpp
-    assert "lgr" not in rpp
-    assert "es" in caplog.text
-
-
 def test_read_without_idn_has_no_uname_or_lgr():
-    rpp = domains.model_to_rpp(info_domain(), TABLES)
+    rpp = domains.model_to_rpp(info_domain())
 
     assert "uName" not in rpp
     assert "lgr" not in rpp

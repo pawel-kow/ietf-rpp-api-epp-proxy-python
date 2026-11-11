@@ -1,7 +1,8 @@
 import pytest
 
-from models import AuthInfo
-from rpp_to_model_mapper import NotSupportedByEpp, rpp_authorization
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.model.shared.common import AuthInfo
+from rpp.mapping.shared import rpp_authorization
 
 SECRET = "TXkgU2VjcmV0IFRva2Vu"  # "My Secret Token", core §6.1
 
@@ -24,7 +25,7 @@ def test_roid_is_kept():
 
 
 def test_other_method_cannot_reach_epp():
-    with pytest.raises(NotSupportedByEpp, match="'bearer'"):
+    with pytest.raises(NotSupportedByBackend, match="'bearer'"):
         rpp_authorization.rpp_to_model(f"bearer value={SECRET}")
 
 

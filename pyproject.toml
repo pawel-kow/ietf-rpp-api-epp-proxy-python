@@ -15,3 +15,101 @@ pythonpath = [
     "src",
 ]
 addopts = "--strict-markers --tb=short -p no:warnings"
+
+# Module boundaries of #120, checked by `PYTHONPATH=src lint-imports` (docs/agents/architecture.project.md).
+[tool.importlinter]
+# main is a module, which import-linter cannot take as a root. An import of it is therefore seen as external and
+# forbidden by name.
+root_packages = ["core", "registry_adapter", "rpp", "settings"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+id = "core-stdlib-only"
+name = "core imports only the standard library"
+type = "forbidden"
+source_modules = ["core"]
+forbidden_modules = [
+    "main", "registry_adapter", "rpp", "settings",
+    "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
+]
+
+[[tool.importlinter.contracts]]
+id = "core-layers"
+name = "Inside core: flows -> ports -> model, capabilities -> result"
+type = "layers"
+containers = ["core"]
+layers = ["flows", "ports", "model | capabilities", "result"]
+
+[[tool.importlinter.contracts]]
+id = "core-model-objects"
+name = "The object packages of core.model are independent, except domain -> contact"
+type = "independence"
+modules = ["core.model.contact", "core.model.domain", "core.model.host", "core.model.message"]
+ignore_imports = ["core.model.domain.** -> core.model.contact.**"]
+
+[[tool.importlinter.contracts]]
+id = "core-model-shared"
+name = "core.model.shared imports no object package of core.model"
+type = "forbidden"
+source_modules = ["core.model.shared"]
+forbidden_modules = ["core.model.contact", "core.model.domain", "core.model.host", "core.model.message"]
+
+[[tool.importlinter.contracts]]
+id = "rpp-not-registry-adapter"
+name = "rpp imports core only, never registry_adapter, XML or settings"
+type = "forbidden"
+source_modules = ["rpp"]
+forbidden_modules = ["main", "registry_adapter", "settings", "lxml", "xsdata"]
+
+[[tool.importlinter.contracts]]
+id = "rpp-layers"
+name = "Inside rpp: handlers -> mapping, http; mapping -> dto, schema"
+type = "layers"
+containers = ["rpp"]
+layers = ["handlers", "mapping | http", "dto | schema"]
+
+[[tool.importlinter.contracts]]
+id = "rpp-mapping-no-http"
+name = "rpp.mapping never imports rpp.http, Flask or Connexion"
+type = "forbidden"
+source_modules = ["rpp.mapping", "rpp.dto", "rpp.schema"]
+forbidden_modules = ["rpp.handlers", "rpp.http", "connexion", "flask", "starlette", "werkzeug"]
+
+[[tool.importlinter.contracts]]
+id = "registry-adapter-not-rpp"
+name = "registry_adapter never imports rpp, core.flows, core.session, settings or a web framework"
+type = "forbidden"
+source_modules = ["registry_adapter"]
+forbidden_modules = ["core.flows", "core.session", "main", "rpp", "settings", "connexion", "dataclasses_json", "flask", "jsonschema", "starlette", "werkzeug"]
+
+[[tool.importlinter.contracts]]
+id = "epp-layers"
+name = "Inside epp: gateways -> commands -> xml, session"
+type = "layers"
+containers = ["registry_adapter.epp"]
+layers = ["gateways", "commands", "xml | session"]
+
+[[tool.importlinter.contracts]]
+id = "epp-only-session-sends"
+name = "Inside epp only session uses the transport"
+type = "forbidden"
+source_modules = [
+    "registry_adapter.epp.commands", "registry_adapter.epp.gateways", "registry_adapter.epp.xml",
+    "registry_adapter.epp.contact_refusal", "registry_adapter.epp.profile", "registry_adapter.epp.refusals",
+]
+forbidden_modules = ["registry_adapter.common.transport"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+id = "registry-adapter-common-standalone"
+name = "registry_adapter.common imports no project package"
+type = "forbidden"
+source_modules = ["registry_adapter.common"]
+forbidden_modules = ["core", "main", "registry_adapter.epp", "rpp", "settings"]
+
+[[tool.importlinter.contracts]]
+id = "settings-standalone"
+name = "settings imports no project package, and only main imports settings"
+type = "forbidden"
+source_modules = ["settings"]
+forbidden_modules = ["core", "main", "registry_adapter", "rpp"]

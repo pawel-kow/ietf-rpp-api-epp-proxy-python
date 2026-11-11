@@ -1,16 +1,23 @@
 import pytest
 from lxml import etree
 
-from epp_to_model_mapper import parse_domain_transfer_response, transfer_domain_xml
-from models import AuthInfo, DomainTransfer, DomainTransferProcess, ResultCode, TransferOperation
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.shared.common import AuthInfo
+from core.model.shared.domain_transfer_process import DomainTransferProcess
+from core.model.shared.transfer_operation import TransferOperation
+from core.result.result_code import ResultCode
+from registry_adapter.epp.commands.domain.transfer import parse_domain_transfer_response, transfer_domain_xml
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
+
 DOMAIN = "urn:ietf:params:xml:ns:domain-1.0"
+
 NS = {"epp": EPP, "domain": DOMAIN}
 
 
 def command(transfer):
-    return etree.fromstring(transfer_domain_xml(transfer, client_request_id="cl-1").encode())
+    return etree.fromstring(transfer_domain_xml(transfer, client_request_id="cl-1", ns_map=EPP_NS_MAP).encode())
 
 
 def only(root, path):
@@ -63,7 +70,7 @@ def test_trn_data_is_parsed():
     )
     assert response.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING
     assert response.server_transaction_id == "sv-1"
-    assert response.transfer == DomainTransferProcess(
+    assert response.payload == DomainTransferProcess(
         name="FOO.EXAMPLE",
         trStatus="pending",
         reqClientId="ClientX",
@@ -75,4 +82,4 @@ def test_trn_data_is_parsed():
 
 
 def test_expiry_date_is_optional():
-    assert parse_domain_transfer_response(reply(1000), "cl-1").transfer.expiryDate is None
+    assert parse_domain_transfer_response(reply(1000), "cl-1").payload.expiryDate is None

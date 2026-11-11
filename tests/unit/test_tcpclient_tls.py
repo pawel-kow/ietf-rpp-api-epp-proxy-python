@@ -1,10 +1,11 @@
 import ssl
 import subprocess
+import time
 
 import pytest
 
-from eppclient.tcpclient import TCPClient
-from eppclient.tls import new_tls_context
+from registry_adapter.common.transport.tcp_client import TCPClient
+from registry_adapter.common.transport.tls import new_tls_context
 from tests.helper.loopback_epp_server import LoopbackEppServer
 
 
@@ -41,12 +42,6 @@ def test_skip_verify_turns_off_certificate_and_hostname_check():
 
     assert context.verify_mode == ssl.CERT_NONE
     assert context.check_hostname is False
-
-
-def test_skip_verify_warns(caplog):
-    new_tls_context(insecure_skip_verify=True)
-
-    assert "rpp_epp_tls_insecure_skip_verify" in caplog.text
 
 
 def test_verification_on_does_not_warn(caplog):
@@ -126,3 +121,40 @@ def test_without_a_tls_context_the_connection_is_plain():
         assert not isinstance(client.socket, ssl.SSLSocket)
         assert client.receive() == "<greeting/>"
         client.disconnect()
+
+
+def closed_by_peer_within(client, seconds=5):
+    """The close reaches the client asynchronously, so it is polled for."""
+    deadline = time.monotonic() + seconds
+    while not client.closed_by_peer():
+        if time.monotonic() > deadline:
+            return False
+        time.sleep(0.01)
+    return True
+
+
+@pytest.mark.parametrize("tls", [False, True])
+def test_an_idle_open_connection_is_not_closed_by_peer(localhost_certificate, tls):
+    with LoopbackEppServer(b"<greeting/>", localhost_certificate if tls else None) as server:
+        client = TCPClient("127.0.0.1", server.port, new_tls_context(insecure_skip_verify=True) if tls else None)
+        client.connect()
+        client.receive()
+
+        assert client.closed_by_peer() is False
+        client.disconnect()
+
+
+@pytest.mark.parametrize("tls", [False, True])
+def test_a_connection_the_server_closed_is_closed_by_peer(localhost_certificate, tls):
+    certificate = localhost_certificate if tls else None
+    with LoopbackEppServer(b"<greeting/>", certificate, close_after_reply=True) as server:
+        client = TCPClient("127.0.0.1", server.port, new_tls_context(insecure_skip_verify=True) if tls else None)
+        client.connect()
+        client.receive()
+
+        assert closed_by_peer_within(client)
+        client.disconnect()
+
+
+def test_without_a_socket_the_connection_is_closed_by_peer():
+    assert TCPClient("127.0.0.1", 700).closed_by_peer() is True

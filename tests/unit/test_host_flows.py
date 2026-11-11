@@ -1,10 +1,18 @@
 import pytest
 
-from flows import create_host, patch_host, replace_host, update_host
-from models import ErrorResponse, Host, HostReplacement, HostUpdate, HostUpdateChanges, ResultCode
+from core.flows.host.host_flows import create_host, patch_host, replace_host, update_host
+from core.model.host.host import Host
+from core.model.host.host_replacement import HostReplacement
+from core.model.host.host_update import HostUpdate
+from core.model.host.host_update_changes import HostUpdateChanges
+from core.result.error_response import ErrorResponse
+from core.result.result_code import ResultCode
+from registry_adapter.epp.gateways.epp_backend import EppBackend
+from tests.helper.epp_ns_map import EPP_NS_MAP
 from tests.helper.fake_epp_client import FakeEppClient
 
 HOST_NS = 'xmlns:host="urn:ietf:params:xml:ns:host-1.0"'
+
 NAME = "ns1.example.example"
 
 
@@ -46,47 +54,47 @@ def replacement(new_name, **members):
 
 
 def test_create_reads_the_host_back():
-    result = create_host(client(CREATED, info()), Host(name=NAME), "cl-1")
+    result = create_host(EppBackend(client(CREATED, info()), EPP_NS_MAP), Host(name=NAME), "cl-1")
 
-    assert result.host.status == ["ok"]
+    assert result.stored.status == ["ok"]
     assert result.mutation.server_transaction_id == "sv-1"
 
 
 def test_create_error_is_returned():
-    assert isinstance(create_host(client(EXISTS), Host(name=NAME), "cl-1"), ErrorResponse)
+    assert isinstance(create_host(EppBackend(client(EXISTS), EPP_NS_MAP), Host(name=NAME), "cl-1"), ErrorResponse)
 
 
 def test_failed_readback_has_no_host():
-    result = create_host(client(CREATED, MISSING), Host(name=NAME), "cl-1")
+    result = create_host(EppBackend(client(CREATED, MISSING), EPP_NS_MAP), Host(name=NAME), "cl-1")
 
-    assert result.host is None
+    assert result.stored is None
     assert result.mutation.server_transaction_id == "sv-1"
 
 
 def test_exception_during_readback_has_no_host():
-    result = update_host(client(DONE, ConnectionError("gone")), HostUpdate(name=NAME), "cl-1")
+    result = update_host(EppBackend(client(DONE, ConnectionError("gone")), EPP_NS_MAP), HostUpdate(name=NAME), "cl-1")
 
-    assert result.host is None
+    assert result.stored is None
 
 
 def test_readback_does_not_reuse_the_client_transaction_id():
     """The backend refuses a repeated clTRID, so the read-back would fail."""
     epp = client(CREATED, info())
 
-    create_host(epp, Host(name=NAME), "cl-1")
+    create_host(EppBackend(epp, EPP_NS_MAP), Host(name=NAME), "cl-1")
 
     assert "cl-1" in epp.sent[0]
     assert "cl-1" not in epp.sent[1]
 
 
 def test_update_error_is_returned():
-    assert isinstance(update_host(client(MISSING), HostUpdate(name=NAME), "cl-1"), ErrorResponse)
+    assert isinstance(update_host(EppBackend(client(MISSING), EPP_NS_MAP), HostUpdate(name=NAME), "cl-1"), ErrorResponse)
 
 
 def test_update_reads_back_under_the_new_name():
     epp = client(DONE, info())
 
-    update_host(epp, HostUpdate(name=NAME, new_name="ns2.example.example"), "cl-1")
+    update_host(EppBackend(epp, EPP_NS_MAP), HostUpdate(name=NAME, new_name="ns2.example.example"), "cl-1")
 
     assert "ns2.example.example" in epp.sent[1]
 
@@ -98,14 +106,14 @@ def sent_update(epp) -> str:
 def test_replace_of_a_missing_host_is_an_error():
     epp = client(MISSING)
 
-    assert isinstance(replace_host(epp, replacement(NAME), "cl-1"), ErrorResponse)
+    assert isinstance(replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME), "cl-1"), ErrorResponse)
     assert len(epp.sent) == 1
 
 
 def test_replace_adds_and_removes_addresses():
     epp = client(info(addresses=["192.0.2.1", "2001:db8::1"]), DONE, info())
 
-    replace_host(epp, replacement(NAME, ipv4=["198.51.100.1"], ipv6=["2001:db8::1"]), "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME, ipv4=["198.51.100.1"], ipv6=["2001:db8::1"]), "cl-1")
 
     xml = sent_update(epp)
     add = xml[xml.index("<host:add>"):xml.index("</host:add>")]
@@ -118,7 +126,7 @@ def test_replace_adds_and_removes_addresses():
 def test_replace_compares_addresses_by_value():
     epp = client(info(addresses=["2001:0DB8::0001"]), DONE, info())
 
-    replace_host(epp, replacement(NAME, ipv6=["2001:db8::1"]), "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME, ipv6=["2001:db8::1"]), "cl-1")
 
     assert len(epp.sent) == 1
 
@@ -126,7 +134,7 @@ def test_replace_compares_addresses_by_value():
 def test_replace_clears_what_the_request_omits():
     epp = client(info(statuses=["clientDeleteProhibited", "linked"], addresses=["192.0.2.1"]), DONE, info())
 
-    replace_host(epp, replacement(NAME), "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME), "cl-1")
 
     xml = sent_update(epp)
     rem = xml[xml.index("<host:rem>"):xml.index("</host:rem>")]
@@ -138,7 +146,7 @@ def test_replace_clears_what_the_request_omits():
 def test_replace_adds_a_status():
     epp = client(info(), DONE, info())
 
-    replace_host(epp, replacement(NAME, status=["clientUpdateProhibited"]), "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME, status=["clientUpdateProhibited"]), "cl-1")
 
     assert 's="clientUpdateProhibited"' in sent_update(epp)
 
@@ -147,7 +155,7 @@ def test_replace_sends_the_reason_of_a_new_status():
     epp = client(info(), DONE, info())
 
     wanted = replacement(NAME, status=["clientUpdateProhibited"], status_reasons={"clientUpdateProhibited": "x"})
-    replace_host(epp, wanted, "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), wanted, "cl-1")
 
     assert ">x</host:status>" in sent_update(epp)
 
@@ -160,7 +168,7 @@ def test_replace_with_another_reason_replaces_the_status():
     epp = client(info(statuses=["clientDeleteProhibited"], reasons={"clientDeleteProhibited": "old"}), DONE, info())
 
     wanted = replacement(NAME, status=["clientDeleteProhibited"], status_reasons={"clientDeleteProhibited": "new"})
-    replace_host(epp, wanted, "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), wanted, "cl-1")
 
     add, rem = status_blocks(sent_update(epp))
     assert ">new</host:status>" in add
@@ -170,7 +178,7 @@ def test_replace_with_another_reason_replaces_the_status():
 def test_replace_that_omits_a_reason_clears_it():
     epp = client(info(statuses=["clientDeleteProhibited"], reasons={"clientDeleteProhibited": "old"}), DONE, info())
 
-    replace_host(epp, replacement(NAME, status=["clientDeleteProhibited"]), "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME, status=["clientDeleteProhibited"]), "cl-1")
 
     add, rem = status_blocks(sent_update(epp))
     assert 's="clientDeleteProhibited"' in add
@@ -181,7 +189,7 @@ def test_replace_with_the_same_reason_changes_nothing():
     epp = client(info(statuses=["clientDeleteProhibited"], reasons={"clientDeleteProhibited": "x"}), DONE, info())
 
     wanted = replacement(NAME, status=["clientDeleteProhibited"], status_reasons={"clientDeleteProhibited": "x"})
-    replace_host(epp, wanted, "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), wanted, "cl-1")
 
     assert len(epp.sent) == 1
 
@@ -189,7 +197,7 @@ def test_replace_with_the_same_reason_changes_nothing():
 def test_replace_with_another_name_renames():
     epp = client(info(), DONE, info())
 
-    replace_host(epp, replacement("ns2.example.example"), "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), replacement("ns2.example.example"), "cl-1")
 
     assert "<host:chg>" in sent_update(epp)
     assert "ns2.example.example" in epp.sent[2]
@@ -198,7 +206,7 @@ def test_replace_with_another_name_renames():
 def test_replace_with_the_same_name_in_another_case_does_not_rename():
     epp = client(info(), DONE, info())
 
-    replace_host(epp, replacement(NAME.upper()), "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME.upper()), "cl-1")
 
     assert len(epp.sent) == 1
 
@@ -206,7 +214,7 @@ def test_replace_with_the_same_name_in_another_case_does_not_rename():
 def test_replace_uses_the_client_transaction_id_for_the_update_only():
     epp = client(info(), DONE, info())
 
-    replace_host(epp, replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
+    replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
 
     assert ["cl-1" in xml for xml in epp.sent] == [False, True, False]
 
@@ -214,7 +222,7 @@ def test_replace_uses_the_client_transaction_id_for_the_update_only():
 def test_replace_error_from_the_update_is_returned():
     epp = client(info(), (False, "2304", epp_reply(2304)))
 
-    assert isinstance(replace_host(epp, replacement(NAME, ipv4=["192.0.2.1"]), "cl-1"), ErrorResponse)
+    assert isinstance(replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME, ipv4=["192.0.2.1"]), "cl-1"), ErrorResponse)
 
 
 def test_update_changes_default_to_empty():
@@ -229,7 +237,7 @@ def test_a_direct_patch_is_not_preceded_by_a_read():
     epp = client(DONE, info())
     update = HostUpdate(name=NAME, add=HostUpdateChanges(ipv4=["192.0.2.1"]))
 
-    patch_host(epp, NAME, update, never_called, "cl-1")
+    patch_host(EppBackend(epp, EPP_NS_MAP), NAME, update, never_called, "cl-1")
 
     assert "host:update" in epp.sent[0] and "host:info" in epp.sent[1]
 
@@ -237,7 +245,7 @@ def test_a_direct_patch_is_not_preceded_by_a_read():
 def test_a_patch_needing_the_host_sends_the_difference():
     epp = client(info(addresses=["192.0.2.1"]), DONE, info())
 
-    patch_host(epp, NAME, None, lambda host: replacement(NAME, ipv4=["198.51.100.1"]), "cl-1")
+    patch_host(EppBackend(epp, EPP_NS_MAP), NAME, None, lambda host: replacement(NAME, ipv4=["198.51.100.1"]), "cl-1")
 
     assert "host:info" in epp.sent[0]
     rem = sent_update(epp)[sent_update(epp).index("<host:rem>"):]
@@ -248,7 +256,7 @@ def test_a_patch_needing_the_host_sends_the_difference():
 def test_only_the_update_carries_the_client_transaction_id():
     epp = client(info(), DONE, info())
 
-    patch_host(epp, NAME, None, lambda host: replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
+    patch_host(EppBackend(epp, EPP_NS_MAP), NAME, None, lambda host: replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
 
     assert "cl-1" not in epp.sent[0]
     assert "cl-1" in epp.sent[1]
@@ -258,32 +266,32 @@ def test_only_the_update_carries_the_client_transaction_id():
 def test_a_patch_of_a_missing_host_is_an_error():
     epp = client(MISSING)
 
-    assert isinstance(patch_host(epp, NAME, None, never_called, "cl-1"), ErrorResponse)
+    assert isinstance(patch_host(EppBackend(epp, EPP_NS_MAP), NAME, None, never_called, "cl-1"), ErrorResponse)
     assert len(epp.sent) == 1
 
 
 def test_a_patch_without_a_difference_sends_no_update():
     epp = client(info(addresses=["192.0.2.1"]))
 
-    result = patch_host(epp, NAME, None, lambda host: replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
+    result = patch_host(EppBackend(epp, EPP_NS_MAP), NAME, None, lambda host: replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
 
     assert len(epp.sent) == 1
-    assert result.host.ipv4 == ["192.0.2.1"]
+    assert result.stored.ipv4 == ["192.0.2.1"]
     assert result.mutation.server_transaction_id == "sv-1"
 
 
 def test_a_replacement_without_a_difference_sends_no_update():
     epp = client(info(addresses=["192.0.2.1"]))
 
-    result = replace_host(epp, replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
+    result = replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
 
     assert len(epp.sent) == 1
-    assert result.host.ipv4 == ["192.0.2.1"]
+    assert result.stored.ipv4 == ["192.0.2.1"]
 
 
 @pytest.mark.parametrize("run", [
-    lambda epp: replace_host(epp, replacement(NAME), "cl-1"),
-    lambda epp: patch_host(epp, NAME, None, lambda host: replacement(NAME), "cl-1"),
+    lambda epp: replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME), "cl-1"),
+    lambda epp: patch_host(EppBackend(epp, EPP_NS_MAP), NAME, None, lambda host: replacement(NAME), "cl-1"),
 ])
 def test_a_change_of_nothing_by_a_client_that_is_not_the_sponsor_is_refused(run):
     epp = client(info(), username="baz")
@@ -297,6 +305,6 @@ def test_a_change_of_nothing_by_a_client_that_is_not_the_sponsor_is_refused(run)
 def test_a_rename_alone_is_a_difference():
     epp = client(info(), DONE, info())
 
-    patch_host(epp, NAME, None, lambda host: replacement("ns2.example.example"), "cl-1")
+    patch_host(EppBackend(epp, EPP_NS_MAP), NAME, None, lambda host: replacement("ns2.example.example"), "cl-1")
 
     assert "ns2.example.example" in sent_update(epp)

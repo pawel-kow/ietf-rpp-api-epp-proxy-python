@@ -1,16 +1,23 @@
 import pytest
 from lxml import etree
 
-from epp_to_model_mapper import parse_contact_transfer_response, transfer_contact_xml
-from models import AuthInfo, ContactTransfer, ContactTransferProcess, ResultCode, TransferOperation
+from core.model.contact.contact_transfer import ContactTransfer
+from core.model.shared.common import AuthInfo
+from core.model.shared.contact_transfer_process import ContactTransferProcess
+from core.model.shared.transfer_operation import TransferOperation
+from core.result.result_code import ResultCode
+from registry_adapter.epp.commands.contact.transfer import parse_contact_transfer_response, transfer_contact_xml
+from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
+
 CONTACT = "urn:ietf:params:xml:ns:contact-1.0"
+
 NS = {"epp": EPP, "contact": CONTACT}
 
 
 def command(transfer):
-    return etree.fromstring(transfer_contact_xml(transfer, client_request_id="cl-1").encode())
+    return etree.fromstring(transfer_contact_xml(transfer, client_request_id="cl-1", ns_map=EPP_NS_MAP).encode())
 
 
 def only(root, path):
@@ -53,7 +60,7 @@ def test_trn_data_is_parsed():
     response = parse_contact_transfer_response(reply(1001), "cl-1")
     assert response.code == ResultCode.COMMAND_COMPLETED_ACTION_PENDING
     assert response.server_transaction_id == "sv-1"
-    assert response.transfer == ContactTransferProcess(
+    assert response.payload == ContactTransferProcess(
         id="FO-1",
         trStatus="pending",
         reqClientId="ClientX",

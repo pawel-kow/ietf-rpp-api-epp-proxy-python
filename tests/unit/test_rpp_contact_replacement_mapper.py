@@ -1,10 +1,14 @@
 import pytest
 from connexion import ProblemException
 
-from controller.helper.rpp_response import map_request
-from models import Address, Contact, ContactType
-from rpp_to_model_mapper import contact_patch, contact_replacement
+from core.model.contact.address import Address
+from core.model.contact.contacts import Contact, ContactType
+from rpp.http.operation import map_request
+from rpp.mapping.contact import contact_patch, contact_replacement
 from tests.helper.contact_fixtures import ADDRESS, card, current_contact, derived_update, localized, put_body
+from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
+
+pytestmark = pytest.mark.usefixtures("epp_app_context")
 
 ID = "JD-1234"
 

@@ -11,10 +11,12 @@ Install modules
 pip install -r requirements.txt 
 ```
 
+For development, install `requirements-dev.txt` instead, which adds the tools of the checks.
+
 ## Running
 ```
 cd src
-uvicorn run:app
+uvicorn main:app
 ```
 
 Swagger UI shall be available at http://127.0.0.1:8000/ui/

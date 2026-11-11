@@ -1,8 +1,10 @@
 import jsonschema
 import pytest
 
-from models import Host, HostCheckResponse, ResultCode
-from rpp_to_model_mapper import UnsupportedRppFeature, host_availability, host_replacement, hosts
+from core.capabilities.unsupported_feature import UnsupportedFeature
+from core.model.host.host import Host
+from core.model.shared.availability import Availability
+from rpp.mapping.host import host_availability, host_replacement, hosts
 
 NAME = "ns1.example.example"
 
@@ -46,19 +48,19 @@ def test_request_without_the_own_ns_record_is_a_client_error(mapper, body):
 
 @pytest.mark.parametrize("mapper", [hosts.rpp_to_model, replace_host])
 def test_a_record_epp_cannot_hold_comes_before_the_missing_ns_record(mapper):
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         mapper(without_own_ns(record("a", {"address": "192.0.2.1"}, name="www")))
 
 
 def test_status_on_create_comes_before_the_missing_ns_record():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         hosts.rpp_to_model({"@type": "host", "hostName": NAME, "status": [
             {"@type": "hostStatus", "label": "clientUpdateProhibited"},
         ]})
 
 
 def test_a_status_epp_cannot_hold_comes_before_the_missing_ns_record_on_a_replacement():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         replace_host({"@type": "host", "hostName": NAME, "status": [
             {"@type": "hostStatus", "label": "clientUpdateProhibited", "due": "2030-01-01T00:00:00Z"},
         ]})
@@ -82,7 +84,7 @@ def test_a_record_may_name_the_host_itself(name):
 
 @pytest.mark.parametrize("name", ["www", f"sub.{NAME}.", "ns2.example.example."])
 def test_a_record_for_another_name_is_unsupported(name):
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         hosts.rpp_to_model(host(record("a", {"address": "192.0.2.1"}, name=name)))
 
 
@@ -92,17 +94,17 @@ def test_self_referencing_ns_record_adds_nothing(nsdname):
 
 
 def test_ns_record_for_another_host_is_unsupported():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         hosts.rpp_to_model(host(record("ns", {"nsdname": "ns2.example.example."}, name="@")))
 
 
 def test_ns_record_at_another_name_is_unsupported():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         hosts.rpp_to_model(host(record("ns", {"nsdname": f"{NAME}."}, name="other.example.")))
 
 
 def test_other_record_types_are_unsupported():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         hosts.rpp_to_model(host(record("txt", {"text": "x"})))
 
 
@@ -111,7 +113,7 @@ def test_class_in_is_accepted():
 
 
 def test_other_classes_are_unsupported():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         hosts.rpp_to_model(host({**A, "class": "CH"}))
 
 
@@ -132,12 +134,12 @@ def test_dns_controls_are_unsupported():
     body = host(A)
     body["dns"]["controls"] = {"@type": "dnsControls", "ttl": {"a": 3600}}
 
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         hosts.rpp_to_model(body)
 
 
 def test_status_on_create_is_unsupported():
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         hosts.rpp_to_model(host(status=[{"@type": "hostStatus", "label": "clientUpdateProhibited"}]))
 
 
@@ -167,7 +169,7 @@ def test_replacement_rejects_dns_controls():
     body = host(A)
     body["dns"]["controls"] = {"@type": "dnsControls", "ttl": {"a": 3600}}
 
-    with pytest.raises(UnsupportedRppFeature):
+    with pytest.raises(UnsupportedFeature):
         replace_host(body)
 
 
@@ -205,10 +207,7 @@ def test_host_without_addresses_has_its_ns_record():
 
 
 def availability(available, reason=None):
-    return HostCheckResponse(
-        host_name=NAME, available=available, reason=reason, code=ResultCode.COMMAND_COMPLETED_SUCCESSFULLY,
-        msg="ok", server_transaction_id="sv", client_transaction_id=None,
-    )
+    return Availability(name=NAME, available=available, reason=reason)
 
 
 def test_available_host():

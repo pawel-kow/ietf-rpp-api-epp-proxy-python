@@ -1,0 +1,87 @@
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
+
+from core.model.contact.contacts import ContactMinimal
+from core.model.domain.dns_sec import DnsSec
+from core.model.domain.domain_idn import DomainIdn
+from core.model.shared.common import AuthInfo, Process, ProvisioningObject
+
+@dataclass(kw_only=True)
+class HostObj:
+    id: str
+
+@dataclass(kw_only=True)
+class HostAttr:
+    id: str
+    ipv4: Optional[List[str]] = None
+    ipv6: Optional[List[str]] = None
+
+@dataclass(kw_only=True)
+class NS:
+    host_objs: Optional[List[HostObj]]
+    host_attrs: Optional[List[HostAttr]]
+
+@dataclass(kw_only=True)
+class ContactReference:
+    types: List[str]
+    id: str
+
+@dataclass(kw_only=True)
+class ContactReferenceNew:
+    type: str
+    contact: ContactMinimal
+
+@dataclass(kw_only=True)
+class CreationProcess(Process):
+    duration: str
+
+@dataclass(kw_only=True)
+class Domain(ProvisioningObject):
+    name: str
+    ns: Optional[NS] = None
+    contacts: Optional[List[ContactReference]] = None
+    dnsSEC: Optional[DnsSec] = None
+    idn: Optional[DomainIdn] = None
+    subordinateHosts: Optional[List[str]] = None
+    processes: Optional[Dict[str, Process]] = None
+    status_reasons: Dict[str, str] = field(default_factory=dict)
+    rgpStatus: List[str] = field(default_factory=list)  # RFC 3915 §4.1.2, empty without rgp:infData
+    
+    def update(self, obj):
+        super().update(obj)
+
+        self.name = obj.name if obj.name else self.name
+        self.processes = obj.processes if obj.processes else self.processes
+        # TODO: cascade update
+        self.ns = obj.ns if obj.ns and (obj.ns.host_objs and len(obj.ns.host_objs) > 0 or obj.ns.host_attrs and len(obj.ns.host_attrs) > 0) else self.ns
+        # TODO: cascade update
+        self.contacts = obj.contacts if obj.contacts else self.contacts
+        # TODO: cascade update
+        self.dnsSEC = obj.dnsSEC if obj.dnsSEC else self.dnsSEC
+    
+@dataclass(kw_only=True)
+class DomainUpdateAdd:
+    ns: Optional[NS] = None
+    contacts: Optional[List[ContactReferenceNew]] = None
+    dnsSEC: Optional[DnsSec] = None
+    status: Optional[List[str]] = None
+    status_reasons: Optional[Dict[str, str]] = None
+
+@dataclass(kw_only=True)
+class DomainUpdateRemove:
+    ns: Optional[NS] = None
+    contacts: Optional[List[ContactReferenceNew]] = None
+    dnsSEC: Optional[DnsSec] = None
+    status: Optional[List[str]] = None
+
+@dataclass(kw_only=True)
+class DomainUpdateChange:
+    authInfo: Optional[AuthInfo] = None
+    clear_auth_info: bool = False
+    
+@dataclass(kw_only=True)
+class DomainUpdate:
+    name: str
+    add: Optional[DomainUpdateAdd] = None
+    remove: Optional[DomainUpdateRemove] = None
+    change: Optional[DomainUpdateChange] = None

@@ -2,8 +2,10 @@ import base64
 
 import pytest
 
-from app import create_app
-from controller.epp_session_authenticator import EppSessionAuthenticator
+from core.session.session_pool import SessionPool
+from registry_adapter.epp.profile import EPP_PROFILE
+from rpp.http.app import create_app
+from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 
 DOMAIN_NS = 'xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"'
@@ -55,7 +57,7 @@ def client_with(replies):
     def factory(username, password):
         return FakeEppClient(username, password, replies=replies)
 
-    return create_app(EppSessionAuthenticator(factory)).test_client()
+    return create_app(SessionPool(epp_backends(factory)), EPP_PROFILE).test_client()
 
 
 def patch(http):

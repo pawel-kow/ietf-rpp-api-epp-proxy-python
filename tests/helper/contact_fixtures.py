@@ -1,9 +1,12 @@
-from controller.helper.rpp_response import raise_epp_error
-from flows import epp_contact_refusal
-from models import (
-    Address, AuthInfo, Contact, ContactReplacement, ContactType, ContactUpdate, LocalizedPostalInfo, contact_difference,
-    contact_localization,
-)
+from core.model.contact import contact_difference, contact_localization
+from core.model.contact.address import Address
+from core.model.contact.contact_replacement import ContactReplacement
+from core.model.contact.contact_update import ContactUpdate
+from core.model.contact.contacts import Contact, ContactType
+from core.model.contact.localized_postal_info import LocalizedPostalInfo
+from core.model.shared.common import AuthInfo
+from registry_adapter.epp import contact_refusal
+from rpp.http.problem import raise_registry_error
 
 ADDRESS = Address(street=["1 Main"], city="Berlin", stateProvince="BE", postalCode="10115", country="DE")
 
@@ -41,9 +44,9 @@ def localized(**members) -> LocalizedPostalInfo:
 
 
 def derived_update(current: Contact, wanted: ContactReplacement) -> ContactUpdate:
-    """The EPP update the flow derives from a full update, without the registry; a refusal as the handler renders it."""
+    """The EPP update the EPP adapter derives from a full update, without the registry; a refusal as the handler renders it."""
     wanted = contact_localization.as_stored(wanted, current)
-    refused = epp_contact_refusal.refuse(current, wanted)
+    refused = contact_refusal.refuse(current, wanted)
     if refused:
-        raise_epp_error(refused)
+        raise_registry_error(refused)
     return contact_difference.difference(current, wanted)
