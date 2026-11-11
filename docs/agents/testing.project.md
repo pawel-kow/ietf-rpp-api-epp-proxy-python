@@ -15,8 +15,8 @@ pytest -k domain_update                                 # single test group by s
 pytest "tests/integration/test_from_file_definition.py::test_from_file_definition[domain_update-test1-simple_update]"  # one case by id
 ```
 
-Run the full suite with `-n 8`, which takes about 8 minutes where one worker takes about 18. The unit tests are
-bound by CPU (#112), so more workers than cores do not speed them up, and the backend refuses logins under about
+Run the full suite with `-n 8`, which takes about 5.5 minutes on 4 cores. The unit tests are bound by CPU,
+mostly building an app per test from `openapi.yaml`, so more workers than cores do not speed them up, and the backend refuses logins under about
 16 concurrent sessions (pawel-kow/EPP-server-docker#7), so 8 is the most it takes. Every worker makes its own
 `{random_name}`, so cases in different workers do not collide.
 
