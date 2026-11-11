@@ -91,7 +91,11 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
   the EPP side; keep it in the mapper path instead?
 - **Q6** Domain/contact PUT without `authInfo`: stays `KEEP` (spec-issues: json §4.9.3 forbids sending it, so C1's
   rule would wipe the password on every PUT of a read), or becomes `CLEAR`?
-- **Q7** Host PUT/PATCH that changes nothing by a non-sponsor: 403 via `require_sponsor` as domains/contacts, or 200?
+  Maintainer: use Visibility (`authInfo` is `onDemand`, data-objects §2.x, domain/contact `authInfo`) to tell
+  whether `authInfo` is part of the PUT; `authInfo` set "without visibility" is an error; add a spec-issues entry.
+  Reading proposed to the maintainer, not yet confirmed: PUT with `includeElements=authInfo` → present = SET,
+  absent = CLEAR (contact CLEAR = 501); without it → KEEP, and a body `authInfo` → 400.
+- ~~**Q7**~~ Decided, D3.
 - ~~**Q5**~~ Decided, D2. Host PUT that changes nothing (finding 4): keep sending the empty update (`2003`), as "must not change"
   requires? Then `replace` takes a flag to send even when unchanged, for hosts only.
 
@@ -103,6 +107,8 @@ update + info, others = info + update + info). Also: HTTP status, `RPP-Code` and
 - **D2 (Q5)** A host PUT that changes nothing sends no update and answers 200 with the current host, as domains and
   contacts. Behaviour change: `spec-issues.md` "Full update without a change", host integration case(s) and
   `test_host_flows.py` updated.
+- **D3 (Q7)** A host PUT or PATCH that changes nothing, from a client that is not the sponsor, is 403 (`02201`) via
+  `require_sponsor`, as domains and contacts. Behaviour change for host PATCH (today 200) and PUT (today `2003`).
 
 ## Corrections
 
