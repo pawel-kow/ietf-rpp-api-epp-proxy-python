@@ -9,15 +9,17 @@ from registry_adapter.epp.commands.domain.domain_commands import (
     epp_domains_Check, epp_domains_Create, epp_domains_Delete, epp_domains_Info, epp_domains_Renew,
     epp_domains_Restore, epp_domains_RestoreInfo, epp_domains_Transfer, epp_domains_Update,
 )
+from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.session.epp_client import EPPClient
 
 
 class EppDomainGateway:
     """The domain commands over EPP. EPP has no full update, so `replace` is derived from `<update>`."""
 
-    def __init__(self, epp_client: EPPClient, ns_map: dict[str, str]):
+    def __init__(self, epp_client: EPPClient, ns_map: dict[str, str], idn_tables: IdnTables):
         self._epp_client = epp_client
         self._ns_map = ns_map
+        self._idn_tables = idn_tables
         self._steps = ReplacementSteps(
             read=self.info,
             object_of=lambda info: info.domain,
@@ -30,10 +32,10 @@ class EppDomainGateway:
         return epp_domains_Check(self._epp_client, name, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
 
     def info(self, name, client_transaction_id=None):
-        return epp_domains_Info(self._epp_client, name, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+        return epp_domains_Info(self._epp_client, name, client_transaction_id=client_transaction_id, ns_map=self._ns_map, idn_tables=self._idn_tables)
 
     def create(self, domain, client_transaction_id=None):
-        return epp_domains_Create(self._epp_client, domain, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+        return epp_domains_Create(self._epp_client, domain, client_transaction_id=client_transaction_id, ns_map=self._ns_map, idn_tables=self._idn_tables)
 
     def update(self, update, client_transaction_id=None):
         return epp_domains_Update(self._epp_client, update, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
@@ -56,4 +58,4 @@ class EppDomainGateway:
         return epp_domains_Restore(self._epp_client, restore, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
 
     def restore_info(self, name, client_transaction_id=None):
-        return epp_domains_RestoreInfo(self._epp_client, name, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+        return epp_domains_RestoreInfo(self._epp_client, name, client_transaction_id=client_transaction_id, ns_map=self._ns_map, idn_tables=self._idn_tables)

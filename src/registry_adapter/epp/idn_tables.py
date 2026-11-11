@@ -23,6 +23,10 @@ class IdnTables:
             raise ValueError(f"The LGR '{lgr}' is not offered")
         return self._tables[lgr]
 
+    def lgrs(self) -> frozenset[str]:
+        """The LGRs that have a table."""
+        return frozenset(self._tables)
+
     def lgr(self, table: str) -> str | None:
         """The LGR of an IDN table, or None when no LGR is mapped to it."""
         return self._lgrs.get(table)

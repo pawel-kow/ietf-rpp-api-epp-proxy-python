@@ -1,48 +1,37 @@
-from connexion import request
-from flask import current_app
+from connexion import ProblemException, request
+
+from core.flows.domain.domain_flows import (
+    create_domain, patch_domain, read_domain_restore, renew_domain, replace_domain,
+)
 from core.result.error_response import ErrorResponse
 from rpp.handlers.shared.requested_elements import requested_elements
-from rpp.http.context import backend_profile
+from rpp.http.context import backend_profile, get_backend
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers
 from rpp.http.operation import map_request, require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
-from core.flows.domain.domain_flows import patch_domain, read_domain_restore, renew_domain, replace_domain
-from rpp.http.context import get_backend
-
-def _idn_tables():
-    return current_app.config["RPP_IDN_TABLES"]
 from rpp.mapping.domain import (
     domain_availability, domain_patch, domain_renew_process, domain_replacement, domain_restore_patch,
     domain_restore_process, domain_restore_report, domains,
 )
 from rpp.mapping.shared import include_elements
 
-
 OBJECT = "domainName"
-
-
-def _domain_to_rpp(domain):
-    return domains.model_to_rpp(domain, _idn_tables())
 
 
 def _domain_output(domain, requested):
     """The domain as a response shows it: with the onDemand data elements the request includes."""
-    return include_elements.visible(OBJECT, _domain_to_rpp(domain), requested)
+    return include_elements.visible(OBJECT, domains.model_to_rpp(domain), requested)
 
 
-def _domain_after_mutation(domain_name, mutation_resp, success_status, requested, extra_headers=None):
-    """Reads the domain back after a mutation the registry has already applied.
-
-    A failed readback must not look like a failed mutation, so it answers 202 with no body.
-    """
-    headers = {**generate_rpp_response_headers(mutation_resp), **(extra_headers or {})}
-    try:
-        inforesp = get_backend().domains.info(domain_name)
-        if isinstance(inforesp, ErrorResponse):
-            return None, 202, headers
-        return _domain_output(inforesp.domain, requested), success_status, headers
-    except Exception:
+def _mutation_answer(result, requested, status=200, extra_headers=None):
+    """The answer to a mutation: the domain as read after it, or 202 with no body when that read failed."""
+    if isinstance(result, ErrorResponse):
+        raise_registry_error(result)
+    headers = {**generate_rpp_response_headers(result.mutation), **(extra_headers or {})}
+    if result.stored is None:
         return None, 202, headers
+    return _domain_output(result.stored, requested), status, headers
+
 
 def _availability(name, u_name, lgr):
     """EPP check has no place for `uName` and `lgr` (draft-obispo-epp-idn-04 adds nothing to it)."""
@@ -51,16 +40,6 @@ def _availability(name, u_name, lgr):
     if isinstance(ret, ErrorResponse):
         raise_registry_error(ret)
     return ret
-
-def _updated_domain(result, requested):
-    """The answer to an update: the domain as read after it, or 202 when that read failed."""
-    if isinstance(result, ErrorResponse):
-        raise_registry_error(result)
-    headers = generate_rpp_response_headers(result.mutation)
-    if result.domain is None:
-        return None, 202, headers
-    return _domain_output(result.domain, requested), 200, headers
-
 
 @rpp_operation
 def domainNames_availabilityHead(name, uName=None, lgr=None):
@@ -77,12 +56,16 @@ def domainNames_availability(name, uName=None, lgr=None):
 @rpp_operation
 def domainNames_create(body):
     requested = requested_elements(OBJECT)
-    domain = map_request(domains.rpp_to_model, body, _idn_tables(), profile=backend_profile())
-    domainresp = get_backend().domains.create(domain, client_transaction_id=client_transaction_id())
-    if isinstance(domainresp, ErrorResponse):
-        raise_registry_error(domainresp)
-    location = f"{str(request.url).rstrip('/')}/{domain.name}"
-    return _domain_after_mutation(domainresp.domain.name, domainresp, 201, requested, {"Location": location})
+    domain = map_request(domains.rpp_to_model, body, profile=backend_profile())
+    result = create_domain(get_backend(), domain, client_transaction_id())
+    location = {"Location": f"{str(request.url).rstrip('/')}/{domain.name}"}
+    try:
+        return _mutation_answer(result, requested, 201, location)
+    except ProblemException:
+        raise
+    except Exception:
+        # The domain is created: a read-back that cannot be shown must not look like a failed create.
+        return None, 202, {**generate_rpp_response_headers(result.mutation), **location}
 
 @rpp_operation
 def domainNames_delete(name):
@@ -107,19 +90,19 @@ def domainNames_updatePartial(name, body):
 
     def wanted_from_current(current):
         return map_request(
-            domain_patch.rpp_to_model_with_current, name, body, _domain_to_rpp(current),
+            domain_patch.rpp_to_model_with_current, name, body, domains.model_to_rpp(current),
             profile=backend_profile(),
         )
 
     result = patch_domain(get_backend(), name, update, wanted_from_current, client_transaction_id())
-    return _updated_domain(result, requested)
+    return _mutation_answer(result, requested)
 
 
 @rpp_operation
 def domainNames_update(name, body):
     requested = requested_elements(OBJECT)
     wanted = map_request(domain_replacement.rpp_to_model, name, body, requested, profile=backend_profile())
-    return _updated_domain(replace_domain(get_backend(), wanted, client_transaction_id()), requested)
+    return _mutation_answer(replace_domain(get_backend(), wanted, client_transaction_id()), requested)
 
 
 @rpp_operation

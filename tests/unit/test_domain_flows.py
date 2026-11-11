@@ -1,7 +1,7 @@
 import pytest
 
 from registry_adapter.epp.gateways.epp_backend import EppBackend
-from core.flows.domain.domain_flows import patch_domain, replace_domain
+from core.flows.domain.domain_flows import create_domain, patch_domain, replace_domain
 from core.model.domain.domain_replacement import DomainReplacement
 from core.model.domain.domains import Domain, DomainUpdate, DomainUpdateRemove, HostObj, NS
 from core.result.error_response import ErrorResponse
@@ -52,7 +52,7 @@ def test_a_direct_update_is_not_preceded_by_a_read():
 
     assert len(epp.sent) == 2
     assert "domain:update" in epp.sent[0] and "domain:info" in epp.sent[1]
-    assert result.domain.ns.host_objs == [HostObj(id="ns2.foo.example")]
+    assert result.stored.ns.host_objs == [HostObj(id="ns2.foo.example")]
 
 
 def test_a_patch_needing_the_domain_reads_it_first():
@@ -83,7 +83,7 @@ def test_a_patch_that_changes_nothing_sends_no_update():
     result = patch_domain(EppBackend(epp, EPP_NS_MAP), NAME, None, lambda domain: WITH_NS1, "cl-1")
 
     assert len(epp.sent) == 1
-    assert result.domain.name.lower() == NAME
+    assert result.stored.name.lower() == NAME
 
 
 def test_a_rejected_update_is_returned():
@@ -93,12 +93,12 @@ def test_a_rejected_update_is_returned():
 def test_failed_readback_has_no_domain():
     result = patch_domain(EppBackend(client(DONE, MISSING), EPP_NS_MAP), NAME, REMOVE_NS1, never_called, "cl-1")
 
-    assert result.domain is None
+    assert result.stored is None
     assert result.mutation.server_transaction_id == "sv-1"
 
 
 def test_exception_during_readback_has_no_domain():
-    assert patch_domain(EppBackend(client(DONE, ConnectionError("gone")), EPP_NS_MAP), NAME, REMOVE_NS1, never_called, "cl-1").domain is None
+    assert patch_domain(EppBackend(client(DONE, ConnectionError("gone")), EPP_NS_MAP), NAME, REMOVE_NS1, never_called, "cl-1").stored is None
 
 
 def test_error_of_the_patch_propagates():
@@ -115,7 +115,7 @@ def test_a_replacement_reads_updates_and_reads_back():
     result = replace_domain(EppBackend(epp, EPP_NS_MAP), WITHOUT_NS, "cl-1")
 
     assert [("domain:info" in m, "domain:update" in m) for m in epp.sent] == [(True, False), (False, True), (True, False)]
-    assert result.domain is not None
+    assert result.stored is not None
 
 
 def test_a_replacement_that_changes_nothing_sends_no_update():
@@ -124,7 +124,7 @@ def test_a_replacement_that_changes_nothing_sends_no_update():
     result = replace_domain(EppBackend(epp, EPP_NS_MAP), WITH_NS1, "cl-1")
 
     assert len(epp.sent) == 1
-    assert result.domain.name.lower() == NAME
+    assert result.stored.name.lower() == NAME
 
 
 def test_a_replacement_of_a_missing_domain_is_the_read_error():
@@ -151,3 +151,32 @@ def test_a_sponsor_is_known_whatever_the_case_of_its_id():
     result = replace_domain(EppBackend(epp, EPP_NS_MAP), WITH_NS1, "cl-1")
 
     assert not isinstance(result, ErrorResponse)
+
+
+CREATED = (True, "1000", epp_reply(1000, (
+    f'<resData><domain:creData {DOMAIN_NS}><domain:name>FOO.EXAMPLE</domain:name>'
+    '<domain:crDate>2026-11-04T10:00:00.0Z</domain:crDate></domain:creData></resData>'
+)))
+
+
+def test_a_create_reads_the_domain_back():
+    epp = client(CREATED, info("ns1.foo.example"))
+
+    result = create_domain(EppBackend(epp, EPP_NS_MAP), Domain(name=NAME), "cl-1")
+
+    assert result.stored.ns.host_objs == [HostObj(id="ns1.foo.example")]
+    assert ["<domain:create" in m for m in epp.sent] == [True, False]
+
+
+def test_a_create_whose_read_back_fails_has_no_domain():
+    result = create_domain(EppBackend(client(CREATED, MISSING), EPP_NS_MAP), Domain(name=NAME), "cl-1")
+
+    assert result.stored is None
+    assert result.mutation.server_transaction_id == "sv-1"
+
+
+def test_a_refused_create_is_not_read_back():
+    epp = client((False, "2302", epp_reply(2302)))
+
+    assert isinstance(create_domain(EppBackend(epp, EPP_NS_MAP), Domain(name=NAME), "cl-1"), ErrorResponse)
+    assert len(epp.sent) == 1

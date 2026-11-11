@@ -1,5 +1,5 @@
 from registry_adapter.epp.gateways.epp_backend import EppBackend
-from core.flows.contact.contact_flows import patch_contact, replace_contact
+from core.flows.contact.contact_flows import create_contact, patch_contact, replace_contact
 from core.model.contact import contact_application
 from core.model.contact.address import Address
 from core.model.contact.contact_replacement import ContactReplacement
@@ -61,7 +61,7 @@ def test_a_direct_update_is_not_preceded_by_a_read():
     result = patch_contact(EppBackend(epp, EPP_NS_MAP), ID, EMAIL_CHANGE, never_called, "cl-1")
 
     assert kinds(epp) == [(False, True), (True, False)]
-    assert result.contact.id == "JD-1"
+    assert result.stored.id == "JD-1"
 
 
 def test_a_patch_needing_the_contact_reads_it_first():
@@ -96,7 +96,7 @@ def test_a_replacement_that_changes_nothing_sends_no_update():
     result = replace_contact(EppBackend(epp, EPP_NS_MAP), UNCHANGED, "cl-1")
 
     assert kinds(epp) == [(True, False)]
-    assert result.contact.id == "JD-1" and result.mutation.server_transaction_id == "sv-1"
+    assert result.stored.id == "JD-1" and result.mutation.server_transaction_id == "sv-1"
 
 
 def test_an_unchanged_contact_of_another_client_is_a_403():
@@ -109,19 +109,19 @@ def test_an_unchanged_contact_of_another_client_is_a_403():
 def test_the_sponsor_is_compared_without_regard_to_case():
     result = replace_contact(EppBackend(client(info(), username="clientx"), EPP_NS_MAP), UNCHANGED, "cl-1")
 
-    assert result.contact is not None
+    assert result.stored is not None
 
 
 def test_a_failed_read_back_leaves_the_mutation_without_a_contact():
     result = patch_contact(EppBackend(client(DONE, MISSING), EPP_NS_MAP), ID, EMAIL_CHANGE, never_called, "cl-1")
 
-    assert result.contact is None and result.mutation.server_transaction_id == "sv-1"
+    assert result.stored is None and result.mutation.server_transaction_id == "sv-1"
 
 
 def test_a_read_back_that_raises_leaves_the_mutation_without_a_contact():
     result = patch_contact(EppBackend(client(DONE, ConnectionError()), EPP_NS_MAP), ID, EMAIL_CHANGE, never_called, "cl-1")
 
-    assert result.contact is None
+    assert result.stored is None
 
 
 LOC_FORM = PostalInfoChange(form="loc", name="Jörg", address=Address(street=None, city="Berlin", country="DE"))
@@ -156,7 +156,7 @@ def test_an_int_form_the_registry_did_not_add_to_a_loc_only_contact_is_an_error(
 def test_a_form_the_registry_added_is_a_success():
     result = patch_contact(EppBackend(client(INT_ONLY, DONE, BOTH), EPP_NS_MAP), ID, None, applying(ADD_LOC), "cl-1")
 
-    assert result.contact is not None
+    assert result.stored is not None
 
 
 def test_a_form_that_was_there_and_is_changed_is_not_checked():
@@ -167,16 +167,47 @@ def test_a_form_that_was_there_and_is_changed_is_not_checked():
 
     result = replace_contact(EppBackend(client(BOTH, DONE, BOTH), EPP_NS_MAP), changed, "cl-1")
 
-    assert result.contact is not None
+    assert result.stored is not None
 
 
 def test_a_form_that_cannot_be_read_back_is_not_an_error():
     result = patch_contact(EppBackend(client(INT_ONLY, DONE, MISSING), EPP_NS_MAP), ID, None, applying(ADD_LOC), "cl-1")
 
-    assert result.contact is None
+    assert result.stored is None
 
 
 def test_a_direct_update_has_nothing_to_compare_with():
     result = patch_contact(EppBackend(client(DONE, INT_ONLY), EPP_NS_MAP), ID, ADD_LOC, never_called, "cl-1")
 
-    assert result.contact is not None
+    assert result.stored is not None
+
+
+CREATED = reply(1000, (
+    '<resData><contact:creData xmlns:contact="urn:ietf:params:xml:ns:contact-1.0"><contact:id>JD-1</contact:id>'
+    '<contact:crDate>2026-11-04T10:00:00.0Z</contact:crDate></contact:creData></resData>'
+))
+NEW = Contact(id=ID, name="Joe", address=BERLIN, email=["a@example.example"])
+
+
+def test_a_create_reads_the_contact_back():
+    epp = client(CREATED, info())
+
+    result = create_contact(EppBackend(epp, EPP_NS_MAP), NEW, "cl-1")
+
+    assert result.stored.id == ID
+    assert kinds(epp) == [(False, False), (True, False)]
+
+
+def test_a_create_whose_read_back_fails_has_no_contact():
+    """#17: the read back was in the handler, and a failed one answered 500 after the contact was created."""
+    result = create_contact(EppBackend(client(CREATED, MISSING), EPP_NS_MAP), NEW, "cl-1")
+
+    assert result.stored is None
+    assert result.mutation.server_transaction_id == "sv-1"
+
+
+def test_a_refused_create_is_not_read_back():
+    epp = client(reply(2302))
+
+    assert isinstance(create_contact(EppBackend(epp, EPP_NS_MAP), NEW, "cl-1"), ErrorResponse)
+    assert len(epp.sent) == 1

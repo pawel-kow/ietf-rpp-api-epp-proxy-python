@@ -1,19 +1,19 @@
 import ssl
 from types import SimpleNamespace
 
-from config import Config, config
+from settings.load_settings import load_settings
 from registry_adapter.epp.gateways.epp_backend import EppBackend
 from registry_adapter.common.transport.tcp_client import TCPClient
 import main
-from main import new_backend, new_epp_client, tls_context, tls_context_from_config
+from main import new_backend, new_epp_client, settings, tls_context, tls_context_from_config
 
 
 def test_default_factory_connects_to_the_configured_backend():
     client = new_epp_client("user", "pw")
 
     assert isinstance(client.client, TCPClient)
-    assert client.client.server_address == config.rpp_epp_host
-    assert client.client.server_port == config.rpp_epp_port
+    assert client.client.server_address == settings.epp.rpp_epp_host
+    assert client.client.server_port == settings.epp.rpp_epp_port
 
 
 def test_default_factory_uses_the_request_credentials():
@@ -26,7 +26,7 @@ def test_the_backend_is_epp_over_the_default_client():
     backend = new_backend("user", "pw")
 
     assert isinstance(backend, EppBackend)
-    assert backend.epp_client.client.server_address == config.rpp_epp_host
+    assert backend.epp_client.client.server_address == settings.epp.rpp_epp_host
     assert backend.sponsor_id == "user"
 
 
@@ -67,26 +67,31 @@ def test_tls_is_on_and_verified_when_the_config_is_silent(tmp_path, monkeypatch)
     config_file.write_text("rpp_epp_host: example.org\n")
     monkeypatch.setenv("RPP_CONFIG_FILE", str(config_file))
 
-    settings = Config()
+    loaded = load_settings()
 
-    assert settings.rpp_epp_use_tls is True
-    assert settings.rpp_epp_tls_insecure_skip_verify is False
+    assert loaded.epp.rpp_epp_use_tls is True
+    assert loaded.epp.rpp_epp_tls_insecure_skip_verify is False
 
 
 def test_the_composition_root_gives_discovery_the_configuration():
-    assert config.rpp_base_url
-    assert config.rpp_tlds
-    assert config.rpp_environment_name
-    assert config.rpp_environment_status
+    assert settings.discovery.rpp_base_url
+    assert settings.discovery.rpp_tlds
+    assert settings.discovery.rpp_environment_name
+    assert settings.discovery.rpp_environment_status
 
 
 def test_the_composition_root_hands_the_configuration_to_the_app():
-    assert main.app.app.config["RPP_DISCOVERY_SETTINGS"] is config
+    assert main.app.app.config["RPP_DISCOVERY_SETTINGS"] is settings.discovery
 
 
-def test_the_app_maps_lgr_to_the_configured_idn_tables():
-    tables = main.app.app.config["RPP_IDN_TABLES"]
+def test_the_app_offers_the_configured_lgrs():
+    assert main.app.app.config["RPP_BACKEND_PROFILE"].lgrs == frozenset(settings.epp.rpp_idn_lgr_tables or {})
 
-    for lgr, table in (config.rpp_idn_lgr_tables or {}).items():
+
+def test_the_backend_maps_lgr_to_the_configured_idn_tables():
+    tables = main.idn_tables
+
+    for lgr, table in (settings.epp.rpp_idn_lgr_tables or {}).items():
         assert tables.table(lgr) == table
         assert tables.lgr(table) == lgr
+    assert new_backend("user", "pw").profile.lgrs == frozenset(settings.epp.rpp_idn_lgr_tables or {})

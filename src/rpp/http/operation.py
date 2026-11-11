@@ -5,6 +5,7 @@ from flask import request as flask_request
 from jsonschema import ValidationError
 
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from core.capabilities.unsupported_feature import UnsupportedFeature
 from rpp.http.context import backend_profile
 from rpp.http.headers import problem_headers
@@ -31,7 +32,7 @@ def require_empty_body():
 
 def _unsupported_detail(e: UnsupportedFeature) -> str:
     """A mapper does not know the backend, so its refusal is named here."""
-    if isinstance(e, NotSupportedByBackend):
+    if isinstance(e, (NotSupportedByBackend, NotSupportedByProxy)):
         return e.detail(backend_profile().name)
     return str(e)
 

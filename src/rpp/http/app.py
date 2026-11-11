@@ -10,13 +10,13 @@ from connexion.middleware import MiddlewarePosition
 from connexion.resolver import RelativeResolver
 from connexion.validators import VALIDATOR_MAP
 from starlette.middleware.cors import CORSMiddleware
+from rpp.http.context import BACKEND_PROFILE, DISCOVERY_SETTINGS
 from rpp.http.problem import handle_rpp_error
 from rpp.http.middleware.body_buffering_middleware import BodyBufferingMiddleware
 from rpp.http.validators.rpp_request_body_validator import RppRequestBodyValidator
 from rpp.http.validators.rpp_response_body_validator import RppResponseBodyValidator
 from rpp.http.security.session_security_handler import SessionSecurityHandler
 from core.capabilities.backend_profile import BackendProfile
-from rpp.mapping.domain.idn_tables import IdnTables
 
 OPENAPI_SPEC = Path(__file__).parent.parent / "openapi.yaml"
 
@@ -31,7 +31,7 @@ def parsed_spec() -> dict:
         return yaml.load(spec, Loader=yaml.CSafeLoader)
 
 
-def create_app(sessions, profile: BackendProfile, discovery_settings=None, idn_tables=None):
+def create_app(sessions, profile: BackendProfile, discovery_settings=None):
     """
     Builds the application.
 
@@ -41,8 +41,6 @@ def create_app(sessions, profile: BackendProfile, discovery_settings=None, idn_t
         profile: What the backend can hold, which the mappers check, refusals name and discovery states.
         discovery_settings: Has rpp_base_url, rpp_tlds, rpp_environment_name and
             rpp_environment_status, which the discovery document states.
-        idn_tables: The IdnTables that map a domain's `lgr` to the IDN table of EPP. Without them no `lgr` is
-            accepted, and reads leave out `uName` and `lgr`.
     """
     app = FlaskApp(
         __name__,
@@ -64,9 +62,8 @@ def create_app(sessions, profile: BackendProfile, discovery_settings=None, idn_t
                     "body": MediaTypeDict({**VALIDATOR_MAP["body"], "*/*json": RppRequestBodyValidator}),
                     "response": MediaTypeDict({"*/*json": RppResponseBodyValidator}),
                 })
-    app.app.config["RPP_DISCOVERY_SETTINGS"] = discovery_settings
-    app.app.config["RPP_IDN_TABLES"] = idn_tables or IdnTables()
-    app.app.config["RPP_BACKEND_PROFILE"] = profile
+    app.app.config[DISCOVERY_SETTINGS] = discovery_settings
+    app.app.config[BACKEND_PROFILE] = profile
     app.add_error_handler(ProblemException, handle_rpp_error)
 
     return app

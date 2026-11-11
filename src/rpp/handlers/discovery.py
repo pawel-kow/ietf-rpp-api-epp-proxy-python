@@ -2,16 +2,15 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from flask import current_app
 from connexion import ProblemException
 
 from core.model.shared.discovery import Discovery
 from core.result.result_code import ResultCode
-from rpp.http.context import backend_profile
+from rpp.http.context import backend_profile, discovery_settings
 from rpp.http.headers import RPP_MEDIA_TYPE, client_transaction_id, problem_headers, rpp_code
 from rpp.http.operation import rpp_operation
-
 from rpp.mapping.discovery import discovery
+
 logger = logging.getLogger(__name__)
 
 # The RPP version of core §12. The data objects (data-objects §17.2) and the profiles (core §12.4) are the backend's.
@@ -22,7 +21,7 @@ RPP_VERSION = "1.0"
 @rpp_operation
 def discovery_read():
     """The Discovery Data Object: no authentication and no EPP, it comes from configuration and the proxy itself."""
-    settings = current_app.config.get("RPP_DISCOVERY_SETTINGS")
+    settings = discovery_settings()
     missing = discovery.invalid_settings(settings)
     if missing:
         logger.warning("Discovery is not configured, missing or invalid: %s", ", ".join(missing))

@@ -8,9 +8,10 @@ from rpp.http.headers import client_transaction_id, generate_rpp_response_header
 from rpp.http.operation import map_request, require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
 
-OBJECT = "host"
 from rpp.mapping.host import host_availability, host_patch, host_replacement, hosts
 from rpp.mapping.shared import include_elements
+
+OBJECT = "host"
 
 
 def _host_output(host, requested):
@@ -23,10 +24,10 @@ def _mutation_response(result, success_status, requested, extra_headers=None):
     if isinstance(result, ErrorResponse):
         raise_registry_error(result)
     headers = {**generate_rpp_response_headers(result.mutation), **(extra_headers or {})}
-    if result.host is None:
+    if result.stored is None:
         return None, 202, headers
     try:
-        return _host_output(result.host, requested), success_status, headers
+        return _host_output(result.stored, requested), success_status, headers
     except Exception:
         return None, 202, headers
 

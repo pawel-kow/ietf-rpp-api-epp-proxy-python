@@ -1,4 +1,5 @@
 import base64
+import logging
 from typing import Union
 
 from core.model.domain.dns_sec import DnsSec
@@ -29,6 +30,7 @@ from registry_adapter.epp.commands.domain.epp_request import (
     domain_check, domain_create, domain_delete, domain_info, domain_renew, domain_restore, domain_transfer,
     domain_update,
 )
+from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.xml.codec import epp_to_str, str_to_epp
 from registry_adapter.epp.xml.generated.domain_1_0 import CreData, InfData, RenData, TrnData
 from registry_adapter.epp.xml.generated.epp_1_0 import Epp
@@ -37,8 +39,11 @@ from registry_adapter.epp.xml.generated.rgp_1_0 import InfData as RgpInfData, Up
 from registry_adapter.epp.xml.generated.sec_dns_1_1 import InfData as SecDnsInfData
 
 
-def create_domain_xml(domain: Domain, client_request_id=None, *, ns_map: dict[str, str]) -> str:
-    return epp_to_str(domain_create(domain, cl_trid(client_request_id)), ns_map)
+logger = logging.getLogger(__name__)
+
+
+def create_domain_xml(domain: Domain, client_request_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> str:
+    return epp_to_str(domain_create(domain, cl_trid(client_request_id), idn_tables), ns_map)
 
 
 def info_domain_xml(domain_name: str, client_request_id=None, *, ns_map: dict[str, str]) -> str:
@@ -115,15 +120,22 @@ def _dns_sec_from_epp(epp: Epp) -> Union[DnsSec, None]:
     )
 
 
-def _idn_from_epp(epp: Epp) -> Union[DomainIdn, None]:
-    """The IDN data of an Info response (draft-obispo-epp-idn-04)."""
+def _idn_from_epp(epp: Epp, idn_tables: IdnTables) -> Union[DomainIdn, None]:
+    """The IDN data of an Info response (draft-obispo-epp-idn-04). Without an LGR for its table there is none, as json
+    §6.4 does not allow `uName` without `lgr`."""
     data = find_extension(epp, IdnData)
     if data is None:
         return None
-    return DomainIdn(table=data.table, uname=data.uname)
+    lgr = idn_tables.lgr(data.table)
+    if lgr is None:
+        logger.warning("No LGR is configured for the IDN table '%s', so uName and lgr are left out", data.table)
+        return None
+    return DomainIdn(lgr=lgr, uname=data.uname)
 
 
-def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[DomainCreateResponse, ErrorResponse]:
+def parse_domain_response(
+    xml_string: str, client_transaction_id: str, *, idn_tables: IdnTables,
+) -> Union[DomainCreateResponse, ErrorResponse]:
     """Parses an EPP domain create/info response into a DomainCreateResponse."""
     epp = str_to_epp(xml_string)
     header = parse_epp_response_header(epp)
@@ -169,7 +181,7 @@ def parse_domain_response(xml_string: str, client_transaction_id: str) -> Union[
         authInfo=authInfo,
         contacts=contacts,
         dnsSEC=_dns_sec_from_epp(epp),
-        idn=_idn_from_epp(epp),
+        idn=_idn_from_epp(epp, idn_tables),
         rgpStatus=_rgp_status(find_extension(epp, RgpInfData)),
         subordinateHosts=(getattr(data, "host", None) or None) if data else None,
     )

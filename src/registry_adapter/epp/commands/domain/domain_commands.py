@@ -18,6 +18,7 @@ from registry_adapter.epp.commands.domain.domain_xml import (
 )
 from registry_adapter.epp.commands.domain.epp_request import domain_update
 from registry_adapter.epp.commands.shared.epp_core import get_epp_error_response
+from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.session.epp_client import EPPClient, IDN_EXTENSION, RGP_EXTENSION, SEC_DNS_EXTENSION
 import os
 from typing import Union
@@ -34,7 +35,7 @@ def _missing_extension(epp_client: EPPClient, uri: str, feature: str, data, clie
     )
 
 
-def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainCreateResponse, ErrorResponse]:
+def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[DomainCreateResponse, ErrorResponse]:
     """
     Creates a domain using EPP commands.
     Args:
@@ -50,17 +51,17 @@ def epp_domains_Create(epp_client: EPPClient, domain: Domain, client_transaction
     )
     if missing:
         return missing
-    eppxml = create_domain_xml(domain, client_request_id=client_transaction_id, ns_map=ns_map)
+    eppxml = create_domain_xml(domain, client_request_id=client_transaction_id, ns_map=ns_map, idn_tables=idn_tables)
     success, code, response = epp_client.send_and_get_response(eppxml)
     
     if success == True:
-        domainresp = parse_domain_response(response, client_transaction_id=client_transaction_id)
+        domainresp = parse_domain_response(response, client_transaction_id=client_transaction_id, idn_tables=idn_tables)
         return domainresp
     else:
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
         return errorresp
 
-def epp_domains_Info(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainInfoResponse, ErrorResponse]:
+def epp_domains_Info(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[DomainInfoResponse, ErrorResponse]:
     """
     Retrieves information about a domain using EPP commands.
     Args:
@@ -74,7 +75,7 @@ def epp_domains_Info(epp_client: EPPClient, domain_name: str, client_transaction
     success, code, response = epp_client.send_and_get_response(eppxml)
     
     if success == True:
-        domainresp = parse_domain_response(response, client_transaction_id=client_transaction_id)
+        domainresp = parse_domain_response(response, client_transaction_id=client_transaction_id, idn_tables=idn_tables)
         return domainresp
     else:
         errorresp = get_epp_error_response(response, client_transaction_id=client_transaction_id)
@@ -202,7 +203,7 @@ def epp_domains_Restore(epp_client: EPPClient, restore: DomainRestore, client_tr
         return get_epp_error_response(response, client_transaction_id=client_transaction_id)
 
 
-def epp_domains_RestoreInfo(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str]) -> Union[DomainInfoResponse, ErrorResponse]:
+def epp_domains_RestoreInfo(epp_client: EPPClient, domain_name: str, client_transaction_id=None, *, ns_map: dict[str, str], idn_tables: IdnTables) -> Union[DomainInfoResponse, ErrorResponse]:
     """
     Reads a domain for its RGP statuses (RFC 3915 §4.1.2), which a server without the extension does not give.
     Args:
@@ -215,4 +216,6 @@ def epp_domains_RestoreInfo(epp_client: EPPClient, domain_name: str, client_tran
     missing = _missing_extension(epp_client, RGP_EXTENSION, "A restore", True, client_transaction_id)
     if missing:
         return missing
-    return epp_domains_Info(epp_client, domain_name, client_transaction_id=client_transaction_id, ns_map=ns_map)
+    return epp_domains_Info(
+        epp_client, domain_name, client_transaction_id=client_transaction_id, ns_map=ns_map, idn_tables=idn_tables,
+    )

@@ -55,7 +55,7 @@ def replacement(new_name, **members):
 def test_create_reads_the_host_back():
     result = create_host(EppBackend(client(CREATED, info()), EPP_NS_MAP), Host(name=NAME), "cl-1")
 
-    assert result.host.status == ["ok"]
+    assert result.stored.status == ["ok"]
     assert result.mutation.server_transaction_id == "sv-1"
 
 
@@ -66,14 +66,14 @@ def test_create_error_is_returned():
 def test_failed_readback_has_no_host():
     result = create_host(EppBackend(client(CREATED, MISSING), EPP_NS_MAP), Host(name=NAME), "cl-1")
 
-    assert result.host is None
+    assert result.stored is None
     assert result.mutation.server_transaction_id == "sv-1"
 
 
 def test_exception_during_readback_has_no_host():
     result = update_host(EppBackend(client(DONE, ConnectionError("gone")), EPP_NS_MAP), HostUpdate(name=NAME), "cl-1")
 
-    assert result.host is None
+    assert result.stored is None
 
 
 def test_readback_does_not_reuse_the_client_transaction_id():
@@ -275,7 +275,7 @@ def test_a_patch_without_a_difference_sends_no_update():
     result = patch_host(EppBackend(epp, EPP_NS_MAP), NAME, None, lambda host: replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
 
     assert len(epp.sent) == 1
-    assert result.host.ipv4 == ["192.0.2.1"]
+    assert result.stored.ipv4 == ["192.0.2.1"]
     assert result.mutation.server_transaction_id == "sv-1"
 
 
@@ -285,7 +285,7 @@ def test_a_replacement_without_a_difference_sends_no_update():
     result = replace_host(EppBackend(epp, EPP_NS_MAP), replacement(NAME, ipv4=["192.0.2.1"]), "cl-1")
 
     assert len(epp.sent) == 1
-    assert result.host.ipv4 == ["192.0.2.1"]
+    assert result.stored.ipv4 == ["192.0.2.1"]
 
 
 @pytest.mark.parametrize("run", [

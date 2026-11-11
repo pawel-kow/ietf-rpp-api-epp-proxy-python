@@ -5,6 +5,7 @@ from connexion import ProblemException
 
 from rpp.http.operation import map_request
 from registry_adapter.epp.gateways.epp_backend import EppBackend
+from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.profile import EPP_PROFILE
 from core.model.domain.domains import ContactReference
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
@@ -40,7 +41,13 @@ def test_epp_holds_the_contact_roles_of_rfc_5731():
 
 
 def test_the_epp_backend_has_the_epp_profile():
-    assert EppBackend(None, EPP_NS_MAP).profile is EPP_PROFILE
+    assert EppBackend(None, EPP_NS_MAP).profile == EPP_PROFILE
+
+
+def test_the_epp_backend_offers_the_lgrs_of_its_idn_tables():
+    backend = EppBackend(None, EPP_NS_MAP, IdnTables({"latn-1.0": "de"}))
+
+    assert backend.profile == replace(EPP_PROFILE, lgrs=frozenset({"latn-1.0"}))
 
 
 def test_a_contact_label_of_the_backend_is_accepted():

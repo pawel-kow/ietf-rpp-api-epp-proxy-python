@@ -10,6 +10,7 @@ from core.model.domain.domain_transfer import DomainTransfer
 from core.model.domain.domains import Domain, DomainUpdate
 from core.model.domain.restore_report import RestoreReport
 from core.model.shared.common import AuthInfo
+from registry_adapter.epp.idn_tables import IdnTables
 
 from registry_adapter.epp.xml.generated.domain_1_0 import (
     AddRemType, AuthInfoChgType, AuthInfoType, Check, ChgType, ContactAttrType, ContactType, Create, Delete,
@@ -188,7 +189,7 @@ def domain_restore(restore: DomainRestore, rpp_cl_trid: str) -> Epp:
     )
 
 
-def domain_create(domain: Domain, rpp_cl_trid: str) -> Epp:
+def domain_create(domain: Domain, rpp_cl_trid: str, idn_tables: IdnTables) -> Epp:
     create = Create(name=domain.name.upper())
 
     if domain.processes and domain.processes.get("creation"):
@@ -218,7 +219,7 @@ def domain_create(domain: Domain, rpp_cl_trid: str) -> Epp:
     if domain.dnsSEC:
         extensions.append(_sec_dns_create(domain.dnsSEC))
     if domain.idn:
-        extensions.append(IdnData(table=domain.idn.table, uname=domain.idn.uname))
+        extensions.append(IdnData(table=idn_tables.table(domain.idn.lgr), uname=domain.idn.uname))
 
     return Epp(
         command=CommandType(

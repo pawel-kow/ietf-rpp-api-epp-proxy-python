@@ -1,5 +1,3 @@
-import logging
-
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_idn import DomainIdn
 from core.model.domain.domains import ContactReference, CreationProcess, Domain, HostObj, NS
@@ -8,17 +6,13 @@ from rpp.schema.validator import validate_schema
 from rpp.mapping.domain import domain_dns
 from rpp.mapping.shared import auth_info, prov_metadata, statuses
 from rpp.mapping.shared.common import parse_rpp, period_duration, reject_set
-from rpp.mapping.domain.idn_tables import IdnTables
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from rpp.dto.rpp_contact_reference import RPPContactReference
 from rpp.dto.rpp_domain import RPPDomain
 from rpp.dto.rpp_host_reference import RPPHostReference
 from rpp.dto.rpp_labelled_contact import RPPLabelledContact
 
-logger = logging.getLogger(__name__)
-
 REGISTRANT = "registrant"
-NO_IDN_TABLES = IdnTables()
 
 
 def check_contact_label(label: str, profile: BackendProfile) -> str:
@@ -61,16 +55,18 @@ def _rpp_to_delegation(domain_rpp: RPPDomain, profile: BackendProfile) -> tuple[
     return ns or dns_ns, dns_sec
 
 
-def _rpp_to_idn(domain_rpp: RPPDomain, idn_tables: IdnTables) -> DomainIdn | None:
-    """The `lgr` names the IDN table through the configured map. Json §6.4 requires it whenever `uName` is given."""
+def _rpp_to_idn(domain_rpp: RPPDomain, profile: BackendProfile) -> DomainIdn | None:
+    """The `lgr` must be one the backend offers. Json §6.4 requires it whenever `uName` is given."""
     if domain_rpp.lgr is None:
         if domain_rpp.uName is not None:
             raise ValueError("'uName' needs 'lgr'")
         return None
-    return DomainIdn(table=idn_tables.table(domain_rpp.lgr), uname=domain_rpp.uName)
+    if domain_rpp.lgr not in profile.lgrs:
+        raise ValueError(f"The LGR '{domain_rpp.lgr}' is not offered")
+    return DomainIdn(lgr=domain_rpp.lgr, uname=domain_rpp.uName)
 
 
-def rpp_to_model(rpp: dict, idn_tables: IdnTables = NO_IDN_TABLES, *, profile: BackendProfile) -> Domain:
+def rpp_to_model(rpp: dict, *, profile: BackendProfile) -> Domain:
     """Converts a create request to a Domain, with what the backend of `profile` can hold."""
     validate_schema("domainName.create", rpp)
     domain_rpp = parse_rpp(RPPDomain, rpp)
@@ -83,7 +79,7 @@ def rpp_to_model(rpp: dict, idn_tables: IdnTables = NO_IDN_TABLES, *, profile: B
         dnsSEC=dns_sec,
         contacts=_rpp_to_contacts(domain_rpp, profile),
         processes=_rpp_to_processes(domain_rpp),
-        idn=_rpp_to_idn(domain_rpp, idn_tables),
+        idn=_rpp_to_idn(domain_rpp, profile),
     )
 
 
@@ -109,21 +105,16 @@ def _contacts_to_rpp(domain: Domain) -> list[RPPLabelledContact] | None:
     ] or None
 
 
-def _idn_to_rpp(domain: Domain, idn_tables: IdnTables) -> tuple[str | None, str | None]:
-    """The `uName` and `lgr` of a domain. Without an LGR for its table both are left out, as json §6.4 does not
-    allow `uName` without `lgr`."""
+def _idn_to_rpp(domain: Domain) -> tuple[str | None, str | None]:
+    """The `uName` and `lgr` of a domain."""
     if domain.idn is None:
         return None, None
-    lgr = idn_tables.lgr(domain.idn.table)
-    if lgr is None:
-        logger.warning("No LGR is configured for the IDN table '%s', so uName and lgr are left out", domain.idn.table)
-        return None, None
-    return domain.idn.uname, lgr
+    return domain.idn.uname, domain.idn.lgr
 
 
-def model_to_rpp(domain: Domain, idn_tables: IdnTables = NO_IDN_TABLES) -> dict:
+def model_to_rpp(domain: Domain) -> dict:
     """Converts a Domain to its read representation."""
-    u_name, lgr = _idn_to_rpp(domain, idn_tables)
+    u_name, lgr = _idn_to_rpp(domain)
     domain_dict = RPPDomain(
         name=domain.name,
         uName=u_name,

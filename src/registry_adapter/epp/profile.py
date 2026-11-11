@@ -1,4 +1,7 @@
+from dataclasses import replace
+
 from core.capabilities.backend_profile import BackendProfile
+from registry_adapter.epp.idn_tables import IdnTables
 
 EPP_PROFILE = BackendProfile(
     name="EPP",
@@ -17,3 +20,8 @@ EPP_PROFILE = BackendProfile(
     objects=("domainName", "host", "contact"),
     profiles=("urn:ietf:params:rpp:profile:epp-compatibility",),  # core §12.4, data-objects §2.8, json §8.7.1
 )
+
+
+def epp_profile(idn_tables: IdnTables) -> BackendProfile:
+    """The profile of an EPP backend, which offers the LGRs that its IDN tables are mapped from."""
+    return replace(EPP_PROFILE, lgrs=idn_tables.lgrs())

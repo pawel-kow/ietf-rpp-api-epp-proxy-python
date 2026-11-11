@@ -1,6 +1,6 @@
 import pytest
 
-from rpp.mapping.domain.idn_tables import IdnTables
+from registry_adapter.epp.idn_tables import IdnTables
 
 TABLES = IdnTables({"latn-1.0": "de", "spa-1.0": "es"})
 

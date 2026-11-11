@@ -16,6 +16,7 @@ class BackendProfile:
     `supports_renew`, `supports_contact_delete` and `supports_transfer_query` are whether the backend has these
     commands.
     `objects` are the data objects and `profiles` the profiles the discovery document states.
+    `lgrs` are the label generation rulesets the backend offers for IDNs, none when it takes no IDN.
     """
     name: str
     contact_labels: tuple[str, ...]
@@ -32,3 +33,4 @@ class BackendProfile:
     supports_transfer_query: bool
     objects: tuple[str, ...]
     profiles: tuple[str, ...]
+    lgrs: frozenset[str] = frozenset()

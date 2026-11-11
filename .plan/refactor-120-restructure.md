@@ -11,10 +11,10 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       `commands/not_used/` deleted; contracts renamed
 - [x] T2 Phase 3: `models`, `registry`, `flows` → `core/` per object; explicit imports; `BackendProfile` and the
       refusals → `core/capabilities`
-- [~] T3 Phase 4: `controller` → `rpp/http` + `rpp/handlers`; mappers and schema validator → `rpp/`; session pool →
+- [x] T3 Phase 4: `controller` → `rpp/http` + `rpp/handlers`; mappers and schema validator → `rpp/`; session pool →
       `core/session`; `run.py` → `main.py`; `copy_models.sh`, Dockerfile and docs for `uvicorn main:app`
-- [ ] T4 Phase 5: `IdnTables` → `epp/`; read-back once (closes #17); settings passed in
-- [ ] T5 Phase 6: result envelope for gateway results
+- [x] T4 Phase 5: `IdnTables` → `epp/`; read-back once (closes #17); settings passed in
+- [~] T5 Phase 6: result envelope for gateway results
 - [ ] T6 Docs (`architecture.project.md`, `testing.project.md`, `process.project.md`, README), import-linter contracts
       for the target, final checks, draft PR
 
@@ -59,3 +59,15 @@ ends with `PYTHONPATH=src lint-imports` and the full `pytest -n 8`, and is its o
       `RelativeResolver('rpp.handlers')`. `rpp/dto/__init__.py` is empty.
 - D15 `tests/unit/test_openapi_spec.py` had to change for the renames, so it is repaired in passing: #124 is fixed.
 - D16 `rpp.http.app → rpp.mapping.domain.idn_tables` is an ignored import until phase 5 (finding 6).
+- D17 Finding 6: `IdnTables` → `registry_adapter/epp/idn_tables.py`. `DomainIdn` holds the `lgr` instead of the table
+      id. The EPP domain commands translate it with the tables `EppBackend` is given; the mapper refuses an LGR that is
+      not in `BackendProfile.lgrs` (new), with the same 400. `epp_profile(idn_tables)` makes the EPP profile with
+      them. The warning for a table without an LGR moves to the EPP parser.
+- D18 Finding 7 (#17): `core/flows/read_back.py` and one `MutationResult` (`stored`) replace the three
+      `_read_back`s and `*_mutation_result.py`. `create_domain` and `create_contact` are flows now. A contact create
+      whose read-back fails answers 202, as domains and hosts already did (it was a 500).
+- D19 Finding 8: `config.py` → `settings/` (`EppSettings`, `DiscoverySettings`, `Settings`, `load_settings`), loaded
+      once by `main.py`, which passes each section on. The section fields keep the config.yaml key names. Handlers
+      read the app configuration only through `rpp/http/context.py`.
+- D20 `NotSupportedByProxy` takes the backend name in `detail()`, as `NotSupportedByBackend` does, so core does not
+      name EPP; the answer is the same.

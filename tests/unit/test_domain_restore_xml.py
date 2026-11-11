@@ -6,6 +6,7 @@ from registry_adapter.epp.commands.domain.domain_xml import (
 from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.restore_report import RestoreReport
 from core.result.result_code import ResultCode
+from registry_adapter.epp.idn_tables import IdnTables
 from tests.helper.epp_ns_map import EPP_NS_MAP
 
 EPP = "urn:ietf:params:xml:ns:epp-1.0"
@@ -124,8 +125,8 @@ def info_reply(extension=""):
 def test_info_reads_the_rgp_status():
     """RFC 3915 §4.1.2."""
     extension = f'<extension><rgp:infData xmlns:rgp="{RGP}"><rgp:rgpStatus s="redemptionPeriod"/></rgp:infData></extension>'
-    assert parse_domain_response(info_reply(extension), "rs35-cl-1").domain.rgpStatus == ["redemptionPeriod"]
+    assert parse_domain_response(info_reply(extension), "rs35-cl-1", idn_tables=IdnTables()).domain.rgpStatus == ["redemptionPeriod"]
 
 
 def test_info_without_rgp_data_has_no_rgp_status():
-    assert parse_domain_response(info_reply(), "rs35-cl-1").domain.rgpStatus == []
+    assert parse_domain_response(info_reply(), "rs35-cl-1", idn_tables=IdnTables()).domain.rgpStatus == []
