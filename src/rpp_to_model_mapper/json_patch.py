@@ -122,18 +122,18 @@ def apply(
     document: dict,
     operations: list[RPPPatchOperation],
     array_paths: tuple[str, ...],
-    ignored_path: str | None = None,
+    ignored_paths: tuple[str, ...] = (),
     absent_parents: dict[str, dict] | None = None,
 ) -> dict:
     """Applies a patch (json draft §5.2.2, steps 1 to 5) to a copy of the document, in order.
 
-    `array_paths` are the properties that are arrays even when absent. Operations on `ignored_path` are left to the caller.
+    `array_paths` are the properties that are arrays even when absent. Operations on `ignored_paths` are left to the caller.
     `absent_parents` gives the objects the schema allows on a path (step 2), to use when the document does not have them.
     A failure names the operation by its position.
     """
     patched = copy.deepcopy(document)
     for number, operation in enumerate(operations, start=1):
-        if operation.path == ignored_path:
+        if operation.path in ignored_paths:
             continue
         try:
             _apply(patched, operation, array_paths, absent_parents or {})

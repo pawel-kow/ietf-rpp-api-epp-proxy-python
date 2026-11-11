@@ -142,7 +142,7 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/ex8-{random_name}.example",
+        "url": "/domainNames/ex8-{random_name}.example?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",

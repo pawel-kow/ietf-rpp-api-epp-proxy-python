@@ -163,7 +163,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames",
+        "url": "/domainNames?includeElements=authInfo",
         "body_json": {
           "@type": "domainName",
           "name": "test4-{random_name}.example",

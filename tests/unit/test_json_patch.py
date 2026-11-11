@@ -103,8 +103,8 @@ def test_object_property_is_set_and_removed():
     assert "registrant" not in patch(op("remove", "/registrant"))
 
 
-def test_ignored_path_is_left_to_the_caller():
-    result = json_patch.apply(DOCUMENT, [RPPPatchOperation.from_dict(op("remove", "/authInfo"))], ARRAYS, "/authInfo")
+def test_ignored_paths_are_left_to_the_caller():
+    result = json_patch.apply(DOCUMENT, [RPPPatchOperation.from_dict(op("remove", "/authInfo"))], ARRAYS, ("/authInfo",))
 
     assert result == DOCUMENT
 

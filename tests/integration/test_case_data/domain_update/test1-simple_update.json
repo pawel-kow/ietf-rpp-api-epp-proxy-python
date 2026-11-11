@@ -272,7 +272,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test1-{random_name}.example",
+        "url": "/domainNames/up-test1-{random_name}.example?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",
@@ -426,7 +426,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test1-{random_name}.example",
+        "url": "/domainNames/up-test1-{random_name}.example?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "Accept": "application/rpp+json",

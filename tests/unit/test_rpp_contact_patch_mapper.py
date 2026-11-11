@@ -4,7 +4,7 @@ from connexion import ProblemException
 from controller.helper.rpp_response import map_request
 from models import ContactType
 from rpp_to_model_mapper import contact_patch
-from tests.helper.contact_fixtures import ADDRESS, current_contact, localized
+from tests.helper.contact_fixtures import ADDRESS, current_contact, derived_update, localized
 
 ID = "JD-1234"
 STATUS = {"@type": "contactStatus", "label": "clientUpdateProhibited"}
@@ -19,7 +19,8 @@ def direct(*operations):
 
 
 def with_current(*operations, current=None):
-    return map_request(contact_patch.rpp_to_model_with_current, ID, list(operations), current or current_contact())
+    current = current or current_contact()
+    return derived_update(current, map_request(contact_patch.rpp_to_model_with_current, ID, list(operations), current))
 
 
 def rejected(*operations, current=None) -> ProblemException:
@@ -55,13 +56,54 @@ def test_remove_auth_info_is_a_501():
 
 
 @pytest.mark.parametrize("operation", [
-    op("replace", "/contactInfo/emails/email/address", value="b@example.example"),
+    op("replace", "/contactInfo/name/full", value="Jo"),
+    op("remove", "/contactInfo/emails/email"),
+    op("remove", "/contactInfo/phones/voice"),
+    op("add", "/contactInfo/phones/voice-1", value={"number": "tel:+49.1"}),
+    op("remove", "/contactInfo/phones"),
     op("remove", "/status"),
     op("remove", "/status", match={"label": "clientUpdateProhibited", "reason": "x"}),
     op("replace", "/status", value=[STATUS]),
 ])
 def test_these_need_the_current_contact(operation):
     assert direct(operation) is None
+
+
+@pytest.mark.parametrize("operation, member, value", [
+    (op("replace", "/contactInfo/emails/email/address", value="b@example.example"), "email", "b@example.example"),
+    (op("replace", "/contactInfo/emails/email", value={"address": "b@example.example"}), "email", "b@example.example"),
+    (op("replace", "/contactInfo/phones/voice/number", value="tel:+49.999"), "voice", "+49.999"),
+    (op("add", "/contactInfo/phones/voice", value={"number": "tel:+49.999;ext=7"}), "voice", "+49.999x7"),
+    (op("replace", "/contactInfo/phones/fax/number", value="tel:+49.888"), "fax", "+49.888"),
+    (op("add", "/contactInfo/phones/fax", value={"number": "tel:+49.888", "features": {"fax": True}}), "fax", "+49.888"),
+])
+def test_a_phone_or_the_email_goes_without_a_read(operation, member, value):
+    """EPP holds one value each, which `chg` sets (#108)."""
+    update = direct(operation)
+
+    assert getattr(update.change, member) == value
+    assert update.change.postal_info == [] and update.add is None and update.remove is None
+
+
+def test_the_last_operation_on_a_number_wins():
+    update = direct(op("replace", "/contactInfo/phones/voice/number", value="tel:+49.2"), op("add", "/contactInfo/phones/voice", value={"number": "tel:+49.1"}))
+
+    assert update.change.voice == "+49.1"
+
+
+@pytest.mark.parametrize("operation", [
+    op("replace", "/contactInfo/emails/email/address", value="bé@example.example"),
+    op("add", "/contactInfo/phones/fax", value={"number": "tel:+49.888"}),
+    op("add", "/contactInfo/phones/voice", value={"number": "tel:+49.888", "features": {"fax": True}}),
+    op("replace", "/contactInfo/phones/voice/number", value="+49.888"),
+    op("add", "/contactInfo/phones/voice", value={"number": "tel:+49.888", "foo": 1}),
+])
+def test_a_direct_phone_or_email_is_checked_as_in_a_full_update(operation):
+    assert status_of(operation) == 400
+
+
+def test_a_phone_with_voice_and_fax_is_a_501():
+    assert status_of(op("add", "/contactInfo/phones/voice", value={"number": "tel:+49.8", "features": {"voice": True, "fax": True}})) == 501
 
 
 @pytest.mark.parametrize("operation", [

@@ -104,54 +104,16 @@
         }
       },
       "response": {
-        "status": 200,
+        "status": 501,
         "headers": {
-          "RPP-Code": "01000"
+          "RPP-Code": "02102"
         },
-        "content_type": "application/rpp+json",
+        "content_type": "application/problem+json",
         "body": {
-          "@type": "contact",
-          "id": "FO-{random_id_10}05A",
-          "contactInfo": {
-            "name": {
-              "full": "John Doe"
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            },
-            "addresses": {
-              "addr": {
-                "countryCode": "US",
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "region",
-                    "value": "PA"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
-                  }
-                ]
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.777"
-              }
-            }
-          }
+          "type": "urn:ietf:params:rpp:error"
         }
       }
     }
-  ]
+  ],
+  "description": "A full update is the wanted state (core §16.8), so the name, address and email it omits are cleared, which EPP cannot do: 501, see spec-issues.md (Full update of a contact)."
 }

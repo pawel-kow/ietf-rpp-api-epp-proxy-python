@@ -1,11 +1,7 @@
+from models.client_statuses import is_client_label
 from rpp_schema_validator import validate_schema
 
-CLIENT_STATUS_PREFIX = "client"
 OK = "ok"
-
-
-def is_client_label(label) -> bool:
-    return isinstance(label, str) and label.startswith(CLIENT_STATUS_PREFIX)
 
 
 def _visible(status: dict) -> bool:

@@ -39,7 +39,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test2-{random_name}.example",
+        "url": "/domainNames/up-test2-{random_name}.example?includeElements=authInfo",
         "headers": {
           "Authorization": "Basic Zm9vOmJhcg==",
           "RPP-Cltrid": "up-test2-{random_name}-clTRID",
