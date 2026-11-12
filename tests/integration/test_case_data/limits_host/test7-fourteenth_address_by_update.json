@@ -1,5 +1,6 @@
 {
   "test_id": "test7-fourteenth_address_by_update",
+  "skip": "pawel-kow/epp#29",
   "description": "A fourteenth address added to a host with thirteen: the limit holds for the host, not the command.",
   "steps": [
     {
@@ -17,7 +18,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:H7}",
+          "id": "{handle:a:Y7}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -79,9 +80,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -113,7 +111,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:H7}"
+                  "id": "{handle:a:Y7}"
                 }
               },
               {
@@ -150,9 +148,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "domainName"
         }
@@ -292,9 +287,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }

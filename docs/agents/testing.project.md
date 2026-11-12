@@ -257,7 +257,9 @@ afterwards.
 What the drafts define is the oracle; a limit they leave to the server is expected to be refused with 400 (`02001`,
 `02004`, `02005`) or 422 (`02306`), never 500 or 501. A limit that differs by server is a `limit_*` fact of the
 environment, and `values_cut_at_column` marks a server that stores a value cut instead of refusing it, where the cases
-over a column do not run. The limits and their sources are in [backend-limits.yaml](../testing/backend-limits.yaml),
+over a column do not run. The EPP test server cuts strings (pawel-kow/epp#21) and phone extensions (pawel-kow/epp#31),
+breaks on a label of 61 to 63 characters under `.example` (pawel-kow/epp#30), and counts nameservers, contacts a role
+and host addresses per command, so an update can pass its limits (pawel-kow/epp#29). The limits and their sources are in [backend-limits.yaml](../testing/backend-limits.yaml),
 the coverage of every field in [integration-test-review.md](../testing/integration-test-review.md).
 
 ## Isolating cases

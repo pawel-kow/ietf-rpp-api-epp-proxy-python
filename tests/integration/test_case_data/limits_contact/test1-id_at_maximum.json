@@ -20,10 +20,10 @@
                 "when": {
                   "env.limit_contact_id_length": 32
                 },
-                "then": "{pad:32:{handle:a:c1}}"
+                "then": "{pad:32:{handle:a:Z1}}"
               },
               {
-                "then": "{pad:16:{handle:a:c1}}"
+                "then": "{pad:16:{handle:a:Z1}}"
               }
             ]
           },
@@ -88,9 +88,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }

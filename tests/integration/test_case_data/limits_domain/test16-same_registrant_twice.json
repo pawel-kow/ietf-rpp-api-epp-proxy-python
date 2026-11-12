@@ -19,7 +19,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:g16}",
+          "id": "{handle:a:Wg2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -81,9 +81,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -115,7 +112,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:g16}"
+                  "id": "{handle:a:Wg2}"
                 }
               },
               {
@@ -153,7 +150,7 @@
               "label": "registrant",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:g16}"
+                "id": "{handle:a:Wg2}"
               }
             }
           ]

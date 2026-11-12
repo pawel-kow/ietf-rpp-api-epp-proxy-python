@@ -10,11 +10,11 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 - [x] T4 Runner: `{pad:N:TEXT}` for a name or id of an exact length (unit tests first)
 - [x] T5 Probe cases `limits_domain/`, `limits_contact/`, `limits_host/`, with environment facts for the limits
       that differ by server
-- [~] T6 Run on epp-docker (needs `.env`), record the outcomes, file the confirmed defects, mark them `skip`
+- [x] T6 Run on epp-docker (needs `.env`), record the outcomes, file the confirmed defects, mark them `skip`
 - [x] T7 Open boundaries of the drafts into `.spec/spec-issues.md`
-- [ ] T8 Docs: `testing.project.md` (placeholder, facts, the new groups) done; the review §6 and the `probe` ids
-      of backend-limits.yaml to be updated to the implemented cases and their outcomes
-- [ ] T9 Checks: `lint-imports`, `pytest -n 8`; MTEST run `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration`
+- [x] T8 Docs: `testing.project.md` (placeholder, facts, the new groups, the EPP test server's limit defects); review
+      §6 and §7 with the implemented cases and outcomes; `probe` and `verified` per backend in backend-limits.yaml
+- [~] T9 Checks: `lint-imports` and `pytest -n 8` done; MTEST run `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration`
       (pending: needs a machine on the allowlist)
 - [ ] T10 Draft PR
 
@@ -46,8 +46,15 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 ## Results
 
 - 90 cases: 30 run on both backends, 37 on EPP only, 23 on RRI only. Unit tests: 1991 passed.
-- `lint-imports`: passed.
+- `lint-imports`: 15 contracts kept (after `pip install -r requirements-dev.txt`).
+- `pytest -n 8` on epp-docker: 2357 passed, 38 skipped (5 min 55 s).
+- The first run failed 4 cases on contact ids shared with `contact_transfer` (the backend compares ids case-blind):
+  the limits cases now use the suffixes `X`, `Y`, `Z`, `Q`, `W`, which no other case uses.
+- Confirmed and filed: pawel-kow/epp#29 (limits counted per command), pawel-kow/epp#30 (label of 61 to 63 cut, no
+  reply), pawel-kow/epp#31 (extension clamped), #137 (IPv6 not RFC 5952), #138 (label over 63 reaches the registry).
+  Read in the code and filed, pending MTEST: #139 (RRI limit refusals are 500), #140 (six holders are 501).
+  #141 (dead test modules). Skipped cases name their issue.
 
 ## Open questions
 
-- `.env` with the epp-docker credentials is missing in this container, so T6 waits for it.
+- MTEST run of `limits_*` (and the suite) from a machine on the allowlist.

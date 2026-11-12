@@ -17,7 +17,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:H8}",
+          "id": "{handle:a:Y8}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -79,9 +79,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -113,7 +110,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:H8}"
+                  "id": "{handle:a:Y8}"
                 }
               },
               {
@@ -150,9 +147,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "domainName"
         }

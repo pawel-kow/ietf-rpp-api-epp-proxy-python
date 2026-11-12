@@ -20,7 +20,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:L23}",
+          "id": "{handle:a:X23}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -82,9 +82,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -120,9 +117,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -158,9 +152,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -196,9 +187,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -234,9 +222,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -272,9 +257,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -310,9 +292,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -348,9 +327,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -386,9 +362,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -424,9 +397,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -462,9 +432,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -500,9 +467,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -538,9 +502,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -576,9 +537,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -614,9 +572,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -648,7 +603,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:L23}"
+                  "id": "{handle:a:X23}"
                 }
               },
               {

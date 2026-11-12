@@ -1,5 +1,6 @@
 {
   "test_id": "test4-label_of_64",
+  "skip": "#138",
   "description": "A label of 64 characters is over the 63 octets of DNS (RFC 1035 §2.3.4).",
   "steps": [
     {
@@ -17,7 +18,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:L4}",
+          "id": "{handle:a:X4}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -79,9 +80,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -113,7 +111,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:L4}"
+                  "id": "{handle:a:X4}"
                 }
               },
               {

@@ -17,7 +17,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c5}",
+          "id": "{handle:a:Z5}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -79,9 +79,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -90,7 +87,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/{handle:a:c5}",
+        "url": "/contacts/{handle:a:Z5}",
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -126,15 +123,13 @@
       },
       "response": {
         "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        }
+        "body": {}
       }
     },
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/{handle:a:c5}",
+        "url": "/contacts/{handle:a:Z5}",
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -143,9 +138,6 @@
       },
       "response": {
         "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "status": [
             {

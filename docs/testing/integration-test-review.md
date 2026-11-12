@@ -1,6 +1,6 @@
 # Integration test review: coverage of the data object fields
 
-Status: draft, 2026-11-12, `main` at 414a86e. Companion file: [backend-limits.yaml](backend-limits.yaml).
+Status: 2026-11-12. §2 to §5 describe the suite on `main` at 414a86e, before the probe cases of §6 (#136). Companion file: [backend-limits.yaml](backend-limits.yaml).
 
 This review checks the data-driven integration suite (`tests/integration/test_case_data/`, 312 cases) against
 three criteria, for every writable field of the Domain Name, Contact and Host data objects and of the component
@@ -311,44 +311,59 @@ must convert to.
     fall to 400 by class, while 02306 is 422. The same over-long value is 400 on one server and 422 on another.
 13. **Discovery** has no element to announce any limit, so every limit above is learnt by failing.
 
-## 6. Proposed probe cases
+## 6. Probe cases
 
-Cases that go over each limit, in three new groups, `limits_domain/`, `limits_contact/` and `limits_host/` (the last
-with `_group.json` `{"when": {"profile.host_objects": true}}`). Each limit gets the value at the limit and the value
-past it, so a change of the backend shows as a failure of exactly one of the two. The full list with the expected
-answer per backend is in [backend-limits.yaml](backend-limits.yaml) under `probe`; the outline:
+The limits are probed by 90 cases in `limits_domain/` (52), `limits_contact/` (26) and `limits_host/` (12): 30 run
+on both backends, 37 on the EPP test server only, 23 on RRI only. Each limit gets the value at it and the value past it,
+so a change of the backend shows as a failure of exactly one of the two. What the drafts define is the oracle (DNS
+lengths, the 15 digits of a phone number, the period of 1 to 99, ISO 3166-1, RFC 5322, US-ASCII); a limit they leave
+to the server is expected to be refused with 400 (`02001`, `02004`, `02005`) or 422 (`02306`), never 500 or 501.
+Limits that differ by server are `limit_*` facts of the environment (testing.project.md, *Limits*). Each limit and
+its cases are in [backend-limits.yaml](backend-limits.yaml), with the outcome per backend under `verified`.
 
 | Group | Cases | Limits |
 |---|---|---|
-| `limits_domain` | `test1`–`test12` | label length 1/63/64, total length (E column of 68 characters), hyphens, `_`, upper case, trailing dot, other TLD, `uName` NFC and IDNA2003 |
-| `limits_domain` | `test13`–`test22` | all client statuses, a status twice, 5/6 holders and one holder twice (R), 5/6 tech contacts by create and by update (E), a 2nd abuse contact (R), unknown label |
-| `limits_domain` | `test23`–`test33` | 13/14 nameservers by create and by update (E), 1/13/14 `ns` records, 5/6 address records, `aaaa` without `a`, `mx` (R), 21 records (R) |
-| `limits_domain` | `test34`–`test39` | `keyTag` 65535/65536, `digestType` 4, two DS records (E), DNSKEY flags and algorithm (R) |
-| `limits_domain` | `test40`–`test53` | request over 64 KiB, `authdata` 5/16/17 and character rules, unknown `method`, `period` 0/100/11 months/10 and 11 years, renew 11 months and past 10 years (E) |
-| `limits_contact` | `test1`–`test8` | `id` 16/17 (E) and 32/33 (R), prefix of another registrar, `_` and `.`, all client statuses |
-| `limits_contact` | `test9`–`test31` | `name.full` 4/255/256, `'`, a character outside the BMP, org 4/256, 0 and 4 street lines, street 4/256, city 3/81 and with a digit, region in lower case, postcode 2/16/17, lower case and DE with 4 digits, country `XX`, email without `@` and of 256 |
-| `limits_contact` | `test32`–`test41` | phone of 15/16 digits, subscriber of 3, extension of 11, `voice-1`, no phone (R), 2 localizations, a link, `authdata` 5/17 |
-| `limits_host` | `test1`–`test12` | label 63/64, name 253/254, 13/14 addresses by create and by update, `256.0.0.1`, a private address, uncompressed IPv6, both client statuses, a status twice |
+| `limits_domain` | `test1`–`test11` | label of 60/61/63/64, leading hyphen, `_`, `--` in positions 3–4, trailing dot, other TLD, upper case, `uName` not NFC |
+| `limits_domain` | `test12`–`test21` | all client statuses, a status twice, 5/6 holders and one holder twice (R), 5/6 tech contacts by create and a 6th by update (E), a 2nd abuse contact (R), an unknown label |
+| `limits_domain` | `test22`–`test32` | 13/14 nameservers and a 14th by update (E), 1/2/13/14 `ns` records (R), 5/6 address records, `aaaa` without `a`, a null MX (R) |
+| `limits_domain` | `test33`–`test38` | `keyTag` 65535/65536, `digestType` 4, two DS records (E), DNSKEY flags 256 and algorithm 9 (R) |
+| `limits_domain` | `test39`–`test52` | `authdata` at and under the minimum, 16/17, without a digit (E), with `O` (R), unknown `method`, `period` 0/100/11 months/10 and 11 years, renew of 11 months and past 10 years (E) |
+| `limits_contact` | `test1`–`test5` | `id` at and over the maximum (E 16, R 32), prefix of another registrar, `_`, all client statuses |
+| `limits_contact` | `test6`–`test16` | `name.full` 255/256 and at and under the minimum (E 5, R 3), 4 street lines (E) and none (R), city 80/81, postcode 16, country `XX`, email without `@` |
+| `limits_contact` | `test17`–`test26` | phone of 15/16 digits, subscriber of 3 digits (R), extension of 11 digits, `voice-1`, no phone (R), 2 localizations, a link, contact `authdata` 5/17 (E) |
+| `limits_host` | `test1`–`test12` | label 63/64, name 253/254, 13/14 addresses and a 14th by update, `256.0.0.1`, a private address, uncompressed IPv6, both client statuses, a status twice |
 
-Expected answers follow core Table 9: a value the proxy can tell is wrong is 400 `02001` or `02005`, a value a
-server's policy refuses is 422 `02306`, and a count over a limit is 422 `02306`. Several probes are expected to fail
-on the current code, which is their purpose:
+Dropped from the first outline: a label of 1 (no name of one character is unique between runs), a `uName` valid in
+IDNA2003 only, 21 RRI records (another limit is hit first), a request over 64 KiB, a dot in a contact id, a city with
+a digit, organisation and street lengths, a postcode of 17 and an email of 256 (only the EPP test server limits them,
+and it cuts them, pawel-kow/epp#21).
 
-- **E cuts values instead of refusing them** (MariaDB without `STRICT_*`): a 61–63 character label under `.example`
-  is stored as 68 characters and answers 201 (`test2`, `test4`); `name.full` of 256 is cut to 255 (pawel-kow/epp#21).
-- **E counts nameservers, contacts per role and host addresses per command**, so the update probes (`test20`,
-  `test25`, `limits_host/test7`) are expected to pass where create refuses.
-- **R refuses many over-limit values in its XSD** (`83000000004`) or with a class-5 code (`53300102920`, name
-  servers out of range), which the proxy maps to 500 `02400` as its own defect. Over-limit handles, city, record
-  counts and contacts per domain are expected to answer 500 today, where 4xx is right.
+### Outcome on the EPP test server
 
-Probes that cost a lot or change shared state need care before they run on MTEST: the 64 KiB request counts against
-the ACL like any other, and every probe that creates must use `{handle:a:…}` and `{random_name}` as the suite does.
+The full suite passes (2357 passed, 38 skipped). The probes found:
+
+| Case | Expected | Got | Issue |
+|---|---|---|---|
+| `limits_domain/test4`, `limits_host/test2` | 400 for a label of 64 | 422 `02306` from the registry (domain); host as expected | #138 |
+| `limits_domain/test19`, `test24`, `limits_host/test7` | 4xx for a 6th tech contact, a 14th nameserver, a 14th address added by update | 200: limits counted per command | pawel-kow/epp#29 |
+| `limits_domain/test2`, `test3` (do not run there) | 201 for a label of 61 to 63 | the name is cut to 68 characters, the server dies and the proxy times out (500 `02400`) | pawel-kow/epp#30 |
+| `limits_contact/test20` (does not run there) | the extension read back whole | 11 digits read back as 2147483647 | pawel-kow/epp#31 |
+| `limits_contact/test7` (does not run there) | 4xx for a name of 256 | 201, cut to 255 | pawel-kow/epp#21 |
+| `limits_host/test10` | `2001:db8::1` (RFC 5952) | `2001:0db8::1` | #137 |
+
+Confirmed limits of the EPP test server: labels up to 60 under `.example`, 13 nameservers and 5 contacts a role at
+create, 13 host addresses at create, `keyTag` up to 65535, `authdata` of 6 to 16
+characters with an upper case letter and a digit, contact ids of 16, names of at least 5 characters, cities of 80 and
+postcodes of 16, phone numbers of 15 digits, periods of 1 to 10 whole years and an expiry at most 10 years ahead.
+
+### Outcome on RRI MTEST
+
+Pending: the run needs a machine on the allowlist of both RegAccs. Expected to fail there, read in the code: the
+over-limit values RRI refuses in its XSD or with a class-5 code answer 500 (#139), and six holders answer 501 (#140).
 
 ## 7. Other findings
 
-- **F1.** `tests/integration/test_domain_create.py` and `test_domain_delete.py` collect no test: `test_cases = []`,
-  followed by an unassigned list of old cases in a pre-RPP format (`/domains`, `authInfo.pw`). Dead code.
+- **F1.** `tests/integration/test_domain_create.py` and `test_domain_delete.py` collect no test (#141).
 - **F2.** `DC9` and `CC9` are named "invalid schema" but send a body with renamed members, so they prove an unknown
   member and a missing required member at once. A missing `name`, `id`, locality or email has no case of its own.
 - **F3.** `DU6` ("invalid_schema") sends a contact without `object` and is EPP-only for no reason of the field; the
@@ -357,7 +372,3 @@ the ACL like any other, and every probe that creates must use `{handle:a:…}` a
   host with a client status, though the drafts allow both.
 - **F5.** `dns` of RRI domains is created in every case (`profile.domain_dns_required`) but never changed: no
   update case replaces, adds or removes a name server or `nsentry` on RRI.
-
-Per [process.md](../agents/process.md#issues), the defects here (F1, the cut values and per-command counts of the
-EPP test server, the 500 for RRI limit refusals) belong in GitHub issues, not in this file, once confirmed by the
-probes.

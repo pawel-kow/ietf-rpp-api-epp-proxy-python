@@ -45,7 +45,7 @@ def assert_headers(expected_headers, response, test_name):
             continue
         assert header in response.headers, f"Header '{header}' not found in response for test case: {test_name}"
         if isinstance(test, str):
-            assert response.headers[header] == test, f"Header '{header}' has unexpected value for test case: {test_name}"
+            assert response.headers[header] == test, f"Header '{header}' is {response.headers[header]!r}, not {test!r}, for test case: {test_name}"
         elif isinstance(test, dict) and "type" in test:
             assert evaluate_condition(response.headers[header], test), f"Header '{header}' does not meet the condition {test['type']} for test case: {test_name}"
         else:

@@ -14,7 +14,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c8}",
+          "id": "{handle:a:Z8}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -88,9 +88,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }

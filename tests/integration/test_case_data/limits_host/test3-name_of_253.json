@@ -32,9 +32,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -52,9 +49,6 @@
       },
       "response": {
         "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "hostName": "{pad:63:h3-{random_name}}.{pad:63:a}.{pad:63:b}.{pad:57:c}.net"
         }

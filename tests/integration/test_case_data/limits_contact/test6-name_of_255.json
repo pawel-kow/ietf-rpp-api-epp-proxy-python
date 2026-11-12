@@ -14,7 +14,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c6}",
+          "id": "{handle:a:Z6}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -76,9 +76,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -87,7 +84,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/{handle:a:c6}",
+        "url": "/contacts/{handle:a:Z6}",
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -96,9 +93,6 @@
       },
       "response": {
         "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "contactInfo": {
             "name": {

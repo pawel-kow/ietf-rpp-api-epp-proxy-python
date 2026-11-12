@@ -3,8 +3,8 @@
 # DRAFT. Companion of integration-test-review.md (§5, §6). Each entry is one limit of one RPP data
 # element: what the RPP drafts say about it (`rpp`) and what each backend enforces. Most backend values
 # come from the server's source, its database or the registry's documentation, not from a test run:
-# `probe` names the integration case (proposed in the review, §6) that is to confirm each one, and
-# `verified` turns true once that case has run green.
+# `probe` names the integration cases under tests/integration/test_case_data/ that confirm each one, and
+# `verified` says per backend how they came out.
 #
 # Shape of an entry:
 #   path:        JSON pointer of the element inside the RPP object ("*" for any array member)
@@ -14,8 +14,9 @@
 #                  over:     the registry's answer to a value over the limit (result code, or `truncates`)
 #                  expected: the RPP answer the proxy should give (HTTP status and RPP-Code)
 #                  source:   code | db | doc | xsd | observed | inferred, and `ref`
-#   probe:       proposed case id(s) under tests/integration/test_case_data/
-#   verified:    false until the probe ran on that backend
+#   probe:       the case ids under tests/integration/test_case_data/
+#   verified:    per backend: passed; defect <issue> (the case is skipped or does not run there because of it);
+#                pending (not run yet); n/a (no probe runs there)
 #
 # Backends:
 #   epp-docker: the XPanel-based EPP test server of EPP-server-docker (tests/integration/environments/
@@ -47,8 +48,8 @@ transport:
     rpp: {defined: false, gap: "no maximum request size and no result code for one"}
     epp-docker: {max: null, source: inferred, ref: "Apache default, not limited by the server"}
     rri-mtest: {max: 65536, unit: bytes, over: 83000000000, expected: "413 or 400", source: doc, ref: "§2.2"}
-    probe: [limits_domain/test40-request_over_64_kib]
-    verified: false
+    probe: []
+    verified: {epp-docker: "n/a", rri-mtest: "n/a"}
 
 domainName:
   - path: /name
@@ -57,8 +58,8 @@ domainName:
     rpp: {defined: true, max: 63, unit: octets, ref: "FQDN (data-objects §2.1.11) → RFC 9499, RFC 1035 §2.3.4"}
     epp-docker: {min: 2, max: 63, over: 2005, expected: "400 02005", source: code, ref: "command/command-create.cgi validate_label"}
     rri-mtest: {min: 1, max: 63, over: 53300062003, expected: "400 02005", source: xsd, ref: "domainace-rule [0-9a-zA-Z][0-9a-zA-Z-]{0,62}"}
-    probe: [limits_domain/test1-label_of_1, limits_domain/test2-label_of_63, limits_domain/test3-label_of_64]
-    verified: false
+    probe: [limits_domain/test3-label_of_63, limits_domain/test4-label_of_64]
+    verified: {epp-docker: "defect #138, defect pawel-kow/epp#30", rri-mtest: "pending"}
   - path: /name
     kind: length
     what: length of the whole name
@@ -71,52 +72,52 @@ domainName:
       source: db
       ref: "registry.domain.name varchar(68)"
     rri-mtest: {min: 4, max: 66, unit: characters incl. ".de", source: doc, ref: "§3.6 domain-rule"}
-    probe: [limits_domain/test2-label_of_63, limits_domain/test4-label_of_60]
-    verified: false
+    probe: [limits_domain/test3-label_of_63, limits_domain/test1-label_of_60]
+    verified: {epp-docker: "passed except defect pawel-kow/epp#30", rri-mtest: "pending"}
   - path: /name
     kind: charset
     rpp: {defined: partly, rule: "A-label for an IDN; servers MAY restrict to their TLDs", gap: "no rule on '_', '--' in positions 3-4 of a non-IDN label, leading or trailing '-', upper case input, trailing dot"}
     epp-docker: {pattern: "^[A-Z0-9-]+$ per label, no leading/trailing '-', no '--' outside xn--", over: 2005, source: code, ref: "validate_label"}
     rri-mtest: {pattern: "latinToken (Basic Latin, Latin-1 Supplement, Latin Extended-A) for the U-label", source: doc, ref: "§5.2"}
-    probe: [limits_domain/test5-leading_hyphen, limits_domain/test6-underscore, limits_domain/test7-hyphens_in_3_and_4, limits_domain/test8-upper_case_name, limits_domain/test9-trailing_dot, limits_domain/test10-other_tld]
-    verified: false
+    probe: [limits_domain/test5-leading_hyphen, limits_domain/test6-underscore, limits_domain/test7-hyphens_in_3_and_4, limits_domain/test10-upper_case_name, limits_domain/test8-trailing_dot, limits_domain/test9-other_tld]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /uName
     kind: charset
     rpp: {defined: true, rule: "NFC, IDNA2008 PVALID, Bidi rule, round trip to the A-label (data-objects §9 domainName)"}
     epp-docker: {rule: "code points of the IDN table the lgr maps to (de, es)", over: 2306, source: observed, ref: "domain_create/test29"}
     rri-mtest: {rule: "DENIC repertoire, holds ñ", source: doc}
-    probe: [domain_create/test29-code_point_outside_idn_table, limits_domain/test11-uname_not_nfc, limits_domain/test12-uname_idna2003_only]
-    verified: false
+    probe: [domain_create/test29-code_point_outside_idn_table, limits_domain/test11-uname_not_nfc]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /lgr
     kind: enum
     rpp: {defined: true, rule: "name registered in the IANA IDN Tables registry"}
     epp-docker: {values: [latn-1.0], source: code, ref: "config.yaml rpp_idn_lgr_tables"}
     rri-mtest: {values: [latn-1.0], source: code, ref: "config.rri-mtest.yaml rpp_rri_lgr"}
     probe: [domain_create/test28-lgr_without_idn_table]
-    verified: true
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
 
   - path: /status
     kind: count
     rpp: {defined: false, gap: "no maximum, no rule for a repeated label"}
     epp-docker: {max: null, note: "one row per status, client values clientDeleteProhibited, clientHold, clientRenewProhibited, clientTransferProhibited, clientUpdateProhibited", source: db}
     rri-mtest: {client_values: [], note: "every status is the registry's", source: code, ref: "RRI_PROFILE.client_statuses=False"}
-    probe: [limits_domain/test13-all_client_statuses, limits_domain/test14-status_twice]
-    verified: false
+    probe: [limits_domain/test12-all_client_statuses, limits_domain/test13-status_twice]
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
   - path: /status/*/reason
     kind: length
     rpp: {defined: false}
     epp-docker: {max: 0, note: "not stored, Info repeats the label (#54)", source: db}
     rri-mtest: {max: 0, source: inferred}
     probe: []
-    verified: false
+    verified: {epp-docker: "n/a", rri-mtest: "n/a"}
 
   - path: /registrant
     kind: count
     rpp: {defined: true, min: 0, max: 1, gap: "several holders (RRI) are contacts labelled registrant, gap Q1"}
     epp-docker: {min: 0, max: 1, source: code, ref: "EPP_PROFILE.max_registrants"}
     rri-mtest: {min: 1, max: 5, rule: "all different", over: "XSD (contact 1-7) 83000000004", expected: "422 02306", source: doc, ref: "§5.2 Holder"}
-    probe: [limits_domain/test15-five_registrants, limits_domain/test16-six_registrants, limits_domain/test17-same_registrant_twice]
-    verified: false
+    probe: [limits_domain/test14-five_registrants, limits_domain/test15-six_registrants, limits_domain/test16-same_registrant_twice]
+    verified: {epp-docker: "n/a", rri-mtest: "pending"}
   - path: /contacts
     kind: count
     what: per label
@@ -134,15 +135,15 @@ domainName:
       expected: "422 02306"
       source: doc
       ref: "§5.2 GeneralRequest, AbuseContact"
-    probe: [limits_domain/test18-five_tech_contacts, limits_domain/test19-six_tech_contacts, limits_domain/test20-sixth_tech_by_update, limits_domain/test21-second_abuse_contact]
-    verified: false
+    probe: [limits_domain/test17-five_tech_contacts, limits_domain/test18-six_tech_contacts, limits_domain/test19-sixth_tech_contact_by_update, limits_domain/test20-second_abuse_contact]
+    verified: {epp-docker: "passed except defect pawel-kow/epp#29", rri-mtest: "pending"}
   - path: /contacts/*/label
     kind: enum
     rpp: {defined: false, gap: "open string, spec-issues.md Contact labels"}
     epp-docker: {values: [admin, billing, tech], source: code}
     rri-mtest: {values: [generalRequest, abuse], source: code}
-    probe: [limits_domain/test22-unknown_contact_label]
-    verified: false
+    probe: [limits_domain/test21-unknown_contact_label]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
 
   - path: /nameservers
     kind: count
@@ -156,8 +157,8 @@ domainName:
       source: code
       ref: "command-create.cgi hostObj_list->size() > 13, command-update.cgi same on the add list"
     rri-mtest: {note: "no host objects: nameservers answer 501 02102 (domain_lifecycle/test6); see /dns/records ns", source: code}
-    probe: [limits_domain/test23-thirteen_nameservers, limits_domain/test24-fourteen_nameservers, limits_domain/test25-fourteen_by_update]
-    verified: false
+    probe: [limits_domain/test22-thirteen_nameservers, limits_domain/test23-fourteen_nameservers, limits_domain/test24-fourteenth_nameserver_by_update]
+    verified: {epp-docker: "passed except defect pawel-kow/epp#29", rri-mtest: "n/a"}
 
   - path: /dns/records
     kind: count
@@ -165,30 +166,30 @@ domainName:
     rpp: {defined: false}
     epp-docker: {max: 13, note: "domain:hostAttr, stored as host objects", over: 2306, source: code}
     rri-mtest: {min: 2, max: 13, over: 53300102920, expected: "422 02306", note: "a class-5 code: the proxy answers 500 02400 today", source: doc, ref: "§5.2 Nserver, message 53300102920"}
-    probe: [limits_domain/test26-one_ns_record, limits_domain/test27-thirteen_ns_records, limits_domain/test28-fourteen_ns_records]
-    verified: false
+    probe: [limits_domain/test25-one_ns_record, limits_domain/test26-two_ns_records, limits_domain/test27-thirteen_ns_records, limits_domain/test28-fourteen_ns_records]
+    verified: {epp-docker: "n/a", rri-mtest: "pending"}
   - path: /dns/records
     kind: count
     what: a, aaaa and mx records of the domain itself (Nsentry)
     rpp: {defined: false}
     epp-docker: {values: [], note: "not supported, 501", source: code, ref: "EPP_PROFILE.domain_record_types"}
     rri-mtest: {min: 1, max: 5, rule: "an aaaa needs an a; mx preference 0-999; null MX '.' allowed", over: "66300063023 for aaaa without a", source: doc, ref: "§5.2 Nsentry"}
-    probe: [limits_domain/test29-five_address_records, limits_domain/test30-six_address_records, limits_domain/test31-aaaa_without_a, limits_domain/test32-mx_record]
-    verified: false
+    probe: [limits_domain/test29-five_address_records, limits_domain/test30-six_address_records, limits_domain/test31-aaaa_without_a, limits_domain/test32-null_mx_record]
+    verified: {epp-docker: "n/a", rri-mtest: "pending"}
   - path: /dns/records
     kind: count
     what: all dnsentry together
     rpp: {defined: false}
     rri-mtest: {max: 20, over: "XSD 83000000004", expected: "422 02306", source: xsd, ref: "domain-5.0.xsd dnsentry 1..20"}
-    probe: [limits_domain/test33-twenty_one_records]
-    verified: false
+    probe: []
+    verified: {epp-docker: "n/a", rri-mtest: "n/a"}
   - path: /dns/records/*/type
     kind: enum
     rpp: {defined: true, rule: "EPP profile: ns, a, aaaa; with DNSSEC ds and/or dnskey"}
     epp-docker: {values: [ns, ds, dnskey], note: "a/aaaa only as glue of ns", source: code}
     rri-mtest: {values: [ns, a, aaaa, mx, dnskey], note: "no ds input, DENIC computes it", source: code}
     probe: [host_create/test9-other_record_type]
-    verified: false
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
   - path: /dns/records/*/rdata (ds)
     kind: range
     rpp: {defined: false, gap: "rdata members named, value ranges not (keyTag, algorithm, digestType, digest length)"}
@@ -203,45 +204,45 @@ domainName:
       source: code
       ref: "lib/EPP/SecDNS.pm _parse_ds_data"
     rri-mtest: {note: "no ds input", source: doc}
-    probe: [domain_create/test22-invalid_ds_digest, limits_domain/test34-keytag_65535, limits_domain/test35-keytag_65536, limits_domain/test36-digest_type_4, limits_domain/test37-two_ds_records]
-    verified: false
+    probe: [domain_create/test22-invalid_ds_digest, limits_domain/test33-keytag_65535, limits_domain/test34-keytag_65536, limits_domain/test35-digest_type_4, limits_domain/test36-two_ds_records]
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
   - path: /dns/records/*/rdata (dnskey)
     kind: range
     rpp: {defined: false}
     epp-docker: {flags: {min: 0, max: 65535}, protocol: {min: 0, max: 255}, algorithm: {min: 0, max: 255}, publicKey: {max: 255, charset: base64}, note: "only inside dsData; dnskey alone 2306", source: code}
     rri-mtest: {flags: {values: [256, 257]}, protocol: {values: [3]}, algorithm: {values: [3, 5, 6, 7, 8, 10, 12, 13, 14]}, publicKey: {min: 30, max: 999, charset: "A-Za-z0-9-./+"}, count: {max: 20}, source: doc, ref: "§3.6 dnskey-rule, §5.2 Dnskey"}
-    probe: [limits_domain/test38-dnskey_flags_256, limits_domain/test39-dnskey_algorithm_9]
-    verified: false
+    probe: [limits_domain/test37-dnskey_flags_256, limits_domain/test38-dnskey_algorithm_9]
+    verified: {epp-docker: "n/a", rri-mtest: "pending"}
   - path: /dns/controls
     kind: range
     rpp: {defined: partly, rule: "ttl and maxSigLifetime >= 1", gap: "no maximum"}
     epp-docker: {maxSigLifetime: {min: 1, max: 2147483647, note: "server holds it; the proxy answers 501 02103 for any control"}, source: code, ref: "SecDNS.pm MAX_SIG_LIFE"}
     rri-mtest: {note: "not supported", source: doc}
     probe: [domain_create/test20-dns_controls_are_unsupported]
-    verified: true
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
 
   - path: /authInfo/authdata
     kind: length
     rpp: {defined: false, gap: "no length or character set for method authinfo"}
     epp-docker: {min: 6, max: 16, rule: "at least one upper case letter and one digit", over: 2005, expected: "400 02005", source: code, ref: "command-create.cgi, command-update.cgi authInfo_pw"}
     rri-mtest: {min: 8, max: 16, charset: "A-H J-N P-Z a-k m-n p-z 2-9 + - / *", validity_days: 30, expected: "422 02306 (checked by the proxy, gap Q4)", source: doc, ref: "§6.15"}
-    probe: [limits_domain/test41-authinfo_of_5, limits_domain/test42-authinfo_of_16, limits_domain/test43-authinfo_of_17, limits_domain/test44-authinfo_without_digit, limits_domain/test45-authinfo_with_letter_o]
-    verified: false
+    probe: [limits_domain/test39-authinfo_at_minimum, limits_domain/test40-authinfo_under_minimum, limits_domain/test41-authinfo_of_16, limits_domain/test42-authinfo_of_17, limits_domain/test43-authinfo_without_digit, limits_domain/test44-authinfo_with_letter_o]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /authInfo/method
     kind: enum
     rpp: {defined: partly, rule: "IANA registry; authinfo in the EPP profile", gap: "registry not yet defined"}
     epp-docker: {values: [authinfo]}
     rri-mtest: {values: [authinfo]}
-    probe: [limits_domain/test46-unknown_auth_method]
-    verified: false
+    probe: [limits_domain/test45-unknown_auth_method]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
 
   - path: /processes/createProcess/*/period
     kind: range
     rpp: {defined: true, value: {min: 1, max: 99}, unit: [y, m]}
     epp-docker: {rule: "12 to 120 months in steps of 12 (1 to 10 years)", over: 2306, source: code, ref: "command-create.cgi date_add"}
     rri-mtest: {note: "no periods, 501", source: code}
-    probe: [limits_domain/test47-period_0, limits_domain/test48-period_100, limits_domain/test49-period_11_months, limits_domain/test50-period_10_years, limits_domain/test51-period_11_years]
-    verified: false
+    probe: [limits_domain/test46-period_0, limits_domain/test47-period_100, limits_domain/test48-period_11_months, limits_domain/test49-period_10_years, limits_domain/test50-period_11_years]
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
 
 renewProcess:
   - path: /renewalPeriod
@@ -249,8 +250,8 @@ renewProcess:
     rpp: {defined: true, value: {min: 1, max: 99}, unit: [y, m]}
     epp-docker: {rule: "12 to 120 months in steps of 12; the new expiry at most 10 years ahead", over: 2306, source: code, ref: "command-renew.cgi"}
     rri-mtest: {note: "no renew, 501", source: code}
-    probe: [limits_domain/test52-renew_11_months, limits_domain/test53-renew_past_10_years]
-    verified: false
+    probe: [limits_domain/test51-renew_11_months, limits_domain/test52-renew_past_10_years]
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
 
 restoreProcess:
   - path: /restoreReport/statements
@@ -259,7 +260,7 @@ restoreProcess:
     epp-docker: {min: 2, max: 2, source: observed, ref: "domain_restore/test9"}
     rri-mtest: {note: "no report, 501", source: code}
     probe: [domain_restore/test9-report_with_one_statement]
-    verified: true
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
 
 contact:
   - path: /id
@@ -267,136 +268,136 @@ contact:
     rpp: {defined: false, gap: "data-objects §7.1 names no bounds; json §6.1.1 prescribes the roidType pattern ^(\\w|_){1,8}-\\w{1,}$ max 89, which neither EPP contact ids (3-16) nor DENIC handles (DENIC-1000022-EXAMPLE) follow; the proxy schema has none"}
     epp-docker: {min: 3, max: 16, over: 2005, expected: "400 02005", note: "a check of an id outside 3-16 answers available (pawel-kow/epp#24)", source: code, ref: "command-create.cgi validate_clIDType"}
     rri-mtest: {min: 9, max: 32, over: "XSD 83000000004", expected: "400 02005", source: xsd, ref: "contact-5.0.xsd handleType"}
-    probe: [limits_contact/test1-id_of_16, limits_contact/test2-id_of_17, limits_contact/test3-id_of_32, limits_contact/test4-id_of_33]
-    verified: false
+    probe: [limits_contact/test1-id_at_maximum, limits_contact/test2-id_over_maximum]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /id
     kind: pattern
     rpp: {defined: false}
     epp-docker: {pattern: "^<registrar prefix>-[A-Z0-9-]+$, no '--', no trailing '-'; case-insensitive", over: "2306 for another prefix, 2005 otherwise", source: code}
     rri-mtest: {pattern: "^[dD][eE][nN][iI][cC]-<RegAcc number>-[-.a-zA-Z0-9]+$", over: "63200020603 another RegAcc, XSD otherwise", source: xsd}
-    probe: [limits_contact/test5-id_of_another_registrar, limits_contact/test6-id_with_underscore, limits_contact/test7-id_with_dot]
-    verified: false
+    probe: [limits_contact/test3-id_of_another_registrar, limits_contact/test4-id_with_underscore]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
 
   - path: /status
     kind: count
     rpp: {defined: false}
     epp-docker: {client_values: [clientDeleteProhibited, clientTransferProhibited, clientUpdateProhibited], source: db}
     rri-mtest: {client_values: [], note: "ok is synthesised (gap Q14)", source: code}
-    probe: [limits_contact/test8-all_client_statuses]
-    verified: false
+    probe: [limits_contact/test5-all_client_statuses]
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
 
   - path: /contactInfo/name/full
     kind: length
     rpp: {defined: false, gap: "spec-issues.md Length of contact fields"}
     epp-docker: {min: 5, max: 255, over: truncates, note: "int form; pawel-kow/epp#21", source: code, ref: "command-create.cgi postalInfo_int_name {5,}, column varchar(255)"}
     rri-mtest: {min: 3, max: 255, rule: "not digits only, not specials only, not one repeated letter, not 5 identical in a row", immutable: true, source: doc, ref: "§5.1, §6.3"}
-    probe: [limits_contact/test9-name_of_4, limits_contact/test10-name_of_255, limits_contact/test11-name_of_256]
-    verified: false
+    probe: [limits_contact/test8-name_at_minimum, limits_contact/test9-name_under_minimum, limits_contact/test6-name_of_255, limits_contact/test7-name_of_256]
+    verified: {epp-docker: "passed except defect pawel-kow/epp#21", rri-mtest: "pending"}
   - path: /contactInfo/name/full
     kind: charset
     rpp: {defined: true, rule: "US-ASCII in the internationalized form; any character in a localization"}
     epp-docker: {int: "[a-zA-Z0-9-&,./ ] and white space; not starting with '-', ',' or '.'; no '--', ',,', '..'", loc: "letters, marks, digits, -&,./ and white space; BMP only", source: code, ref: "command-create.cgi, lib/EPP/PostalInfo.pm LOC_TEXT"}
     rri-mtest: {rule: "UTF-8, one form only", source: doc}
-    probe: [contact_create/test19-non_ascii_name, limits_contact/test12-name_with_apostrophe, limits_contact/test13-localized_name_outside_bmp]
-    verified: false
+    probe: [contact_create/test19-non_ascii_name]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /contactInfo/organizations/org/name
     kind: length
     rpp: {defined: false}
     epp-docker: {min: 5, max: 255, charset: "as name", over: truncates, source: code}
     rri-mtest: {min: 1, max: 255, rule: "PERSON only; an ORG is named by its name", source: doc}
-    probe: [limits_contact/test14-org_of_4, limits_contact/test15-org_of_256]
-    verified: false
+    probe: []
+    verified: {epp-docker: "n/a", rri-mtest: "n/a"}
   - path: /contactInfo/addresses/addr/components (kind name)
     kind: count
     rpp: {defined: partly, rule: "server MAY constrain the number of street lines; order is significant"}
     epp-docker: {min: 0, max: 3, over: "the proxy answers 501 02102; the server itself ignores lines after the third", source: code}
     rri-mtest: {min: 1, max: null, source: doc, ref: "§5.1 Address 1-n"}
-    probe: [contact_create/test3-create_all_data, limits_contact/test16-no_street_line, limits_contact/test17-four_street_lines]
-    verified: false
+    probe: [contact_create/test3-create_all_data, limits_contact/test11-no_street_line, limits_contact/test10-four_street_lines]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /contactInfo/addresses/addr/components/*/value (kind name)
     kind: length
     rpp: {defined: false}
     epp-docker: {min: 5, max: 255, charset: "as name", over: "2005 under 5, truncates over 255", source: code}
     rri-mtest: {min: 1, max: 255, source: doc}
-    probe: [limits_contact/test18-street_of_4, limits_contact/test19-street_of_256]
-    verified: false
+    probe: []
+    verified: {epp-docker: "n/a", rri-mtest: "n/a"}
   - path: /contactInfo/addresses/addr/components/*/value (kind locality)
     kind: length
     rpp: {defined: false}
     epp-docker: {min: 4, max: 255, pattern: "^[a-z][a-z-. ]{3,}$ (case-insensitive): no digits", over: 2005, source: code}
     rri-mtest: {min: 1, max: 80, over: "XSD 83000000004", expected: "400 02005", source: xsd}
-    probe: [limits_contact/test20-city_of_3, limits_contact/test21-city_with_digit, limits_contact/test22-city_of_81]
-    verified: false
+    probe: [limits_contact/test12-city_of_80, limits_contact/test13-city_of_81]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /contactInfo/addresses/addr/components/*/value (kind region)
     kind: pattern
     rpp: {defined: false}
     epp-docker: {pattern: "^[A-Z][a-zA-Z-. ]{1,}$", max: 255, over: 2005, source: code}
     rri-mtest: {note: "no region, 501 (profile contact_region=False)", source: code}
-    probe: [limits_contact/test23-region_lower_case]
-    verified: false
+    probe: []
+    verified: {epp-docker: "n/a", rri-mtest: "n/a"}
   - path: /contactInfo/addresses/addr/components/*/value (kind postcode)
     kind: pattern
     rpp: {defined: false}
     epp-docker: {pattern: "^[A-Z0-9- ]{3,}$", max: 16, over: "2005, truncates over 16", note: "lower case letters are refused", source: code}
     rri-mtest: {min: 1, max: 20, charset: "letters, digits, '-', space", rule: "DE 5 digits, AT and CH 4 digits", source: doc}
-    probe: [limits_contact/test24-postcode_of_2, limits_contact/test25-postcode_of_16, limits_contact/test26-postcode_of_17, limits_contact/test27-postcode_lower_case, limits_contact/test28-de_postcode_of_4]
-    verified: false
+    probe: [limits_contact/test14-postcode_of_16]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /contactInfo/addresses/addr/countryCode
     kind: enum
     rpp: {defined: true, rule: "ISO 3166-1 alpha-2; schema ^[A-Z]{2}$"}
     epp-docker: {values: "ISO 3166-1 list in command-create.cgi", over: 2005, source: code}
     rri-mtest: {values: "ISO 3166-1 alpha-2", source: doc}
-    probe: [limits_contact/test29-country_xx]
-    verified: false
+    probe: [limits_contact/test15-country_xx]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /contactInfo/emails/email/address
     kind: format
     rpp: {defined: true, rule: "RFC 5322"}
     epp-docker: {rule: "Perl Email::Valid", max: 255, over: 2005, source: code}
     rri-mtest: {min: 3, max: 255, pattern: "\\S+@\\S+", source: xsd}
-    probe: [limits_contact/test30-email_without_at, limits_contact/test31-email_of_256]
-    verified: false
+    probe: [limits_contact/test16-email_without_at]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /contactInfo/emails
     kind: count
     rpp: {defined: true, rule: "email, email-1, ... without gaps"}
     epp-docker: {max: 1, over: "501 02102 by the proxy", source: code}
     rri-mtest: {max: null, note: "1-n in RRI; the proxy allows 1", source: doc}
     probe: [contact_create/test18-additional_email]
-    verified: true
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /contactInfo/phones/*/number
     kind: pattern
     rpp: {defined: true, rule: "tel:+CC.N, CC 1-3 digits, N 1-14 digits, at most 15 digits, ;ext=digits"}
     epp-docker: {pattern: "^\\+\\d{1,3}\\.\\d{1,14}$", max: 17, extension: "stored as int(10): at most 10 digits", over: 2005, source: code}
     rri-mtest: {pattern: "^\\+[0-9]{1,3}\\.[0-9]{4,14}(x.+)?$", rule: "no dummy numbers like +49.000000", over: 63200062603, source: doc, ref: "§3.6 phone-rule"}
-    probe: [contact_create/test17-phone_with_hyphens, limits_contact/test32-phone_of_15_digits, limits_contact/test33-phone_of_16_digits, limits_contact/test34-subscriber_of_3_digits, limits_contact/test35-extension_of_11_digits]
-    verified: false
+    probe: [contact_create/test17-phone_with_hyphens, limits_contact/test17-phone_of_15_digits, limits_contact/test18-phone_of_16_digits, limits_contact/test19-subscriber_of_3_digits, limits_contact/test20-extension_of_11_digits]
+    verified: {epp-docker: "passed except defect pawel-kow/epp#31", rri-mtest: "pending"}
   - path: /contactInfo/phones
     kind: count
     rpp: {defined: true, rule: "voice, voice-1, ..., fax, fax-1, ..."}
     epp-docker: {voice: {max: 1}, fax: {max: 1}, source: code}
     rri-mtest: {voice: {min: 1, max: 1}, fax: {max: 0}, over: 63200042402, source: doc}
-    probe: [limits_contact/test36-second_voice_number, limits_contact/test37-without_phone]
-    verified: false
+    probe: [limits_contact/test21-second_voice_number, limits_contact/test22-without_phone]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /contactInfo/localizations
     kind: count
     rpp: {defined: true, min_supported: 1, rule: "a server MUST reject more than it supports", gap: "no result code"}
     epp-docker: {max: 1, over: "501 02102 by the proxy", source: code}
     rri-mtest: {max: 0, over: "501 02102 by the proxy", source: code}
-    probe: [limits_contact/test38-two_localizations]
-    verified: false
+    probe: [limits_contact/test23-two_localizations]
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
   - path: /contactInfo/links
     kind: count
     rpp: {defined: true, rule: "url, contact-uri"}
     epp-docker: {max: 0, over: "501 02102 by the proxy", source: code}
     rri-mtest: {note: "a REQUEST contact is a Card with one link (gap Q2); uri-template 8-1024 characters", source: doc}
-    probe: [limits_contact/test39-link_url]
-    verified: false
+    probe: [limits_contact/test24-link]
+    verified: {epp-docker: "passed", rri-mtest: "pending"}
   - path: /authInfo/authdata
     kind: length
     rpp: {defined: false}
     epp-docker: {min: 6, max: 16, rule: "at least one upper case letter and one digit", over: 2005, source: code}
     rri-mtest: {note: "no contact authInfo (profile contact_auth_info=False)", source: code}
-    probe: [limits_contact/test40-authinfo_of_5, limits_contact/test41-authinfo_of_17]
-    verified: false
+    probe: [limits_contact/test25-authinfo_under_minimum, limits_contact/test26-authinfo_of_17]
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
 
 host:
   - path: /hostName
@@ -405,7 +406,7 @@ host:
     epp-docker: {label: {max: 63}, total: {max: 253}, pattern: "^([A-Z0-9]([A-Z0-9-]{0,61}[A-Z0-9])?\\.){1,125}[A-Z0-9]([A-Z0-9-]{0,61}[A-Z0-9])$", over: 2005, source: code}
     rri-mtest: {note: "no host objects; a name server host 1-254 characters (nserver-rule)", source: doc}
     probe: [limits_host/test1-label_of_63, limits_host/test2-label_of_64, limits_host/test3-name_of_253, limits_host/test4-name_of_254]
-    verified: false
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}
   - path: /dns/records (a, aaaa)
     kind: count
     rpp: {defined: false}
@@ -416,18 +417,18 @@ host:
       source: code
       ref: "command-create.cgi host_addr_list->size() > 13"
     rri-mtest: {note: "glue is part of the domain's Nserver entry, 0-n per host", source: doc}
-    probe: [limits_host/test5-thirteen_addresses, limits_host/test6-fourteen_addresses, limits_host/test7-fourteen_by_update]
-    verified: false
+    probe: [limits_host/test5-thirteen_addresses, limits_host/test6-fourteen_addresses, limits_host/test7-fourteenth_address_by_update]
+    verified: {epp-docker: "passed except defect pawel-kow/epp#29", rri-mtest: "n/a"}
   - path: /dns/records/*/rdata/address
     kind: format
     rpp: {defined: true, rule: "IPv4 RFC 791, IPv6 RFC 4291; server MAY reject addresses not allocated for public use"}
     epp-docker: {max: 45, rule: "v4 and v6 syntax checked", note: "whether private or reserved ranges are refused is unknown", source: code}
     rri-mtest: {min: 7, max: 39, source: doc, ref: "§3.6 ip-rule"}
     probe: [host_create/test10-invalid_address, limits_host/test8-address_256, limits_host/test9-private_address, limits_host/test10-ipv6_uncompressed]
-    verified: false
+    verified: {epp-docker: "passed except defect #137", rri-mtest: "n/a"}
   - path: /status
     kind: count
     rpp: {defined: false}
     epp-docker: {client_values: [clientDeleteProhibited, clientUpdateProhibited], source: db}
     probe: [limits_host/test11-both_client_statuses, limits_host/test12-status_twice]
-    verified: false
+    verified: {epp-docker: "passed", rri-mtest: "n/a"}

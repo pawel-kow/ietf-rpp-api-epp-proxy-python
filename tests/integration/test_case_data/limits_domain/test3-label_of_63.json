@@ -20,7 +20,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:L3}",
+          "id": "{handle:a:X3}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -82,9 +82,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -116,7 +113,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:L3}"
+                  "id": "{handle:a:X3}"
                 }
               },
               {
@@ -153,9 +150,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "domainName"
         }
@@ -173,9 +167,6 @@
       },
       "response": {
         "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "name": "{pad:63:t3-{random_name}}.{tld}"
         }
@@ -192,10 +183,7 @@
         }
       },
       "response": {
-        "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        }
+        "status": 200
       }
     }
   ]

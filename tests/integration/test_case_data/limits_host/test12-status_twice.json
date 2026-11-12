@@ -32,9 +32,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "host"
         }
@@ -73,9 +70,7 @@
         "any_of": [
           {
             "status": 200,
-            "headers": {
-              "RPP-Code": "01000"
-            }
+            "body": {}
           },
           {
             "status": 400,

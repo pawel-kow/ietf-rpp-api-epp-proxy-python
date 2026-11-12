@@ -14,7 +14,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c14}",
+          "id": "{handle:a:Z14}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -76,9 +76,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -87,7 +84,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/{handle:a:c14}",
+        "url": "/contacts/{handle:a:Z14}",
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -96,14 +93,19 @@
       },
       "response": {
         "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "contactInfo": {
             "addresses": {
               "addr": {
                 "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
                   {
                     "kind": "postcode",
                     "value": "1234567890123456"

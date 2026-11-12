@@ -17,7 +17,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c26}",
+          "id": "{handle:a:Z26}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",

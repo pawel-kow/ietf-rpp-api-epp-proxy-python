@@ -14,7 +14,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c17}",
+          "id": "{handle:a:Z17}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -48,10 +48,7 @@
             },
             "phones": {
               "voice": {
-                "number": "tel:+49.1234567890123",
-                "features": {
-                  "voice": true
-                }
+                "number": "tel:+49.1234567890123"
               }
             }
           },
@@ -76,9 +73,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -87,7 +81,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/{handle:a:c17}",
+        "url": "/contacts/{handle:a:Z17}",
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -96,17 +90,11 @@
       },
       "response": {
         "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "contactInfo": {
             "phones": {
               "voice": {
-                "number": "tel:+49.1234567890123",
-                "features": {
-                  "voice": true
-                }
+                "number": "tel:+49.1234567890123"
               }
             }
           }

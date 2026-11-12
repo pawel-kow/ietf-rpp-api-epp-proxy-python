@@ -17,7 +17,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:g14}",
+          "id": "{handle:a:Wg0}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -79,9 +79,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -99,7 +96,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:h14}",
+          "id": "{handle:a:Wh0}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -161,9 +158,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -181,7 +175,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:i14}",
+          "id": "{handle:a:Wi0}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -243,9 +237,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -263,7 +254,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:j14}",
+          "id": "{handle:a:Wj0}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -325,9 +316,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -345,7 +333,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:k14}",
+          "id": "{handle:a:Wk0}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -407,9 +395,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -441,7 +426,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:g14}"
+                  "id": "{handle:a:Wg0}"
                 }
               },
               {
@@ -479,28 +464,28 @@
               "label": "registrant",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:h14}"
+                "id": "{handle:a:Wh0}"
               }
             },
             {
               "label": "registrant",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:i14}"
+                "id": "{handle:a:Wi0}"
               }
             },
             {
               "label": "registrant",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:j14}"
+                "id": "{handle:a:Wj0}"
               }
             },
             {
               "label": "registrant",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:k14}"
+                "id": "{handle:a:Wk0}"
               }
             }
           ]
@@ -508,9 +493,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "domainName"
         }
@@ -527,10 +509,7 @@
         }
       },
       "response": {
-        "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        }
+        "status": 200
       }
     }
   ]

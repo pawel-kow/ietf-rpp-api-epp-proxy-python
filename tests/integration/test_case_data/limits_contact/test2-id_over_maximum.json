@@ -20,10 +20,10 @@
                 "when": {
                   "env.limit_contact_id_length": 32
                 },
-                "then": "{pad:33:{handle:a:c2}}"
+                "then": "{pad:33:{handle:a:Z2}}"
               },
               {
-                "then": "{pad:17:{handle:a:c2}}"
+                "then": "{pad:17:{handle:a:Z2}}"
               }
             ]
           },

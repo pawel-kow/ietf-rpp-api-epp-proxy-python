@@ -19,7 +19,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:a18}",
+          "id": "{handle:a:Qa1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -81,9 +81,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -101,7 +98,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:b18}",
+          "id": "{handle:a:Qb1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -163,9 +160,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -183,7 +177,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c18}",
+          "id": "{handle:a:Qc1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -245,9 +239,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -265,7 +256,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:d18}",
+          "id": "{handle:a:Qd1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -327,9 +318,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -347,7 +335,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:e18}",
+          "id": "{handle:a:Qe1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -409,9 +397,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -429,7 +414,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:f18}",
+          "id": "{handle:a:Qf1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -491,9 +476,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -525,7 +507,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:a18}"
+                  "id": "{handle:a:Qa1}"
                 }
               },
               {
@@ -563,42 +545,42 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:a18}"
+                "id": "{handle:a:Qa1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:b18}"
+                "id": "{handle:a:Qb1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:c18}"
+                "id": "{handle:a:Qc1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:d18}"
+                "id": "{handle:a:Qd1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:e18}"
+                "id": "{handle:a:Qe1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:f18}"
+                "id": "{handle:a:Qf1}"
               }
             }
           ]

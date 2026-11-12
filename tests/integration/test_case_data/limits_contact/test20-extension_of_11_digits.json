@@ -17,7 +17,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c20}",
+          "id": "{handle:a:Z20}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -51,10 +51,7 @@
             },
             "phones": {
               "voice": {
-                "number": "tel:+49.6912345678;ext=12345678901",
-                "features": {
-                  "voice": true
-                }
+                "number": "tel:+49.6912345678;ext=12345678901"
               }
             }
           },
@@ -79,9 +76,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -90,7 +84,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/{handle:a:c20}",
+        "url": "/contacts/{handle:a:Z20}",
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -99,17 +93,11 @@
       },
       "response": {
         "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "contactInfo": {
             "phones": {
               "voice": {
-                "number": "tel:+49.6912345678;ext=12345678901",
-                "features": {
-                  "voice": true
-                }
+                "number": "tel:+49.6912345678;ext=12345678901"
               }
             }
           }

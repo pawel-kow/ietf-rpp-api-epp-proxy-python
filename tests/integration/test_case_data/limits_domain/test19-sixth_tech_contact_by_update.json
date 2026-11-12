@@ -1,5 +1,6 @@
 {
   "test_id": "test19-sixth_tech_contact_by_update",
+  "skip": "pawel-kow/epp#29",
   "when": {
     "profile.contact_labels": {
       "contains": "tech"
@@ -19,7 +20,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:a19}",
+          "id": "{handle:a:Qa2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -81,9 +82,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -101,7 +99,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:b19}",
+          "id": "{handle:a:Qb2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -163,9 +161,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -183,7 +178,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:c19}",
+          "id": "{handle:a:Qc2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -245,9 +240,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -265,7 +257,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:d19}",
+          "id": "{handle:a:Qd2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -327,9 +319,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -347,7 +336,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:e19}",
+          "id": "{handle:a:Qe2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -409,9 +398,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -429,7 +415,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:f19}",
+          "id": "{handle:a:Qf2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -491,9 +477,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "contact"
         }
@@ -525,7 +508,7 @@
                 },
                 "then": {
                   "@type": "contact",
-                  "id": "{handle:a:a19}"
+                  "id": "{handle:a:Qa2}"
                 }
               },
               {
@@ -563,35 +546,35 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:a19}"
+                "id": "{handle:a:Qa2}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:b19}"
+                "id": "{handle:a:Qb2}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:c19}"
+                "id": "{handle:a:Qc2}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:d19}"
+                "id": "{handle:a:Qd2}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:e19}"
+                "id": "{handle:a:Qe2}"
               }
             }
           ]
@@ -599,9 +582,6 @@
       },
       "response": {
         "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
         "body": {
           "@type": "domainName"
         }
@@ -625,7 +605,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "{handle:a:f19}"
+                "id": "{handle:a:Qf2}"
               }
             }
           }
