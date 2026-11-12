@@ -1,5 +1,6 @@
 {
   "test_id": "test15-six_registrants",
+  "skip": "#140",
   "when": {
     "profile.max_registrants": 5
   },

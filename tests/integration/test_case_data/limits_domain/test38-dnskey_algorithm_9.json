@@ -131,9 +131,17 @@
               {
                 "@type": "dnsRecord",
                 "name": "@",
-                "type": "a",
+                "type": "ns",
                 "rdata": {
-                  "address": "192.0.2.1"
+                  "nsdname": "ns1.n38-{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns2.n38-{random_name}.net."
                 }
               },
               {

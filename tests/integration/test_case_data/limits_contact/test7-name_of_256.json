@@ -1,5 +1,6 @@
 {
   "test_id": "test7-name_of_256",
+  "skip": "#139",
   "when": {
     "env.values_cut_at_column": false
   },

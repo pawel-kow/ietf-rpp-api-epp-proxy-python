@@ -5,7 +5,7 @@
       "contains": "aaaa"
     }
   },
-  "description": "RRI takes an aaaa record only next to an a record.",
+  "description": "An aaaa record without an a record: RRI takes it (MTEST, 2026-11-12).",
   "steps": [
     {
       "when": {
@@ -139,48 +139,24 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 400,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02001"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02004"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02005"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 422,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          }
-        ]
+        "status": 201,
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/t31-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
       }
     }
   ]

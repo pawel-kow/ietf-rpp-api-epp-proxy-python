@@ -1,5 +1,6 @@
 {
   "test_id": "test2-id_over_maximum",
+  "skip": "#139",
   "description": "A contact id one character over the most the server takes.",
   "steps": [
     {

@@ -1,5 +1,6 @@
 {
   "test_id": "test25-one_ns_record",
+  "skip": "#139",
   "when": {
     "profile.host_objects": false
   },

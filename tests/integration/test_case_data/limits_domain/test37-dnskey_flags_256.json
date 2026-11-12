@@ -7,7 +7,7 @@
       }
     }
   },
-  "description": "A DNSKEY with flags 256 (ZSK), which RRI takes.",
+  "description": "A DNSKEY with flags 256 (ZSK), which RRI takes. RRI takes a DNSKEY only with name servers, not next to an a record.",
   "steps": [
     {
       "when": {
@@ -131,9 +131,17 @@
               {
                 "@type": "dnsRecord",
                 "name": "@",
-                "type": "a",
+                "type": "ns",
                 "rdata": {
-                  "address": "192.0.2.1"
+                  "nsdname": "ns1.n37-{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns2.n37-{random_name}.net."
                 }
               },
               {

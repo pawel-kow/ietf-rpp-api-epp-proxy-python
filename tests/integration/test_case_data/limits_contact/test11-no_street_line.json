@@ -1,5 +1,6 @@
 {
   "test_id": "test11-no_street_line",
+  "skip": "#139",
   "when": {
     "env.limit_street_lines_min": 1
   },

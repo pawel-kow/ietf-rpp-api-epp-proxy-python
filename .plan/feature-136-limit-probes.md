@@ -14,9 +14,9 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 - [x] T7 Open boundaries of the drafts into `.spec/spec-issues.md`
 - [x] T8 Docs: `testing.project.md` (placeholder, facts, the new groups, the EPP test server's limit defects); review
       §6 and §7 with the implemented cases and outcomes; `probe` and `verified` per backend in backend-limits.yaml
-- [~] T9 Checks: `lint-imports` and `pytest -n 8` done; MTEST run `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration`
-      (pending: needs a machine on the allowlist)
-- [ ] T10 Draft PR
+- [x] T9 Checks: `lint-imports`, `pytest -n 8` and the MTEST run `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration`
+- [x] T10 Draft PR #142
+- [x] T11 MTEST outcomes into the cases, backend-limits.yaml and review §6
 
 ## Findings (evidence)
 
@@ -55,6 +55,11 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
   Read in the code and filed, pending MTEST: #139 (RRI limit refusals are 500), #140 (six holders are 501).
   #141 (dead test modules). Skipped cases name their issue.
 
+- MTEST (2026-11-12): first run 11 of the limits cases failed. #139 and #140 confirmed, those cases skipped.
+  `test31` (RRI takes an `aaaa` alone) and `test37`/`test38` (a DNSKEY needs `ns` records, not an `a` record) fixed;
+  `test20` skipped (one REQUEST handle on MTEST). Then the full suite: 151 passed, 253 skipped. Limits on epp-docker
+  after the change: 60 passed, 30 skipped.
+
 ## Open questions
 
-- MTEST run of `limits_*` (and the suite) from a machine on the allowlist.
+- None.

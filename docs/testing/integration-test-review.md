@@ -1,6 +1,7 @@
 # Integration test review: coverage of the data object fields
 
-Status: 2026-11-12. §2 to §5 describe the suite on `main` at 414a86e, before the probe cases of §6 (#136). Companion file: [backend-limits.yaml](backend-limits.yaml).
+Status: 2026-11-12. §2 to §5 describe the suite on `main` at 414a86e, before the probe cases of §6 (#136). §6 has
+the outcome of the probes on both backends: the EPP test server and DENIC RRI MTEST. Companion file: [backend-limits.yaml](backend-limits.yaml).
 
 This review checks the data-driven integration suite (`tests/integration/test_case_data/`, 312 cases) against
 three criteria, for every writable field of the Domain Name, Contact and Host data objects and of the component
@@ -326,7 +327,7 @@ its cases are in [backend-limits.yaml](backend-limits.yaml), with the outcome pe
 | `limits_domain` | `test1`–`test11` | label of 60/61/63/64, leading hyphen, `_`, `--` in positions 3–4, trailing dot, other TLD, upper case, `uName` not NFC |
 | `limits_domain` | `test12`–`test21` | all client statuses, a status twice, 5/6 holders and one holder twice (R), 5/6 tech contacts by create and a 6th by update (E), a 2nd abuse contact (R), an unknown label |
 | `limits_domain` | `test22`–`test32` | 13/14 nameservers and a 14th by update (E), 1/2/13/14 `ns` records (R), 5/6 address records, `aaaa` without `a`, a null MX (R) |
-| `limits_domain` | `test33`–`test38` | `keyTag` 65535/65536, `digestType` 4, two DS records (E), DNSKEY flags 256 and algorithm 9 (R) |
+| `limits_domain` | `test33`–`test38` | `keyTag` 65535/65536, `digestType` 4, two DS records (E), DNSKEY flags 256 and algorithm 9 with two `ns` records (R) |
 | `limits_domain` | `test39`–`test52` | `authdata` at and under the minimum, 16/17, without a digit (E), with `O` (R), unknown `method`, `period` 0/100/11 months/10 and 11 years, renew of 11 months and past 10 years (E) |
 | `limits_contact` | `test1`–`test5` | `id` at and over the maximum (E 16, R 32), prefix of another registrar, `_`, all client statuses |
 | `limits_contact` | `test6`–`test16` | `name.full` 255/256 and at and under the minimum (E 5, R 3), 4 street lines (E) and none (R), city 80/81, postcode 16, country `XX`, email without `@` |
@@ -340,7 +341,8 @@ and it cuts them, pawel-kow/epp#21).
 
 ### Outcome on the EPP test server
 
-The full suite passes (2357 passed, 38 skipped). The probes found:
+The full suite passes (2357 passed, 38 skipped; the `limits_*` groups after the MTEST changes below: 60 passed, 30
+skipped). The probes found:
 
 | Case | Expected | Got | Issue |
 |---|---|---|---|
@@ -356,10 +358,27 @@ create, 13 host addresses at create, `keyTag` up to 65535, `authdata` of 6 to 16
 characters with an upper case letter and a digit, contact ids of 16, names of at least 5 characters, cities of 80 and
 postcodes of 16, phone numbers of 15 digits, periods of 1 to 10 whole years and an expiry at most 10 years ahead.
 
+`limits_contact/test2` and `test4` passed on the EPP test server but are now skipped on both backends for #139, since
+a skip cannot be limited to one backend.
+
 ### Outcome on RRI MTEST
 
-Pending: the run needs a machine on the allowlist of both RegAccs. Expected to fail there, read in the code: the
-over-limit values RRI refuses in its XSD or with a class-5 code answer 500 (#139), and six holders answer 501 (#140).
+The full suite passes on MTEST (151 passed, 253 skipped, 2026-11-12). Of the 53 `limits_*` cases that select RRI, 43
+pass and 10 are skipped. The first run failed 11 cases:
+
+| Case | Expected | Got | Outcome |
+|---|---|---|---|
+| `limits_contact/test2`, `test4`, `test7`, `test11`, `test13` | 4xx for an id of 33 or with `_`, a name of 256, no street line, a city of 81 | 500 `02400`: RRI refuses them in its XSD (`83000000004`) | defect #139, skipped |
+| `limits_domain/test25`, `test28` | 4xx for 1 and 14 `ns` records | 500 `02400`: RRI answers the class-5 code `53300102920` | defect #139, skipped |
+| `limits_domain/test15` | 4xx for six holders | 501 `02102` from the proxy | defect #140, skipped |
+| `limits_domain/test20` | 4xx for a second abuse contact | 200: on MTEST the abuse and general request handles in `.env` are one handle, so the second add is the same contact again and changes nothing | skipped until a second `REQUEST` handle exists |
+| `limits_domain/test31` | 4xx for an `aaaa` record without an `a` record (`docs/rri/`) | 201 | expectation changed to 201 |
+| `limits_domain/test37` | 201 for a DNSKEY with flags 256 next to an `a` record | 422 `02306`, RRI `66300048905` "Invalid DNS Data (Nsentry, Dnskey)"; flags 257 is refused the same way | the case now delegates with two `ns` records and passes; `test38` the same, so its refusal is of algorithm 9 |
+
+Confirmed limits of RRI MTEST: labels up to 63 under `.de`, 1 to 5 holders, all different, 2 to 13 `ns` records, 1 to
+5 address records of the domain itself and an `aaaa` record without an `a` record, a null MX, a DNSKEY only with
+name servers, flags 256, algorithm 9 refused, `authdata` of 8 to 16 characters without `I O l o 0 1`, contact ids of
+32, names of at least 3 characters, cities of 80, a subscriber number of at least 4 digits, one voice number required.
 
 ## 7. Other findings
 

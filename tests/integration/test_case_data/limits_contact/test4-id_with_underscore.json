@@ -1,5 +1,6 @@
 {
   "test_id": "test4-id_with_underscore",
+  "skip": "#139",
   "description": "An underscore is in neither EPP's nor RRI's id syntax.",
   "steps": [
     {

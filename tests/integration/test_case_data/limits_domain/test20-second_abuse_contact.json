@@ -1,5 +1,6 @@
 {
   "test_id": "test20-second_abuse_contact",
+  "skip": "needs two different REQUEST handles; on MTEST the abuse and general request handles are the same, so the second add is the same contact again",
   "when": {
     "profile.contact_labels": {
       "contains": "abuse"
