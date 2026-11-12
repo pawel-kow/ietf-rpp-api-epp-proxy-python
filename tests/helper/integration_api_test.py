@@ -132,6 +132,20 @@ def replace_upper_placeholders(value: str) -> str:
     value = UPPER.sub(lambda match: match.group(1).upper(), value)
     return LOWER.sub(lambda match: match.group(1).lower(), value)
 
+PAD = re.compile(r"\{pad:(\d+):([^{}]*)\}")
+DIGITS = "0123456789"
+
+def replace_pad_placeholders(value: str) -> str:
+    """Replaces {pad:N:TEXT} by TEXT followed by the digits 0 to 9, repeated, to N characters: a name or id of an exact
+    length that keeps the random part of TEXT. TEXT longer than N fails the test."""
+    def replace(match):
+        length, text = int(match.group(1)), match.group(2)
+        if len(text) > length:
+            pytest.fail(f"{match.group(0)}: the text is longer than {length} characters")
+        missing = length - len(text)
+        return text + (DIGITS * (missing // len(DIGITS) + 1))[:missing]
+    return PAD.sub(replace, value)
+
 def endpoint_test(client, case_sequence, sleep=time.sleep, credentials=None, pacer=None):
     """
     Tests the POST /domains endpoint using the Flask test client.

@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from main import app
 from tests.helper import selectors
 from tests.helper.idn_labels import replace_idn_placeholders
-from tests.helper.integration_api_test import endpoint_test, replace_upper_placeholders
+from tests.helper.integration_api_test import endpoint_test, replace_pad_placeholders, replace_upper_placeholders
 from tests.helper.pacer import Pacer
 from tests.helper.test_environment import (
     REPOSITORY, Credentials, EnvironmentError, environment_names, load, replace_values, selected_name,
@@ -157,7 +157,7 @@ def process_placeholders(json_data=dict|list|str|None, obj=None, started=None):
             .replace("{random_id_10}", f"{random_id_10}")\
             .replace("{test_start}", started.isoformat())# type: ignore
         replaced = replace_values(replaced, environment, random_id_10)
-        replaced = replace_upper_placeholders(replace_idn_placeholders(replaced, random_id_10))
+        replaced = replace_upper_placeholders(replace_pad_placeholders(replace_idn_placeholders(replaced, random_id_10)))
         return replaced.replace("{unique_cltrid}", str(uuid.uuid4())) # RPP-Cltrid is unique per request
     else:
         return json_data

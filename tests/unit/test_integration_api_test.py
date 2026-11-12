@@ -2,7 +2,8 @@ import json
 
 import pytest
 
-from tests.helper.integration_api_test import endpoint_test, field_value, replace_upper_placeholders, substitute_captures
+from tests.helper.integration_api_test import (endpoint_test, field_value, replace_pad_placeholders,
+                                               replace_upper_placeholders, substitute_captures)
 from tests.helper.recursive_compare_existing import recusive_compare_existing
 
 REQUEST = {"method": "GET", "url": "/x", "headers": {"RPP-Cltrid": "cl-1"}}
@@ -151,6 +152,23 @@ def test_upper_placeholder_is_its_text_in_upper_case():
 
 def test_text_without_upper_placeholder_is_unchanged():
     assert replace_upper_placeholders("ns1.{random_name}.net") == "ns1.{random_name}.net"
+
+
+def test_pad_placeholder_fills_its_text_with_digits_to_the_length():
+    assert replace_pad_placeholders("{pad:16:FOO-ab12}.example") == "FOO-ab1201234567.example"
+
+
+def test_pad_placeholder_repeats_the_digits():
+    assert replace_pad_placeholders("{pad:15:t}") == "t01234567890123"
+
+
+def test_pad_placeholder_of_the_text_length_is_the_text():
+    assert replace_pad_placeholders("{pad:3:abc}") == "abc"
+
+
+def test_pad_placeholder_shorter_than_its_text_fails():
+    with pytest.raises(pytest.fail.Exception, match="longer than 2"):
+        replace_pad_placeholders("{pad:2:abc}")
 
 
 def test_delay_seconds_waits_before_the_request():
