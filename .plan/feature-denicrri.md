@@ -16,8 +16,10 @@ The maintainer asked to work through the phases without waiting for confirmation
 - [x] R6: RRI messages (QUEUE-READ, QUEUE-DELETE). Every message is a service notice (see open points).
 - [x] R7: transfer per Q3 option C (501 `02101` from the profile), Q8–Q10 and Q16 not exposed.
 - [x] R8: docs (architecture, testing, security, process, overview, README, refactoring.md status).
-- [~] Full EPP run and MTEST run on the final state, recorded below.
-- [ ] Before merge: file unfixed defects as issues, `git rm` this plan, release the mutex.
+- [x] Full EPP run and MTEST run on the final state, recorded below.
+- [x] Follow-ups filed: #131 (REQUEST contacts), #132 (typed queue messages), #133 (CHPROV and the rest not exposed),
+      #134 (AuthInfo1 lifetime), #135 (plan files left on main).
+- [~] Maintainer review; then `git rm` this plan, release the mutex.
 
 ## Decisions
 
@@ -60,7 +62,7 @@ The maintainer asked to work through the phases without waiting for confirmation
 - MTEST queue messages include `msg:contactDelete`, which ref §9 does not list.
 - MTEST probe: a domain CREATE with an `A` and an `MX` record and no NS succeeds with `pendingCreate`
   (`53000080014`); an MX exchange must resolve (`63300083005` otherwise). CREATE-AUTHINFO1 without `expire` answered
-  an expiry two days ahead, not 30. INFO after DELETE shows `redemptionPeriod`. Handles come back in upper case.
+  an expiry two days ahead, not 30, and `expire` = today + 30 days is refused (`63391068618`, #134). INFO after DELETE shows `redemptionPeriod`. Handles come back in upper case.
 - `.plan/refactor-116-backend-port.md` and `.plan/refactor-117-backend-profile.md` are on `main` although their PRs
   are merged (left over, not removed by #118/#121).
 
@@ -70,6 +72,8 @@ The maintainer asked to work through the phases without waiting for confirmation
 |---|---|---|
 | Before (`0c4f6ac` + main) | `PYTHONPATH=src lint-imports`; `pytest -n 8` | 12 contracts kept; 2149 passed, 5 skipped |
 | R1 + R2 (`bf7f223`) | the same | 12 contracts kept; 2209 passed, 6 skipped (the same integration skips: #49, #50, #54) |
+| R3–R8 (`1bc9732`) | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2272 passed, 8 skipped (#49, #50, #54, the two empty legacy modules, three RRI-only `domain_lifecycle` cases) |
+| R3–R8 (`1bc9732`) | `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration` (MTEST) | **20 passed**, 290 skipped (each skip names its fact); `domain_lifecycle` 7 of 7 |
 
 ## Open questions
 
