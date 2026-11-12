@@ -141,7 +141,9 @@ Behaviour of MTEST the cases depend on: every reply carries info `13000000011`; 
 resolve; CREATE-AUTHINFO1 without an expiry gives one two days ahead (#134); handles come back in upper case and IPv6
 addresses uncompressed; the IDN repertoire holds `ñ`, which the `de` table of the EPP test server does not
 (`env.lgr_without_enye`); a read reusing a client transaction id is not refused, only a write would be
-(`env.cltrid_reuse_refused`). [config.rri-mtest.yaml](../../config.rri-mtest.yaml) offers `latn-1.0` as the LGR, which
+(`env.cltrid_reuse_refused`); an `lgr` on an ASCII name is not refused, RRI takes no LGR (`env.lgr_on_ascii_refused`);
+clearing a contact's name or email is refused by RRI with 422 `02306`, where the EPP adapter refuses it with 501
+(`env.contact_removal_refused_by_registry`). [config.rri-mtest.yaml](../../config.rri-mtest.yaml) offers `latn-1.0` as the LGR, which
 the descriptor states as `lgrs`, as `epp-docker.yaml` does for `config.yaml`.
 
 ## Selectors

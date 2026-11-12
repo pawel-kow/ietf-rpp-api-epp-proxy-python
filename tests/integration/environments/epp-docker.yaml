@@ -20,3 +20,5 @@ facts:
   lgr_without_enye: true               # the IDN table of latn-1.0 lacks ñ
   deleted_domain_readable: false       # a domain deleted right after its create is read in its redemption period, not purged
   failed_logins_lock: false
+  lgr_on_ascii_refused: true       # an lgr on a name that is not an IDN is refused
+  contact_removal_refused_by_registry: false  # the registry, not the proxy, refuses clearing a contact's name or email

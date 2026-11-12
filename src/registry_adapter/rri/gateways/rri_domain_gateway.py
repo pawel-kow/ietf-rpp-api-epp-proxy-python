@@ -45,14 +45,12 @@ def _partly_applied(what: str, first: OperationResponse, error: ErrorResponse) -
 
 
 def _idn_refusal(domain: Domain) -> str | None:
-    """RRI takes the U-label as the domain's handle and has no IDN table of its own: an `lgr` on an ASCII name, or a
-    `uName` that is not the name, is refused here, as an EPP server refuses it."""
-    if domain.idn is None:
+    """RRI takes only the domain's name, the U-label: a `uName` that is not the name would be dropped unseen, so it is
+    refused here, as an EPP server refuses it. An `lgr` is not sent, RRI has no IDN table of its own."""
+    if domain.idn is None or not domain.idn.uname:
         return None
-    handle, ace = handle_and_ace(domain.name)
-    if ace is None:
-        return "An LGR is given for a name that is not an IDN"
-    if domain.idn.uname and domain.idn.uname.lower() != handle:
+    handle, _ = handle_and_ace(domain.name)
+    if domain.idn.uname.lower() != handle:
         return "The uName does not match the name"
     return None
 
@@ -115,9 +113,6 @@ class RriDomainGateway:
             contacts=[(c.type, c.contact.id) for c in wanted.contacts], ns=wanted.ns, records=wanted.records,
             dns_sec=wanted.dnsSEC,
         )
-        if not after.dnsentries(wanted.name):
-            return refused(ResultCode.UNIMPLEMENTED_OPTION, "A domain without DNS data cannot be expressed in RRI",
-                           client_transaction_id)
         keep_auth_info = AUTH_INFO in wanted.unchanged
         password = wanted.authInfo.pw if wanted.authInfo else None
         if not keep_auth_info and password is not None and not valid_auth_info1(password):

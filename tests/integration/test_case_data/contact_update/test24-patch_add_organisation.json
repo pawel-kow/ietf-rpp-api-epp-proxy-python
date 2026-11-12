@@ -1,7 +1,4 @@
 {
-  "when": {
-    "profile.contact_org_person_name": true
-  },
   "test_id": "test24-patch_add_organisation",
   "steps": [
     {
@@ -151,7 +148,19 @@
           "@type": "contact",
           "id": "{handle:a:24A}",
           "contactInfo": {
-            "kind": "org",
+            "kind": {
+              "select": [
+                {
+                  "when": {
+                    "profile.contact_kind_held": true
+                  },
+                  "then": "individual"
+                },
+                {
+                  "then": "org"
+                }
+              ]
+            },
             "organizations": {
               "org": {
                 "name": "ACME Inc."

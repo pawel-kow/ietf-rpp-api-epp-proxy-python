@@ -1,7 +1,4 @@
 {
-  "when": {
-    "profile.contact_name_changeable": true
-  },
   "test_id": "test18-patch_name_keeps_the_address",
   "steps": [
     {
@@ -138,54 +135,75 @@
         ]
       },
       "response": {
-        "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:18A}",
-          "contactInfo": {
-            "name": {
-              "full": "Jane Doe"
+        "select": [
+          {
+            "when": {
+              "profile.contact_name_changeable": false
             },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
+            "then": {
+              "status": 422,
+              "headers": {
+                "RPP-Code": "02306"
+              },
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              }
+            }
+          },
+          {
+            "then": {
+              "status": 200,
+              "headers": {
+                "RPP-Code": "01000"
+              },
+              "content_type": "application/rpp+json",
+              "body": {
+                "@type": "contact",
+                "id": "{handle:a:18A}",
+                "contactInfo": {
+                  "name": {
+                    "full": "Jane Doe"
                   },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "select": [
-                      {
-                        "when": {
-                          "profile.contact_region": true
+                  "addresses": {
+                    "addr": {
+                      "components": [
+                        {
+                          "kind": "name",
+                          "value": "123 Main St"
                         },
-                        "then": {
-                          "kind": "region",
-                          "value": "PA"
+                        {
+                          "kind": "locality",
+                          "value": "Anytown"
+                        },
+                        {
+                          "select": [
+                            {
+                              "when": {
+                                "profile.contact_region": true
+                              },
+                              "then": {
+                                "kind": "region",
+                                "value": "PA"
+                              }
+                            },
+                            {
+                              "omit": true
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "postcode",
+                          "value": "12345"
                         }
-                      },
-                      {
-                        "omit": true
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
+                      ]
+                    }
                   }
-                ]
+                }
               }
             }
           }
-        }
+        ]
       }
     }
   ]

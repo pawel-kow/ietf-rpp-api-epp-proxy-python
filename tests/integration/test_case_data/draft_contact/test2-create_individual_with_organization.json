@@ -110,19 +110,77 @@
         }
       },
       "response": {
-        "status": 501,
-        "content_type": "application/problem+json",
-        "body": {
-          "type": "urn:ietf:params:rpp:error",
-          "status": 501,
-          "errors": [
-            {
-              "result": "02102"
+        "select": [
+          {
+            "when": {
+              "profile.contact_kind_held": true
+            },
+            "then": {
+              "status": 201,
+              "headers": {
+                "RPP-Code": "01000"
+              },
+              "content_type": "application/rpp+json",
+              "body": {
+                "@type": "contact",
+                "id": "{handle:a:J02}"
+              }
             }
-          ]
-        },
+          },
+          {
+            "then": {
+              "status": 501,
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error",
+                "status": 501,
+                "errors": [
+                  {
+                    "result": "02102"
+                  }
+                ]
+              },
+              "headers": {
+                "RPP-Code": "02102"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "when": {
+        "profile.contact_kind_held": true
+      },
+      "request": {
+        "method": "GET",
+        "url": "/contacts/{handle:a:J02}",
         "headers": {
-          "RPP-Code": "02102"
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:J02}",
+          "contactInfo": {
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "Example Inc."
+              }
+            }
+          }
         }
       }
     }

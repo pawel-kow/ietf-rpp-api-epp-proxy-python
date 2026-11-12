@@ -226,6 +226,7 @@ New facts, each read by the proxy and by the selectors:
 | `contact_transfer_operations: frozenset[str]` | the same five | none | the same |
 | `restore_report: bool` | yes | no (gap Q6) | the restore mapper, which refuses a report with 501 `02102` |
 | `auth_info_readable: bool` | yes | no | the domain mapper, which refuses `includeElements=authInfo` with 501 `02102` (P2) |
+| `contact_kind_held: bool` | no, the kind follows from the organisation | yes, PERSON or ORG | the contact mapper, which refuses an organisation on an individual with 501 `02102` otherwise, and the PATCH, which keeps a held kind |
 
 ### 3.8 Result codes and errors
 

@@ -226,10 +226,13 @@ flow, the port and the EPP commands of one object.
     A-label as `ace`. A domain in its redemption period has no sponsor in INFO and reads with the sponsor `unknown`
     (spec-issues.md, "Sponsor of a deleted domain"). A request whose second command fails answers a
     `PartiallyApplied` (core/result) with the first command's transaction ids and the refusal, which `read_back` does
-    not read back, so the handler answers 202 (gap Q7). What RRI cannot express is refused before any command:
-    changing or clearing a contact's name, clearing its address, email or phone, a person's name on an
-    organisation's contact (an ORG is named by its organisation; a contact with an organisation is an ORG), a domain
-    without DNS data, an `lgr` on an ASCII name and a `uName` that is not the name. Hosts, transfers, renew and contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
+    not read back, so the handler answers 202 (gap Q7). The adapter refuses only what an RRI
+    request has no place for, which RRI would never see: a person's name on an organisation's contact (an ORG is
+    named by its organisation), a contact authInfo, a `uName` that is not the name, and an AuthInfo1 RRI does not take
+    (RRI receives only its hash). Everything else is sent, and RRI's refusal answered by its code: changing a
+    contact's name, clearing a member it requires, a domain without DNS data (`83000000004`, the XSDs). An `lgr` is
+    not sent. A contact create sends the kind of the Card (PERSON or ORG, a PERSON may name its organisation); an
+    update keeps the type RRI holds. Hosts, transfers, renew and contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
     message is a service notice naming its RRI type and the domains and handles it is about, with 1301 or 1300 as a
     poll has.
 
@@ -331,9 +334,10 @@ whether a restore takes a report (`domain_restore_report`), whether a read can s
 (`domains.check_requested`, which refuses `includeElements=authInfo` otherwise), whether hosts are objects
 (`domains.check_host_objects`, which refuses `nameservers`), whether a client sets statuses
 (`domains.check_client_statuses`), what a contact holds (`contact_capabilities`: fax, localization, region, voice
-numbers, authInfo, statuses) and whether the backend renews (`renew_domain`, which sends no read without). The RRI
-values are `RRI_PROFILE` in `registry_adapter/rri/profile.py`. `domain_dns_required` and `contact_phone_required`
-are left to the registry to enforce and read by the test selectors only. The domain mappers
+numbers, authInfo, statuses, an organisation on an individual unless `contact_kind_held`, a person's name on an
+organisation unless `contact_org_person_name`) and whether the backend renews (`renew_domain`, which sends no read without). The RRI
+values are `RRI_PROFILE` in `registry_adapter/rri/profile.py`. `domain_dns_required`, `contact_phone_required` and
+`contact_name_changeable` are left to the registry to enforce and read by the test selectors only. The domain mappers
 take the profile as the keyword `profile`, from `backend_profile()` in the handler. The EPP values are `EPP_PROFILE`
 in `registry_adapter/epp/profile.py`, and `epp_profile(idn_tables)` adds the LGRs of the configured IDN tables.
 

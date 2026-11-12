@@ -17,6 +17,7 @@ EPP_PROFILE = BackendProfile(
     contact_localization=True,
     contact_region=True,
     contact_phones_max=1,
+    contact_kind_held=False,  # RFC 5733 has no kind, a read derives it from the org
     contact_org_person_name=True,  # RFC 5733 postalInfo name and org
     contact_name_changeable=True,
     contact_auth_info=True,  # RFC 5733 §2.8

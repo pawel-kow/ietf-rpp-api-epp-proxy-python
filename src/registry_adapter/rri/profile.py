@@ -14,6 +14,7 @@ RRI_PROFILE = BackendProfile(
     contact_localization=False,
     contact_region=False,
     contact_phones_max=1,
+    contact_kind_held=True,  # PERSON or ORG, a PERSON may name its organisation
     contact_org_person_name=False,  # an ORG is named by its organisation
     contact_name_changeable=False,  # the name is immutable (63220080801)
     contact_auth_info=False,  # an RRI contact has no AuthInfo

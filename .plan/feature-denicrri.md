@@ -48,14 +48,16 @@ The maintainer asked to work through the phases without waiting for confirmation
 - **Every case runs on both backends** unless it needs a function one lacks (maintainer). The contacts get a phone
   and a full address, the domains an `a` record and a registrant, passwords RRI's characters; differences are
   selected by profile and environment facts. RRI counterparts: `domain_update/test35` to `test37`.
-- **RRI contact rules**: a contact with an organisation is an ORG, named by the organisation; a different person's
-  name on it is refused (501, `contact_org_person_name`). The name is immutable on RRI: a change is refused (501,
-  `contact_name_changeable`), as is clearing the name, address, email or phone. Open for the maintainer: an RPP
-  `org` card with a person's name could instead become an RRI PERSON with an `organisation`, which keeps both names
-  but makes the person the holder.
+- **Pass-through** (maintainer): the RRI adapter refuses only what an RRI request has no place for (a person's name
+  on an ORG, 501 as accepted; a contact authInfo; a `uName` that is not the name; an AuthInfo1 RRI does not take,
+  as it receives only the hash). Name changes, clearing a required contact member and a domain without DNS data go
+  to RRI, which refuses them (422 `02306`; `83000000004` for the missing DNS data, the XSDs). An `lgr` is not sent.
+- **Contact kind** (maintainer): an `org` card is an RRI ORG, an `individual` with an organisation a PERSON with
+  `organisation` (`contact_kind_held`; EPP still refuses it). An update keeps the type RRI holds, a PATCH the kind.
+  Cases: `draft_contact/test2`, `contact_update/test24`, `test35`.
 - **New profile facts** beyond refactoring.md §3.7: `contact_auth_info` (EPP requires a contact authInfo, RRI has
-  none; the contact mapper refuses one), `domain_dns_required` and `contact_phone_required` (left to the registry,
-  read by the test selectors).
+  none; the contact mapper refuses one), `contact_kind_held`, `domain_dns_required`, `contact_phone_required` and
+  `contact_name_changeable` (the last three left to the registry, read by the test selectors).
 - **A poll on RRI answers 1301/1300** like EPP, so a client sees the same codes.
 - **The EPP cases** that create domains without DNS data or contacts without a phone skip on RRI by those facts at
   group level. The cases that run on both backends are the new `domain_lifecycle/` group, plus the availability,
@@ -84,6 +86,8 @@ The maintainer asked to work through the phases without waiting for confirmation
 | R3–R8 (`1bc9732`) | `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration` (MTEST) | **20 passed**, 290 skipped (each skip names its fact); `domain_lifecycle` 7 of 7 |
 | Review round 1 | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2287 passed, 9 skipped |
 | Review round 1 | MTEST, `pytest -n 4 tests/integration` | **105 passed**, 208 skipped (each skip names the function RRI lacks); the one failure of the full run, `domain_lifecycle/test1` (a deleted domain now reads), fixed and rerun |
+| Review round 2 (pass-through) | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2290 passed, 10 skipped |
+| Review round 2 (pass-through) | MTEST, `pytest -n 4 tests/integration` | **108 passed**, 206 skipped |
 
 ## Open questions
 

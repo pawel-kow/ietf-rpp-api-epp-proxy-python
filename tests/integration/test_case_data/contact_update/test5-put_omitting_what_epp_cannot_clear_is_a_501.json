@@ -160,14 +160,35 @@
         }
       },
       "response": {
-        "status": 501,
-        "headers": {
-          "RPP-Code": "02102"
-        },
-        "content_type": "application/problem+json",
-        "body": {
-          "type": "urn:ietf:params:rpp:error"
-        }
+        "select": [
+          {
+            "when": {
+              "env.contact_removal_refused_by_registry": true
+            },
+            "then": {
+              "status": 422,
+              "headers": {
+                "RPP-Code": "02306"
+              },
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              }
+            }
+          },
+          {
+            "then": {
+              "status": 501,
+              "headers": {
+                "RPP-Code": "02102"
+              },
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              }
+            }
+          }
+        ]
       }
     }
   ]

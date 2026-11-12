@@ -81,10 +81,7 @@ def _reject_additional(entries: dict | None, member: str):
 
 
 def _rpp_to_type(card: RPPCard) -> ContactType:
-    kind = card.kind or KIND_INDIVIDUAL
-    if kind == KIND_INDIVIDUAL and card.organizations:
-        raise NotSupportedByBackend("'organizations' on an individual")
-    return KIND_TO_TYPE[kind]
+    return KIND_TO_TYPE[card.kind or KIND_INDIVIDUAL]
 
 
 def _rpp_to_address(addresses: dict[str, RPPCardAddress] | None) -> Address | None:
@@ -128,8 +125,6 @@ def _rpp_to_localized(card: RPPCard) -> LocalizedPostalInfo | None:
         return None
     if localization.emails:
         raise NotSupportedByBackend("A localized email")
-    if localization.organizations and (card.kind or KIND_INDIVIDUAL) == KIND_INDIVIDUAL:
-        raise NotSupportedByBackend("'organizations' on an individual")
     name = localization.name or card.name
     return LocalizedPostalInfo(
         name=name.full if name else None,

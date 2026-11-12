@@ -6,7 +6,8 @@ from core.model.contact.contacts import ContactType
 
 def check_contact(contact, *, profile: BackendProfile):
     """Refuses what the backend cannot hold of a contact (`profile`): a fax number, a localized form, a region, more
-    voice numbers than it holds, an authInfo, a client status. `contact` is a `Contact` or a `ContactReplacement`; None passes."""
+    voice numbers than it holds, an organisation on an individual, the name of a person on an organisation, an authInfo, a
+    client status. `contact` is a `Contact` or a `ContactReplacement`; None passes."""
     if contact is None:
         return contact
     if not profile.contact_fax and any(contact.fax or []):
@@ -17,6 +18,10 @@ def check_contact(contact, *, profile: BackendProfile):
         raise NotSupportedByBackend("The region of an address")
     if len([phone for phone in contact.phone or [] if phone]) > profile.contact_phones_max:
         raise NotSupportedByBackend(f"More than {profile.contact_phones_max} voice numbers")
+    localized = contact.localizedPostalInfo
+    if not profile.contact_kind_held and getattr(contact, "type", None) == ContactType.PERSON \
+            and (contact.organisationName or (localized is not None and localized.organisationName)):
+        raise NotSupportedByBackend("'organizations' on an individual")
     if not profile.contact_org_person_name and getattr(contact, "type", None) == ContactType.ORG \
             and contact.name and contact.organisationName and contact.name != contact.organisationName:
         raise NotSupportedByBackend("The name of a person in the contact of an organisation")

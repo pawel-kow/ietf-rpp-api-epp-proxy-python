@@ -349,39 +349,61 @@ def _stored_contact_replacement(**extra):
     return ContactReplacement(**{**base, **extra})
 
 
-@pytest.mark.parametrize("change, text", [
-    (dict(name="Erika Musterfrau"), "Changing the name"),
-    (dict(phone=None), "Removing the phone number"),
-    (dict(address=None), "Removing the address"),
-    (dict(organisationName="Example eG"), "name of a person"),
-])
-def test_a_contact_update_rri_cannot_express_sends_nothing(change, text):
-    gateway, client = backend(CONTACT_INFO)
+ORG_CONTACT_INFO = reply(data=(REPLIES / "contact_info.xml").read_text()
+                         .replace("<contact:type>PERSON</contact:type>", "<contact:type>ORG</contact:type>"))
+
+
+@pytest.mark.parametrize("change", [dict(name="Erika Musterfrau"), dict(phone=None), dict(address=None)])
+def test_a_contact_update_rri_refuses_is_sent_and_its_refusal_answered(change):
+    gateway, client = backend(CONTACT_INFO, error("63220080801", "Name is immutable"))
 
     resp = gateway.contacts.replace(_stored_contact_replacement(**change))
 
-    assert resp.code == ResultCode.UNIMPLEMENTED_OPTION and text in resp.msg
+    assert len(client.sent) == 2 and "<contact:update>" in client.sent[1]
+    assert resp.code == ResultCode.PARAMETER_VALUE_POLICY_ERROR and resp.registry_code == "63220080801"
+
+
+def test_a_person_keeps_its_type_when_an_organisation_is_added():
+    gateway, client = backend(CONTACT_INFO, reply(stid="sv-update"))
+
+    gateway.contacts.replace(_stored_contact_replacement(organisationName="Example eG"))
+
+    assert "<contact:type>PERSON</contact:type>" in client.sent[1]
+    assert "<contact:name>Erika Mustermann</contact:name>" in client.sent[1]
+    assert "<contact:organisation>Example eG</contact:organisation>" in client.sent[1]
+
+
+def test_the_name_of_a_person_on_an_org_is_refused():
+    gateway, client = backend(ORG_CONTACT_INFO)
+
+    resp = gateway.contacts.replace(_stored_contact_replacement(organisationName="Example eG"))
+
+    assert resp.code == ResultCode.UNIMPLEMENTED_OPTION and "name of a person" in resp.msg
     assert len(client.sent) == 1
 
 
-def test_a_full_update_without_dns_data_sends_nothing():
-    gateway, client = backend(DOMAIN_INFO)
+def test_a_full_update_without_dns_data_is_left_to_the_registry():
+    gateway, client = backend(DOMAIN_INFO, error("53300083004", "No nameserver"))
 
     resp = gateway.domains.replace(_wanted(records=[]))
 
-    assert resp.code == ResultCode.UNIMPLEMENTED_OPTION and len(client.sent) == 1
+    assert isinstance(resp, ErrorResponse) and len(client.sent) == 2
 
 
-@pytest.mark.parametrize("name, idn, text", [
-    ("example.de", DomainIdn(lgr="latn-1.0", uname=None), "not an IDN"),
-    ("xn--bcher-kva.de", DomainIdn(lgr="latn-1.0", uname="bücherei.de"), "uName"),
-])
-def test_an_idn_rri_would_take_otherwise_is_refused(name, idn, text):
+def test_an_lgr_on_an_ascii_name_is_not_sent():
+    gateway, client = backend(reply())
+
+    gateway.domains.create(Domain(name="example.de", idn=DomainIdn(lgr="latn-1.0", uname=None)))
+
+    assert "latn" not in client.sent[0]
+
+
+def test_a_uname_that_is_not_the_name_is_refused():
     gateway, client = backend()
 
-    resp = gateway.domains.create(Domain(name=name, idn=idn))
+    resp = gateway.domains.create(Domain(name="xn--bcher-kva.de", idn=DomainIdn(lgr="latn-1.0", uname="bücherei.de")))
 
-    assert resp.code == ResultCode.PARAMETER_VALUE_POLICY_ERROR and text in resp.msg
+    assert resp.code == ResultCode.PARAMETER_VALUE_POLICY_ERROR and "uName" in resp.msg
     assert client.sent == []
 
 

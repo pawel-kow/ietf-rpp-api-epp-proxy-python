@@ -23,6 +23,11 @@ class BackendProfile:
     `domain_dns_required` is whether a domain needs DNS data (name servers or records) from its create on, and
     `contact_phone_required` whether a contact needs a voice number. The proxy leaves both to the registry to refuse
     (gap Q13); the test selectors read them.
+    `contact_kind_held` is whether the backend holds a contact's kind, so an individual can have an organisation;
+    otherwise the kind follows from the organisation, and the contact mapper refuses an organisation on an individual.
+    `contact_org_person_name` is whether the contact of an organisation holds the name of a person as well, which the
+    contact mapper checks. `contact_name_changeable` is whether an update can change a contact's name; the proxy
+    leaves it to the registry to refuse, and the test selectors read it.
     `registrant_required` is whether a domain needs a registrant, which the registry refuses otherwise; the test
     selectors read it.
     `registration_periods` is whether a domain is registered for a period, with an expiry date; the domain mapper
@@ -43,6 +48,7 @@ class BackendProfile:
     contact_region: bool
     contact_phones_max: int
     contact_auth_info: bool
+    contact_kind_held: bool
     contact_org_person_name: bool
     contact_name_changeable: bool
     supports_renew: bool

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, FrozenSet, List, Optional
 
 from core.model.contact.address import Address
+from core.model.contact.contacts import ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from core.model.shared.common import AuthInfo
 
@@ -12,9 +13,10 @@ class ContactReplacement:
 
     `status` holds client statuses only, the server's are not the client's to replace. `unchanged` names the members
     the replacement does not state, which stay as they are stored: a data element with onDemand Visibility the request
-    did not include.
+    did not include. `type` is the kind the request states, which a backend that holds no kind ignores.
     """
     id: str
+    type: Optional[ContactType] = None
     name: Optional[str] = None
     organisationName: Optional[str] = None
     email: Optional[List[str]] = None

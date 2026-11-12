@@ -132,6 +132,21 @@
         "select": [
           {
             "when": {
+              "env.lgr_on_ascii_refused": false
+            },
+            "then": {
+              "status": 201,
+              "headers": {
+                "RPP-Code": "01000"
+              },
+              "body": {
+                "@type": "domainName",
+                "name": "test31-{random_name}.{tld}"
+              }
+            }
+          },
+          {
+            "when": {
               "profile.lgrs": {
                 "contains": "latn-1.0"
               }
@@ -160,6 +175,23 @@
             }
           }
         ]
+      }
+    },
+    {
+      "when": {
+        "env.lgr_on_ascii_refused": false
+      },
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/test31-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
       }
     }
   ]

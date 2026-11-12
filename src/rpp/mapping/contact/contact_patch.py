@@ -183,11 +183,12 @@ def _with_derived_kind(patched: dict, operations: list[RPPPatchOperation]) -> di
     return {**patched, "contactInfo": card}
 
 
-def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> ContactReplacement:
+def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact, *, kind_held: bool = False) -> ContactReplacement:
     """Applies the patch to the current contact (its read representation) and returns the contact it asks for.
 
     A read need not show a data element with onDemand Visibility (`authInfo`), so its operations are converted as
-    without the current contact, and one that no operation names is left as it is.
+    without the current contact, and one that no operation names is left as it is. A backend that holds the kind
+    (`kind_held`) keeps the current one; otherwise it follows the organisation.
     """
     operations = _operations(rpp)
     for operation in operations:
@@ -199,7 +200,8 @@ def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact) -> C
     )
     patched = patch_statuses.with_server_statuses(patched, read, "contactStatus")
     validate_schema("contact.read", patched)
-    requested = {member: value for member, value in _with_derived_kind(patched, operations).items() if member not in READ_ONLY_MEMBERS}
+    patched = patched if kind_held else _with_derived_kind(patched, operations)
+    requested = {member: value for member, value in patched.items() if member not in READ_ONLY_MEMBERS}
     auth_info_update = _PatchedUpdate()
     for operation in operations:
         if operation.path == AUTH_INFO_PATH:

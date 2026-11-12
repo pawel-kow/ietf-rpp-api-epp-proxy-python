@@ -162,13 +162,13 @@
               "profile.domain_dns_required": true
             },
             "then": {
-              "status": 501,
+              "status": 500,
+              "headers": {
+                "RPP-Code": "02400"
+              },
               "content_type": "application/problem+json",
               "body": {
                 "type": "urn:ietf:params:rpp:error"
-              },
-              "headers": {
-                "RPP-Code": "02102"
               }
             }
           },
