@@ -7,9 +7,9 @@ The maintainer asked to work through the phases without waiting for confirmation
 
 - [x] Mutex, merge `origin/main` (#120 phases 2–6 are merged) into the branch.
 - [x] Extract the EPP test values for `.env` (`TEST_EPP_*`), probe MTEST.
-- [~] R1: test environments, `.env`, placeholders, selectors, cases moved; the new profile facts.
-- [ ] R2: `TCPClient` framing; the models widened (§3.6), EPP mapping unchanged.
-- [ ] R3: `rri/session`, `rri/xml` (generated), CTIDs, result codes, `FakeRriClient`, `RriSettings`, `RRI_PROFILE`,
+- [x] R1: test environments, `.env`, placeholders, selectors, cases moved; the new profile facts.
+- [x] R2: `TCPClient` framing; the models widened (§3.6), EPP mapping unchanged.
+- [~] R3: `rri/session`, `rri/xml` (generated), CTIDs, result codes, `FakeRriClient`, `RriSettings`, `RRI_PROFILE`,
       composition, `rri-mtest.yaml`; LOGIN/LOGOUT on MTEST.
 - [ ] R4: RRI domains (CHECK, INFO, CREATE + AuthInfo1, UPDATE/CHHOLDER, DELETE, RESTORE), `derived_update.update`.
 - [ ] R5: RRI contacts (CHECK, INFO, CREATE, UPDATE with verification carried over).
@@ -31,6 +31,15 @@ The maintainer asked to work through the phases without waiting for confirmation
 - **EPP credentials in `.env` too** (maintainer): the EPP environment names `TEST_EPP_REGACC1`/`_PASSWORD` and
   `TEST_EPP_REGACC2`/`_PASSWORD` instead of writing `foo`/`bar` and `baz`/`qux` into its descriptor. The wrong
   password and unknown user forms are not secrets and stay in the descriptor.
+- **Handle prefixes in `.env`** (maintainer): `TEST_<ENV>_REGACCn_PREFIX`, because a handle must carry the prefix
+  configured for its account, and the EPP and RRI accounts differ (`FO-`/`BA-` on EPP, `DENIC-<n>-<suffix>-` on RRI).
+  The descriptors name the variable instead of a fixed prefix.
+- **CTID** (gap Q18): the client's `RPP-Cltrid` is the CTID of the first write of a request when it is a token of 3
+  to 60 characters, `<cltrid>-n` of the n-th; otherwise a new UUID. Every answer echoes the client's id.
+- **Q7 takes the alternative**: a request whose second command fails (CREATE then CREATE-AUTHINFO1) answers the
+  error of the second command, with a detail that the first was applied. The flows have no way to make a gateway
+  answer a 202, and a Problem says more than a 202 without a body.
+- **Reading a REQUEST contact** answers 501 `02102`: RPP has no Card form for a URI template yet (gap Q2), follow-up.
 
 ## Findings
 
@@ -39,6 +48,9 @@ The maintainer asked to work through the phases without waiting for confirmation
 - On MTEST, each RegAcc uses the same `REQUEST` contact for the General Request and the Abuse role
   (`TEST_RRI_REGACCn_GEN_REQ` equals `TEST_RRI_REGACCn_ABUSE`).
 - MTEST queue messages include `msg:contactDelete`, which ref §9 does not list.
+- MTEST probe: a domain CREATE with an `A` and an `MX` record and no NS succeeds with `pendingCreate`
+  (`53000080014`); an MX exchange must resolve (`63300083005` otherwise). CREATE-AUTHINFO1 without `expire` answered
+  an expiry two days ahead, not 30. INFO after DELETE shows `redemptionPeriod`. Handles come back in upper case.
 - `.plan/refactor-116-backend-port.md` and `.plan/refactor-117-backend-profile.md` are on `main` although their PRs
   are merged (left over, not removed by #118/#121).
 
@@ -46,6 +58,8 @@ The maintainer asked to work through the phases without waiting for confirmation
 
 | When | Command | Result |
 |---|---|---|
+| Before (`0c4f6ac` + main) | `PYTHONPATH=src lint-imports`; `pytest -n 8` | 12 contracts kept; 2149 passed, 5 skipped |
+| R1 + R2 (`bf7f223`) | the same | 12 contracts kept; 2209 passed, 6 skipped (the same integration skips: #49, #50, #54) |
 
 ## Open questions
 
