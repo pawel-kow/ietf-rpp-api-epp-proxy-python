@@ -1,12 +1,80 @@
 {
+  "when": {
+    "profile.host_objects": true
+  },
   "test_id": "test3-add_remove_hostobj",
   "steps": [
+    {
+      "when": {
+        "profile.registrant_required": true
+      },
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:HU3}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
     {
       "request": {
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -43,7 +111,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -81,16 +149,57 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "up-test3-{random_name}.example",
+          "name": "up-test3-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
+          },
+          "registrant": {
+            "select": [
+              {
+                "when": {
+                  "profile.registrant_required": true
+                },
+                "then": {
+                  "@type": "contact",
+                  "id": "{handle:a:HU3}"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -100,22 +209,34 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test3-{random_name}.example",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ]
+          "name": "up-test3-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          }
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test3-{random_name}.example",
+        "url": "/domainNames/up-test3-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -144,13 +265,25 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test3-{random_name}.example",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "name": "up-test3-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "nameservers": [
             {
               "@type": "host",
@@ -167,9 +300,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test3-{random_name}.example",
+        "url": "/domainNames/up-test3-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -189,13 +322,25 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test3-{random_name}.example",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "name": "up-test3-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "nameservers": [
             {
               "@type": "host",

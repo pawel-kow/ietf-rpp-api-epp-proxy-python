@@ -24,6 +24,7 @@ def replacement_from_rpp(
         reject_set(due=status.due)
     return ContactReplacement(
         id=contact_rpp.id,
+        type=contact.type,
         name=contact.name,
         organisationName=contact.organisationName,
         email=contact.email,

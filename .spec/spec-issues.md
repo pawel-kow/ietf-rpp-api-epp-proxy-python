@@ -377,6 +377,14 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - **Proxy:** `GET .../restoreProcesses/latest` reads the domain: `pendingRestore` is `pendingRestore`, `pendingDelete` is `rgpPendingDelete`, and anything else is 404 (`02303`), so `restored` is never read.
 - **Proxy:** the proxy logs in with `urn:ietf:params:xml:ns:rgp-1.0` when the server offers it. Without it every restore operation is 501 (`02103`). The RGP statuses are not yet part of the domain's `status` (#105).
 
+## Sponsor of a deleted domain
+
+- Data-objects requires `provMetadata.spClientId` in every read of a domain. DENIC RRI shows no RegAcc for a domain in
+  its redemption period (status `redemptionPeriod`), whoever reads it, so a registry may hold an object whose sponsor it
+  does not disclose.
+- **Proxy:** such a domain reads with what RRI shows (`name`, status `pendingDelete`, `upDate`) and `spClientId`
+  `unknown`, a placeholder, until RPP lets a read leave the sponsor out.
+
 ## Discovery
 
 - Core §11 and data-objects §17.3.1 require the document without authentication. The drafts give no caching rule, and `datetime` is the current time, so a cached document goes stale.

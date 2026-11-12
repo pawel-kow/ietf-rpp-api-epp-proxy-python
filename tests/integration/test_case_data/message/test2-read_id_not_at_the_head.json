@@ -6,7 +6,7 @@
         "method": "GET",
         "url": "/messages/MSG37-nosuch-{random_id_10}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -41,7 +41,7 @@
         "method": "GET",
         "url": "/messages/MSG37-nosuch-{random_id_10}",
         "headers": {
-          "Authorization": "Basic YmF6OnF1eA==",
+          "Authorization": "{auth:b}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

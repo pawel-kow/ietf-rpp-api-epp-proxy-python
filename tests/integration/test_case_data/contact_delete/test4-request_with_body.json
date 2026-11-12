@@ -7,7 +7,7 @@
         "url": "/contacts",
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}D04",
+          "id": "{handle:a:D04}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -40,7 +40,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -50,7 +50,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}D04",
+          "id": "{handle:a:D04}",
           "status": [
             {
               "@type": "contactStatus",
@@ -63,10 +63,10 @@
     {
       "request": {
         "method": "DELETE",
-        "url": "/contacts/FO-{random_id_10}D04",
+        "url": "/contacts/{handle:a:D04}",
         "body_raw": "test",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "RPP-Cltrid": "test4-{random_name}-clTRID",
           "Accept": "application/rpp+json"
         }

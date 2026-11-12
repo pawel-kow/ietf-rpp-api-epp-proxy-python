@@ -20,11 +20,14 @@ class TransferHandlers:
 
     `gateway_of(backend)` is the gateway of the object, whose `transfer` runs a transfer, `create_mapper`,
     `approve_mapper` and `reject_mapper` convert a request, `response_mapper` a process, and `make_transfer(id, operation,
-    auth_info)` builds a transfer without content.
+    auth_info)` builds a transfer without content. `operations_of(profile)` are the transfer operations the backend
+    has for the object: any other answers 501 (`02101`) before a command is sent.
     """
 
-    def __init__(self, gateway_of, create_mapper, approve_mapper, reject_mapper, response_mapper, make_transfer):
+    def __init__(self, gateway_of, operations_of, create_mapper, approve_mapper, reject_mapper, response_mapper,
+                 make_transfer):
         self._gateway_of = gateway_of
+        self._operations_of = operations_of
         self._create_mapper = create_mapper
         self._approve_mapper = approve_mapper
         self._reject_mapper = reject_mapper
@@ -35,7 +38,17 @@ class TransferHandlers:
     def _authorization():
         return request.headers.get("RPP-Authorization")
 
+    def _require(self, operation: TransferOperation):
+        if operation.value not in self._operations_of(backend_profile()):
+            raise_registry_error(ErrorResponse(
+                code=ResultCode.UNIMPLEMENTED_COMMAND,
+                msg=f"{backend_profile().name} has no transfer {operation.value} for this object",
+                server_transaction_id=None,
+                client_transaction_id=client_transaction_id(),
+            ))
+
     def _run(self, transfer):
+        self._require(transfer.operation)
         resp = self._gateway_of(get_backend()).transfer(transfer, client_transaction_id=client_transaction_id())
         if isinstance(resp, ErrorResponse):
             raise_registry_error(resp)
@@ -55,10 +68,12 @@ class TransferHandlers:
         return self._response_mapper(resp.payload), 200, generate_rpp_response_headers(resp)
 
     def _operation(self, id, operation):
+        self._require(operation)
         auth_info = map_request(rpp_authorization.rpp_to_model, self._authorization())
         return self._process(self._make_transfer(id, operation, auth_info))
 
     def create(self, id, body):
+        self._require(TransferOperation.REQUEST)
         resp = self._run(map_request(self._create_mapper, id, body, self._authorization()))
         headers = generate_rpp_response_headers(resp)
         if resp.payload is None:  # applied, but the backend gave no state to show
@@ -92,8 +107,10 @@ class TransferHandlers:
         return body
 
     def approve(self, id):
+        self._require(TransferOperation.APPROVE)
         body = map_request(self._optional_body)
         return self._process(map_request(self._approve_mapper, id, body, self._authorization()))
 
     def reject(self, id, body):
+        self._require(TransferOperation.REJECT)
         return self._process(map_request(self._reject_mapper, id, body, self._authorization()))

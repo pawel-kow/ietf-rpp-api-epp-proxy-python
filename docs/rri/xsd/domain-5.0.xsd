@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:domain="http://registry.denic.de/domain/5.0"
+    xmlns:contact="http://registry.denic.de/contact/5.0"
+    xmlns:dnsentry="http://registry.denic.de/dnsentry/5.0"
+    xmlns:verification="http://registry.denic.de/verification/5.0"
+    targetNamespace="http://registry.denic.de/domain/5.0" elementFormDefault="qualified">
+    <import namespace="http://registry.denic.de/contact/5.0" schemaLocation="contact-5.0.xsd" />
+    <import namespace="http://registry.denic.de/dnsentry/5.0" schemaLocation="dnsentry-5.0.xsd" />
+    <import namespace="http://registry.denic.de/verification/5.0"
+        schemaLocation="verification-5.0.xsd" />
+    <simpleType name="latinToken">
+        <restriction base="token">
+            <pattern value="[\p{IsBasicLatin}\p{IsLatin-1Supplement}\p{IsLatinExtended-A}]*" />
+        </restriction>
+    </simpleType>
+    <simpleType name="handleType">
+        <restriction base="domain:latinToken">
+            <minLength value="4" />
+            <maxLength value="66" />
+        </restriction>
+    </simpleType>
+    <simpleType name="aceType">
+        <restriction base="dnsentry:hostnameType">
+            <pattern value="[0-9a-zA-Z][0-9a-zA-Z\-]{0,62}\.[dD][eE]" />
+        </restriction>
+    </simpleType>
+    <group name="handleGroup">
+        <sequence>
+            <element name="handle" type="domain:handleType" />
+            <element name="ace" type="domain:aceType" minOccurs="0" />
+        </sequence>
+    </group>
+    <simpleType name="statusType">
+        <restriction base="token">
+            <enumeration value="free" />
+            <enumeration value="connect" />
+            <enumeration value="failed" />
+            <enumeration value="invalid" />
+            <enumeration value="redemptionPeriod" />
+            <enumeration value="pendingCreate" />
+            <enumeration value="serverHold" />
+        </restriction>
+    </simpleType>
+    <simpleType name="providerType">
+        <restriction base="token">
+            <pattern value="DENIC\-[1-9][0-9]*" />
+        </restriction>
+    </simpleType>
+    <complexType name="providerName">
+        <simpleContent>
+            <extension base="normalizedString" />
+        </simpleContent>
+    </complexType>
+    <complexType name="contactType">
+        <simpleContent>
+            <extension base="contact:handleType">
+                <attribute name="role" type="contact:roleType" use="required" />
+            </extension>
+        </simpleContent>
+    </complexType>
+    <complexType name="contactInfoDataType">
+        <sequence>
+            <element ref="contact:handle" minOccurs="0" />
+            <group ref="domain:domainHolderDataGroup" minOccurs="0" />
+        </sequence>
+        <attribute name="role" type="contact:roleType" use="required" />
+    </complexType>
+    <complexType name="createType">
+        <sequence>
+            <group ref="domain:handleGroup" />
+            <element name="contact" type="domain:contactType" minOccurs="1" maxOccurs="7" />
+            <element ref="dnsentry:dnsentry" minOccurs="1" maxOccurs="20" />
+        </sequence>
+    </complexType>
+    <complexType name="updateType">
+        <sequence>
+            <group ref="domain:handleGroup" />
+            <element name="contact" type="domain:contactType" minOccurs="1" maxOccurs="7" />
+            <element ref="dnsentry:dnsentry" minOccurs="1" maxOccurs="20" />
+        </sequence>
+    </complexType>
+    <complexType name="chprovType">
+        <complexContent>
+            <extension base="domain:updateType">
+                <sequence>
+                    <element name="authInfo" type="domain:latinToken" minOccurs="1" maxOccurs="1" />
+                </sequence>
+            </extension>
+        </complexContent>
+    </complexType>
+    <complexType name="deleteType">
+        <sequence>
+            <group ref="domain:handleGroup" />
+            <element name="contact" type="domain:contactType" minOccurs="0" maxOccurs="5" />
+        </sequence>
+    </complexType>
+    <complexType name="restoreType">
+        <sequence>
+            <group ref="domain:handleGroup" />
+        </sequence>
+    </complexType>
+    <group name="checkDataGroup">
+        <sequence>
+            <element name="handle" type="domain:handleType" />
+            <element name="ace" type="domain:aceType" />
+            <element name="status" type="domain:statusType" />
+        </sequence>
+    </group>
+    <complexType name="checkType">
+        <sequence>
+            <group ref="domain:handleGroup" />
+        </sequence>
+    </complexType>
+    <complexType name="checkDataType">
+        <group ref="domain:checkDataGroup" />
+    </complexType>
+    <complexType name="infoType">
+        <complexContent>
+            <extension base="domain:checkType">
+                <sequence>
+                    <element name="authInfo" type="domain:latinToken" minOccurs="0" maxOccurs="1" />
+                </sequence>
+                <attribute name="recursive" type="boolean" use="optional" />
+            </extension>
+        </complexContent>
+    </complexType>
+    <complexType name="infoDataType">
+        <sequence>
+            <group ref="domain:checkDataGroup" />
+            <element name="expire" type="dateTime" minOccurs="0" />
+            <element name="registryLock" type="boolean" minOccurs="0" />
+            <choice minOccurs="0" maxOccurs="1">
+                <element name="authInfo" type="boolean" />
+                <sequence>
+                    <element name="authInfo1" type="dateTime" minOccurs="0" maxOccurs="1" />
+                    <element name="authInfo2" type="dateTime" minOccurs="0" maxOccurs="1" />
+                </sequence>
+            </choice>
+            <element name="contact" type="domain:contactInfoDataType" minOccurs="0" maxOccurs="16" />
+            <element ref="dnsentry:dnsentry" minOccurs="0" maxOccurs="20" />
+            <element name="disputeData" minOccurs="0" />    
+            <element name="registrationDate" type="string" minOccurs="0" />
+            <element name="verificationDeadlineBeforeDedelegation" type="dateTime" minOccurs="0" />
+            <element name="verificationDeadlineBeforeDeletion" type="dateTime" minOccurs="0" />
+            <element name="changed" type="dateTime" />
+            <element name="regAcc" type="domain:regAccType" minOccurs="0"/>
+        </sequence>
+    </complexType>
+    <complexType name="regAccType">
+        <sequence>
+            <element name="regAccId" type="domain:providerType" />
+            <element name="name" type="domain:providerName" />
+            <element name="email" minOccurs="0" />
+            <element name="phone" minOccurs="0" maxOccurs="unbounded" />
+            <element name="changed" minOccurs="0" type="dateTime" />
+        </sequence>
+    </complexType>
+    <group name="domainHolderDataGroup">
+        <sequence>
+            <group ref="contact:coreDataGroup" />
+            <element ref="verification:verificationInformation" minOccurs="0" maxOccurs="5" />
+        </sequence>
+    </group>
+    <complexType name="transitType">
+        <sequence>
+            <group ref="domain:handleGroup" />
+        </sequence>
+        <attribute name="disconnect" type="boolean" use="optional" />
+    </complexType>
+    <simpleType name="hexadecimalType">
+        <restriction base="token">
+            <pattern value="[0-9a-fA-F]+" />
+        </restriction>
+    </simpleType>
+    <simpleType name="dateType">
+        <restriction base="token">
+            <pattern value="[0-9]{8}" />
+        </restriction>
+    </simpleType>
+    <complexType name="createAuthInfo1Type">
+        <sequence>
+            <group ref="domain:handleGroup" />
+        </sequence>
+        <attribute name="hash" type="domain:hexadecimalType" />
+        <attribute name="expire" type="domain:dateType" use="optional" />
+    </complexType>
+    <complexType name="createAuthInfo1DataType">
+        <sequence>
+            <element name="expire" type="dateTime" minOccurs="0" maxOccurs="1" />
+        </sequence>
+    </complexType>
+    <complexType name="deleteAuthInfo1Type">
+        <sequence>
+            <group ref="domain:handleGroup" />
+        </sequence>
+    </complexType>
+    <complexType name="createAuthInfo2Type">
+        <sequence>
+            <group ref="domain:handleGroup" />
+        </sequence>
+    </complexType>
+    <element name="create" type="domain:createType" />
+    <element name="update" type="domain:updateType" />
+    <element name="chholder" type="domain:updateType" />
+    <element name="delete" type="domain:deleteType" />
+    <element name="restore" type="domain:restoreType" />
+    <element name="check" type="domain:checkType" />
+    <element name="checkData" type="domain:checkDataType" />
+    <element name="info" type="domain:infoType" />
+    <element name="infoData" type="domain:infoDataType" />
+    <element name="chprov" type="domain:chprovType" />
+    <element name="transit" type="domain:transitType" />
+    <element name="createAuthInfo1" type="domain:createAuthInfo1Type" />
+    <element name="createAuthInfo1Data" type="domain:createAuthInfo1DataType" />
+    <element name="deleteAuthInfo1" type="domain:deleteAuthInfo1Type" />
+    <element name="createAuthInfo2" type="domain:createAuthInfo2Type" />
+</schema>

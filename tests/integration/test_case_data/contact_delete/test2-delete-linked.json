@@ -7,7 +7,7 @@
         "url": "/contacts",
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}D02",
+          "id": "{handle:a:D02}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -40,7 +40,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -50,7 +50,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}D02",
+          "id": "{handle:a:D02}",
           "status": [
             {
               "@type": "contactStatus",
@@ -66,7 +66,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "test2-{random_name}.example",
+          "name": "test2-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -74,12 +74,12 @@
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}D02"
+            "id": "{handle:a:D02}"
           }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -89,7 +89,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "test2-{random_name}.example",
+          "name": "test2-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",
@@ -102,10 +102,10 @@
     {
       "request": {
         "method": "DELETE",
-        "url": "/contacts/FO-{random_id_10}D02",
+        "url": "/contacts/{handle:a:D02}",
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

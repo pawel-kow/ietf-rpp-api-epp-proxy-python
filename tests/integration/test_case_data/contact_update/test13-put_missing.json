@@ -4,9 +4,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}13Z",
+        "url": "/contacts/{handle:a:13Z}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -32,8 +32,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -48,10 +60,22 @@
                 "number": "tel:+49.123123123"
               },
               "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.456456456",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {

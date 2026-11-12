@@ -31,7 +31,10 @@ def _has_form(contact: Contact, form: str) -> bool:
 
 def _forms_the_registry_lost(update: ContactUpdate, before: Contact, after: Contact) -> list[str]:
     """A form that a `chg` adds is ignored by some registries, which still answer 1000. Only its presence is compared,
-    the fields can come back normalised or cut."""
+    the fields can come back normalised or cut. A backend that replaced the contact (its `update` is no delta) sent
+    every form, and the registry refuses what it cannot hold."""
+    if not isinstance(update, ContactUpdate):
+        return []
     forms = [change.form for change in update.change.postal_info] if update.change else []
     return [form for form in forms if not _has_form(before, form) and not _has_form(after, form)]
 

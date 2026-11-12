@@ -1,21 +1,131 @@
 {
+  "when": {
+    "profile.registration_periods": true,
+    "profile.supports_renew": true
+  },
   "test_id": "test10-renew",
   "steps": [
+    {
+      "when": {
+        "profile.registrant_required": true
+      },
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:HR10}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
     {
       "request": {
         "method": "POST",
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "ex10-{random_name}.example",
+          "name": "ex10-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
+          },
+          "registrant": {
+            "select": [
+              {
+                "when": {
+                  "profile.registrant_required": true
+                },
+                "then": {
+                  "@type": "contact",
+                  "id": "{handle:a:HR10}"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -32,9 +142,9 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/ex10-{random_name}.example/processes/renewProcesses",
+        "url": "/domainNames/ex10-{random_name}.{tld}/processes/renewProcesses",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -56,10 +166,22 @@
         },
         "fields": {
           "expiryDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": 189215940,
-            "max_delta": 189388860
+            "select": [
+              {
+                "when": {
+                  "profile.registration_periods": true
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": 189215940,
+                  "max_delta": 189388860
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {

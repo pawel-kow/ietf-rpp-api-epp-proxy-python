@@ -4,7 +4,9 @@ from connexion import ProblemException
 from core.model.contact.address import Address
 from core.model.contact.contacts import Contact, ContactType
 from rpp.http.operation import map_request
+from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.mapping.contact import contact_patch, contact_replacement
+from rpp.mapping.contact.contact_capabilities import check_contact
 from tests.helper.contact_fixtures import ADDRESS, card, current_contact, derived_update, localized, put_body
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 
@@ -213,7 +215,11 @@ def test_disclose_is_a_501():
 
 def test_what_create_refuses_is_refused():
     assert rejected(put_body(card(links={"url": {"uri": "https://example.example"}}))) == 501
-    assert rejected(put_body(card(organizations={"org": {"name": "ACME"}}))) == 501
+    wanted = map_request(contact_replacement.rpp_to_model, ID, put_body(card(organizations={"org": {"name": "ACME"}})))
+    assert wanted.type == ContactType.PERSON
+    with pytest.raises(ProblemException) as problem:
+        map_request(check_contact, wanted, profile=EPP_PROFILE)
+    assert problem.value.status == 501
 
 
 def test_kind_org_without_an_organisation_is_a_400():
@@ -358,3 +364,12 @@ def test_a_put_changing_the_name_does_not_write_the_organisation_into_the_locali
     ))
 
     assert [f.form for f in update(body, current).change.postal_info] == ["int"]
+
+
+@pytest.mark.parametrize("kind_held, kind", [(False, ContactType.ORG), (True, ContactType.PERSON)])
+def test_a_patch_that_adds_an_organisation_keeps_a_held_kind(kind_held, kind):
+    patch = [{"op": "add", "path": "/contactInfo/organizations", "value": {"org": {"name": "ACME"}}}]
+
+    wanted = contact_patch.rpp_to_model_with_current(ID, patch, current_contact(), kind_held=kind_held)
+
+    assert wanted.type == kind and wanted.name == "John Doe" and wanted.organisationName == "ACME"

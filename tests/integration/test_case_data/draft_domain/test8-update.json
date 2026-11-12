@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.auth_info_readable": true
+  },
   "test_id": "test8-update",
   "steps": [
     {
@@ -6,14 +9,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}dt1",
+          "id": "{handle:a:dt1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -27,6 +30,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -36,12 +47,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -50,7 +81,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}dt1"
+          "id": "{handle:a:dt1}"
         }
       }
     },
@@ -59,14 +90,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}dt2",
+          "id": "{handle:a:dt2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -80,6 +111,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -89,12 +128,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -103,7 +162,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}dt2"
+          "id": "{handle:a:dt2}"
         }
       }
     },
@@ -112,22 +171,47 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "ex8-{random_name}.example",
+          "name": "ex8-{random_name}.{tld}",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}dt1"
+            "id": "{handle:a:dt1}"
           },
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "2fooBAR"
+            "authdata": "2feeBAR9"
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -142,9 +226,21 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/ex8-{random_name}.example?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.auth_info_readable": true
+              },
+              "then": "/domainNames/ex8-{random_name}.{tld}?includeElements=authInfo"
+            },
+            {
+              "then": "/domainNames/ex8-{random_name}.{tld}"
+            }
+          ]
+        },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -153,12 +249,37 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}dt2"
+            "id": "{handle:a:dt2}"
           },
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "2BARfoo"
+            "authdata": "2BARfee9"
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -169,12 +290,24 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}dt2"
+            "id": "{handle:a:dt2}"
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2BARfoo"
+            "select": [
+              {
+                "when": {
+                  "profile.auth_info_readable": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2BARfee9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       }

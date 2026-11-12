@@ -4,13 +4,13 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/rn7-{random_name}.example/processes/renewProcesses",
+        "url": "/domainNames/rn7-{random_name}.{tld}/processes/renewProcesses",
         "body_json": {
           "@type": "renewProcess",
           "unknown": 1
         },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

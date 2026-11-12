@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:global="http://registry.denic.de/global/5.0"
+    xmlns:contact="http://registry.denic.de/contact/5.0"
+    xmlns:domain="http://registry.denic.de/domain/5.0"
+    xmlns:regacc="http://registry.denic.de/regacc/5.0"
+    xmlns:tr="http://registry.denic.de/transaction/5.0" xmlns:msg="http://registry.denic.de/msg/5.0"
+    targetNamespace="http://registry.denic.de/global/5.0" elementFormDefault="qualified">
+    <import namespace="http://registry.denic.de/msg/5.0" schemaLocation="message-5.0.xsd" />
+    <import namespace="http://registry.denic.de/contact/5.0" schemaLocation="contact-5.0.xsd" />
+    <import namespace="http://registry.denic.de/domain/5.0" schemaLocation="domain-5.0.xsd" />
+    <import namespace="http://registry.denic.de/regacc/5.0" schemaLocation="regacc-5.0.xsd" />
+    <import namespace="http://registry.denic.de/transaction/5.0"
+        schemaLocation="transaction-5.0.xsd" />
+    <complexType name="requestType">
+        <sequence>
+            <choice>
+                <element name="login" type="global:loginType" />
+                <element name="logout" type="global:logoutType" />
+                <element ref="contact:create" />
+                <element ref="contact:update" />
+                <element ref="contact:check" />
+                <element ref="contact:info" />
+                <element ref="domain:create" />
+                <element ref="domain:update" />
+                <element ref="domain:chholder" />
+                <element ref="domain:delete" />
+                <element ref="domain:restore" />
+                <element ref="domain:check" />
+                <element ref="domain:info" />
+                <element ref="domain:chprov" />
+                <element ref="domain:transit" />
+                <element ref="domain:createAuthInfo1" />
+                <element ref="domain:deleteAuthInfo1" />
+                <element ref="domain:createAuthInfo2" />
+                <element ref="msg:queue-read" />
+                <element ref="msg:delete" />
+                <element ref="regacc:info" />
+            </choice>
+            <element name="ctid" type="tr:idType" minOccurs="0" />
+        </sequence>
+    </complexType>
+    <complexType name="loginType">
+        <sequence>
+            <element name="user" type="NMTOKEN" />
+            <element name="password" type="string" />
+        </sequence>
+    </complexType>
+    <simpleType name="logoutType">
+        <restriction base="string">
+            <enumeration value="" />
+        </restriction>
+    </simpleType>
+    <complexType name="responseType">
+        <sequence>
+            <element ref="tr:transaction" />
+        </sequence>
+    </complexType>
+    <element name="registry-request" type="global:requestType" />
+    <element name="registry-response" type="global:responseType" />
+</schema>

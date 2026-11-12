@@ -1,4 +1,8 @@
 {
+  "when": {
+    "profile.host_objects": true,
+    "profile.registration_periods": true
+  },
   "test_id": "test6-read",
   "steps": [
     {
@@ -6,7 +10,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -43,7 +47,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -80,14 +84,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}J6",
+          "id": "{handle:a:J6}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -107,8 +111,20 @@
                     "value": "Dulles"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -123,10 +139,22 @@
                 "number": "tel:+1.7035555555"
               },
               "fax": {
-                "features": {
-                  "fax": true
-                },
-                "number": "tel:+1.7035555556"
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "features": {
+                        "fax": true
+                      },
+                      "number": "tel:+1.7035555556"
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -136,9 +164,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -153,14 +193,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}S6",
+          "id": "{handle:a:S6}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -180,8 +220,20 @@
                     "value": "Dulles"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -196,10 +248,22 @@
                 "number": "tel:+1.7035555555"
               },
               "fax": {
-                "features": {
-                  "fax": true
-                },
-                "number": "tel:+1.7035555556"
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "features": {
+                        "fax": true
+                      },
+                      "number": "tel:+1.7035555556"
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -209,9 +273,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -224,16 +300,28 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.auth_info_readable": true
+              },
+              "then": "/domainNames?includeElements=authInfo"
+            },
+            {
+              "then": "/domainNames"
+            }
+          ]
+        },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "ex6-{random_name}.example",
+          "name": "ex6-{random_name}.{tld}",
           "nameservers": [
             {
               "@type": "host",
@@ -246,28 +334,57 @@
           ],
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}J6"
+            "id": "{handle:a:J6}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}S6"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S6}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S6}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}S6"
-              }
-            }
-          ],
+            ]
+          },
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "2fooBAR"
+            "authdata": "2feeBAR9"
           },
           "processes": {
             "@type": "processes",
@@ -289,33 +406,74 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "ex6-{random_name}.example",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "name": "ex6-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}J6"
+            "id": "{handle:a:J6}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}S6"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S6}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S6}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}S6"
-              }
-            }
-          ],
+            ]
+          },
           "nameservers": [
             {
               "@type": "host",
@@ -327,9 +485,21 @@
             }
           ],
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.auth_info_readable": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "fields": {
@@ -337,19 +507,59 @@
             "type": "not_null"
           },
           "provMetadata.crClientId": {
-            "type": "not_null"
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "domainName.crClientId"
+                  }
+                },
+                "then": {
+                  "type": "not_null"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "provMetadata.crDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": -1,
-            "max_delta": 60
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "domainName.crDate"
+                  }
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": -1,
+                  "max_delta": 60
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "expiryDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": 62899200,
-            "max_delta": 63244800
+            "select": [
+              {
+                "when": {
+                  "profile.registration_periods": true
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": 62899200,
+                  "max_delta": 63244800
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       }
@@ -357,9 +567,21 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/ex6-{random_name}.example?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.auth_info_readable": true
+              },
+              "then": "/domainNames/ex6-{random_name}.{tld}?includeElements=authInfo"
+            },
+            {
+              "then": "/domainNames/ex6-{random_name}.{tld}"
+            }
+          ]
+        },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -369,33 +591,74 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "ex6-{random_name}.example",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "name": "ex6-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}J6"
+            "id": "{handle:a:J6}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}S6"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S6}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S6}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}S6"
-              }
-            }
-          ],
+            ]
+          },
           "nameservers": [
             {
               "@type": "host",
@@ -407,9 +670,21 @@
             }
           ],
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.auth_info_readable": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "fields": {
@@ -417,19 +692,59 @@
             "type": "not_null"
           },
           "provMetadata.crClientId": {
-            "type": "not_null"
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "domainName.crClientId"
+                  }
+                },
+                "then": {
+                  "type": "not_null"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "provMetadata.crDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": -1,
-            "max_delta": 60
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "domainName.crDate"
+                  }
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": -1,
+                  "max_delta": 60
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "expiryDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": 62899200,
-            "max_delta": 63244800
+            "select": [
+              {
+                "when": {
+                  "profile.registration_periods": true
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": 62899200,
+                  "max_delta": 63244800
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       }

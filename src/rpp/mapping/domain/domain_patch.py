@@ -10,7 +10,7 @@ from rpp.dto.rpp_host_reference import RPPHostReference
 from rpp.dto.rpp_labelled_contact import RPPLabelledContact
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
 from rpp.mapping.domain import domain_wanted
-from rpp.mapping.domain.domains import check_contact_label, REGISTRANT
+from rpp.mapping.domain.domains import check_contact_label, check_host_objects, REGISTRANT
 from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
 from rpp.mapping.shared.common import parse_rpp
 from rpp.mapping.shared.dns_records import DNS_PARENTS
@@ -45,7 +45,10 @@ def _matched_contact(match: dict, profile: BackendProfile) -> ContactReferenceNe
     target = match.get("object")
     if "label" not in match or not isinstance(target, dict) or "id" not in target:
         return None
-    return _contact(check_contact_label(match["label"], profile), target["id"])
+    label = check_contact_label(match["label"], profile)
+    if label == REGISTRANT:  # a further registrant, which only the current domain tells from the first
+        return None
+    return _contact(label, target["id"])
 
 
 class _PatchedUpdate:
@@ -85,12 +88,16 @@ class _PatchedUpdate:
     def _add_element(self, operation: RPPPatchOperation):
         if operation.path == "/nameservers":
             _validated("nameservers", [operation.value])
+            check_host_objects([operation.value], self.profile)
             host = parse_rpp(RPPHostReference, operation.value)
             self.add_hosts.append(HostObj(id=host.hostName))
         else:
             _validated("contacts", [operation.value])
             contact = parse_rpp(RPPLabelledContact, operation.value)
-            self.add_contacts.append(_contact(check_contact_label(contact.label, self.profile), contact.object.id))
+            label = check_contact_label(contact.label, self.profile)
+            if label == REGISTRANT:  # a further registrant: how many there are needs the current domain
+                raise NeedsCurrentState()
+            self.add_contacts.append(_contact(label, contact.object.id))
 
     def _remove_element(self, operation: RPPPatchOperation):
         if operation.path == "/nameservers":

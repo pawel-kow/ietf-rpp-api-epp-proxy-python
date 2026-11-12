@@ -7,7 +7,7 @@
         "url": "/contacts",
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-13",
+          "id": "{handle:a:-13}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -21,6 +21,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -30,12 +38,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {

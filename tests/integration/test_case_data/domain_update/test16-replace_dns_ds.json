@@ -1,17 +1,87 @@
 {
+  "when": {
+    "profile.domain_record_types": {
+      "contains": "ds"
+    }
+  },
   "test_id": "test16-replace_dns_ds",
   "steps": [
+    {
+      "when": {
+        "profile.registrant_required": true
+      },
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:HU16}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
     {
       "request": {
         "method": "POST",
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "t16-{random_name}.example",
+          "name": "t16-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
           },
           "dns": {
             "@type": "dnsData",
@@ -28,11 +98,27 @@
                 }
               }
             ]
+          },
+          "registrant": {
+            "select": [
+              {
+                "when": {
+                  "profile.registrant_required": true
+                },
+                "then": {
+                  "@type": "contact",
+                  "id": "{handle:a:HU16}"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -51,7 +137,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/t16-{random_name}.example",
+        "url": "/domainNames/t16-{random_name}.{tld}",
         "body_json": [
           {
             "op": "replace",
@@ -76,7 +162,7 @@
         ],
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -111,9 +197,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/t16-{random_name}.example",
+        "url": "/domainNames/t16-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

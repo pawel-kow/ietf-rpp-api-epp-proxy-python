@@ -1,4 +1,9 @@
 {
+  "when": {
+    "profile.contact_labels": {
+      "contains": "admin"
+    }
+  },
   "test_id": "test4-contacts_and_registrant",
   "steps": [
     {
@@ -6,14 +11,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uf1",
+          "id": "{handle:a:uf1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -27,6 +32,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -36,12 +49,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -50,7 +83,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uf1"
+          "id": "{handle:a:uf1}"
         }
       }
     },
@@ -59,14 +92,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uf2",
+          "id": "{handle:a:uf2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -80,6 +113,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -89,12 +130,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -103,7 +164,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uf2"
+          "id": "{handle:a:uf2}"
         }
       }
     },
@@ -113,43 +174,97 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "up-test4-{random_name}.example",
+          "name": "up-test4-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uf1"
+            "id": "{handle:a:uf1}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "billing",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
+            ]
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
               }
-            },
-            {
-              "label": "billing",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
-              }
-            }
-          ]
+            ]
+          }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -159,49 +274,90 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test4-{random_name}.example",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "name": "up-test4-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uf1"
+            "id": "{handle:a:uf1}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "billing",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
-              }
-            },
-            {
-              "label": "billing",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
-              }
-            }
-          ]
+            ]
+          }
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test4-{random_name}.example",
+        "url": "/domainNames/up-test4-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -214,7 +370,7 @@
               "label": "billing",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
+                "id": "{handle:a:uf1}"
               }
             }
           },
@@ -225,7 +381,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}uf2"
+                "id": "{handle:a:uf2}"
               }
             }
           }
@@ -236,49 +392,90 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test4-{random_name}.example",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "name": "up-test4-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uf1"
+            "id": "{handle:a:uf1}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf2}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
-              }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf2"
-              }
-            }
-          ]
+            ]
+          }
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test4-{random_name}.example",
+        "url": "/domainNames/up-test4-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -289,7 +486,7 @@
             "path": "/registrant",
             "value": {
               "@type": "contact",
-              "id": "FO-{random_id_10}uf2"
+              "id": "{handle:a:uf2}"
             }
           }
         ]
@@ -299,40 +496,81 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test4-{random_name}.example",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "name": "up-test4-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uf2"
+            "id": "{handle:a:uf2}"
           },
-          "contacts": [
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf2"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf2}"
+                    }
+                  },
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
-              }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uf1"
-              }
-            }
-          ]
+            ]
+          }
         }
       }
     }

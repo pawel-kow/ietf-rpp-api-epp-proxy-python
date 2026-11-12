@@ -33,11 +33,16 @@ def registrant_of(domain: Domain) -> str | None:
 
 
 def contacts_of(domain: Domain) -> list[ContactReferenceNew]:
-    """The contacts of the domain other than the registrant, one per role."""
-    return [
-        ContactReferenceNew(type=label, contact=ContactMinimal(id=contact.id))
-        for contact in domain.contacts or [] for label in contact.types if label != REGISTRANT
-    ]
+    """The contacts of the domain other than the registrant, one per role. Registrants after the first, where a
+    backend holds several, are contacts of the role `registrant`."""
+    contacts, first = [], True
+    for contact in domain.contacts or []:
+        for label in contact.types:
+            if label == REGISTRANT and first:
+                first = False
+                continue
+            contacts.append(ContactReferenceNew(type=label, contact=ContactMinimal(id=contact.id)))
+    return contacts
 
 
 def host_objects_of(ns: NS | None) -> list[str]:

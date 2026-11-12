@@ -36,15 +36,25 @@ src/
     │   ├── idn_tables.py    lgr <-> EPP IDN table
     │   ├── profile.py       EPP_PROFILE, epp_profile
     │   └── refusals.py, contact_refusal.py
-    ├── rri/                 later, same shape as epp/
+    ├── rri/
+    │   ├── session/         RriClient: LOGIN (no greeting), LOGOUT, lock, re-login, RegAccId of the login
+    │   ├── xml/             codec, generated/ (xsdata, from docs/rri/xsd by generate_rri_models.sh)
+    │   ├── commands/        {domain,contact,message}/<operation>.py, shared/rri_command.py (run, CTID)
+    │   ├── gateways/        RriBackend, Rri*Gateway (hosts: every command UNIMPLEMENTED)
+    │   ├── result_codes.py  DENIC code → ResultCode
+    │   ├── statuses.py      RRI domain status → RPP status
+    │   └── profile.py       RRI_PROFILE, rri_profile
     └── common/
+        ├── session/         SerialSession: lock, re-login, retry rule
         ├── transport/       TCP client, TLS context
         └── xmlsafe/         hardened parser, decode_xml
 ```
 
-`registry_adapter/common` holds only protocol-agnostic infrastructure. The full update derived from partial ones is
-domain logic and stays in `core/ports`. The connection behaviour (lock, reconnect, re-login) differs between EPP and
-RRI, so it moves to `common` only when the RRI client is its second user ([rule 6](architecture.md#same-pattern-for-the-same-thing)).
+`registry_adapter/common` holds only protocol-agnostic infrastructure. The full update derived from partial ones, and
+the partial one derived from a full one, are domain logic and stay in `core/ports`. The session behaviour both
+protocols share, `common/session/serial_session.py` (`SerialSession`: the lock, re-login on a closed session, resend
+only of a command never written), is the base of `EPPClient` and `RriClient`, which add their login and logout
+([rule 6](architecture.md#same-pattern-for-the-same-thing)).
 
 Package `__init__.py` files are empty, except `rpp/handlers/__init__.py`, which names every handler for Connexion
 (see [Request lifecycle](#request-lifecycle)). Imports are absolute and name the module that defines what they import.
@@ -61,6 +71,8 @@ Package `__init__.py` files are empty, except `rpp/handlers/__init__.py`, which 
 - Inside `rpp`: `handlers → mapping, http`; `mapping → dto, schema`. `mapping` never imports `http`, Flask or
   Connexion.
 - Inside `epp`: `gateways → commands → xml, session`; `session → common/transport`. Only `session` sends.
+- Inside `rri`: `gateways → commands → session → xml`; the session logs in and reads replies in XML. Only `session`
+  sends. `epp` and `rri` never import each other.
 
 ### What each module must never know
 
@@ -82,7 +94,7 @@ Package `__init__.py` files are empty, except `rpp/handlers/__init__.py`, which 
 [pyproject.toml](../../pyproject.toml) and run with `PYTHONPATH=src lint-imports` (see
 [process.project.md](process.project.md#checks-before-done)). A forbidden contract also follows indirect imports.
 `main.py` is a module, which import-linter cannot take as a root, so an import of `main` is forbidden by name and what
-`main` imports is not checked. A contract for "never another protocol" comes with the second protocol. Every
+`main` imports is not checked. `protocols-independent` keeps `epp` and `rri` apart. Every
 `ignore_imports` entry is known debt below; never add one for new code. The "must never know" table is not checked
 by imports where it is about names and messages; see the known debt.
 
@@ -196,7 +208,34 @@ flow, the port and the EPP commands of one object.
    (domain-1.0, contact-1.0, secDNS-1.1, etc.). `idn_tables.py` maps a domain's `lgr` to the table of the EPP IDN
    extension and back, for the domain commands.
 10. **`registry_adapter/common/`:** `transport/tcp_client.py` and `transport/tls.py` carry the bytes, and
-    `xmlsafe/xml_helper.py` reads XML without entities or a DTD.
+    `xmlsafe/xml_helper.py` reads XML without entities or a DTD. `TCPClient` takes the `framing`: the length prefix
+    counts itself (`LENGTH_INCLUDES_HEADER`, RFC 5734, the default) or the payload only (`LENGTH_OF_PAYLOAD`, RRI),
+    and `send(message, loggable=False)` does not print a message that holds a credential.
+11. **`registry_adapter/rri/`:** the DENIC RRI 5.0 adapter, XML only (gap Q20). `RriBackend` is the
+    `RegistryBackend` over one `RriClient`; its `sponsor_id` is the RegAccId of the login, so one deployment serves
+    several RegAccs. `commands/shared/rri_command.run` sends one request and turns the reply into an
+    `OperationResponse` or an `ErrorResponse` with the DENIC code as `registry_code` (`result_codes.py`; a code whose
+    meaning depends on the command is mapped by the command), logs the codes of warnings and errors only, and gives
+    a write its CTID: the client's `RPP-Cltrid`, `-n` added for the n-th write of one request, or a UUID when the id
+    is no RRI token. RRI updates by replacement only, so `RriDomainGateway.replace` and `RriContactGateway.replace`
+    are native (UPDATE, or CHHOLDER when the holders change, then DELETE-/CREATE-AUTHINFO1; a contact UPDATE sends
+    the verification data it read again, from `Contact.carried_over`), and `update(delta)` is derived through
+    `derived_update.update`, which reads, applies the delta with `<object>_application.apply` and replaces. A
+    domain's further holders are contacts labelled `registrant`, General Request and Abuse are `generalRequest` and
+    `abuse`, and `a`/`aaaa`/`mx` entries are `ZoneRecord`s. An IDN is sent with its U-label as `handle` and its
+    A-label as `ace`. A domain in its redemption period has no sponsor in INFO and reads with the sponsor `unknown`
+    (spec-issues.md, "Sponsor of a deleted domain"). A request whose second command fails answers a
+    `PartiallyApplied` (core/result) with the first command's transaction ids and the refusal, which `read_back` does
+    not read back, so the handler answers 202 (gap Q7). The adapter refuses only what an RRI
+    request has no place for, which RRI would never see: a person's name on an organisation's contact (an ORG is
+    named by its organisation), a contact authInfo, a `uName` that is not the name, an AuthInfo1 RRI does not take
+    (RRI receives only its hash), and a domain without DNS data (CREATE and UPDATE hold at least one `dnsentry`).
+    Everything else is sent, and RRI's refusal answered by its code: changing a contact's name, clearing a member it
+    requires. An `lgr` is
+    not sent. A contact create sends the kind of the Card (PERSON or ORG, a PERSON may name its organisation); an
+    update keeps the type RRI holds. Hosts, transfers, renew and contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
+    message is a service notice naming its RRI type and the domains and handles it is about, with 1301 or 1300 as a
+    poll has.
 
 `domainNames_create`, `domainNames_updatePartial`, `domainNames_update`, `contacts_create`, the contact updates and
 the host mutations do not build
@@ -288,11 +327,20 @@ A mapper raises `NotSupportedByBackend` or `NotSupportedByProxy` (`core/capabili
 `map_request` names the backend of the application's `BackendProfile`: `… cannot be expressed in EPP`, `… can be
 expressed in EPP, but not by this proxy`. What a backend can hold, where it differs between
 backends, is a fact of the `BackendProfile` (`core/capabilities/backend_profile.py`), not a constant of a mapper: the
-contact labels (`domains.check_contact_label`), the record types at the apex of a domain (`domain_dns`) and the LGRs
-it offers (`domains.rpp_to_model`). The domain mappers
+contact labels and how many registrants a domain has (`domains.check_contact_label`, `check_registrants`; further
+registrants are contacts labelled `registrant`), the record types of a domain (`domain_dns`; `a`, `aaaa` and `mx`
+records other than glue are `ZoneRecord`s the registry serves itself), the LGRs it offers (`domains.rpp_to_model`),
+the transfer operations of each object (`TransferHandlers`, which answer 501 `02101` for one the backend lacks),
+whether a restore takes a report (`domain_restore_report`), whether a read can show a domain's authInfo
+(`domains.check_requested`, which refuses `includeElements=authInfo` otherwise), whether hosts are objects
+(`domains.check_host_objects`, which refuses `nameservers`), whether a client sets statuses
+(`domains.check_client_statuses`), what a contact holds (`contact_capabilities`: fax, localization, region, voice
+numbers, authInfo, statuses, an organisation on an individual unless `contact_kind_held`, a person's name on an
+organisation unless `contact_org_person_name`) and whether the backend renews (`renew_domain`, which sends no read without). The RRI
+values are `RRI_PROFILE` in `registry_adapter/rri/profile.py`. `domain_dns_required`, `contact_phone_required` and
+`contact_name_changeable` are left to the registry to enforce and read by the test selectors only. The domain mappers
 take the profile as the keyword `profile`, from `backend_profile()` in the handler. The EPP values are `EPP_PROFILE`
-in `registry_adapter/epp/profile.py`, and `epp_profile(idn_tables)` adds the LGRs of the configured IDN tables. Some
-of its facts are not read yet, they are for a backend that differs.
+in `registry_adapter/epp/profile.py`, and `epp_profile(idn_tables)` adds the LGRs of the configured IDN tables.
 
 A value that is not in the form the backend requires (a phone number, the parts of a restore report) is a 400. The
 mapper raises `BackendRequirement` (`core/capabilities/`) with `{backend}` in its text, and `map_request` names the
@@ -327,6 +375,11 @@ turns both checks off, for test backends only, and `main.py` warns when it is on
 `rpp_epp_objects`, `rpp_epp_extensions` and `rpp_epp_connection_cache` are read into `EppSettings`, but nothing uses
 them.
 
+`rpp_backend` names the protocol (`Settings.backend`). `RriSettings` holds `rpp_rri_host`, `rpp_rri_port` (51131),
+`rpp_rri_use_tls`, `rpp_rri_tls_insecure_skip_verify` (test backends only, main warns), `rpp_rri_timeout` (unused,
+like the EPP one) and `rpp_rri_lgr`, the one LGR a client may name for DENIC's repertoire (gap Q11). There is no
+RegAccId setting: it is taken from the login.
+
 `rpp_base_url`, `rpp_tlds`, `rpp_environment_name` and `rpp_environment_status` are what the
 discovery document (`GET /.well-known/rpp`, no authentication, no EPP) states. `rpp/handlers/discovery.py`
 adds the RPP version, a constant, and the supported objects and profiles of the `BackendProfile`. Without all four, it
@@ -338,8 +391,11 @@ does not check the `version` parameter of the media type, so core §12's 406 is 
 
 ## Composition
 
-[src/main.py](../../src/main.py) is the composition root: `new_backend` builds an `EppBackend` over the default
-`EPPClient`, with the namespace map and the `IdnTables`, and is the factory it passes to
+[src/main.py](../../src/main.py) is the composition root. `rpp_backend` (`epp` by default, or `rri`) picks
+`new_epp_backend` or `new_rri_backend` and its profile from `BACKENDS`; nothing else knows which backend runs.
+`new_epp_backend` builds an `EppBackend` over the default
+`EPPClient`, with the namespace map and the `IdnTables`, and `new_rri_backend` an `RriBackend` over an `RriClient`
+on a `TCPClient` with payload-only framing. The chosen one is `new_backend`, the factory main passes to
 [`SessionPool`](../../src/core/session/session_pool.py), which keeps one backend per user. The pool goes to
 `create_app` in [app.py](../../src/rpp/http/app.py), with the `BackendProfile` (`epp_profile(idn_tables)`) and the
 `DiscoverySettings`, which the handlers read through [context.py](../../src/rpp/http/context.py). `create_app` hands

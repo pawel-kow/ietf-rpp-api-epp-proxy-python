@@ -32,6 +32,10 @@ There is no CI in this repository. Run both checks from the repository root, in 
 1. `PYTHONPATH=src lint-imports`: the module boundaries, see
    [architecture.project.md](architecture.project.md#the-check).
 2. The full `pytest -n 8` run, which needs the live backend. See [testing.project.md](testing.project.md).
+3. For a change to `registry_adapter/rri/`, `core` or `rpp`: the run on DENIC MTEST,
+   `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration`, from a machine on the allowlist of both RegAccs, before
+   the PR leaves draft. A coder without such a machine runs the unit tests and records the MTEST run as pending in
+   the plan.
 
 ## Issue labels
 

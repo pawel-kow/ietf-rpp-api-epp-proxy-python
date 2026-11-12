@@ -1,4 +1,5 @@
 {
+  "when": {"env.failed_logins_lock": false},
   "test_id": "test5-unknown_user",
   "steps": [
     {
@@ -6,7 +7,7 @@
         "method": "GET",
         "url": "/hosts/t5.{random_name}.net/availability",
         "headers": {
-          "Authorization": "Basic Z2hvc3Q6bm9wZQ==",
+          "Authorization": "{auth:unknown_user}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

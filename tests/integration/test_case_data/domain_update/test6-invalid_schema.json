@@ -1,12 +1,17 @@
 {
+  "when": {
+    "profile.contact_labels": {
+      "contains": "admin"
+    }
+  },
   "test_id": "test6-invalid_schema",
   "steps": [
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test6-{random_name}.example",
+        "url": "/domainNames/up-test6-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "RPP-Cltrid": "up-test6-{random_name}-clTRID",
           "Accept": "application/rpp+json",
           "Content-Type": "application/rpp+json"

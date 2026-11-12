@@ -105,7 +105,7 @@ id = "registry-adapter-common-standalone"
 name = "registry_adapter.common imports no project package"
 type = "forbidden"
 source_modules = ["registry_adapter.common"]
-forbidden_modules = ["core", "main", "registry_adapter.epp", "rpp", "settings"]
+forbidden_modules = ["core", "main", "registry_adapter.epp", "registry_adapter.rri", "rpp", "settings"]
 
 [[tool.importlinter.contracts]]
 id = "settings-standalone"
@@ -113,3 +113,27 @@ name = "settings imports no project package, and only main imports settings"
 type = "forbidden"
 source_modules = ["settings"]
 forbidden_modules = ["core", "main", "registry_adapter", "rpp"]
+
+[[tool.importlinter.contracts]]
+id = "protocols-independent"
+name = "The protocol adapters never import each other"
+type = "independence"
+modules = ["registry_adapter.epp", "registry_adapter.rri"]
+
+[[tool.importlinter.contracts]]
+id = "rri-layers"
+name = "Inside rri: gateways -> commands -> session -> xml (the session logs in and reads replies in XML)"
+type = "layers"
+containers = ["registry_adapter.rri"]
+layers = ["gateways", "commands", "session", "xml"]
+
+[[tool.importlinter.contracts]]
+id = "rri-only-session-sends"
+name = "Inside rri only session uses the transport"
+type = "forbidden"
+source_modules = [
+    "registry_adapter.rri.commands", "registry_adapter.rri.gateways", "registry_adapter.rri.xml",
+    "registry_adapter.rri.profile", "registry_adapter.rri.result_codes", "registry_adapter.rri.statuses",
+]
+forbidden_modules = ["registry_adapter.common.transport"]
+allow_indirect_imports = true

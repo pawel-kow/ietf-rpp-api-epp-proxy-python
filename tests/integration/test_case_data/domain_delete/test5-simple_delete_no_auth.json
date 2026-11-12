@@ -4,7 +4,7 @@
     {
       "request": {
         "method": "DELETE",
-        "url": "/domainNames/test5-{random_name}.example",
+        "url": "/domainNames/test5-{random_name}.{tld}",
         "headers": {
           "Content-Type": "application/rpp+json",
           "RPP-Cltrid": "test5-{random_name}-clTRID",

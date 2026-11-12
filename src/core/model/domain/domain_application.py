@@ -77,6 +77,7 @@ def apply(current: Domain, delta: DomainUpdate) -> DomainReplacement:
         registrant=registrant,
         contacts=contacts,
         dnsSEC=_dns_sec(dns_sec_of(current.dnsSEC), delta),
+        records=list(current.records or []),
         status=list(statuses),
         status_reasons={label: reason for label, reason in statuses.items() if reason},
         **_auth_info(current, delta.change),

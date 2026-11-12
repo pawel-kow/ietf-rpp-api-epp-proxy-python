@@ -124,12 +124,15 @@ def substitute_captures(value, captures):
     return value
 
 UPPER = re.compile(r"\{upper:([^{}]*)\}")
+LOWER = re.compile(r"\{lower:([^{}]*)\}")
 
 def replace_upper_placeholders(value: str) -> str:
     """Replaces {upper:TEXT} by TEXT in upper case, the form the registry stores a name in, for an exact `match`."""
-    return UPPER.sub(lambda match: match.group(1).upper(), value)
+    """`{lower:TEXT}` is TEXT in lower case, for an id the client sends in another case than the registry stores."""
+    value = UPPER.sub(lambda match: match.group(1).upper(), value)
+    return LOWER.sub(lambda match: match.group(1).lower(), value)
 
-def endpoint_test(client, case_sequence, sleep=time.sleep):
+def endpoint_test(client, case_sequence, sleep=time.sleep, credentials=None, pacer=None):
     """
     Tests the POST /domains endpoint using the Flask test client.
 
@@ -137,6 +140,9 @@ def endpoint_test(client, case_sequence, sleep=time.sleep):
         client: The Flask test client fixture.
         cases: A sequence of test steps as parameterized test case dictionaries.
         sleep: Waits for a step's "delay_seconds" before its request, for registry periods that must pass.
+        credentials: Replaces a `{auth:…}` header by the credential when the request is sent, so the case never
+            holds one (`tests.helper.test_environment.Credentials`).
+        pacer: Waits before a request of a registrar so its requests stay under the backend's limit.
     """
     if "skip" in case_sequence:
         pytest.skip(reason=f"Skipping test case: {case_sequence['test_id']} - {case_sequence['skip']}")
@@ -145,21 +151,25 @@ def endpoint_test(client, case_sequence, sleep=time.sleep):
         case = substitute_captures(case, captures)
         if case.get("delay_seconds"):
             sleep(case["delay_seconds"])
+        headers = case["request"].get("headers", {})
+        if pacer is not None:
+            pacer.wait(headers)
+        sent_headers = credentials.headers(headers) if credentials is not None else headers
         # --- Make HTTP Request ---
         if "body_json" in case["request"]:
             response = client.request(case["request"]["method"],
                                     case["request"]["url"],
                                     json=case["request"]["body_json"],
-                                    headers=case["request"]["headers"])
+                                    headers=sent_headers)
         elif "body_raw" in case["request"]:
             response = client.request(case["request"]["method"],
                                     case["request"]["url"],
                                     content=case["request"]["body_raw"],
-                                    headers=case["request"]["headers"])
+                                    headers=sent_headers)
         else:
             response = client.request(case["request"]["method"],
                                     case["request"]["url"],
-                                    headers=case["request"]["headers"])
+                                    headers=sent_headers)
         print(f"Test case: {case_sequence['test_id']}[{i}]: {response.status_code} - {response.headers} - {response.text}")
 
         test_name = f"{case_sequence['test_id']}[{i}]"

@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.contact_org_person_name": true
+  },
   "test_id": "test25-patch_remove_organisation",
   "steps": [
     {
@@ -6,20 +9,34 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}25A",
+          "id": "{handle:a:25A}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
             "kind": "org",
             "name": {
-              "full": "John Doe"
+              "select": [
+                {
+                  "when": {
+                    "profile.contact_org_person_name": true
+                  },
+                  "then": {
+                    "full": "John Doe"
+                  }
+                },
+                {
+                  "then": {
+                    "full": "ACME Inc."
+                  }
+                }
+              ]
             },
             "organizations": {
               "org": {
@@ -38,8 +55,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -54,10 +83,22 @@
                 "number": "tel:+49.123123123"
               },
               "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.456456456",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -67,9 +108,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -81,16 +134,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}25A"
+          "id": "{handle:a:25A}"
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}25A",
+        "url": "/contacts/{handle:a:25A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -110,7 +163,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}25A",
+          "id": "{handle:a:25A}",
           "contactInfo": {
             "kind": "individual",
             "name": {
@@ -123,9 +176,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}25A",
+        "url": "/contacts/{handle:a:25A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

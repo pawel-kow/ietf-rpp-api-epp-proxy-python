@@ -2,22 +2,140 @@
   "test_id": "test12-simple_create-clTRID",
   "steps": [
     {
+      "when": {
+        "profile.registrant_required": true
+      },
       "request": {
         "method": "POST",
-        "url": "/domainNames?includeElements=authInfo",
+        "url": "/contacts",
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:HC12}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.auth_info_readable": true
+              },
+              "then": "/domainNames?includeElements=authInfo"
+            },
+            {
+              "then": "/domainNames"
+            }
+          ]
+        },
         "body_json": {
           "@type": "domainName",
-          "name": "test12-{random_name}.example",
+          "name": "test12-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
+          },
+          "registrant": {
+            "select": [
+              {
+                "when": {
+                  "profile.registrant_required": true
+                },
+                "then": {
+                  "@type": "contact",
+                  "id": "{handle:a:HC12}"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
           "RPP-Cltrid": "test12-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json"
         }
       },
@@ -26,17 +144,41 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "TEST12-{random_name}.EXAMPLE",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "name": "TEST12-{random_name}.{tld}",
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.auth_info_readable": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "fields": {
@@ -44,19 +186,59 @@
             "type": "not_null"
           },
           "provMetadata.crDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": -1,
-            "max_delta": 60
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "domainName.crDate"
+                  }
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": -1,
+                  "max_delta": 60
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "provMetadata.crClientId": {
-            "type": "not_null"
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "domainName.crClientId"
+                  }
+                },
+                "then": {
+                  "type": "not_null"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "expiryDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": 31449600,
-            "max_delta": 31622400
+            "select": [
+              {
+                "when": {
+                  "profile.registration_periods": true
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": 31449600,
+                  "max_delta": 31622400
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {

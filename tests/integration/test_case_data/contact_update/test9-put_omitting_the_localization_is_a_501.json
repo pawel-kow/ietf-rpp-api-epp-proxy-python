@@ -1,19 +1,23 @@
 {
+  "when": {
+    "profile.contact_localization": true
+  },
   "test_id": "test9-put_keeps_the_localization",
+  "description": "A full update without the localization the contact has asks to remove it, which EPP cannot do: 501, see spec-issues.md (Full update of a contact).",
   "steps": [
     {
       "request": {
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}09A",
+          "id": "{handle:a:09A}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -69,9 +73,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -83,16 +99,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}09A"
+          "id": "{handle:a:09A}"
         }
       }
     },
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}09A",
+        "url": "/contacts/{handle:a:09A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -159,6 +175,5 @@
         }
       }
     }
-  ],
-  "description": "A full update without the localization the contact has asks to remove it, which EPP cannot do: 501, see spec-issues.md (Full update of a contact)."
+  ]
 }

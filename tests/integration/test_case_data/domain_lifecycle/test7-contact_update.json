@@ -1,0 +1,214 @@
+{
+  "test_id": "test7-contact_update",
+  "description": "A contact with a phone is created, changed by PATCH and read back.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "select": [
+            {
+              "when": {
+                "profile.contact_auth_info": true
+              },
+              "then": {
+                "@type": "contact",
+                "id": "{handle:a:L7}",
+                "contactInfo": {
+                  "@type": "Card",
+                  "version": "2.0",
+                  "kind": "individual",
+                  "name": {
+                    "full": "Erika Mustermann"
+                  },
+                  "addresses": {
+                    "addr": {
+                      "components": [
+                        {
+                          "kind": "name",
+                          "value": "Musterweg 12"
+                        },
+                        {
+                          "kind": "locality",
+                          "value": "Frankfurt am Main"
+                        },
+                        {
+                          "kind": "postcode",
+                          "value": "60596"
+                        }
+                      ],
+                      "countryCode": "DE"
+                    }
+                  },
+                  "emails": {
+                    "email": {
+                      "address": "erika@example.com"
+                    }
+                  },
+                  "phones": {
+                    "voice": {
+                      "number": "tel:+49.6912345678",
+                      "features": {
+                        "voice": true
+                      }
+                    }
+                  }
+                },
+                "authInfo": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              }
+            },
+            {
+              "then": {
+                "@type": "contact",
+                "id": "{handle:a:L7}",
+                "contactInfo": {
+                  "@type": "Card",
+                  "version": "2.0",
+                  "kind": "individual",
+                  "name": {
+                    "full": "Erika Mustermann"
+                  },
+                  "addresses": {
+                    "addr": {
+                      "components": [
+                        {
+                          "kind": "name",
+                          "value": "Musterweg 12"
+                        },
+                        {
+                          "kind": "locality",
+                          "value": "Frankfurt am Main"
+                        },
+                        {
+                          "kind": "postcode",
+                          "value": "60596"
+                        }
+                      ],
+                      "countryCode": "DE"
+                    }
+                  },
+                  "emails": {
+                    "email": {
+                      "address": "erika@example.com"
+                    }
+                  },
+                  "phones": {
+                    "voice": {
+                      "number": "tel:+49.6912345678",
+                      "features": {
+                        "voice": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:L7}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/{handle:a:L7}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/contactInfo/emails/email/address",
+            "value": "new@example.com"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "contactInfo": {
+            "emails": {
+              "email": {
+                "address": "new@example.com"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/{handle:a:L7}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "contactInfo": {
+            "emails": {
+              "email": {
+                "address": "new@example.com"
+              }
+            },
+            "name": {
+              "full": "Erika Mustermann"
+            }
+          },
+          "status": [
+            {
+              "label": "ok"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/{handle:a:L7}/availability",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "body": {
+          "available": false
+        }
+      }
+    }
+  ]
+}

@@ -3,11 +3,12 @@ from connexion import request
 from core.flows.contact.contact_flows import create_contact, patch_contact, replace_contact
 from core.result.error_response import ErrorResponse
 from rpp.handlers.shared.requested_elements import requested_elements
-from rpp.http.context import get_backend
+from rpp.http.context import backend_profile, get_backend
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers
 from rpp.http.operation import map_request, require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
 from rpp.mapping.contact import contact_availability, contact_patch, contact_replacement, contacts
+from rpp.mapping.contact.contact_capabilities import check_contact, check_contact_update
 from rpp.mapping.shared import include_elements
 
 OBJECT = "contact"
@@ -21,7 +22,7 @@ def _contact_output(contact, requested):
 @rpp_operation
 def contacts_create(body):
     requested = requested_elements(OBJECT)
-    contact = map_request(contacts.rpp_to_model, body)
+    contact = map_request(check_contact, map_request(contacts.rpp_to_model, body), profile=backend_profile())
     result = create_contact(get_backend(), contact, client_transaction_id())
     return _mutation_answer(result, requested, 201, {"Location": f"{str(request.url).rstrip('/')}/{contact.id}"})
 
@@ -55,17 +56,20 @@ def _mutation_answer(result, requested, status=200, extra_headers=None):
 @rpp_operation
 def contacts_update(id, body):
     requested = requested_elements(OBJECT)
-    wanted = map_request(contact_replacement.rpp_to_model, id, body, requested)
+    wanted = map_request(check_contact, map_request(contact_replacement.rpp_to_model, id, body, requested),
+                         profile=backend_profile())
     return _mutation_answer(replace_contact(get_backend(), wanted, client_transaction_id()), requested)
 
 
 @rpp_operation
 def contacts_updatePartial(id, body):
     requested = requested_elements(OBJECT)
-    update = map_request(contact_patch.rpp_to_model, id, body)
+    update = map_request(check_contact_update, map_request(contact_patch.rpp_to_model, id, body), profile=backend_profile())
 
     def wanted_from_current(current):
-        return map_request(contact_patch.rpp_to_model_with_current, id, body, current)
+        return map_request(check_contact, map_request(contact_patch.rpp_to_model_with_current, id, body, current,
+                                       kind_held=backend_profile().contact_kind_held),
+                           profile=backend_profile())
 
     return _mutation_answer(patch_contact(get_backend(), id, update, wanted_from_current, client_transaction_id()), requested)
 

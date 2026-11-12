@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}J04",
+          "id": "{handle:a:J04}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -33,8 +33,20 @@
                     "value": "Dulles"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -49,10 +61,22 @@
                 "number": "tel:+1.7035555555"
               },
               "fax": {
-                "features": {
-                  "fax": true
-                },
-                "number": "tel:+1.7035555556"
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "features": {
+                        "fax": true
+                      },
+                      "number": "tel:+1.7035555556"
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -62,9 +86,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -77,9 +113,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}J04",
+        "url": "/contacts/{handle:a:J04}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -89,7 +125,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}J04",
+          "id": "{handle:a:J04}",
           "status": [
             {
               "@type": "contactStatus",
@@ -115,8 +151,20 @@
                     "value": "Dulles"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -131,10 +179,22 @@
                 "number": "tel:+1.7035555555"
               },
               "fax": {
-                "features": {
-                  "fax": true
-                },
-                "number": "tel:+1.7035555556"
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "features": {
+                        "fax": true
+                      },
+                      "number": "tel:+1.7035555556"
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -149,13 +209,41 @@
             "type": "not_null"
           },
           "provMetadata.crClientId": {
-            "type": "not_null"
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "contact.crClientId"
+                  }
+                },
+                "then": {
+                  "type": "not_null"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "provMetadata.crDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": -1,
-            "max_delta": 60
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "contact.crDate"
+                  }
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": -1,
+                  "max_delta": 60
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       }

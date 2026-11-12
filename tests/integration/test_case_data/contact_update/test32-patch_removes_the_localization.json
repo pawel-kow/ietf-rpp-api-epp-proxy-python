@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.contact_localization": true
+  },
   "test_id": "test32-patch_removes_the_localization",
   "steps": [
     {
@@ -6,14 +9,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}32A",
+          "id": "{handle:a:32A}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -69,9 +72,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -83,16 +98,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}32A"
+          "id": "{handle:a:32A}"
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}32A",
+        "url": "/contacts/{handle:a:32A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

@@ -1,14 +1,17 @@
 {
+  "when": {
+    "env.failed_logins_lock": false
+  },
   "test_id": "test6-simple_delete_invalid_auth",
   "steps": [
     {
       "request": {
         "method": "DELETE",
-        "url": "/domainNames/test6-{random_name}.example",
+        "url": "/domainNames/test6-{random_name}.{tld}",
         "headers": {
           "Content-Type": "application/rpp+json",
           "RPP-Cltrid": "test6-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmNhdA==",
+          "Authorization": "{auth:a:wrong_password}",
           "Accept": "application/rpp+json"
         }
       },

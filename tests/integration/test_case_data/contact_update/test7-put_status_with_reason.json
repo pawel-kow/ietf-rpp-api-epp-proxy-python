@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.client_statuses": true
+  },
   "test_id": "test7-put_status_with_reason",
   "description": "The backend accepts a status with a reason and repeats the label as its text (#54), so the reason is not read back: this case proves the update with a reason is accepted and the status is set and cleared, not that the reason is stored. The reason itself is covered by unit tests.",
   "steps": [
@@ -7,14 +10,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}07A",
+          "id": "{handle:a:07A}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -34,8 +37,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -50,10 +65,22 @@
                 "number": "tel:+49.123123123"
               },
               "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.456456456",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -63,9 +90,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -77,16 +116,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}07A"
+          "id": "{handle:a:07A}"
         }
       }
     },
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}07A",
+        "url": "/contacts/{handle:a:07A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -112,8 +151,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -128,10 +179,22 @@
                 "number": "tel:+49.123123123"
               },
               "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.456456456",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -157,7 +220,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}07A",
+          "id": "{handle:a:07A}",
           "status": [
             {
               "label": "clientDeleteProhibited"
@@ -169,9 +232,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}07A",
+        "url": "/contacts/{handle:a:07A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -197,8 +260,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -213,10 +288,22 @@
                 "number": "tel:+49.123123123"
               },
               "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.456456456",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -235,7 +322,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}07A",
+          "id": "{handle:a:07A}",
           "status": [
             {
               "label": "ok"

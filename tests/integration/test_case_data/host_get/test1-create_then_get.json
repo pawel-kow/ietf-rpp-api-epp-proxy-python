@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "t1-{random_name}.example",
+          "name": "t1-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -36,14 +36,14 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "host",
-          "hostName": "ns1.t1-{random_name}.example",
+          "hostName": "ns1.t1-{random_name}.{tld}",
           "dns": {
             "@type": "dnsData",
             "records": [
@@ -52,12 +52,12 @@
                 "name": "@",
                 "type": "ns",
                 "rdata": {
-                  "nsdname": "ns1.t1-{random_name}.example."
+                  "nsdname": "ns1.t1-{random_name}.{tld}."
                 }
               },
               {
                 "@type": "dnsRecord",
-                "name": "ns1.t1-{random_name}.example.",
+                "name": "ns1.t1-{random_name}.{tld}.",
                 "type": "a",
                 "rdata": {
                   "address": "192.0.2.1"
@@ -80,9 +80,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/hosts/ns1.t1-{random_name}.example",
+        "url": "/hosts/ns1.t1-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -91,7 +91,7 @@
         "status": 200,
         "body": {
           "@type": "host",
-          "hostName": "ns1.t1-{random_name}.example",
+          "hostName": "ns1.t1-{random_name}.{tld}",
           "status": [
             {
               "@type": "hostStatus",
@@ -106,12 +106,12 @@
                 "name": "@",
                 "type": "ns",
                 "rdata": {
-                  "nsdname": "ns1.t1-{random_name}.example."
+                  "nsdname": "ns1.t1-{random_name}.{tld}."
                 }
               },
               {
                 "@type": "dnsRecord",
-                "name": "ns1.t1-{random_name}.example.",
+                "name": "ns1.t1-{random_name}.{tld}.",
                 "type": "a",
                 "rdata": {
                   "address": "192.0.2.1"

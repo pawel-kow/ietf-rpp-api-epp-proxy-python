@@ -1,0 +1,265 @@
+{
+  "when": {
+    "profile.contact_kind_held": true
+  },
+  "test_id": "test35-individual_with_organisation_put_and_patch",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:35A}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "Example Inc."
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Example Dr., Suite 100"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Dulles"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20166-6503"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1.7035555555"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe@example.example"
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:35A}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/contacts/{handle:a:35A}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "Example GmbH"
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "123 Example Dr., Suite 100"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Dulles"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "20166-6503"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+1.7035555555"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jdoe@example.example"
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:35A}",
+          "contactInfo": {
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "Example GmbH"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/{handle:a:35A}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/contactInfo/emails/email/address",
+            "value": "jane@example.example"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:35A}",
+          "contactInfo": {
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "organizations": {
+              "org": {
+                "name": "Example GmbH"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "jane@example.example"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/{handle:a:35A}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/contactInfo/organizations"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:35A}",
+          "contactInfo": {
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/contacts/{handle:a:35A}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:35A}",
+          "contactInfo": {
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

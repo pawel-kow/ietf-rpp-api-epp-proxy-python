@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "rn1-{random_name}.example",
+          "name": "rn1-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -15,7 +15,7 @@
           }
         },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -32,7 +32,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/rn1-{random_name}.example/processes/renewProcesses",
+        "url": "/domainNames/rn1-{random_name}.{tld}/processes/renewProcesses",
         "body_json": {
           "@type": "renewProcess",
           "renewalPeriod": {
@@ -42,7 +42,7 @@
           }
         },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

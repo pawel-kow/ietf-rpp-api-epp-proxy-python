@@ -9,6 +9,7 @@ from core.result.result_code import ResultCode
 from registry_adapter.epp.profile import EPP_PROFILE
 from rpp.http.operation import map_request
 from rpp.mapping.contact import contacts
+from rpp.mapping.contact.contact_capabilities import check_contact
 from rpp.mapping.domain import domain_patch, domains
 from rpp.mapping.host import host_patch, host_replacement, hosts
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
@@ -77,7 +78,8 @@ NOT_IN_EPP = [
     (contacts.rpp_to_model, contact(status=[{"@type": "contactStatus", "label": "clientUpdateProhibited"}])),
     (contacts.rpp_to_model, contact(card(links={"url": {"uri": "https://example.example"}}))),
     (contacts.rpp_to_model, contact(card(emails={"email": EMAIL, "email-1": EMAIL}))),
-    (contacts.rpp_to_model, contact(card(organizations={"org": {"name": "Org"}}))),
+    (lambda body: check_contact(contacts.rpp_to_model(body), profile=EPP_PROFILE),
+     contact(card(organizations={"org": {"name": "Org"}}))),
 ]
 
 NOT_IN_PROXY = [

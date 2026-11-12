@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tr="http://registry.denic.de/transaction/5.0"
+    targetNamespace="http://registry.denic.de/transaction/5.0" elementFormDefault="qualified">
+    <simpleType name="idType">
+        <restriction base="token">
+            <minLength value="3" />
+            <maxLength value="64" />
+        </restriction>
+    </simpleType>
+    <simpleType name="resultType">
+        <restriction base="token">
+            <enumeration value="success" />
+            <enumeration value="failed" />
+            <enumeration value="exception" />
+        </restriction>
+    </simpleType>
+    <simpleType name="codeType">
+        <restriction base="unsignedLong" />
+        <!-- Maybe an enumeration of possible values here? -->
+    </simpleType>
+    <simpleType name="levelType">
+        <restriction base="token">
+            <enumeration value="info" />
+            <enumeration value="warning" />
+            <enumeration value="error" />
+        </restriction>
+    </simpleType>
+    <complexType name="messageType">
+        <sequence>
+            <element name="text" type="normalizedString" />
+            <element name="argument" type="token" minOccurs="0" maxOccurs="unbounded" />
+        </sequence>
+        <attribute name="level" type="tr:levelType" use="required" />
+        <attribute name="code" type="tr:codeType" use="required" />
+    </complexType>
+    <complexType name="dataType">
+        <sequence>
+            <any namespace="##other" maxOccurs="unbounded" />
+        </sequence>
+    </complexType>
+    <complexType name="transactionType">
+        <sequence>
+            <element name="stid" type="tr:idType" minOccurs="0" />
+            <element name="ctid" type="tr:idType" minOccurs="0" />
+            <element name="result" type="tr:resultType" />
+            <element name="message" type="tr:messageType" minOccurs="0" maxOccurs="unbounded" />
+            <element name="data" type="tr:dataType" minOccurs="0" />
+        </sequence>
+    </complexType>
+    <element name="transaction" type="tr:transactionType" />
+    <element name="message" type="tr:messageType" />
+</schema>

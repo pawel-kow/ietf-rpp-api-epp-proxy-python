@@ -4,10 +4,10 @@
     {
       "request": {
         "method": "DELETE",
-        "url": "/contacts/FO-{random_id_10}D03",
+        "url": "/contacts/{handle:a:D03}",
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

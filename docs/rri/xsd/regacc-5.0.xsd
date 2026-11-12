@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:regacc="http://registry.denic.de/regacc/5.0"
+    xmlns:contact="http://registry.denic.de/contact/5.0"
+    targetNamespace="http://registry.denic.de/regacc/5.0" elementFormDefault="qualified">
+    <import namespace="http://registry.denic.de/contact/5.0" schemaLocation="contact-5.0.xsd" />
+    <complexType name="normalizedStringPrivacyType">
+        <simpleContent>
+            <extension base="normalizedString" />
+        </simpleContent>
+    </complexType>
+    <complexType name="tokenPrivacyType">
+        <simpleContent>
+            <extension base="token" />
+        </simpleContent>
+    </complexType>
+    <simpleType name="handleType">
+        <restriction base="token">
+            <pattern value="[dD][eE][nN][iI][cC]\-[1-9][0-9]*" />
+            <maxLength value="32" />
+        </restriction>
+    </simpleType>
+    <complexType name="nameType">
+        <simpleContent>
+            <restriction base="regacc:normalizedStringPrivacyType">
+                <minLength value="1" />
+                <maxLength value="255" />
+            </restriction>
+        </simpleContent>
+    </complexType>
+    <complexType name="urlType">
+        <simpleContent>
+            <restriction base="regacc:normalizedStringPrivacyType">
+                <minLength value="1" />
+                <maxLength value="255" />
+            </restriction>
+        </simpleContent>
+    </complexType>
+    <complexType name="addressType">
+        <simpleContent>
+            <restriction base="regacc:normalizedStringPrivacyType">
+                <minLength value="1" />
+                <maxLength value="255" />
+            </restriction>
+        </simpleContent>
+    </complexType>
+    <complexType name="postalCodeType">
+        <simpleContent>
+            <restriction base="regacc:tokenPrivacyType">
+                <pattern value="[ a-zA-Z0-9\-]{1,20}" />
+            </restriction>
+        </simpleContent>
+    </complexType>
+    <complexType name="cityType">
+        <simpleContent>
+            <restriction base="regacc:normalizedStringPrivacyType">
+                <minLength value="1" />
+                <maxLength value="80" />
+            </restriction>
+        </simpleContent>
+    </complexType>
+    <complexType name="countryCodeType">
+        <simpleContent>
+            <restriction base="regacc:tokenPrivacyType">
+                <length value="2" />
+            </restriction>
+        </simpleContent>
+    </complexType>
+    <complexType name="postalType">
+        <sequence>
+            <element name="address" type="regacc:addressType" maxOccurs="unbounded" />
+            <element name="postalCode" type="regacc:postalCodeType" />
+            <element name="city" type="regacc:cityType" />
+            <element name="countryCode" type="regacc:countryCodeType" />
+        </sequence>
+    </complexType>
+    <complexType name="phoneType">
+        <simpleContent>
+            <restriction base="regacc:tokenPrivacyType">
+                <pattern value="\+[/\-\.\s0-9x]{1,254}" />
+            </restriction>
+        </simpleContent>
+    </complexType>
+    <complexType name="emailType">
+        <simpleContent>
+            <restriction base="regacc:tokenPrivacyType">
+                <pattern value="\S+@\S+" />
+                <minLength value="1" />
+                <maxLength value="255" />
+            </restriction>
+        </simpleContent>
+    </complexType>
+    <complexType name="infoType">
+        <choice>
+            <element name="handle" type="regacc:handleType" />
+        </choice>
+    </complexType>
+    <complexType name="contactInfoDataType">
+        <sequence>
+            <group ref="contact:infoDataGroup" minOccurs="0" />
+        </sequence>
+        <attribute name="role" type="contact:roleType" use="required" />
+    </complexType>
+    <complexType name="infoDataType">
+        <sequence>
+            <element name="handle" type="regacc:handleType" />
+            <element name="name" type="regacc:nameType" />
+            <element name="postal" type="regacc:postalType" />
+            <element name="phone" type="regacc:phoneType" minOccurs="0" maxOccurs="unbounded" />
+            <element name="fax" type="regacc:phoneType" minOccurs="0" maxOccurs="unbounded" />
+            <element name="email" type="regacc:emailType" minOccurs="1" maxOccurs="1" />
+            <element name="url" type="regacc:urlType" minOccurs="0" maxOccurs="unbounded" />
+            <element name="memberacc" type="regacc:handleType" />
+            <element name="contact" type="regacc:contactInfoDataType" minOccurs="0" maxOccurs="2" />
+            <element name="changed" type="dateTime" />
+        </sequence>
+    </complexType>
+    <element name="info" type="regacc:infoType" />
+    <element name="infoData" type="regacc:infoDataType" />
+
+</schema>

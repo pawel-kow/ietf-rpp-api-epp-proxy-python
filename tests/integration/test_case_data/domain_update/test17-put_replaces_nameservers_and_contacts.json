@@ -1,4 +1,10 @@
 {
+  "when": {
+    "profile.host_objects": true,
+    "profile.contact_labels": {
+      "contains": "admin"
+    }
+  },
   "test_id": "test17-put_replaces_nameservers_and_contacts",
   "steps": [
     {
@@ -6,14 +12,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uk1",
+          "id": "{handle:a:uk1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -27,6 +33,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -36,12 +50,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -50,7 +84,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uk1"
+          "id": "{handle:a:uk1}"
         }
       }
     },
@@ -59,14 +93,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uk2",
+          "id": "{handle:a:uk2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -80,6 +114,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -89,12 +131,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -103,7 +165,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uk2"
+          "id": "{handle:a:uk2}"
         }
       }
     },
@@ -112,7 +174,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -149,7 +211,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -186,32 +248,86 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "put17-{random_name}.example",
+          "name": "put17-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uk1"
+            "id": "{handle:a:uk1}"
           },
-          "contacts": [
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uk1"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uk1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            }
-          ]
+            ]
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          }
         }
       },
       "response": {
@@ -228,9 +344,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/put17-{random_name}.example",
+        "url": "/domainNames/put17-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -239,17 +355,46 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uk1"
+            "id": "{handle:a:uk1}"
           },
-          "contacts": [
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uk2"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uk2}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            }
-          ],
+            ]
+          },
           "nameservers": [
             {
               "@type": "host",
@@ -269,17 +414,46 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uk1"
+            "id": "{handle:a:uk1}"
           },
-          "contacts": [
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uk2"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uk2}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            }
-          ],
+            ]
+          },
           "nameservers": [
             {
               "@type": "host",
@@ -299,9 +473,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/put17-{random_name}.example",
+        "url": "/domainNames/put17-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -334,9 +508,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/put17-{random_name}.example",
+        "url": "/domainNames/put17-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -352,7 +526,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}uk2"
+                "id": "{handle:a:uk2}"
               }
             }
           }
@@ -372,9 +546,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/put17-{random_name}.example",
+        "url": "/domainNames/put17-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -383,7 +557,7 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uk2"
+            "id": "{handle:a:uk2}"
           },
           "nameservers": [
             {
@@ -400,7 +574,7 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uk2"
+            "id": "{handle:a:uk2}"
           },
           "nameservers": [
             {
@@ -417,9 +591,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/put17-{random_name}.example",
+        "url": "/domainNames/put17-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -452,9 +626,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/put17-{random_name}.example",
+        "url": "/domainNames/put17-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -470,7 +644,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}uk2"
+                "id": "{handle:a:uk2}"
               }
             }
           }

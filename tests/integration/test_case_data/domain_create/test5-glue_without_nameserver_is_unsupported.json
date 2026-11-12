@@ -2,48 +2,168 @@
   "test_id": "test5-glue_without_nameserver_is_unsupported",
   "steps": [
     {
+      "when": {
+        "profile.registrant_required": true
+      },
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:HC5}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
+    {
       "request": {
         "method": "POST",
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "test5-{random_name}.example",
+          "name": "test5-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
           },
           "dns": {
             "@type": "dnsData",
             "records": [
               {
                 "@type": "dnsRecord",
-                "name": "ns1.test5-{random_name}.example.",
+                "name": "ns1.test5-{random_name}.{tld}.",
                 "type": "A",
                 "rdata": {
                   "address": "192.168.1.1"
                 }
               }
             ]
+          },
+          "registrant": {
+            "select": [
+              {
+                "when": {
+                  "profile.registrant_required": true
+                },
+                "then": {
+                  "@type": "contact",
+                  "id": "{handle:a:HC5}"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
       },
       "response": {
-        "status": 501,
-        "content_type": "application/problem+json",
-        "body": {
-          "type": "urn:ietf:params:rpp:error"
-        },
-        "headers": {
-          "RPP-Code": "02102"
+        "select": [
+          {
+            "when": {
+              "profile.domain_record_types": {
+                "contains": "a"
+              }
+            },
+            "then": {
+              "status": 201,
+              "body": {
+                "@type": "domainName"
+              }
+            }
+          },
+          {
+            "then": {
+              "status": 501,
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              },
+              "headers": {
+                "RPP-Code": "02102"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "when": {
+        "profile.domain_record_types": {
+          "contains": "a"
         }
+      },
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/test5-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
       }
     }
-  ]
+  ],
+  "description": "An address record for a name below the domain that is no nameserver: a record the registry serves itself where it holds those, otherwise unsupported."
 }

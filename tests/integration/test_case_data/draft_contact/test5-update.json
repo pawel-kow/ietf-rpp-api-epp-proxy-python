@@ -7,20 +7,34 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-U1",
+          "id": "{handle:a:-U1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
             "kind": "org",
             "name": {
-              "full": "John Doe"
+              "select": [
+                {
+                  "when": {
+                    "profile.contact_org_person_name": true
+                  },
+                  "then": {
+                    "full": "John Doe"
+                  }
+                },
+                {
+                  "then": {
+                    "full": "Example Inc."
+                  }
+                }
+              ]
             },
             "organizations": {
               "org": {
@@ -39,8 +53,20 @@
                     "value": "Reston"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -62,9 +88,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -73,7 +111,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-U1"
+          "id": "{handle:a:-U1}"
         },
         "headers": {
           "RPP-Code": "01000"
@@ -83,9 +121,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}-U1",
+        "url": "/contacts/{handle:a:-U1}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -107,8 +145,20 @@
                     "value": "Reston"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -132,14 +182,35 @@
         }
       },
       "response": {
-        "status": 501,
-        "headers": {
-          "RPP-Code": "02102"
-        },
-        "content_type": "application/problem+json",
-        "body": {
-          "type": "urn:ietf:params:rpp:error"
-        }
+        "select": [
+          {
+            "when": {
+              "env.contact_removal_refused_by_registry": true
+            },
+            "then": {
+              "status": 422,
+              "headers": {
+                "RPP-Code": "02306"
+              },
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              }
+            }
+          },
+          {
+            "then": {
+              "status": 501,
+              "headers": {
+                "RPP-Code": "02102"
+              },
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              }
+            }
+          }
+        ]
       }
     }
   ]

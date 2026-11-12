@@ -4,16 +4,42 @@
     {
       "request": {
         "method": "POST",
-        "url": "/contacts?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.contact_auth_info": true
+              },
+              "then": "/contacts?includeElements=authInfo"
+            },
+            {
+              "then": "/contacts"
+            }
+          ]
+        },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-02",
+          "id": "{handle:a:-02}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
             "kind": "org",
             "name": {
-              "full": "John Doe"
+              "select": [
+                {
+                  "when": {
+                    "profile.contact_org_person_name": true
+                  },
+                  "then": {
+                    "full": "John Doe"
+                  }
+                },
+                {
+                  "then": {
+                    "full": "ACME Inc."
+                  }
+                }
+              ]
             },
             "organizations": {
               "org": {
@@ -26,6 +52,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -35,17 +69,37 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -55,7 +109,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-02",
+          "id": "{handle:a:-02}",
           "status": [
             {
               "@type": "contactStatus",
@@ -67,7 +121,21 @@
             "version": "2.0",
             "kind": "org",
             "name": {
-              "full": "John Doe"
+              "select": [
+                {
+                  "when": {
+                    "profile.contact_org_person_name": true
+                  },
+                  "then": {
+                    "full": "John Doe"
+                  }
+                },
+                {
+                  "then": {
+                    "full": "ACME Inc."
+                  }
+                }
+              ]
             },
             "organizations": {
               "org": {
@@ -80,6 +148,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -89,12 +165,29 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "fields": {
@@ -102,13 +195,41 @@
             "type": "not_null"
           },
           "provMetadata.crDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": -1,
-            "max_delta": 60
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "contact.crDate"
+                  }
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": -1,
+                  "max_delta": 60
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "provMetadata.crClientId": {
-            "type": "not_null"
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "contact.crClientId"
+                  }
+                },
+                "then": {
+                  "type": "not_null"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {

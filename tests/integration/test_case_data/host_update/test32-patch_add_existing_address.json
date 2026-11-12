@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "t32-{random_name}.example",
+          "name": "t32-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -16,7 +16,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -38,7 +38,7 @@
         "url": "/hosts",
         "body_json": {
           "@type": "host",
-          "hostName": "ns1.t32-{random_name}.example",
+          "hostName": "ns1.t32-{random_name}.{tld}",
           "dns": {
             "@type": "dnsData",
             "records": [
@@ -47,12 +47,12 @@
                 "name": "@",
                 "type": "ns",
                 "rdata": {
-                  "nsdname": "ns1.t32-{random_name}.example."
+                  "nsdname": "ns1.t32-{random_name}.{tld}."
                 }
               },
               {
                 "@type": "dnsRecord",
-                "name": "ns1.t32-{random_name}.example.",
+                "name": "ns1.t32-{random_name}.{tld}.",
                 "type": "a",
                 "rdata": {
                   "address": "192.0.2.1"
@@ -63,7 +63,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -82,14 +82,14 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/hosts/ns1.t32-{random_name}.example",
+        "url": "/hosts/ns1.t32-{random_name}.{tld}",
         "body_json": [
           {
             "op": "add",
             "path": "/dns/records",
             "value": {
               "@type": "dnsRecord",
-              "name": "ns1.t32-{random_name}.example.",
+              "name": "ns1.t32-{random_name}.{tld}.",
               "type": "a",
               "rdata": {
                 "address": "192.0.2.1"
@@ -99,7 +99,7 @@
         ],
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

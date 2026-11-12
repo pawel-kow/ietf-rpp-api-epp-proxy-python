@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}18A",
+          "id": "{handle:a:18A}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -33,8 +33,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -49,10 +61,22 @@
                 "number": "tel:+49.123123123"
               },
               "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.456456456",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -62,9 +86,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -76,16 +112,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}18A"
+          "id": "{handle:a:18A}"
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}18A",
+        "url": "/contacts/{handle:a:18A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -99,42 +135,75 @@
         ]
       },
       "response": {
-        "status": 200,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "FO-{random_id_10}18A",
-          "contactInfo": {
-            "name": {
-              "full": "Jane Doe"
+        "select": [
+          {
+            "when": {
+              "profile.contact_name_changeable": false
             },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
+            "then": {
+              "status": 422,
+              "headers": {
+                "RPP-Code": "02306"
+              },
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              }
+            }
+          },
+          {
+            "then": {
+              "status": 200,
+              "headers": {
+                "RPP-Code": "01000"
+              },
+              "content_type": "application/rpp+json",
+              "body": {
+                "@type": "contact",
+                "id": "{handle:a:18A}",
+                "contactInfo": {
+                  "name": {
+                    "full": "Jane Doe"
                   },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "region",
-                    "value": "PA"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
+                  "addresses": {
+                    "addr": {
+                      "components": [
+                        {
+                          "kind": "name",
+                          "value": "123 Main St"
+                        },
+                        {
+                          "kind": "locality",
+                          "value": "Anytown"
+                        },
+                        {
+                          "select": [
+                            {
+                              "when": {
+                                "profile.contact_region": true
+                              },
+                              "then": {
+                                "kind": "region",
+                                "value": "PA"
+                              }
+                            },
+                            {
+                              "omit": true
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "postcode",
+                          "value": "12345"
+                        }
+                      ]
+                    }
                   }
-                ]
+                }
               }
             }
           }
-        }
+        ]
       }
     }
   ]

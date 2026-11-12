@@ -1,12 +1,15 @@
 {
+  "when": {
+    "profile.client_statuses": true
+  },
   "test_id": "test28-patch_missing",
   "steps": [
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}28Z",
+        "url": "/contacts/{handle:a:28Z}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

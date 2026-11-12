@@ -1,4 +1,9 @@
 {
+  "when": {
+    "profile.contact_labels": {
+      "contains": "admin"
+    }
+  },
   "test_id": "test9-remove_contacts_by_partial_match",
   "steps": [
     {
@@ -6,14 +11,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uh1",
+          "id": "{handle:a:uh1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -27,6 +32,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -36,12 +49,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -50,7 +83,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uh1"
+          "id": "{handle:a:uh1}"
         }
       }
     },
@@ -59,14 +92,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uh2",
+          "id": "{handle:a:uh2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -80,6 +113,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -89,12 +130,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -103,7 +164,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uh2"
+          "id": "{handle:a:uh2}"
         }
       }
     },
@@ -112,46 +173,100 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "up-test9-{random_name}.example",
+          "name": "up-test9-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uh1"
+            "id": "{handle:a:uh1}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uh1"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uh1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uh1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uh2}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uh1"
+            ]
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uh2"
-              }
-            }
-          ]
+            ]
+          }
         }
       },
       "response": {
@@ -163,9 +278,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test9-{random_name}.example",
+        "url": "/domainNames/up-test9-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -185,16 +300,45 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test9-{random_name}.example",
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "FO-{random_id_10}uh1"
+          "name": "up-test9-{random_name}.{tld}",
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uh1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            }
-          ]
+            ]
+          }
         }
       }
     }

@@ -1,4 +1,12 @@
 {
+  "when": {
+    "profile.domain_transfer_operations": {
+      "contains": "request"
+    },
+    "profile.contact_transfer_operations": {
+      "contains": "reject"
+    }
+  },
   "test_id": "test11-transfer_reject",
   "steps": [
     {
@@ -6,14 +14,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}D11",
+          "id": "{handle:a:D11}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -27,6 +35,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -36,12 +52,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -50,20 +86,20 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}D11"
+          "id": "{handle:a:D11}"
         }
       }
     },
     {
       "request": {
         "method": "POST",
-        "url": "/contacts/FO-{random_id_10}D11/processes/transferProcesses",
+        "url": "/contacts/{handle:a:D11}/processes/transferProcesses",
         "headers": {
-          "Authorization": "Basic YmF6OnF1eA==",
+          "Authorization": "{auth:b}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json",
-          "RPP-Authorization": "authinfo value=MmZvb0JBUg=="
+          "RPP-Authorization": "authinfo value=MmZlZUJBUjk="
         },
         "body_json": {
           "@type": "transferProcess",
@@ -88,9 +124,9 @@
     {
       "request": {
         "method": "POST",
-        "url": "/contacts/FO-{random_id_10}D11/processes/transferProcesses/latest/transferReject",
+        "url": "/contacts/{handle:a:D11}/processes/transferProcesses/latest/transferReject",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

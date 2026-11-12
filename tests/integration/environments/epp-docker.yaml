@@ -1,0 +1,24 @@
+# The EPP test server of EPP-server-docker (docs/agents/testing.project.md#backend).
+config: config.yaml                    # RPP_CONFIG_FILE of the app under test
+profile: registry_adapter.epp.profile:EPP_PROFILE
+lgrs: [latn-1.0]                       # the LGRs config.yaml maps (rpp_idn_lgr_tables)
+max_workers: 8                         # the backend refuses logins above about 16 sessions
+regacc: user                           # the sponsor id is the login
+registrars:                            # the slots the cases name, each naming its variables in .env
+  a: {user: TEST_EPP_REGACC1, password: TEST_EPP_REGACC1_PASSWORD, prefix: TEST_EPP_REGACC1_PREFIX}
+  b: {user: TEST_EPP_REGACC2, password: TEST_EPP_REGACC2_PASSWORD, prefix: TEST_EPP_REGACC2_PREFIX}
+# Not secrets: a wrong password of a registrar, and a user the backend does not know.
+wrong_password: cat
+unknown_user: {user: ghost, password: nope}
+facts:
+  tld: example
+  restore_within_run: true             # the RGP periods are minutes (EPP-server-docker#5)
+  environment_name: rpp-epp-proxy.example       # rpp_environment_name of its config
+  domain_active_at_create: true        # a new domain is ok at once, not pendingCreate
+  cltrid_reuse_refused: true           # a reused client transaction id is refused, also on a read
+  idn_table_required: true            # the registry refuses an IDN without an IDN table
+  lgr_without_enye: true               # the IDN table of latn-1.0 lacks ñ
+  deleted_domain_readable: false       # a domain deleted right after its create is read in its redemption period, not purged
+  failed_logins_lock: false
+  lgr_on_ascii_refused: true       # an lgr on a name that is not an IDN is refused
+  contact_removal_refused_by_registry: false  # the registry, not the proxy, refuses clearing a contact's name or email

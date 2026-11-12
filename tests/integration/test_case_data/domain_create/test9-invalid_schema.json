@@ -8,13 +8,13 @@
         "body_json": {
           "domain_name": "FREE.EXAMPLE",
           "authInfo": {
-            "pw": "Password1!@"
+            "pw": "Abc2345678"
           }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
           "RPP-Cltrid": "test9-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json"
         }
       },

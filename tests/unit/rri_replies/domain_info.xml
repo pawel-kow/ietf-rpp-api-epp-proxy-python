@@ -1,0 +1,15 @@
+<domain:infoData xmlns:domain="http://registry.denic.de/domain/5.0" xmlns:contact="http://registry.denic.de/contact/5.0" xmlns:dnsentry="http://registry.denic.de/dnsentry/5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <domain:handle>rpp-exp-caa50f65.de</domain:handle>
+  <domain:ace>rpp-exp-caa50f65.de</domain:ace>
+  <domain:status>pendingCreate</domain:status>
+  <domain:authInfo1>2026-11-14T00:00:00+01:00</domain:authInfo1>
+  <domain:contact role="generalrequest"><contact:handle>DENIC-1000022-GENREQ</contact:handle></domain:contact>
+  <domain:contact role="abusecontact"><contact:handle>DENIC-1000022-GENREQ</contact:handle></domain:contact>
+  <domain:contact role="holder"><contact:handle>DENIC-1000022-HOLDER</contact:handle></domain:contact>
+  <dnsentry:dnsentry xsi:type="dnsentry:A"><dnsentry:owner>rpp-exp-caa50f65.de.</dnsentry:owner><dnsentry:rdata><dnsentry:address>192.0.2.10</dnsentry:address></dnsentry:rdata></dnsentry:dnsentry>
+  <dnsentry:dnsentry xsi:type="dnsentry:AAAA"><dnsentry:owner>www.rpp-exp-caa50f65.de.</dnsentry:owner><dnsentry:rdata><dnsentry:address>2001:db8:0:0:0:0:0:1</dnsentry:address></dnsentry:rdata></dnsentry:dnsentry>
+  <dnsentry:dnsentry xsi:type="dnsentry:MX"><dnsentry:owner>rpp-exp-caa50f65.de.</dnsentry:owner><dnsentry:rdata><dnsentry:preference>10</dnsentry:preference><dnsentry:exchange>rpp-exp-caa50f65.de.</dnsentry:exchange></dnsentry:rdata></dnsentry:dnsentry>
+  <domain:registrationDate>2026-11-12T01:20:33+01:00</domain:registrationDate>
+  <domain:changed>2026-11-12T01:20:33+01:00</domain:changed>
+  <domain:regAcc><domain:regAccId>DENIC-1000022</domain:regAccId><domain:name>Example Registrar</domain:name></domain:regAcc>
+</domain:infoData>

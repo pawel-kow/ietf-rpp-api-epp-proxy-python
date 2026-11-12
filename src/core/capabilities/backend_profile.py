@@ -13,8 +13,27 @@ class BackendProfile:
     `host_objects` is whether hosts are objects of their own, `client_statuses` whether a client can set statuses.
     `contact_fax`, `contact_localization` and `contact_region` are whether a contact holds a fax number, a localized
     form and a region in its address, and `contact_phones_max` how many voice numbers it holds.
-    `supports_renew`, `supports_contact_delete` and `supports_transfer_query` are whether the backend has these
-    commands.
+    `supports_renew` and `supports_contact_delete` are whether the backend has these commands.
+    `domain_transfer_operations` and `contact_transfer_operations` are the transfer operations (`request`, `query`,
+    `cancel`, `approve`, `reject`) the backend has for each object, which the transfer handlers check before any
+    command.
+    `restore_report` is whether a restore takes a report, which the restore report mappers check.
+    `auth_info_readable` is whether a read can show a domain's authInfo, which the domain handlers check against
+    `includeElements`.
+    `domain_dns_required` is whether a domain needs DNS data (name servers or records) from its create on, and
+    `contact_phone_required` whether a contact needs a voice number. The proxy leaves both to the registry to refuse
+    (gap Q13); the test selectors read them.
+    `contact_kind_held` is whether the backend holds a contact's kind, so an individual can have an organisation;
+    otherwise the kind follows from the organisation, and the contact mapper refuses an organisation on an individual.
+    `contact_org_person_name` is whether the contact of an organisation holds the name of a person as well, which the
+    contact mapper checks. `contact_name_changeable` is whether an update can change a contact's name; the proxy
+    leaves it to the registry to refuse, and the test selectors read it.
+    `registrant_required` is whether a domain needs a registrant, which the registry refuses otherwise; the test
+    selectors read it.
+    `registration_periods` is whether a domain is registered for a period, with an expiry date; the domain mapper
+    refuses a period otherwise.
+    `metadata` are the provisioning metadata a read shows besides the sponsor, as `<object>.<member>`
+    (`domainName.crDate`); the test selectors read them.
     `objects` are the data objects and `profiles` the profiles the discovery document states.
     `lgrs` are the label generation rulesets the backend offers for IDNs, none when it takes no IDN.
     """
@@ -28,9 +47,21 @@ class BackendProfile:
     contact_localization: bool
     contact_region: bool
     contact_phones_max: int
+    contact_auth_info: bool
+    contact_kind_held: bool
+    contact_org_person_name: bool
+    contact_name_changeable: bool
     supports_renew: bool
     supports_contact_delete: bool
-    supports_transfer_query: bool
+    domain_transfer_operations: frozenset[str]
+    contact_transfer_operations: frozenset[str]
+    restore_report: bool
+    auth_info_readable: bool
+    domain_dns_required: bool
+    contact_phone_required: bool
+    registrant_required: bool
+    registration_periods: bool
+    metadata: frozenset[str]
     objects: tuple[str, ...]
     profiles: tuple[str, ...]
     lgrs: frozenset[str] = frozenset()

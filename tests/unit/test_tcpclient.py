@@ -2,7 +2,7 @@ import struct
 
 import pytest
 
-from registry_adapter.common.transport.tcp_client import ConnectionException, TCPClient
+from registry_adapter.common.transport.tcp_client import LENGTH_OF_PAYLOAD, ConnectionException, TCPClient
 
 
 class FakeSocket:
@@ -83,3 +83,52 @@ def test_length_shorter_than_its_own_header_is_an_error():
 
     with pytest.raises(ConnectionException, match="Invalid message length 3"):
         client.receive()
+
+
+class RecordingSocket:
+    def __init__(self):
+        self.sent = b""
+
+    def sendall(self, data):
+        self.sent += data
+
+
+def test_length_counts_the_header_by_default():
+    client = TCPClient("host", 700)
+    client.socket = RecordingSocket()
+
+    client.send("<a/>")
+
+    assert client.socket.sent == struct.pack('>L', 8) + b"<a/>"
+
+
+def test_payload_only_framing_counts_the_payload():
+    client = TCPClient("host", 700, framing=LENGTH_OF_PAYLOAD)
+    client.socket = RecordingSocket()
+
+    client.send("<ä/>")
+
+    assert client.socket.sent == struct.pack('>L', 5) + "<ä/>".encode("utf-8")
+
+
+def test_payload_only_framing_reads_the_payload_length():
+    client = TCPClient("host", 700, framing=LENGTH_OF_PAYLOAD)
+    client.socket = FakeSocket(b"")
+    client.socket.data = struct.pack('>L', 4) + b"<a/>" + struct.pack('>L', 0)
+
+    assert client.receive() == "<a/>"
+    assert client.receive() == ""
+
+
+def test_unknown_framing_is_refused():
+    with pytest.raises(ValueError):
+        TCPClient("host", 700, framing="other")
+
+
+def test_a_message_with_a_credential_is_not_printed(capsys):
+    client = TCPClient("host", 700, framing=LENGTH_OF_PAYLOAD)
+    client.socket = RecordingSocket()
+
+    client.send("<password>secret</password>", loggable=False)
+
+    assert "secret" not in capsys.readouterr().out

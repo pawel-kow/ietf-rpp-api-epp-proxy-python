@@ -4,9 +4,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test5-{random_name}.example",
+        "url": "/domainNames/up-test5-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "RPP-Cltrid": "up-test5-{random_name}-clTRID",
           "Accept": "application/rpp+json",
           "Content-Type": "application/rpp+json"
@@ -18,7 +18,7 @@
             "value": {
               "@type": "authInfo",
               "method": "authinfo",
-              "authdata": "NewPassword1!@"
+              "authdata": "NewAbc2345678"
             }
           }
         ]

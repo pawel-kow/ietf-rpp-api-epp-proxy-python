@@ -4,9 +4,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}-a6/availability",
+        "url": "/contacts/{handle:a:-a6}/availability",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "repcontact-{random_id_10}"
         }
@@ -26,22 +26,44 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}-a6/availability",
+        "url": "/contacts/{handle:a:-a6}/availability",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "repcontact-{random_id_10}"
         }
       },
       "response": {
-        "status": 500,
-        "headers": {
-          "RPP-Code": "02400"
-        },
-        "body": {
-          "type": "urn:ietf:params:rpp:error"
-        },
-        "content_type": "application/problem+json"
+        "select": [
+          {
+            "when": {
+              "env.cltrid_reuse_refused": true
+            },
+            "then": {
+              "status": 500,
+              "headers": {
+                "RPP-Code": "02400"
+              },
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              },
+              "content_type": "application/problem+json"
+            }
+          },
+          {
+            "then": {
+              "status": 200,
+              "headers": {
+                "RPP-Code": "01000"
+              },
+              "body": {
+                "@type": "contactAvailability",
+                "available": true
+              },
+              "content_type": "application/rpp+json"
+            }
+          }
+        ]
       }
     }
   ]

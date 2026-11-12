@@ -3,12 +3,16 @@ import copy
 import pytest
 from connexion import ProblemException
 
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.contact.address import Address
 from core.model.contact.contacts import Contact, ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from core.model.shared.common import AuthInfo
 from rpp.http.operation import map_request
+from registry_adapter.epp.profile import EPP_PROFILE
+from registry_adapter.rri.profile import RRI_PROFILE
 from rpp.mapping.contact import contacts
+from rpp.mapping.contact.contact_capabilities import check_contact
 from rpp.schema.validator import validate_schema
 from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixture
 
@@ -230,7 +234,6 @@ def test_create_rejects_what_the_profile_does_not_allow(body):
 
 
 @pytest.mark.parametrize("body", [
-    create_body(card(organizations={"org": {"name": "Example Inc."}})),
     create_body(card(links={"url": {"uri": "https://example.example"}})),
     create_body(card(links={"contact-uri": {"uri": "https://example.example", "kind": "contact"}})),
     create_body(card(emails={"email": EMAIL, "email-1": EMAIL})),
@@ -239,7 +242,6 @@ def test_create_rejects_what_the_profile_does_not_allow(body):
     create_body(card(phones={"voice": {**VOICE, "features": {"voice": True, "fax": True}}})),
     create_body(card(addresses=address(("name", "1"), ("name", "2"), ("name", "3"), ("name", "4"), LOCALITY))),
     create_body(card(localizations={"de": {"emails": {"email": EMAIL}}})),
-    create_body(card(localizations={"de": {"organizations": {"org": {"name": "Example GmbH"}}}})),
     create_body(card(localizations={"de": {"name": {"full": "A"}}, "fr": {"name": {"full": "B"}}})),
     create_body(status=[{"@type": "contactStatus", "label": "clientUpdateProhibited"}]),
     create_body(disclose={"@type": "disclose"}),
@@ -247,6 +249,22 @@ def test_create_rejects_what_the_profile_does_not_allow(body):
 ])
 def test_create_rejects_what_the_model_cannot_hold(body):
     assert rejected_status(body) == 501
+
+
+def test_an_organisation_on_an_individual_needs_a_backend_that_holds_the_kind():
+    contact = contacts.rpp_to_model(create_body(card(organizations={"org": {"name": "Example Inc."}})))
+
+    assert contact.type == ContactType.PERSON and contact.organisationName == "Example Inc."
+    assert check_contact(contact, profile=RRI_PROFILE) is contact
+    with pytest.raises(NotSupportedByBackend, match="'organizations' on an individual"):
+        check_contact(contact, profile=EPP_PROFILE)
+
+
+def test_a_localized_organisation_on_an_individual_is_refused_by_epp():
+    contact = contacts.rpp_to_model(create_body(card(localizations={"de": {"organizations": {"org": {"name": "Example GmbH"}}}})))
+
+    with pytest.raises(NotSupportedByBackend, match="'organizations' on an individual"):
+        check_contact(contact, profile=EPP_PROFILE)
 
 
 def test_create_rejects_a_profile_violation_before_what_the_model_cannot_hold():

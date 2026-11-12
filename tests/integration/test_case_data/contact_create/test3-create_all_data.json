@@ -4,16 +4,42 @@
     {
       "request": {
         "method": "POST",
-        "url": "/contacts?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.contact_auth_info": true
+              },
+              "then": "/contacts?includeElements=authInfo"
+            },
+            {
+              "then": "/contacts"
+            }
+          ]
+        },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-03",
+          "id": "{handle:a:-03}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
             "kind": "org",
             "name": {
-              "full": "John Doe"
+              "select": [
+                {
+                  "when": {
+                    "profile.contact_org_person_name": true
+                  },
+                  "then": {
+                    "full": "John Doe"
+                  }
+                },
+                {
+                  "then": {
+                    "full": "ACME Inc."
+                  }
+                }
+              ]
             },
             "organizations": {
               "org": {
@@ -40,8 +66,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -56,10 +94,22 @@
                 "number": "tel:+49.123123123;ext=123"
               },
               "fax": {
-                "number": "tel:+49.123123123;ext=123",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.123123123;ext=123",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -69,14 +119,26 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -86,7 +148,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-03",
+          "id": "{handle:a:-03}",
           "status": [
             {
               "@type": "contactStatus",
@@ -98,7 +160,21 @@
             "version": "2.0",
             "kind": "org",
             "name": {
-              "full": "John Doe"
+              "select": [
+                {
+                  "when": {
+                    "profile.contact_org_person_name": true
+                  },
+                  "then": {
+                    "full": "John Doe"
+                  }
+                },
+                {
+                  "then": {
+                    "full": "ACME Inc."
+                  }
+                }
+              ]
             },
             "organizations": {
               "org": {
@@ -125,8 +201,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -141,10 +229,22 @@
                 "number": "tel:+49.123123123;ext=123"
               },
               "fax": {
-                "number": "tel:+49.123123123;ext=123",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.123123123;ext=123",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -154,9 +254,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "fields": {
@@ -164,13 +276,41 @@
             "type": "not_null"
           },
           "provMetadata.crDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": -1,
-            "max_delta": 60
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "contact.crDate"
+                  }
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": -1,
+                  "max_delta": 60
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "provMetadata.crClientId": {
-            "type": "not_null"
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "contact.crClientId"
+                  }
+                },
+                "then": {
+                  "type": "not_null"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {

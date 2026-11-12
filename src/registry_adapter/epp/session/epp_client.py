@@ -1,13 +1,12 @@
 import re
 import socket
 import struct
-import threading
 import uuid
 import xml.etree.ElementTree as ET
 
 from lxml import etree
 
-from registry_adapter.common.transport.tcp_client import ConnectionException
+from registry_adapter.common.session.serial_session import SerialSession
 from registry_adapter.common.xmlsafe.xml_helper import decode_xml
 
 EPP_NAMESPACE = {'epp': 'urn:ietf:params:xml:ns:epp-1.0'}
@@ -20,16 +19,16 @@ RGP_EXTENSION = "urn:ietf:params:xml:ns:rgp-1.0"
 
 LOGIN_EXTENSIONS = (SEC_DNS_EXTENSION, IDN_EXTENSION, RGP_EXTENSION)
 
-class EPPClient:
+class EPPClient(SerialSession):
     """
     A simple EPP client class.
 
-    One instance owns one EPP session and is shared by all concurrent requests of
-    that user. EPP has no way to match a response to a command on the wire other
-    than order, so a command and its response must not interleave with any other
-    traffic on the socket: _lock serializes every exchange. It is re-entrant because
-    connect() and disconnect() send login/logout through the same path.
+    One instance owns one EPP session and is shared by all concurrent requests of that user; `SerialSession` keeps
+    every exchange apart, opens the session again when the server closed it, and resends only a command that was
+    never written. EPP begins with the server's greeting, whose extensions `supports_extension` answers from.
     """
+
+    name = "EPP"
 
     def __init__(self, transport, username, password):
         """
@@ -40,30 +39,20 @@ class EPPClient:
             username (str): The EPP clID to log in with.
             password (str): The EPP password to log in with.
         """
-        self.client = transport
+        super().__init__(transport)
         self.username = username
         self.password = password
-        self._connected = False 
         self._server_extensions = frozenset()
-        self._lock = threading.RLock()
 
-    def connect(self):
-        """
-        Connects to the server.
-        """
-        with self._lock:
-            try:
-                self.client.connect()
-                # Reading Hello message from server
-                hello = self.client.receive()
-                print("Hello from the server", hello)
-                self._server_extensions = self._parse_greeting(hello)
-                # Sending login message
-                self._send_login(self.username, self.password)
-                self._connected = True
-            except Exception as e:
-                print(f"Error connecting to server: {e}")
-                self._connected = False
+    def _log_in(self):
+        """Reads the greeting and logs in."""
+        hello = self.client.receive()
+        print("Hello from the server", hello)
+        self._server_extensions = self._parse_greeting(hello)
+        self._send_login(self.username, self.password)
+
+    def _log_out(self):
+        self._send_logout()
 
     def send_and_get_response(self, message: str) -> tuple[bool, str, str]:
         """
@@ -79,59 +68,15 @@ class EPPClient:
                 - response (str): The full response message from the server.
         """
         with self._lock:
-            if self._connected and self.client.closed_by_peer():
-                print("EPP session closed by the server, logging in again")
-                self.disconnect(send_logout=False)
-            self._open_session()
-            try:
-                self._send(message)
-            except Exception:
-                # A failed send leaves no complete command on the server, so sending it
-                # again on a new session cannot run it twice. A failed receive may, so it
-                # is never retried.
-                self._open_session()
-                self._send(message)
-            return self._receive_response()
-
-    def _open_session(self):
-        """Logs in unless there is a session. Callers must hold self._lock."""
-        if not self._connected:
-            self.connect()
-        if not self._connected:
-            raise ConnectionException("EPP server is not reachable")
+            return self._parsed(self._round_trip(message))
 
     def _send_and_get_response(self, message: str) -> tuple[bool, str, str]:
-        """
-        Class internal method to send a message and receive a response.
-        This method is used internally by the class to handle the sending and receiving of messages.
-        It is not intended to be used directly by the user.
-        Callers must hold self._lock.
+        """Sends a message on the open socket and receives its response. Callers must hold self._lock."""
+        return self._parsed(self._exchange(message))
 
-        Args:
-            message (str): The message to send.
-
-        Returns:
-            tuple[bool, str, str]: A tuple containing:
-                - success (bool): Whether the operation was successful.
-                - code (str): The EPP response code from the server.
-                - response (str): The full response message from the server.
-        """
-        self._send(message)
-        return self._receive_response()
-
-    def _send(self, message: str):
-        """Sends a message, and closes the session if that fails. Callers must hold self._lock."""
+    def _parsed(self, response: str) -> tuple[bool, str, str]:
+        """The result of a response, which closes the session if it cannot be read. Callers must hold self._lock."""
         try:
-            self.client.send(message)
-        except Exception as e:
-            print(f"Error sending message: {e}")
-            self.disconnect(send_logout=False)
-            raise
-
-    def _receive_response(self) -> tuple[bool, str, str]:
-        """Receives a response, and closes the session if that fails. Callers must hold self._lock."""
-        try:
-            response = self.client.receive()
             print(f"Received response: {response}")
             success, code, msg = self._parse_epp_response(response)
             if not success:
@@ -150,27 +95,6 @@ class EPPClient:
 
     def verify_credentials(self, user, password):
         return self.username == user and self.password == password
-
-    @property
-    def connected(self):
-        return self._connected
-
-    def disconnect(self, send_logout=True):
-        """
-        Disconnects from the server.
-        """
-        with self._lock:
-            try:
-                try:
-                    # Sending logout message
-                    if send_logout:
-                        self._send_logout()
-                finally:
-                    #disconnect TCP connection
-                    self.client.disconnect()
-                    self._connected = False
-            except Exception as e:
-                print(f"Error disconnecting from server: {e}")
 
     def _send_login(self, username, password):
         """

@@ -1,0 +1,301 @@
+{
+  "test_id": "test2-zone_records",
+  "when": {
+    "profile.domain_record_types": {
+      "contains": "aaaa"
+    }
+  },
+  "description": "Address records the registry serves itself are added by PATCH and read back.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "select": [
+            {
+              "when": {
+                "profile.contact_auth_info": true
+              },
+              "then": {
+                "@type": "contact",
+                "id": "{handle:a:L2}",
+                "contactInfo": {
+                  "@type": "Card",
+                  "version": "2.0",
+                  "kind": "individual",
+                  "name": {
+                    "full": "Erika Mustermann"
+                  },
+                  "addresses": {
+                    "addr": {
+                      "components": [
+                        {
+                          "kind": "name",
+                          "value": "Musterweg 12"
+                        },
+                        {
+                          "kind": "locality",
+                          "value": "Frankfurt am Main"
+                        },
+                        {
+                          "kind": "postcode",
+                          "value": "60596"
+                        }
+                      ],
+                      "countryCode": "DE"
+                    }
+                  },
+                  "emails": {
+                    "email": {
+                      "address": "erika@example.com"
+                    }
+                  },
+                  "phones": {
+                    "voice": {
+                      "number": "tel:+49.6912345678",
+                      "features": {
+                        "voice": true
+                      }
+                    }
+                  }
+                },
+                "authInfo": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              }
+            },
+            {
+              "then": {
+                "@type": "contact",
+                "id": "{handle:a:L2}",
+                "contactInfo": {
+                  "@type": "Card",
+                  "version": "2.0",
+                  "kind": "individual",
+                  "name": {
+                    "full": "Erika Mustermann"
+                  },
+                  "addresses": {
+                    "addr": {
+                      "components": [
+                        {
+                          "kind": "name",
+                          "value": "Musterweg 12"
+                        },
+                        {
+                          "kind": "locality",
+                          "value": "Frankfurt am Main"
+                        },
+                        {
+                          "kind": "postcode",
+                          "value": "60596"
+                        }
+                      ],
+                      "countryCode": "DE"
+                    }
+                  },
+                  "emails": {
+                    "email": {
+                      "address": "erika@example.com"
+                    }
+                  },
+                  "phones": {
+                    "voice": {
+                      "number": "tel:+49.6912345678",
+                      "features": {
+                        "voice": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:L2}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "select": [
+            {
+              "when": {
+                "profile.domain_dns_required": true
+              },
+              "then": {
+                "@type": "domainName",
+                "name": "t2-{random_name}.{tld}",
+                "registrant": {
+                  "@type": "contact",
+                  "id": "{handle:a:L2}"
+                },
+                "contacts": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ],
+                "dns": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                },
+                "authInfo": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              }
+            },
+            {
+              "then": {
+                "@type": "domainName",
+                "name": "t2-{random_name}.{tld}",
+                "registrant": {
+                  "@type": "contact",
+                  "id": "{handle:a:L2}"
+                },
+                "authInfo": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "domainName",
+          "name": "t2-{random_name}.{tld}",
+          "registrant": {
+            "id": "{handle:a:L2}"
+          }
+        },
+        "fields": {
+          "provMetadata.spClientId": {
+            "type": "not_null"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/t2-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/dns/records",
+            "value": {
+              "@type": "dnsRecord",
+              "name": "www",
+              "type": "aaaa",
+              "rdata": {
+                "address": "2001:db8::1"
+              }
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "dns": {
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.10"
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "www.t2-{random_name}.{tld}.",
+                "type": "aaaa",
+                "rdata": {
+                  "address": "2001:db8::1"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/t2-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    }
+  ]
+}
