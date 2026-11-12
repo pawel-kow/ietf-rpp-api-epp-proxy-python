@@ -13,7 +13,7 @@ The maintainer asked to work through the phases without waiting for confirmation
       composition, `rri-mtest.yaml`; LOGIN/LOGOUT on MTEST. `SerialSession` in `common/session` shared by both clients.
 - [x] R4: RRI domains (CHECK, INFO, CREATE + AuthInfo1, UPDATE/CHHOLDER, DELETE, RESTORE), `derived_update.update`.
 - [x] R5: RRI contacts (CHECK, INFO, CREATE, UPDATE with verification carried over).
-- [x] R6: RRI messages (QUEUE-READ, QUEUE-DELETE). Every message is a service notice (see open points).
+- [x] R6: RRI messages (QUEUE-READ, QUEUE-DELETE). Every message is a service notice (typed messages: #132).
 - [x] R7: transfer per Q3 option C (501 `02101` from the profile), Q8–Q10 and Q16 not exposed.
 - [x] R8: docs (architecture, testing, security, process, overview, README, refactoring.md status).
 - [x] Full EPP run and MTEST run on the final state, recorded below.
