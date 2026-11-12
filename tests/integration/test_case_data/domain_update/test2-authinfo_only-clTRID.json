@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "up-test2-{random_name}.example",
+          "name": "up-test2-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -16,7 +16,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -26,7 +26,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test2-{random_name}.example",
+          "name": "up-test2-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",
@@ -39,9 +39,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test2-{random_name}.example?includeElements=authInfo",
+        "url": "/domainNames/up-test2-{random_name}.{tld}?includeElements=authInfo",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "RPP-Cltrid": "up-test2-{random_name}-clTRID",
           "Accept": "application/rpp+json",
           "Content-Type": "application/rpp+json"
@@ -63,7 +63,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test2-{random_name}.example",
+          "name": "up-test2-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",

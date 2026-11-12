@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ul1",
+          "id": "{handle:a:ul1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -50,7 +50,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ul1"
+          "id": "{handle:a:ul1}"
         }
       }
     },
@@ -59,14 +59,14 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "put18-{random_name}.example",
+          "name": "put18-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -74,7 +74,7 @@
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}ul1"
+            "id": "{handle:a:ul1}"
           }
         }
       },
@@ -92,9 +92,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/put18-{random_name}.example",
+        "url": "/domainNames/put18-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -103,7 +103,7 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}ul1"
+            "id": "{handle:a:ul1}"
           }
         }
       },
@@ -114,7 +114,7 @@
           "@type": "domainName",
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}ul1"
+            "id": "{handle:a:ul1}"
           }
         },
         "headers": {

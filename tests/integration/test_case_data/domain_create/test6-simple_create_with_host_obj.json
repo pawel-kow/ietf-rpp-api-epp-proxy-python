@@ -6,7 +6,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -43,7 +43,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -81,7 +81,7 @@
         "url": "/domainNames?includeElements=authInfo",
         "body_json": {
           "@type": "domainName",
-          "name": "test6-{random_name}.example",
+          "name": "test6-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -100,7 +100,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -110,7 +110,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "TEST6-{random_name}.EXAMPLE",
+          "name": "TEST6-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",

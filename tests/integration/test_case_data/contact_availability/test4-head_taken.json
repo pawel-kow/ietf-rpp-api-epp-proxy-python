@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-a4",
+          "id": "{handle:a:-a4}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -58,9 +58,9 @@
     {
       "request": {
         "method": "HEAD",
-        "url": "/contacts/FO-{random_id_10}-a4/availability",
+        "url": "/contacts/{handle:a:-a4}/availability",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

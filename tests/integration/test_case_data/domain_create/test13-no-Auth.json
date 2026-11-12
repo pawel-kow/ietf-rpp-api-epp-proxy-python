@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "test13-{random_name}.example",
+          "name": "test13-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",

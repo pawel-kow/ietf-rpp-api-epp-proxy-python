@@ -8,7 +8,7 @@
         "headers": {
           "Content-Type": "application/rpp+json",
           "RPP-Cltrid": "test10-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json"
         }
       },

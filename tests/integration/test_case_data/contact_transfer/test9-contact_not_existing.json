@@ -4,9 +4,9 @@
     {
       "request": {
         "method": "POST",
-        "url": "/contacts/FO-{random_id_10}C9/processes/transferProcesses",
+        "url": "/contacts/{handle:a:C9}/processes/transferProcesses",
         "headers": {
-          "Authorization": "Basic YmF6OnF1eA==",
+          "Authorization": "{auth:b}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json",

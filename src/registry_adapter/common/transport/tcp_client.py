@@ -8,12 +8,17 @@ class ConnectionException(Exception):
 
 READ_TIMEOUT = 20  # seconds
 
+# What the 4-byte length prefix of a frame counts: the prefix and the payload (RFC 5734 §4), or the payload alone.
+LENGTH_INCLUDES_HEADER = "includes-header"
+LENGTH_OF_PAYLOAD = "payload-only"
+HEADER_SIZE = 4
+
 class TCPClient:
     """
     A simple TCP client class.
     """
 
-    def __init__(self, server_address, server_port, tls_context=None):
+    def __init__(self, server_address, server_port, tls_context=None, framing=LENGTH_INCLUDES_HEADER):
         """
         Initializes the TCP client with server address and port.
 
@@ -22,7 +27,11 @@ class TCPClient:
             server_port (int): The server's port number.
             tls_context (ssl.SSLContext): Connects over TLS if given, otherwise over
                 plain TCP.
+            framing (str): What the length prefix of a frame counts, LENGTH_INCLUDES_HEADER or LENGTH_OF_PAYLOAD.
         """
+        if framing not in (LENGTH_INCLUDES_HEADER, LENGTH_OF_PAYLOAD):
+            raise ValueError(f"Unknown framing {framing!r}")
+        self._length_offset = HEADER_SIZE if framing == LENGTH_INCLUDES_HEADER else 0
         self.server_address = server_address
         self.server_port = server_port
         self.tls_context = tls_context
@@ -47,12 +56,13 @@ class TCPClient:
             self.socket = None
             raise
 
-    def send(self, message):
+    def send(self, message, loggable=True):
         """
         Sends a message to the server.
 
         Args:
             message (str): The message to send.
+            loggable (bool): False for a message that holds a credential, which is then not printed.
         """
         if self.socket is None:
             self.connect()
@@ -64,12 +74,12 @@ class TCPClient:
         try:
             payload = message.encode('utf-8')
             payload_length = len(payload)
-            length_bytes = struct.pack('>L', payload_length + 4)  # Pack length as big-endian unsigned integer
+            length_bytes = struct.pack('>L', payload_length + self._length_offset)  # big-endian unsigned integer
 
             self.socket.sendall(length_bytes)
             self.socket.sendall(payload)
 
-            print(f"TCPClient: Sent message: {message}")
+            print(f"TCPClient: Sent message: {message if loggable else '(not logged: it holds a credential)'}")
 
         except Exception as e:
             print(f"TCPClient: Error sending message: {e}")
@@ -103,10 +113,10 @@ class TCPClient:
         try:
             length_bytes = self._recv_exact(4)
             payload_length = struct.unpack('>L', length_bytes)[0]
-            if payload_length < 4:
+            if payload_length < self._length_offset:
                 raise ConnectionException(f"Invalid message length {payload_length}")
 
-            payload = self._recv_exact(payload_length - 4)  # Subtract 4 bytes for the length field
+            payload = self._recv_exact(payload_length - self._length_offset)
             message = payload.decode('utf-8')
 
             print(f"TCPClient: Received message: {message}")

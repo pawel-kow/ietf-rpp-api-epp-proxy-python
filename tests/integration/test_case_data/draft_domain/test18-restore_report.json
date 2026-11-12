@@ -1,4 +1,5 @@
 {
+  "when": {"env.restore_within_run": true, "profile.restore_report": true},
   "test_id": "test18-restore_report",
   "steps": [
     {
@@ -6,14 +7,14 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "ex18-{random_name}.example",
+          "name": "ex18-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -33,9 +34,9 @@
       "delay_seconds": 125,
       "request": {
         "method": "DELETE",
-        "url": "/domainNames/ex18-{random_name}.example",
+        "url": "/domainNames/ex18-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -47,9 +48,9 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/ex18-{random_name}.example/processes/restoreProcesses",
+        "url": "/domainNames/ex18-{random_name}.{tld}/processes/restoreProcesses",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -73,9 +74,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/ex18-{random_name}.example/processes/restoreProcesses/latest",
+        "url": "/domainNames/ex18-{random_name}.{tld}/processes/restoreProcesses/latest",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

@@ -6,7 +6,7 @@
         "method": "GET",
         "url": "/hosts/t6.{random_name}.net/availability",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "repeated-{random_id_10}"
         }
@@ -28,7 +28,7 @@
         "method": "GET",
         "url": "/hosts/t6.{random_name}.net/availability",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "repeated-{random_id_10}"
         }

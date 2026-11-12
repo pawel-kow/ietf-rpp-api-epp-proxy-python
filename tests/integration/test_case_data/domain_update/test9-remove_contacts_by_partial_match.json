@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uh1",
+          "id": "{handle:a:uh1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -50,7 +50,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uh1"
+          "id": "{handle:a:uh1}"
         }
       }
     },
@@ -59,14 +59,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uh2",
+          "id": "{handle:a:uh2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -103,7 +103,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}uh2"
+          "id": "{handle:a:uh2}"
         }
       }
     },
@@ -112,14 +112,14 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "up-test9-{random_name}.example",
+          "name": "up-test9-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -127,28 +127,28 @@
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}uh1"
+            "id": "{handle:a:uh1}"
           },
           "contacts": [
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}uh1"
+                "id": "{handle:a:uh1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}uh1"
+                "id": "{handle:a:uh1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}uh2"
+                "id": "{handle:a:uh2}"
               }
             }
           ]
@@ -163,9 +163,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test9-{random_name}.example",
+        "url": "/domainNames/up-test9-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -185,13 +185,13 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test9-{random_name}.example",
+          "name": "up-test9-{random_name}.{tld}",
           "contacts": [
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}uh1"
+                "id": "{handle:a:uh1}"
               }
             }
           ]

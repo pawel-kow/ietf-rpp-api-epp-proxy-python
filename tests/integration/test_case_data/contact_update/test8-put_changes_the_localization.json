@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}08A",
+          "id": "{handle:a:08A}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -83,7 +83,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}08A"
+          "id": "{handle:a:08A}"
         }
       }
     },
@@ -92,14 +92,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}08B",
+          "id": "{handle:a:08B}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -192,16 +192,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}08B"
+          "id": "{handle:a:08B}"
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}08B",
+        "url": "/contacts/{handle:a:08B}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -221,16 +221,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}08B"
+          "id": "{handle:a:08B}"
         }
       }
     },
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}08A",
+        "url": "/contacts/{handle:a:08A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -301,7 +301,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}08A",
+          "id": "{handle:a:08A}",
           "contactInfo": {
             "name": {
               "full": "John Doe"
@@ -320,9 +320,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}08A",
+        "url": "/contacts/{handle:a:08A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

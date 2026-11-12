@@ -7,7 +7,7 @@
         "url": "/contacts",
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-18",
+          "id": "{handle:a:-18}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -43,7 +43,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

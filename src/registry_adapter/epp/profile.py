@@ -3,6 +3,9 @@ from dataclasses import replace
 from core.capabilities.backend_profile import BackendProfile
 from registry_adapter.epp.idn_tables import IdnTables
 
+# RFC 5730 §2.9.3.4
+TRANSFER_OPERATIONS = frozenset({"request", "query", "cancel", "approve", "reject"})
+
 EPP_PROFILE = BackendProfile(
     name="EPP",
     contact_labels=("admin", "billing", "tech"),  # RFC 5731 §2.2
@@ -16,7 +19,10 @@ EPP_PROFILE = BackendProfile(
     contact_phones_max=1,
     supports_renew=True,
     supports_contact_delete=True,
-    supports_transfer_query=True,
+    domain_transfer_operations=TRANSFER_OPERATIONS,
+    contact_transfer_operations=TRANSFER_OPERATIONS,
+    restore_report=True,  # RFC 3915 §4.2.5
+    auth_info_readable=True,
     objects=("domainName", "host", "contact"),
     profiles=("urn:ietf:params:rpp:profile:epp-compatibility",),  # core §12.4, data-objects §2.8, json §8.7.1
 )

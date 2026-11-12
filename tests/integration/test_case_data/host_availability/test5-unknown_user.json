@@ -6,7 +6,7 @@
         "method": "GET",
         "url": "/hosts/t5.{random_name}.net/availability",
         "headers": {
-          "Authorization": "Basic Z2hvc3Q6bm9wZQ==",
+          "Authorization": "{auth:unknown_user}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

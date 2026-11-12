@@ -5,6 +5,7 @@ from rpp.mapping.domain import domain_transfer_approve, domain_transfer_process,
 
 _handlers = TransferHandlers(
     gateway_of=lambda backend: backend.domains,
+    operations_of=lambda profile: profile.domain_transfer_operations,
     create_mapper=domain_transfer_process.rpp_to_model,
     approve_mapper=domain_transfer_approve.rpp_to_model,
     reject_mapper=domain_transfer_reject.rpp_to_model,

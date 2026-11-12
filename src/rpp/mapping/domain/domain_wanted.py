@@ -6,7 +6,7 @@ from core.model.shared.client_statuses import is_client_label
 from core.model.shared.common import AuthInfo
 from rpp.dto.rpp_dns_data import RPPDnsData
 from rpp.mapping.domain import domain_dns
-from rpp.mapping.domain.domains import check_contact_label
+from rpp.mapping.domain.domains import REGISTRANT, check_contact_label, check_registrants
 from rpp.mapping.shared.common import parse_rpp, reject_set
 
 # Members a client may replace. Any other member of the domain cannot be changed.
@@ -42,13 +42,14 @@ def _client_statuses(domain: dict) -> dict[str, str | None]:
 def _ns(domain_name: str, domain: dict, profile: BackendProfile):
     host_names = [host["hostName"] for host in domain.get("nameservers") or []]
     if not domain.get("dns"):
-        attrs, dns_sec = [], None
+        attrs, dns_sec, records = [], None, []
     else:
-        ns, dns_sec = domain_dns.rpp_to_model(domain_name, parse_rpp(RPPDnsData, domain["dns"]), profile=profile)
+        ns, dns_sec, records = domain_dns.rpp_to_model(
+            domain_name, parse_rpp(RPPDnsData, domain["dns"]), profile=profile)
         attrs = ns.host_attrs if ns else []
     if host_names:
-        return NS(host_objs=[HostObj(id=name) for name in host_names], host_attrs=None), dns_sec
-    return (NS(host_objs=None, host_attrs=attrs) if attrs else None), dns_sec
+        return NS(host_objs=[HostObj(id=name) for name in host_names], host_attrs=None), dns_sec, records
+    return (NS(host_objs=None, host_attrs=attrs) if attrs else None), dns_sec, records
 
 
 def rpp_to_model(
@@ -58,17 +59,21 @@ def rpp_to_model(
     members and server statuses are not the client's and are left out. The caller converts `authInfo`, which a read
     need not show, and names the members the request leaves `unchanged`."""
     _reject_nameservers_with_records(domain)
-    ns, dns_sec = _ns(domain_name, domain, profile)
+    ns, dns_sec, records = _ns(domain_name, domain, profile)
     statuses = _client_statuses(domain)
+    registrant = (domain.get("registrant") or {}).get("id")
+    contacts = [
+        ContactReferenceNew(type=check_contact_label(contact["label"], profile), contact=ContactMinimal(id=contact["object"]["id"]))
+        for contact in domain.get("contacts") or []
+    ]
+    check_registrants((registrant is not None) + sum(c.type == REGISTRANT for c in contacts), profile)
     return DomainReplacement(
         name=domain_name,
         ns=ns,
-        registrant=(domain.get("registrant") or {}).get("id"),
-        contacts=[
-            ContactReferenceNew(type=check_contact_label(contact["label"], profile), contact=ContactMinimal(id=contact["object"]["id"]))
-            for contact in domain.get("contacts") or []
-        ],
+        registrant=registrant,
+        contacts=contacts,
         dnsSEC=dns_sec,
+        records=records,
         status=list(statuses),
         status_reasons={label: reason for label, reason in statuses.items() if reason},
         authInfo=auth_info,

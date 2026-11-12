@@ -4,9 +4,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/{alabel:bücher-a1}.example/availability?uName=b%C3%BCcher.example",
+        "url": "/domainNames/{alabel:bücher-a1}.{tld}/availability?uName=b%C3%BCcher.example",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

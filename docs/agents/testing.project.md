@@ -37,8 +37,9 @@ integration case fails with 401 (`02200`). Its certificate is self-signed and do
 `config.local.yaml` (`rpp_epp_host: <name>`): its top-level keys replace those of `config.yaml`.
 
 Auth uses HTTP Basic, and the username and password are passed straight through as
-the EPP `clID`/`pw` login credentials. The backend has two registrars, `foo` and `baz`
-(contact prefixes `FO-` and `BZ-`), and transfer cases set `Authorization` per step.
+the EPP `clID`/`pw` login credentials. The backend has two registrars, the slots `a` and `b` of the cases, whose
+credentials and contact id prefixes are in `.env` (see [Test environments](#test-environments)), and transfer cases
+set `Authorization` per step.
 
 The backend refuses a repeated clTRID with `2400`, also across sessions, so every EPP command
 needs a new one. It drops addresses given when creating an external host, so tests of addresses
@@ -85,6 +86,52 @@ redemption period to pass, so it is tested only in unit tests.
 The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
 `expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
 
+## Test environments
+
+A test environment is one backend server the integration suite runs against, chosen with `RPP_TEST_ENV` (default
+`epp-docker`) and described in `tests/integration/environments/<name>.yaml`: the config file of the app under test
+(`tests/conftest.py` sets `RPP_CONFIG_FILE` from it before any test module composes the app), the `BackendProfile` it
+is composed with, the most workers it allows, the requests a minute per registrar (`rpp_requests_per_minute`, paced
+by [pacer.py](../../tests/helper/pacer.py)), the registrars, and its `facts`. A run with more workers than the
+environment allows does not start.
+
+The registrars name the variables that hold their credentials, the prefix of the handles they create, and on RRI
+their General Request and Abuse contacts. The runner reads them from the process environment or from `.env` in the
+repository root (python-dotenv; the proxy never reads it). [.env.example](../../.env.example) names them all. A
+missing variable stops the run with its name, so no case logs in with an empty one. The runner puts a credential
+into the `Authorization` header when it sends the request, never into the case, so a failure report cannot print it.
+
+| Placeholder | Is |
+|---|---|
+| `{auth:a}`, `{auth:b}` | HTTP Basic of registrar `a` or `b` |
+| `{auth:a:wrong_password}`, `{auth:unknown_user}` | a wrong password of `a`, a user the backend does not know. Refused where `env.failed_logins_lock` is true |
+| `{handle:a:SUFFIX}` | `<prefix of a>{random_id_10}SUFFIX`, a contact id `a` may create |
+| `{regacc:a}` | the sponsor id of `a`: its login on EPP, the RegAccId of its login on RRI |
+| `{gen_req:a}`, `{abuse:a}` | the REQUEST contacts of `a` (RRI only) |
+| `{tld}` | the TLD the environment registers under (`env.tld`) |
+
+## Selectors
+
+A case file says which backends a case, a step or an expected value is for (implemented in
+[selectors.py](../../tests/helper/selectors.py)). A selector is an object whose keys name facts and which holds when
+every key holds. `profile.<fact>` is a field of the `BackendProfile` of the app under test, `env.<fact>` one of the
+environment's `facts`. A value holds when the fact equals it; `{"contains": x}`, `{"min": n}`, `{"max": n}` and
+`{"not": v}` test a collection, a number or the opposite. A list of selectors holds when one of them does. There is
+no selector on the backend's name: a difference is stated as the fact it comes from, and a fact the profile lacks is
+added to it when it is true of the protocol, to the environment when it is true of one server.
+
+| Where | Form | Effect |
+|---|---|---|
+| A group | `_group.json` in the group directory: `{"when": …}` | every case of the group is skipped where it does not hold |
+| A case | `"when"` at the top level | the case is skipped where it does not hold |
+| A step | `"when"` in the step | the step is left out. A step with `when` cannot `capture` |
+| Any value of a step | `{"select": [{"when": …, "then": …}, …, {"then": …}]}` | the `then` of the first entry that holds; the last entry is the default |
+
+Selectors are resolved first, then the placeholders, then the captures. A selector key that names no fact, in any
+known environment, fails the case at load. A skip names the facts that did not hold. A case whose selectors skip it
+in every known environment fails, because it never runs. `any_of` stays for what the protocol leaves to the server,
+`select` is for what differs by backend or server, and `"skip": "#<issue>"` for a known defect.
+
 ## Tests without the backend
 
 Unit tests in `tests/unit/` inject test doubles through constructors:
@@ -115,8 +162,8 @@ update → verify) run against a Flask test client.
 
 - Placeholders `{random_name}`, `{random_id_10}`, `{test_start}` (start of the case)
   and `{unique_cltrid}` (new value per occurrence) keep tests idempotent against a
-  shared registry. The backend requires contact ids to start with `FO-`. `{ulabel:TEXT}` is the U-label
-  `TEXT-<random_id_10>` and `{alabel:TEXT}` its A-label, so an IDN case writes `{alabel:bücher-t24}.example`.
+  shared registry. A contact id is `{handle:a:SUFFIX}`, because the backend requires the prefix of its registrar. `{ulabel:TEXT}` is the U-label
+  `TEXT-<random_id_10>` and `{alabel:TEXT}` its A-label, so an IDN case writes `{alabel:bücher-t24}.{tld}`.
   `{upper:TEXT}` is TEXT in upper case, after the other placeholders in it are replaced. The backend stores host
   names in upper case, so a `match` on a generated host writes `{upper:ns1.u17-{random_name}.net}`.
 - Every step asserts the headers of core §6.2: `RPP-Svtrid`, a 5-digit `RPP-Code`, and
@@ -171,7 +218,7 @@ nothing (see `domain_update/test17`).
 
 A case creates the contacts, hosts and domains it uses, in its first steps, and relies on nothing seeded in the
 backend. `{random_name}` and `{random_id_10}` are the same for every case of a run, so each case adds its own part:
-contacts are `FO-{random_id_10}` plus a suffix of the case (`ua1`, at most 16 characters in all), hosts are external
+contacts are `{handle:a:SUFFIX}` with a suffix of the case (`ua1`, at most 16 characters in all on EPP), hosts are external
 `nsN.<case>-{random_name}.net`, which need their own `ns` record at create. `domain_create/test7` creates the domain
 it then finds taken.
 

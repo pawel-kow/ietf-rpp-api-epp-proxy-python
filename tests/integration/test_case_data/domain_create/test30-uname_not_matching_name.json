@@ -7,18 +7,18 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "{alabel:bücher-t30}.example",
+          "name": "{alabel:bücher-t30}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
             "authdata": "Password1!@"
           },
-          "uName": "{ulabel:büchers-t30}.example",
+          "uName": "{ulabel:büchers-t30}.{tld}",
           "lgr": "latn-1.0"
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

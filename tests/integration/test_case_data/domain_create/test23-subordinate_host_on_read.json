@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "t23-{random_name}.example",
+          "name": "t23-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -16,7 +16,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -43,13 +43,13 @@
         "url": "/hosts",
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         },
         "body_json": {
           "@type": "host",
-          "hostName": "ns1.t23-{random_name}.example",
+          "hostName": "ns1.t23-{random_name}.{tld}",
           "dns": {
             "@type": "dnsData",
             "records": [
@@ -58,7 +58,7 @@
                 "name": "@",
                 "type": "ns",
                 "rdata": {
-                  "nsdname": "ns1.t23-{random_name}.example."
+                  "nsdname": "ns1.t23-{random_name}.{tld}."
                 }
               }
             ]
@@ -78,9 +78,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/t23-{random_name}.example",
+        "url": "/domainNames/t23-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -93,7 +93,7 @@
           "subordinateHosts": [
             {
               "@type": "host",
-              "hostName": "ns1.t23-{random_name}.example"
+              "hostName": "ns1.t23-{random_name}.{tld}"
             }
           ]
         },

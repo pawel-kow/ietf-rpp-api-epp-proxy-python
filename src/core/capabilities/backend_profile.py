@@ -13,8 +13,13 @@ class BackendProfile:
     `host_objects` is whether hosts are objects of their own, `client_statuses` whether a client can set statuses.
     `contact_fax`, `contact_localization` and `contact_region` are whether a contact holds a fax number, a localized
     form and a region in its address, and `contact_phones_max` how many voice numbers it holds.
-    `supports_renew`, `supports_contact_delete` and `supports_transfer_query` are whether the backend has these
-    commands.
+    `supports_renew` and `supports_contact_delete` are whether the backend has these commands.
+    `domain_transfer_operations` and `contact_transfer_operations` are the transfer operations (`request`, `query`,
+    `cancel`, `approve`, `reject`) the backend has for each object, which the transfer handlers check before any
+    command.
+    `restore_report` is whether a restore takes a report, which the restore report mappers check.
+    `auth_info_readable` is whether a read can show a domain's authInfo, which the domain handlers check against
+    `includeElements`.
     `objects` are the data objects and `profiles` the profiles the discovery document states.
     `lgrs` are the label generation rulesets the backend offers for IDNs, none when it takes no IDN.
     """
@@ -30,7 +35,10 @@ class BackendProfile:
     contact_phones_max: int
     supports_renew: bool
     supports_contact_delete: bool
-    supports_transfer_query: bool
+    domain_transfer_operations: frozenset[str]
+    contact_transfer_operations: frozenset[str]
+    restore_report: bool
+    auth_info_readable: bool
     objects: tuple[str, ...]
     profiles: tuple[str, ...]
     lgrs: frozenset[str] = frozenset()

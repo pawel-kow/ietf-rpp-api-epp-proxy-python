@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "d6-{random_name}.example",
+          "name": "d6-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -36,14 +36,14 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "host",
-          "hostName": "ns1.d6-{random_name}.example",
+          "hostName": "ns1.d6-{random_name}.{tld}",
           "dns": {
             "@type": "dnsData",
             "records": [
@@ -52,7 +52,7 @@
                 "name": "@",
                 "type": "ns",
                 "rdata": {
-                  "nsdname": "ns1.d6-{random_name}.example."
+                  "nsdname": "ns1.d6-{random_name}.{tld}."
                 }
               }
             ]
@@ -72,9 +72,9 @@
     {
       "request": {
         "method": "DELETE",
-        "url": "/hosts/ns1.d6-{random_name}.example",
+        "url": "/hosts/ns1.d6-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

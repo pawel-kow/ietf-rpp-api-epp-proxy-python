@@ -7,7 +7,7 @@
         "url": "/contacts",
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-G1",
+          "id": "{handle:a:-G1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -76,7 +76,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -85,16 +85,16 @@
         "status": 201,
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-G1"
+          "id": "{handle:a:-G1}"
         }
       }
     },
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/FO-{random_id_10}-G1?includeElements=authInfo",
+        "url": "/contacts/{handle:a:-G1}?includeElements=authInfo",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -104,7 +104,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}-G1",
+          "id": "{handle:a:-G1}",
           "status": [
             {
               "@type": "contactStatus",

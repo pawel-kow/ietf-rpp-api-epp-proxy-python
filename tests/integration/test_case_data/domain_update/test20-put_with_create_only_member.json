@@ -4,16 +4,16 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/put20-{random_name}.example",
+        "url": "/domainNames/put20-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "put20-{random_name}.example"
+          "name": "put20-{random_name}.{tld}"
         }
       },
       "response": {

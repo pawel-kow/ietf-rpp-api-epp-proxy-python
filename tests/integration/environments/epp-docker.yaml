@@ -1,0 +1,15 @@
+# The EPP test server of EPP-server-docker (docs/agents/testing.project.md#backend).
+config: config.yaml                    # RPP_CONFIG_FILE of the app under test
+profile: registry_adapter.epp.profile:EPP_PROFILE
+max_workers: 8                         # the backend refuses logins above about 16 sessions
+regacc: user                           # the sponsor id is the login
+registrars:                            # the slots the cases name, each naming its variables in .env
+  a: {user: TEST_EPP_REGACC1, password: TEST_EPP_REGACC1_PASSWORD, prefix: TEST_EPP_REGACC1_PREFIX}
+  b: {user: TEST_EPP_REGACC2, password: TEST_EPP_REGACC2_PASSWORD, prefix: TEST_EPP_REGACC2_PREFIX}
+# Not secrets: a wrong password of a registrar, and a user the backend does not know.
+wrong_password: cat
+unknown_user: {user: ghost, password: nope}
+facts:
+  tld: example
+  restore_within_run: true             # the RGP periods are minutes (EPP-server-docker#5)
+  failed_logins_lock: false

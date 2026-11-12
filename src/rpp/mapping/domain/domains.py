@@ -3,6 +3,7 @@ from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_idn import DomainIdn
 from core.model.domain.domains import ContactReference, CreationProcess, Domain, HostObj, NS
+from core.model.domain.zone_record import ZoneRecord
 from rpp.dto.rpp_contact_reference import RPPContactReference
 from rpp.dto.rpp_domain import RPPDomain
 from rpp.dto.rpp_host_reference import RPPHostReference
@@ -16,10 +17,27 @@ REGISTRANT = "registrant"
 
 
 def check_contact_label(label: str, profile: BackendProfile) -> str:
-    """The RPP label is open, the backend knows a fixed set of contact roles."""
+    """The RPP label is open, the backend knows a fixed set of contact roles. A backend that holds several
+    registrants takes the ones after `registrant` as contacts labelled `registrant`."""
+    if label == REGISTRANT and profile.max_registrants > 1:
+        return label
     if label not in profile.contact_labels:
         raise NotSupportedByBackend(f"Contact label '{label}'")
     return label
+
+
+def check_registrants(registrants: int, profile: BackendProfile):
+    if registrants > profile.max_registrants:
+        raise NotSupportedByBackend(f"More than {profile.max_registrants} registrants")
+
+
+def check_requested(requested: frozenset[str], *, profile: BackendProfile) -> frozenset[str]:
+    """The data elements a request asks to include, refused where the backend never shows one: a backend that cannot
+    read back a domain's authInfo (`profile.auth_info_readable`) refuses `includeElements=authInfo` rather than let a
+    client take its absence for no authInfo."""
+    if "authInfo" in requested and not profile.auth_info_readable:
+        raise NotSupportedByBackend("Reading the 'authInfo' of a domain")
+    return requested
 
 
 def _rpp_to_contacts(domain_rpp: RPPDomain, profile: BackendProfile) -> list[ContactReference] | None:
@@ -28,6 +46,7 @@ def _rpp_to_contacts(domain_rpp: RPPDomain, profile: BackendProfile) -> list[Con
         contacts.append(ContactReference(id=domain_rpp.registrant.id, types=[REGISTRANT]))
     for contact in domain_rpp.contacts or []:
         contacts.append(ContactReference(id=contact.object.id, types=[check_contact_label(contact.label, profile)]))
+    check_registrants(sum(REGISTRANT in contact.types for contact in contacts), profile)
     return contacts or None
 
 
@@ -43,16 +62,17 @@ def _rpp_to_processes(domain_rpp: RPPDomain) -> dict | None:
     return {"creation": CreationProcess(duration=period_duration(period))}
 
 
-def _rpp_to_delegation(domain_rpp: RPPDomain, profile: BackendProfile) -> tuple[NS | None, DnsSec | None]:
+def _rpp_to_delegation(domain_rpp: RPPDomain, profile: BackendProfile
+                       ) -> tuple[NS | None, DnsSec | None, list[ZoneRecord]]:
     ns = None
     if domain_rpp.nameservers:
         ns = NS(host_objs=[HostObj(id=h.hostName) for h in domain_rpp.nameservers], host_attrs=None)
     if domain_rpp.dns is None:
-        return ns, None
+        return ns, None, []
     if ns and domain_rpp.dns.records:
         raise ValueError("'nameservers' and records in 'dns' cannot be used together")
-    dns_ns, dns_sec = domain_dns.rpp_to_model(domain_rpp.name, domain_rpp.dns, profile=profile)
-    return ns or dns_ns, dns_sec
+    dns_ns, dns_sec, records = domain_dns.rpp_to_model(domain_rpp.name, domain_rpp.dns, profile=profile)
+    return ns or dns_ns, dns_sec, records
 
 
 def _rpp_to_idn(domain_rpp: RPPDomain, profile: BackendProfile) -> DomainIdn | None:
@@ -71,12 +91,13 @@ def rpp_to_model(rpp: dict, *, profile: BackendProfile) -> Domain:
     validate_schema("domainName.create", rpp)
     domain_rpp = parse_rpp(RPPDomain, rpp)
     reject_set(status=domain_rpp.status)
-    ns, dns_sec = _rpp_to_delegation(domain_rpp, profile)
+    ns, dns_sec, records = _rpp_to_delegation(domain_rpp, profile)
     return Domain(
         name=domain_rpp.name,
         authInfo=auth_info.rpp_to_model(domain_rpp.authInfo),
         ns=ns,
         dnsSEC=dns_sec,
+        records=records or None,
         contacts=_rpp_to_contacts(domain_rpp, profile),
         processes=_rpp_to_processes(domain_rpp),
         idn=_rpp_to_idn(domain_rpp, profile),
@@ -97,12 +118,15 @@ def _registrant_to_rpp(domain: Domain) -> RPPContactReference | None:
 
 
 def _contacts_to_rpp(domain: Domain) -> list[RPPLabelledContact] | None:
-    return [
-        RPPLabelledContact(label=label, object=RPPContactReference(id=contact.id))
-        for contact in domain.contacts or []
-        for label in contact.types
-        if label != REGISTRANT
-    ] or None
+    """The contacts other than the first registrant, which is `registrant`: further registrants are labelled so."""
+    contacts, first = [], True
+    for contact in domain.contacts or []:
+        for label in contact.types:
+            if label == REGISTRANT and first:
+                first = False
+                continue
+            contacts.append(RPPLabelledContact(label=label, object=RPPContactReference(id=contact.id)))
+    return contacts or None
 
 
 def _idn_to_rpp(domain: Domain) -> tuple[str | None, str | None]:

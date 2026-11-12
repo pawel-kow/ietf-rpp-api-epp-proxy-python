@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ud1",
+          "id": "{handle:a:ud1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -50,7 +50,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ud1"
+          "id": "{handle:a:ud1}"
         }
       }
     },
@@ -59,14 +59,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ud2",
+          "id": "{handle:a:ud2}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -103,7 +103,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ud2"
+          "id": "{handle:a:ud2}"
         }
       }
     },
@@ -112,14 +112,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ud3",
+          "id": "{handle:a:ud3}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -156,7 +156,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ud3"
+          "id": "{handle:a:ud3}"
         }
       }
     },
@@ -165,7 +165,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -202,7 +202,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -240,7 +240,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "up-test1-{random_name}.example",
+          "name": "up-test1-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -249,7 +249,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -259,7 +259,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test1-{random_name}.example",
+          "name": "up-test1-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",
@@ -272,9 +272,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test1-{random_name}.example?includeElements=authInfo",
+        "url": "/domainNames/up-test1-{random_name}.{tld}?includeElements=authInfo",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -310,7 +310,7 @@
             "path": "/registrant",
             "value": {
               "@type": "contact",
-              "id": "FO-{random_id_10}ud2"
+              "id": "{handle:a:ud2}"
             }
           },
           {
@@ -320,7 +320,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud2"
+                "id": "{handle:a:ud2}"
               }
             }
           },
@@ -331,7 +331,7 @@
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud2"
+                "id": "{handle:a:ud2}"
               }
             }
           },
@@ -342,7 +342,7 @@
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud1"
+                "id": "{handle:a:ud1}"
               }
             }
           },
@@ -353,7 +353,7 @@
               "label": "billing",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud1"
+                "id": "{handle:a:ud1}"
               }
             }
           }
@@ -364,7 +364,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "up-test1-{random_name}.example",
+          "name": "up-test1-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",
@@ -388,35 +388,35 @@
           ],
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}ud2"
+            "id": "{handle:a:ud2}"
           },
           "contacts": [
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud2"
+                "id": "{handle:a:ud2}"
               }
             },
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud2"
+                "id": "{handle:a:ud2}"
               }
             },
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud1"
+                "id": "{handle:a:ud1}"
               }
             },
             {
               "label": "billing",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud1"
+                "id": "{handle:a:ud1}"
               }
             }
           ]
@@ -426,9 +426,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test1-{random_name}.example?includeElements=authInfo",
+        "url": "/domainNames/up-test1-{random_name}.{tld}?includeElements=authInfo",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -457,7 +457,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud2"
+                "id": "{handle:a:ud2}"
               }
             }
           },
@@ -468,7 +468,7 @@
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud2"
+                "id": "{handle:a:ud2}"
               }
             }
           },
@@ -479,7 +479,7 @@
               "label": "billing",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud1"
+                "id": "{handle:a:ud1}"
               }
             }
           },
@@ -488,7 +488,7 @@
             "path": "/nameservers",
             "value": {
               "@type": "host",
-              "hostName": "ns1.up-test1-{random_name}.example"
+              "hostName": "ns1.up-test1-{random_name}.{tld}"
             }
           },
           {
@@ -496,7 +496,7 @@
             "path": "/nameservers",
             "value": {
               "@type": "host",
-              "hostName": "ns2.up-test1-{random_name}.example"
+              "hostName": "ns2.up-test1-{random_name}.{tld}"
             }
           },
           {
@@ -506,7 +506,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud3"
+                "id": "{handle:a:ud3}"
               }
             }
           },
@@ -515,7 +515,7 @@
             "path": "/registrant",
             "value": {
               "@type": "contact",
-              "id": "FO-{random_id_10}ud3"
+              "id": "{handle:a:ud3}"
             }
           }
         ]
@@ -525,7 +525,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "UP-TEST1-{random_name}.EXAMPLE",
+          "name": "UP-TEST1-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",
@@ -544,30 +544,30 @@
             },
             {
               "@type": "host",
-              "hostName": "ns1.up-test1-{random_name}.example"
+              "hostName": "ns1.up-test1-{random_name}.{tld}"
             },
             {
               "@type": "host",
-              "hostName": "ns2.up-test1-{random_name}.example"
+              "hostName": "ns2.up-test1-{random_name}.{tld}"
             }
           ],
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}ud3"
+            "id": "{handle:a:ud3}"
           },
           "contacts": [
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud3"
+                "id": "{handle:a:ud3}"
               }
             },
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ud1"
+                "id": "{handle:a:ud1}"
               }
             }
           ]

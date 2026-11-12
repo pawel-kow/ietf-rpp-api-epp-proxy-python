@@ -1,4 +1,5 @@
 {
+  "when": {"profile.contact_transfer_operations": {"contains": "request"}},
   "test_id": "test7-transfer_request",
   "steps": [
     {
@@ -6,14 +7,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}D7",
+          "id": "{handle:a:D7}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -50,16 +51,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}D7"
+          "id": "{handle:a:D7}"
         }
       }
     },
     {
       "request": {
         "method": "POST",
-        "url": "/contacts/FO-{random_id_10}D7/processes/transferProcesses",
+        "url": "/contacts/{handle:a:D7}/processes/transferProcesses",
         "headers": {
-          "Authorization": "Basic YmF6OnF1eA==",
+          "Authorization": "{auth:b}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json",

@@ -4,9 +4,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}13Z",
+        "url": "/contacts/{handle:a:13Z}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

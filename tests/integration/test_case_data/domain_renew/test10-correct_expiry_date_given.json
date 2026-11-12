@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "rn10-{random_name}.example",
+          "name": "rn10-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -15,7 +15,7 @@
           }
         },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -32,9 +32,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/rn10-{random_name}.example",
+        "url": "/domainNames/rn10-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -58,7 +58,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/rn10-{random_name}.example/processes/renewProcesses",
+        "url": "/domainNames/rn10-{random_name}.{tld}/processes/renewProcesses",
         "body_json": {
           "@type": "renewProcess",
           "expiryDate": "{capture:expiry}",
@@ -69,7 +69,7 @@
           }
         },
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

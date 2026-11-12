@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ca1",
+          "id": "{handle:a:ca1}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -50,7 +50,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}ca1"
+          "id": "{handle:a:ca1}"
         }
       }
     },
@@ -60,7 +60,7 @@
         "url": "/domainNames?includeElements=authInfo",
         "body_json": {
           "@type": "domainName",
-          "name": "test3-{random_name}.example",
+          "name": "test3-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -68,35 +68,35 @@
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}ca1"
+            "id": "{handle:a:ca1}"
           },
           "contacts": [
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ca1"
+                "id": "{handle:a:ca1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ca1"
+                "id": "{handle:a:ca1}"
               }
             },
             {
               "label": "billing",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ca1"
+                "id": "{handle:a:ca1}"
               }
             }
           ]
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -106,7 +106,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "TEST3-{random_name}.EXAMPLE",
+          "name": "TEST3-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",
@@ -120,28 +120,28 @@
           },
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}ca1"
+            "id": "{handle:a:ca1}"
           },
           "contacts": [
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ca1"
+                "id": "{handle:a:ca1}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ca1"
+                "id": "{handle:a:ca1}"
               }
             },
             {
               "label": "billing",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}ca1"
+                "id": "{handle:a:ca1}"
               }
             }
           ]

@@ -7,6 +7,7 @@ from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domains import Domain, HostAttr, NS
 from core.model.domain.ds_data import DsData
+from core.model.domain.zone_record import ZoneRecord
 from core.model.domain.key_data import KeyData
 from rpp.dto.rpp_dns_data import RPPDnsData
 from rpp.dto.rpp_dns_record import RPPDnsRecord
@@ -20,6 +21,11 @@ HEX = re.compile(r"(?:[0-9A-Fa-f]{2})+")
 MAX_BYTE = 255
 
 MAX_SHORT = 65535
+
+MAX_PREFERENCE = 65535
+
+# The types of the records a registry may serve itself for a domain or a name below it (`ZoneRecord`).
+ZONE_RECORDS = ("a", "aaaa", "mx")
 
 
 def _number(value: str, maximum: int) -> int:
@@ -67,12 +73,31 @@ def _owner(domain_name: str, name: str) -> str:
     return f"{name}.{domain_name}"
 
 
-def _add_glue(hosts: dict[str, HostAttr], owner: str, record: RPPDnsRecord):
-    """EPP holds addresses only on a nameserver of the domain. Whether the nameserver may have them is the
-    registry's to decide: what a read can show must be accepted as input."""
-    family, address = record_address(record)
-    if owner not in hosts:
+def _in_domain(domain_name: str, owner: str) -> bool:
+    return owner == domain_name or owner.endswith(f".{domain_name}")
+
+
+def _zone_record(domain_name: str, owner: str, record: RPPDnsRecord, profile: BackendProfile) -> ZoneRecord:
+    """A record the registry serves itself, of a type the backend holds (`profile`), for the domain or below it."""
+    kind = record_type(record)
+    if kind not in profile.domain_record_types or not _in_domain(domain_name, owner):
         raise NotSupportedByBackend(f"A DNS record for '{record.name}'")
+    if kind == "mx":
+        preference, exchange = record_rdata(record, "preference", "exchange")
+        return ZoneRecord(owner=owner, type=kind, preference=_number(preference, MAX_PREFERENCE),
+                          exchange=exchange.lower().removesuffix(".") or ".")
+    return ZoneRecord(owner=owner, type=kind, address=record_address(record)[1])
+
+
+def _add_address(hosts: dict[str, HostAttr], records: list[ZoneRecord], domain_name: str, owner: str,
+                 record: RPPDnsRecord, profile: BackendProfile):
+    """An address of a nameserver of the domain is glue. Whether the nameserver may have it is the registry's to
+    decide: what a read can show must be accepted as input. Any other address is a record the registry serves
+    itself, where the backend holds one."""
+    if owner not in hosts:
+        records.append(_zone_record(domain_name, owner, record, profile))
+        return
+    family, address = record_address(record)
     host = hosts[owner]
     setattr(host, family, (getattr(host, family) or []) + [address])
 
@@ -84,13 +109,14 @@ def _reject_controls(controls: dict | None):
         raise NotSupportedByProxy("'dns.controls'")
 
 
-def rpp_to_model(domain_name: str, dns: RPPDnsData, *, profile: BackendProfile) -> tuple[NS | None, DnsSec | None]:
-    """The delegation and DNSSEC data of the records, of the types the backend holds at the apex (`profile`).
-    Delegation goes to EPP as host attributes."""
+def rpp_to_model(domain_name: str, dns: RPPDnsData, *, profile: BackendProfile
+                 ) -> tuple[NS | None, DnsSec | None, list[ZoneRecord]]:
+    """The delegation, the DNSSEC data and the records the registry serves itself, of the types the backend holds
+    (`profile`). Delegation goes to the backend as host attributes."""
     _reject_controls(dns.controls)
     domain_name = domain_name.lower()
     hosts: dict[str, HostAttr] = {}
-    ds_data, key_data, glue = [], [], []
+    ds_data, key_data, glue, records = [], [], [], []
     for record in dns.records or []:
         check_record_class(record)
         kind = record_type(record)
@@ -99,6 +125,8 @@ def rpp_to_model(domain_name: str, dns: RPPDnsData, *, profile: BackendProfile) 
             glue.append((owner, record))
         elif kind not in profile.domain_record_types:
             raise NotSupportedByBackend(f"DNS record type '{record.type}'")
+        elif kind in ZONE_RECORDS:
+            records.append(_zone_record(domain_name, owner, record, profile))
         elif owner != domain_name:
             raise NotSupportedByBackend(f"A DNS record for '{record.name}'")
         elif kind == "ns":
@@ -111,10 +139,10 @@ def rpp_to_model(domain_name: str, dns: RPPDnsData, *, profile: BackendProfile) 
     if ds_data and key_data:
         raise NotSupportedByProxy("'ds' and 'dnskey' records in one request")
     for owner, record in glue:
-        _add_glue(hosts, owner, record)
+        _add_address(hosts, records, domain_name, owner, record, profile)
     ns = NS(host_objs=None, host_attrs=list(hosts.values())) if hosts else None
     dns_sec = DnsSec(ds_data=ds_data or None, key_data=key_data or None) if ds_data or key_data else None
-    return ns, dns_sec
+    return ns, dns_sec, records
 
 
 def _ds_to_rpp(ds: DsData) -> RPPDnsRecord:
@@ -135,11 +163,26 @@ def _key_to_rpp(key: KeyData) -> RPPDnsRecord:
     })
 
 
+def _relative(domain_name: str, owner: str) -> str:
+    return ORIGIN if owner.lower() == domain_name.lower() else f"{owner}."
+
+
+def _zone_record_to_rpp(domain_name: str, record: ZoneRecord) -> RPPDnsRecord:
+    if record.type == "mx":
+        exchange = record.exchange if record.exchange == "." else f"{record.exchange}."
+        rdata = {"preference": str(record.preference), "exchange": exchange}
+    else:
+        rdata = {"address": record.address}
+    return RPPDnsRecord(name=_relative(domain_name, record.owner), type=record.type, rdata=rdata)
+
+
 def model_to_rpp(domain: Domain) -> RPPDnsData | None:
-    """Host attributes and DNSSEC data as records. Host objects are `nameservers`."""
+    """Host attributes, the records the registry serves itself and DNSSEC data as records. Host objects are
+    `nameservers`."""
     records = []
     for host in (domain.ns.host_attrs if domain.ns else None) or []:
         records += nameserver_records(host.id, host.ipv4, host.ipv6)
+    records += [_zone_record_to_rpp(domain.name, record) for record in domain.records or []]
     if domain.dnsSEC:
         records += [_ds_to_rpp(ds) for ds in domain.dnsSEC.ds_data or []]
         records += [_key_to_rpp(key) for key in domain.dnsSEC.key_data or []]

@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "t16-{random_name}.example",
+          "name": "t16-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -32,7 +32,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -51,7 +51,7 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/t16-{random_name}.example",
+        "url": "/domainNames/t16-{random_name}.{tld}",
         "body_json": [
           {
             "op": "replace",
@@ -76,7 +76,7 @@
         ],
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -111,9 +111,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/t16-{random_name}.example",
+        "url": "/domainNames/t16-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

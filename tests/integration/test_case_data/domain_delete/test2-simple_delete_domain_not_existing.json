@@ -4,11 +4,11 @@
     {
       "request": {
         "method": "DELETE",
-        "url": "/domainNames/test2-{random_name}.example",
+        "url": "/domainNames/test2-{random_name}.{tld}",
         "headers": {
           "Content-Type": "application/rpp+json",
           "RPP-Cltrid": "test2-{random_name}-clTRID",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json"
         }
       },

@@ -1,4 +1,5 @@
 {
+  "when": {"profile.domain_transfer_operations": {"contains": "request"}},
   "test_id": "test11-transfer_request",
   "steps": [
     {
@@ -7,7 +8,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "ex11-{random_name}.example",
+          "name": "ex11-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -16,7 +17,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -32,9 +33,9 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/ex11-{random_name}.example/processes/transferProcesses",
+        "url": "/domainNames/ex11-{random_name}.{tld}/processes/transferProcesses",
         "headers": {
-          "Authorization": "Basic YmF6OnF1eA==",
+          "Authorization": "{auth:b}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json",

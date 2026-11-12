@@ -6,7 +6,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -43,7 +43,7 @@
         "method": "POST",
         "url": "/hosts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -80,14 +80,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}M03",
+          "id": "{handle:a:M03}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -153,14 +153,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}J3",
+          "id": "{handle:a:J3}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -226,14 +226,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}S3",
+          "id": "{handle:a:S3}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -299,14 +299,14 @@
         "method": "POST",
         "url": "/domainNames?includeElements=authInfo",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "ex3-{random_name}.example",
+          "name": "ex3-{random_name}.{tld}",
           "nameservers": [
             {
               "@type": "host",
@@ -319,21 +319,21 @@
           ],
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}J3"
+            "id": "{handle:a:J3}"
           },
           "contacts": [
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}S3"
+                "id": "{handle:a:S3}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}S3"
+                "id": "{handle:a:S3}"
               }
             }
           ],
@@ -362,7 +362,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "ex3-{random_name}.example",
+          "name": "ex3-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",
@@ -371,21 +371,21 @@
           ],
           "registrant": {
             "@type": "contact",
-            "id": "FO-{random_id_10}J3"
+            "id": "{handle:a:J3}"
           },
           "contacts": [
             {
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}S3"
+                "id": "{handle:a:S3}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}S3"
+                "id": "{handle:a:S3}"
               }
             }
           ],
@@ -430,9 +430,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/ex3-{random_name}.example",
+        "url": "/domainNames/ex3-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -445,7 +445,7 @@
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}M03"
+                "id": "{handle:a:M03}"
               }
             }
           }
@@ -461,21 +461,21 @@
               "label": "admin",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}S3"
+                "id": "{handle:a:S3}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}S3"
+                "id": "{handle:a:S3}"
               }
             },
             {
               "label": "tech",
               "object": {
                 "@type": "contact",
-                "id": "FO-{random_id_10}M03"
+                "id": "{handle:a:M03}"
               }
             }
           ]

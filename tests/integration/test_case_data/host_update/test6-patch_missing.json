@@ -6,7 +6,7 @@
         "method": "PATCH",
         "url": "/hosts/t6.{random_name}.net",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "ex2-{random_name}.example",
+          "name": "ex2-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -30,9 +30,9 @@
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/ex2-{random_name}.example",
+        "url": "/domainNames/ex2-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -56,7 +56,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "ex2-{random_name}.example",
+          "name": "ex2-{random_name}.{tld}",
           "status": [
             {
               "@type": "domainStatus",

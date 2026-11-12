@@ -7,7 +7,7 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "test5-{random_name}.example",
+          "name": "test5-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -18,7 +18,7 @@
             "records": [
               {
                 "@type": "dnsRecord",
-                "name": "ns1.test5-{random_name}.example.",
+                "name": "ns1.test5-{random_name}.{tld}.",
                 "type": "A",
                 "rdata": {
                   "address": "192.168.1.1"
@@ -29,7 +29,7 @@
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}23A",
+          "id": "{handle:a:23A}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -76,16 +76,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}23A"
+          "id": "{handle:a:23A}"
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/contacts/FO-{random_id_10}23A?includeElements=authInfo",
+        "url": "/contacts/{handle:a:23A}?includeElements=authInfo",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -110,7 +110,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}23A",
+          "id": "{handle:a:23A}",
           "authInfo": {
             "authdata": "NewPass2!#x"
           }

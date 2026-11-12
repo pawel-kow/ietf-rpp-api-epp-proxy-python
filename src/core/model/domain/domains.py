@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from core.model.contact.contacts import ContactMinimal
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domain_idn import DomainIdn
+from core.model.domain.zone_record import ZoneRecord
 from core.model.shared.common import AuthInfo, Process, ProvisioningObject
 
 @dataclass(kw_only=True)
@@ -41,11 +42,16 @@ class Domain(ProvisioningObject):
     ns: Optional[NS] = None
     contacts: Optional[List[ContactReference]] = None
     dnsSEC: Optional[DnsSec] = None
+    records: Optional[List[ZoneRecord]] = None
     idn: Optional[DomainIdn] = None
     subordinateHosts: Optional[List[str]] = None
     processes: Optional[Dict[str, Process]] = None
     status_reasons: Dict[str, str] = field(default_factory=dict)
     rgpStatus: List[str] = field(default_factory=list)  # RFC 3915 §4.1.2, empty without rgp:infData
+    status_due: Dict[str, str] = field(default_factory=dict)  # the deadline of a status, by label
+    # What the backend holds of the domain beyond the model, which its adapter needs for a later command (such as
+    # whether RRI holds an AuthInfo1). Opaque to everything but the adapter that read it, and never shown.
+    carried_over: Optional[Any] = None
     
     def update(self, obj):
         super().update(obj)

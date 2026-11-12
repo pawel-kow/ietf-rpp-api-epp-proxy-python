@@ -4,9 +4,9 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/t9-{random_name}.example/processes/transferProcesses",
+        "url": "/domainNames/t9-{random_name}.{tld}/processes/transferProcesses",
         "headers": {
-          "Authorization": "Basic YmF6OnF1eA==",
+          "Authorization": "{auth:b}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json",

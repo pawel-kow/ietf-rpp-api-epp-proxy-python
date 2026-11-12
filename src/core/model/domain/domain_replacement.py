@@ -3,6 +3,7 @@ from typing import Dict, FrozenSet, List, Optional
 
 from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domains import ContactReferenceNew, NS
+from core.model.domain.zone_record import ZoneRecord
 from core.model.shared.common import AuthInfo
 
 
@@ -10,7 +11,8 @@ from core.model.shared.common import AuthInfo
 class DomainReplacement:
     """The wanted state of the members of a domain a client may replace. An omitted member is cleared.
 
-    `ns` holds host objects or host attributes, not both. `contacts` are the roles other than the registrant.
+    `ns` holds host objects or host attributes, not both. `records` are the records the registry serves itself.
+    `contacts` are the roles other than the registrant, and further registrants where a backend holds several.
     `status` holds client statuses only, the server's are not the client's to replace. `unchanged` names the members
     the replacement does not state, which stay as they are stored: a data element with onDemand Visibility the request
     did not include.
@@ -20,6 +22,7 @@ class DomainReplacement:
     registrant: Optional[str] = None
     contacts: List[ContactReferenceNew] = field(default_factory=list)
     dnsSEC: Optional[DnsSec] = None
+    records: List[ZoneRecord] = field(default_factory=list)
     status: List[str] = field(default_factory=list)
     status_reasons: Dict[str, str] = field(default_factory=dict)
     authInfo: Optional[AuthInfo] = None

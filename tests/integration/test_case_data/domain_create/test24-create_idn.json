@@ -7,18 +7,18 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "{alabel:bücher-t24}.example",
+          "name": "{alabel:bücher-t24}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
             "authdata": "Password1!@"
           },
-          "uName": "{ulabel:bücher-t24}.example",
+          "uName": "{ulabel:bücher-t24}.{tld}",
           "lgr": "latn-1.0"
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -28,8 +28,8 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "{alabel:bücher-t24}.example",
-          "uName": "{ulabel:bücher-t24}.example",
+          "name": "{alabel:bücher-t24}.{tld}",
+          "uName": "{ulabel:bücher-t24}.{tld}",
           "lgr": "latn-1.0"
         }
       }

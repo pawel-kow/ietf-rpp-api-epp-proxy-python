@@ -7,14 +7,14 @@
         "method": "POST",
         "url": "/contacts",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "contact",
-          "id": "FO-{random_id_10}07A",
+          "id": "{handle:a:07A}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -77,16 +77,16 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}07A"
+          "id": "{handle:a:07A}"
         }
       }
     },
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}07A",
+        "url": "/contacts/{handle:a:07A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -157,7 +157,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}07A",
+          "id": "{handle:a:07A}",
           "status": [
             {
               "label": "clientDeleteProhibited"
@@ -169,9 +169,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/contacts/FO-{random_id_10}07A",
+        "url": "/contacts/{handle:a:07A}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -235,7 +235,7 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "contact",
-          "id": "FO-{random_id_10}07A",
+          "id": "{handle:a:07A}",
           "status": [
             {
               "label": "ok"

@@ -7,18 +7,18 @@
         "url": "/domainNames",
         "body_json": {
           "@type": "domainName",
-          "name": "{alabel:bücher-u33}.example",
+          "name": "{alabel:bücher-u33}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
             "authdata": "Password1!@"
           },
-          "uName": "{ulabel:bücher-u33}.example",
+          "uName": "{ulabel:bücher-u33}.{tld}",
           "lgr": "latn-1.0"
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -34,13 +34,13 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/{alabel:bücher-u33}.example",
+        "url": "/domainNames/{alabel:bücher-u33}.{tld}",
         "body_json": {
           "@type": "domainName"
         },
         "headers": {
           "Content-Type": "application/rpp+json",
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }
@@ -50,8 +50,8 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "name": "{alabel:bücher-u33}.example",
-          "uName": "{ulabel:bücher-u33}.example",
+          "name": "{alabel:bücher-u33}.{tld}",
+          "uName": "{ulabel:bücher-u33}.{tld}",
           "lgr": "latn-1.0"
         }
       }

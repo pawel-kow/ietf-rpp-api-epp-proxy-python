@@ -288,8 +288,12 @@ A mapper raises `NotSupportedByBackend` or `NotSupportedByProxy` (`core/capabili
 `map_request` names the backend of the application's `BackendProfile`: `… cannot be expressed in EPP`, `… can be
 expressed in EPP, but not by this proxy`. What a backend can hold, where it differs between
 backends, is a fact of the `BackendProfile` (`core/capabilities/backend_profile.py`), not a constant of a mapper: the
-contact labels (`domains.check_contact_label`), the record types at the apex of a domain (`domain_dns`) and the LGRs
-it offers (`domains.rpp_to_model`). The domain mappers
+contact labels and how many registrants a domain has (`domains.check_contact_label`, `check_registrants`; further
+registrants are contacts labelled `registrant`), the record types of a domain (`domain_dns`; `a`, `aaaa` and `mx`
+records other than glue are `ZoneRecord`s the registry serves itself), the LGRs it offers (`domains.rpp_to_model`),
+the transfer operations of each object (`TransferHandlers`, which answer 501 `02101` for one the backend lacks),
+whether a restore takes a report (`domain_restore_report`) and whether a read can show a domain's authInfo
+(`domains.check_requested`, which refuses `includeElements=authInfo` otherwise). The domain mappers
 take the profile as the keyword `profile`, from `backend_profile()` in the handler. The EPP values are `EPP_PROFILE`
 in `registry_adapter/epp/profile.py`, and `epp_profile(idn_tables)` adds the LGRs of the configured IDN tables. Some
 of its facts are not read yet, they are for a backend that differs.

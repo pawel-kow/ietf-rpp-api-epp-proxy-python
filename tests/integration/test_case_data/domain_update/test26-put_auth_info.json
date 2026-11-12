@@ -6,14 +6,14 @@
         "method": "POST",
         "url": "/domainNames",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
         },
         "body_json": {
           "@type": "domainName",
-          "name": "put26-{random_name}.example",
+          "name": "put26-{random_name}.{tld}",
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
@@ -35,9 +35,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/put26-{random_name}.example?includeElements=authInfo",
+        "url": "/domainNames/put26-{random_name}.{tld}?includeElements=authInfo",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -70,9 +70,9 @@
     {
       "request": {
         "method": "PUT",
-        "url": "/domainNames/put26-{random_name}.example",
+        "url": "/domainNames/put26-{random_name}.{tld}",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"
@@ -95,9 +95,9 @@
     {
       "request": {
         "method": "GET",
-        "url": "/domainNames/put26-{random_name}.example?includeElements=authInfo",
+        "url": "/domainNames/put26-{random_name}.{tld}?includeElements=authInfo",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}"
         }

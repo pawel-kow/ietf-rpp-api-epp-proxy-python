@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from core.model.contact.address import Address
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
@@ -27,6 +27,9 @@ class Contact(ProvisioningObject, ContactMinimal):
     address: Optional[Address] = None;
     localizedPostalInfo: Optional[LocalizedPostalInfo] = None
     status_reasons: Dict[str, str] = field(default_factory=dict)
+    # What the backend holds of the contact beyond the model and loses unless it is sent again in a full update, such
+    # as RRI's verification data. Opaque to everything but the adapter that read it, and never shown.
+    carried_over: Optional[Any] = None
 
     def __post_init__(self):
         localized = self.localizedPostalInfo

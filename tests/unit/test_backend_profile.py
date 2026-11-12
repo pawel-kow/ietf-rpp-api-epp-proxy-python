@@ -107,7 +107,7 @@ def test_a_value_not_in_the_form_of_the_backend_is_a_400_that_names_it(epp_app_c
     report = {"@type": "restoreProcess", "restoreReport": {**REPORT, "statements": REPORT["statements"][:1]}}
 
     with pytest.raises(ProblemException) as refused:
-        map_request(domain_restore_report.rpp_to_model, NAME, report)
+        map_request(domain_restore_report.rpp_to_model, NAME, report, profile=OTHER)
 
     assert refused.value.status == 400
     assert refused.value.detail == "Other requires exactly 2 statements in the restore report"

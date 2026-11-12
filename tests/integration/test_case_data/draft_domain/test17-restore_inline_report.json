@@ -1,12 +1,13 @@
 {
+  "when": {"env.restore_within_run": true},
   "test_id": "test17-restore_inline_report",
   "steps": [
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames/ex10-{random_name}.example/processes/restoreProcesses",
+        "url": "/domainNames/ex10-{random_name}.{tld}/processes/restoreProcesses",
         "headers": {
-          "Authorization": "Basic Zm9vOmJhcg==",
+          "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json"

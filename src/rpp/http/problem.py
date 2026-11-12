@@ -46,7 +46,7 @@ def raise_registry_error(resp: ErrorResponse):
     raise ProblemException(
         status=http_status(resp.code),
         title=resp.code.value[1],
-        detail=resp.msg,
+        detail=f"{resp.registry_code} {resp.msg}" if getattr(resp, "registry_code", None) else resp.msg,
         headers=problem_headers(resp.code, resp.server_transaction_id),
     )
 
