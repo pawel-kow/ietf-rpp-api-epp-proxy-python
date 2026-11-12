@@ -8,11 +8,12 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 - [x] T2 Limits of the EPP test server and RRI MTEST: `docs/testing/backend-limits.yaml`
 - [x] T3 Correction (maintainer): FQDN lengths are defined by DNS (RFC 1035 §2.3.4), not a gap
 - [x] T4 Runner: `{pad:N:TEXT}` for a name or id of an exact length (unit tests first)
-- [~] T5 Probe cases `limits_domain/`, `limits_contact/`, `limits_host/`, with environment facts for the limits
+- [x] T5 Probe cases `limits_domain/`, `limits_contact/`, `limits_host/`, with environment facts for the limits
       that differ by server
-- [ ] T6 Run on epp-docker (needs `.env`), record the outcomes, file the confirmed defects, mark them `skip`
-- [ ] T7 Open boundaries of the drafts into `.spec/spec-issues.md`
-- [ ] T8 Docs: `testing.project.md` (placeholder, facts, the new groups), the review updated with the outcomes
+- [~] T6 Run on epp-docker (needs `.env`), record the outcomes, file the confirmed defects, mark them `skip`
+- [x] T7 Open boundaries of the drafts into `.spec/spec-issues.md`
+- [ ] T8 Docs: `testing.project.md` (placeholder, facts, the new groups) done; the review §6 and the `probe` ids
+      of backend-limits.yaml to be updated to the implemented cases and their outcomes
 - [ ] T9 Checks: `lint-imports`, `pytest -n 8`; MTEST run `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration`
       (pending: needs a machine on the allowlist)
 - [ ] T10 Draft PR
@@ -39,9 +40,13 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 - D5 A case whose server cuts a value instead of refusing it (`env.values_cut_at_column`) does not run there; the
   defect is an issue.
 - D6 Dropped from the proposal: a label of 1 (no unique name possible), `uName` valid in IDNA2003 only, 21 RRI
-  records (another limit is hit first), a request over 64 KiB, a dot in a contact id, a city with a digit.
+  records (another limit is hit first), a request over 64 KiB, a dot in a contact id, a city with a digit, a postcode of 17 (only the EPP test server limits it, and it
+  cuts it), an organisation over 255.
 
 ## Results
+
+- 90 cases: 30 run on both backends, 37 on EPP only, 23 on RRI only. Unit tests: 1991 passed.
+- `lint-imports`: passed.
 
 ## Open questions
 

@@ -1,0 +1,5 @@
+{
+  "when": {
+    "profile.host_objects": true
+  }
+}

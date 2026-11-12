@@ -206,6 +206,8 @@ update → verify) run against a Flask test client.
   `TEXT-<random_id_10>` and `{alabel:TEXT}` its A-label, so an IDN case writes `{alabel:bücher-t24}.{tld}`.
   `{upper:TEXT}` is TEXT in upper case, after the other placeholders in it are replaced. The backend stores host
   names in upper case, so a `match` on a generated host writes `{upper:ns1.u17-{random_name}.net}`.
+  `{pad:N:TEXT}` is TEXT followed by the digits 0 to 9, repeated, to N characters, for a name or id of an exact
+  length that keeps the random part of TEXT: `{pad:63:t3-{random_name}}.{tld}` is a label of 63.
 - Every step asserts the headers of core §6.2: `RPP-Svtrid`, a 5-digit `RPP-Code`, and
   `RPP-Cltrid` echoed.
 - Response body comparison is **subset + case-insensitive**
@@ -248,6 +250,15 @@ dir with a deliberately wrong expected status, run `pytest -k <group>`, and read
 captured `Received response` / `Test case:` line. The runner prints the actual
 status, headers including `rpp-code`, and body on failure. Delete the probe
 afterwards.
+
+## Limits
+
+`limits_domain/`, `limits_contact/` and `limits_host/` probe each limit with the value at it and the value past it.
+What the drafts define is the oracle; a limit they leave to the server is expected to be refused with 400 (`02001`,
+`02004`, `02005`) or 422 (`02306`), never 500 or 501. A limit that differs by server is a `limit_*` fact of the
+environment, and `values_cut_at_column` marks a server that stores a value cut instead of refusing it, where the cases
+over a column do not run. The limits and their sources are in [backend-limits.yaml](../testing/backend-limits.yaml),
+the coverage of every field in [integration-test-review.md](../testing/integration-test-review.md).
 
 ## Isolating cases
 

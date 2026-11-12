@@ -1,0 +1,64 @@
+{
+  "test_id": "test3-name_of_253",
+  "description": "A name of 253 characters, the most of DNS in text form.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "{pad:63:h3-{random_name}}.{pad:63:a}.{pad:63:b}.{pad:57:c}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "{pad:63:h3-{random_name}}.{pad:63:a}.{pad:63:b}.{pad:57:c}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "host"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/hosts/{pad:63:h3-{random_name}}.{pad:63:a}.{pad:63:b}.{pad:57:c}.net",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "hostName": "{pad:63:h3-{random_name}}.{pad:63:a}.{pad:63:b}.{pad:57:c}.net"
+        }
+      }
+    }
+  ]
+}

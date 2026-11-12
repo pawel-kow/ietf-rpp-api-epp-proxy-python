@@ -24,3 +24,14 @@ facts:
   failed_logins_lock: true
   lgr_on_ascii_refused: false      # an lgr on a name that is not an IDN is refused
   contact_removal_refused_by_registry: true  # the registry, not the proxy, refuses clearing a contact's name or email
+  # Limits that differ by server (docs/testing/backend-limits.yaml), for the limits_* cases
+  values_cut_at_column: false   # a value longer than its column is stored cut, not refused
+  limit_contact_id_length: 32
+  limit_authinfo_min_length: 8
+  limit_authinfo_upper_and_digit: false   # an authInfo needs an upper case letter and a digit
+  limit_authinfo_unambiguous: true   # an authInfo has none of I, O, l, o, 0, 1
+  limit_contact_name_min_length: 3
+  limit_street_lines_max: null   # null: no limit known
+  limit_street_lines_min: 1
+  limit_city_max_length: 80
+  limit_phone_subscriber_min_digits: 4
