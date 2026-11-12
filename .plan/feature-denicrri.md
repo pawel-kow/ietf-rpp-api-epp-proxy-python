@@ -88,8 +88,8 @@ The maintainer asked to work through the phases without waiting for confirmation
 | Review round 1 | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2287 passed, 9 skipped |
 | Review round 1 | MTEST, `pytest -n 4 tests/integration` | **105 passed**, 208 skipped (each skip names the function RRI lacks); the one failure of the full run, `domain_lifecycle/test1` (a deleted domain now reads), fixed and rerun |
 | Review round 2 (pass-through) | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2290 passed, 10 skipped |
-| Review round 2 (no DNS data 501) | lint-imports; EPP `pytest -n 8`; MTEST `pytest -n 4 tests/integration` | 15 contracts kept; 2291 passed, 10 skipped; **108 passed**, 206 skipped |
 | Review round 2 (pass-through) | MTEST, `pytest -n 4 tests/integration` | **108 passed**, 206 skipped |
+| Review round 2 (no DNS data 501) | lint-imports; EPP `pytest -n 8`; MTEST `pytest -n 4 tests/integration` | 15 contracts kept; 2291 passed, 10 skipped; **108 passed**, 206 skipped |
 
 ## Open questions
 
