@@ -50,8 +50,9 @@ The maintainer asked to work through the phases without waiting for confirmation
   selected by profile and environment facts. RRI counterparts: `domain_update/test35` to `test37`.
 - **Pass-through** (maintainer): the RRI adapter refuses only what an RRI request has no place for (a person's name
   on an ORG, 501 as accepted; a contact authInfo; a `uName` that is not the name; an AuthInfo1 RRI does not take,
-  as it receives only the hash). Name changes, clearing a required contact member and a domain without DNS data go
-  to RRI, which refuses them (422 `02306`; `83000000004` for the missing DNS data, the XSDs). An `lgr` is not sent.
+  as it receives only the hash; a domain without DNS data, 501, as the XSDs require a `dnsentry` in CREATE and UPDATE
+  (maintainer)). Name changes and clearing a required contact member go to RRI, which refuses them (422 `02306`).
+  An `lgr` is not sent.
 - **Contact kind** (maintainer): an `org` card is an RRI ORG, an `individual` with an organisation a PERSON with
   `organisation` (`contact_kind_held`; EPP still refuses it). An update keeps the type RRI holds, a PATCH the kind.
   Cases: `draft_contact/test2`, `contact_update/test24`, `test35`.
@@ -87,6 +88,7 @@ The maintainer asked to work through the phases without waiting for confirmation
 | Review round 1 | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2287 passed, 9 skipped |
 | Review round 1 | MTEST, `pytest -n 4 tests/integration` | **105 passed**, 208 skipped (each skip names the function RRI lacks); the one failure of the full run, `domain_lifecycle/test1` (a deleted domain now reads), fixed and rerun |
 | Review round 2 (pass-through) | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2290 passed, 10 skipped |
+| Review round 2 (no DNS data 501) | lint-imports; EPP `pytest -n 8`; MTEST `pytest -n 4 tests/integration` | 15 contracts kept; 2291 passed, 10 skipped; **108 passed**, 206 skipped |
 | Review round 2 (pass-through) | MTEST, `pytest -n 4 tests/integration` | **108 passed**, 206 skipped |
 
 ## Open questions

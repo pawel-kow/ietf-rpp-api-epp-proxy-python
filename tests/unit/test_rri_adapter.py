@@ -382,18 +382,27 @@ def test_the_name_of_a_person_on_an_org_is_refused():
     assert len(client.sent) == 1
 
 
-def test_a_full_update_without_dns_data_is_left_to_the_registry():
-    gateway, client = backend(DOMAIN_INFO, error("53300083004", "No nameserver"))
+def test_a_full_update_without_dns_data_sends_nothing():
+    gateway, client = backend(DOMAIN_INFO)
 
     resp = gateway.domains.replace(_wanted(records=[]))
 
-    assert isinstance(resp, ErrorResponse) and len(client.sent) == 2
+    assert resp.code == ResultCode.UNIMPLEMENTED_OPTION and len(client.sent) == 1
+
+
+def test_a_create_without_dns_data_sends_nothing():
+    gateway, client = backend()
+
+    resp = gateway.domains.create(Domain(name="example.de"))
+
+    assert resp.code == ResultCode.UNIMPLEMENTED_OPTION and client.sent == []
 
 
 def test_an_lgr_on_an_ascii_name_is_not_sent():
     gateway, client = backend(reply())
 
-    gateway.domains.create(Domain(name="example.de", idn=DomainIdn(lgr="latn-1.0", uname=None)))
+    gateway.domains.create(Domain(name="example.de", idn=DomainIdn(lgr="latn-1.0", uname=None),
+                                  records=[ZoneRecord(owner="example.de", type="a", address="192.0.2.10")]))
 
     assert "latn" not in client.sent[0]
 

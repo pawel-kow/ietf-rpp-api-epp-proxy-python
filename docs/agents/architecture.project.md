@@ -228,9 +228,10 @@ flow, the port and the EPP commands of one object.
     `PartiallyApplied` (core/result) with the first command's transaction ids and the refusal, which `read_back` does
     not read back, so the handler answers 202 (gap Q7). The adapter refuses only what an RRI
     request has no place for, which RRI would never see: a person's name on an organisation's contact (an ORG is
-    named by its organisation), a contact authInfo, a `uName` that is not the name, and an AuthInfo1 RRI does not take
-    (RRI receives only its hash). Everything else is sent, and RRI's refusal answered by its code: changing a
-    contact's name, clearing a member it requires, a domain without DNS data (`83000000004`, the XSDs). An `lgr` is
+    named by its organisation), a contact authInfo, a `uName` that is not the name, an AuthInfo1 RRI does not take
+    (RRI receives only its hash), and a domain without DNS data (CREATE and UPDATE hold at least one `dnsentry`).
+    Everything else is sent, and RRI's refusal answered by its code: changing a contact's name, clearing a member it
+    requires. An `lgr` is
     not sent. A contact create sends the kind of the Card (PERSON or ORG, a PERSON may name its organisation); an
     update keeps the type RRI holds. Hosts, transfers, renew and contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
     message is a service notice naming its RRI type and the domains and handles it is about, with 1301 or 1300 as a

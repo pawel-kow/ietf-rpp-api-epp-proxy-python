@@ -35,6 +35,12 @@ def _bad_auth_info(client_transaction_id) -> ErrorResponse:
                    client_transaction_id)
 
 
+def _no_dns_data(client_transaction_id) -> ErrorResponse:
+    """RRI's CREATE and UPDATE hold at least one `dnsentry` (the XSDs), so a domain without DNS data has no request."""
+    return refused(ResultCode.UNIMPLEMENTED_OPTION, "A domain without DNS data cannot be expressed in RRI",
+                   client_transaction_id)
+
+
 def _partly_applied(what: str, first: OperationResponse, error: ErrorResponse) -> PartiallyApplied:
     """A request whose first command the registry applied and a later one refused (gap Q7): accepted, with the first
     command's transaction ids, and the refusal logged by its code."""
@@ -79,7 +85,10 @@ class RriDomainGateway:
         password = domain.authInfo.pw if domain.authInfo else None
         if password is not None and not valid_auth_info1(password):
             return _bad_auth_info(client_transaction_id)
-        created = rri_domain_create(self.client, domain.name, state_of_domain(domain), client_transaction_id)
+        state = state_of_domain(domain)
+        if not state.dnsentries(domain.name):
+            return _no_dns_data(client_transaction_id)
+        created = rri_domain_create(self.client, domain.name, state, client_transaction_id)
         if isinstance(created, ErrorResponse) or password is None:
             return self._named(created, domain.name)
         auth = rri_create_auth_info1(self.client, domain.name, password, client_transaction_id, n=2)
@@ -113,6 +122,8 @@ class RriDomainGateway:
             contacts=[(c.type, c.contact.id) for c in wanted.contacts], ns=wanted.ns, records=wanted.records,
             dns_sec=wanted.dnsSEC,
         )
+        if not after.dnsentries(wanted.name):
+            return _no_dns_data(client_transaction_id)
         keep_auth_info = AUTH_INFO in wanted.unchanged
         password = wanted.authInfo.pw if wanted.authInfo else None
         if not keep_auth_info and password is not None and not valid_auth_info1(password):
