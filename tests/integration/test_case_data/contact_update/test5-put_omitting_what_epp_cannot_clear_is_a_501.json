@@ -1,5 +1,6 @@
 {
   "test_id": "test5-put_keeps_what_epp_cannot_clear",
+  "description": "A full update is the wanted state (core §16.8), so the name, address and email it omits are cleared, which EPP cannot do: 501, see spec-issues.md (Full update of a contact).",
   "steps": [
     {
       "request": {
@@ -33,8 +34,20 @@
                     "value": "Anytown"
                   },
                   {
-                    "kind": "region",
-                    "value": "PA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "PA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -49,10 +62,22 @@
                 "number": "tel:+49.123123123"
               },
               "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "number": "tel:+49.456456456",
+                      "features": {
+                        "fax": true
+                      }
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -62,9 +87,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -97,7 +134,26 @@
             "version": "2.0",
             "phones": {
               "voice": {
-                "number": "tel:+49.777"
+                "number": "tel:+49.777777777"
+              }
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
               }
             }
           }
@@ -114,6 +170,5 @@
         }
       }
     }
-  ],
-  "description": "A full update is the wanted state (core §16.8), so the name, address and email it omits are cleared, which EPP cannot do: 501, see spec-issues.md (Full update of a contact)."
+  ]
 }

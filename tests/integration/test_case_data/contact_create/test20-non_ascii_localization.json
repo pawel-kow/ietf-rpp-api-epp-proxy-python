@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.contact_localization": true
+  },
   "test_id": "test20-non_ascii_localization",
   "steps": [
     {
@@ -40,9 +43,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {

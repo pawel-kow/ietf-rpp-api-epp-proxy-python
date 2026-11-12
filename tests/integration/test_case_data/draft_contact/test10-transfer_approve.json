@@ -1,5 +1,12 @@
 {
-  "when": {"profile.contact_transfer_operations": {"contains": "approve"}},
+  "when": {
+    "profile.domain_transfer_operations": {
+      "contains": "request"
+    },
+    "profile.contact_transfer_operations": {
+      "contains": "approve"
+    }
+  },
   "test_id": "test10-transfer_approve",
   "steps": [
     {
@@ -28,6 +35,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -37,12 +52,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -64,7 +99,7 @@
           "Accept": "application/rpp+json",
           "RPP-Cltrid": "{unique_cltrid}",
           "Content-Type": "application/rpp+json",
-          "RPP-Authorization": "authinfo value=MmZvb0JBUg=="
+          "RPP-Authorization": "authinfo value=MmZlZUJBUjk="
         },
         "body_json": {
           "@type": "transferProcess",

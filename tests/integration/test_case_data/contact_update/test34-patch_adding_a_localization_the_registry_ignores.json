@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.contact_localization": true
+  },
   "test_id": "test34-patch_adding_a_localization_the_registry_ignores",
   "steps": [
     {
@@ -62,9 +65,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },

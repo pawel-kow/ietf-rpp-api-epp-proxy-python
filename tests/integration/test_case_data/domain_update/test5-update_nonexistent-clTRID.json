@@ -18,7 +18,7 @@
             "value": {
               "@type": "authInfo",
               "method": "authinfo",
-              "authdata": "NewPassword1!@"
+              "authdata": "NewAbc2345678"
             }
           }
         ]

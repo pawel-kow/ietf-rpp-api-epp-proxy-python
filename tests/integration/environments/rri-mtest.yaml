@@ -15,4 +15,8 @@ facts:
   tld: de
   restore_within_run: false            # the RGP lasts a day on MTEST
   environment_name: rpp-rri-proxy.example       # rpp_environment_name of its config
+  delegation_checked: true             # name servers must serve the zone (predelegation check)
+  domain_active_at_create: false        # a new domain is ok at once, not pendingCreate
+  cltrid_reuse_refused: false           # a reused client transaction id is refused, also on a read
+  idn_table_required: false            # the registry refuses an IDN without an IDN table
   failed_logins_lock: true

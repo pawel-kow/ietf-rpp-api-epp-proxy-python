@@ -1,4 +1,9 @@
 {
+  "when": {
+    "profile.host_objects": true,
+    "env.delegation_checked": false,
+    "profile.registration_periods": true
+  },
   "test_id": "test5-create",
   "steps": [
     {
@@ -107,8 +112,20 @@
                     "value": "Dulles"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -123,10 +140,22 @@
                 "number": "tel:+1.7035555555"
               },
               "fax": {
-                "features": {
-                  "fax": true
-                },
-                "number": "tel:+1.7035555556"
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "features": {
+                        "fax": true
+                      },
+                      "number": "tel:+1.7035555556"
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -136,9 +165,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -180,8 +221,20 @@
                     "value": "Dulles"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -196,10 +249,22 @@
                 "number": "tel:+1.7035555555"
               },
               "fax": {
-                "features": {
-                  "fax": true
-                },
-                "number": "tel:+1.7035555556"
+                "select": [
+                  {
+                    "when": {
+                      "profile.contact_fax": true
+                    },
+                    "then": {
+                      "features": {
+                        "fax": true
+                      },
+                      "number": "tel:+1.7035555556"
+                    }
+                  },
+                  {
+                    "omit": true
+                  }
+                ]
               }
             },
             "emails": {
@@ -209,9 +274,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -224,7 +301,19 @@
     {
       "request": {
         "method": "POST",
-        "url": "/domainNames?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.auth_info_readable": true
+              },
+              "then": "/domainNames?includeElements=authInfo"
+            },
+            {
+              "then": "/domainNames"
+            }
+          ]
+        },
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -248,26 +337,55 @@
             "@type": "contact",
             "id": "{handle:a:J5}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:S5}"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S5}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S5}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:S5}"
-              }
-            }
-          ],
+            ]
+          },
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "2fooBAR"
+            "authdata": "2feeBAR9"
           },
           "processes": {
             "@type": "processes",
@@ -290,32 +408,73 @@
         "body": {
           "@type": "domainName",
           "name": "ex5-{random_name}.{tld}",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:J5}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:S5}"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S5}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:S5}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:S5}"
-              }
-            }
-          ],
+            ]
+          },
           "nameservers": [
             {
               "@type": "host",
@@ -327,9 +486,21 @@
             }
           ],
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "2fooBAR"
+            "select": [
+              {
+                "when": {
+                  "profile.auth_info_readable": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "2feeBAR9"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "fields": {
@@ -337,19 +508,59 @@
             "type": "not_null"
           },
           "provMetadata.crClientId": {
-            "type": "not_null"
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "domainName.crClientId"
+                  }
+                },
+                "then": {
+                  "type": "not_null"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "provMetadata.crDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": -1,
-            "max_delta": 60
+            "select": [
+              {
+                "when": {
+                  "profile.metadata": {
+                    "contains": "domainName.crDate"
+                  }
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": -1,
+                  "max_delta": 60
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "expiryDate": {
-            "type": "datetime_format_utc_and_delta",
-            "reference": "{test_start}",
-            "min_delta": 62899200,
-            "max_delta": 63244800
+            "select": [
+              {
+                "when": {
+                  "profile.registration_periods": true
+                },
+                "then": {
+                  "type": "datetime_format_utc_and_delta",
+                  "reference": "{test_start}",
+                  "min_delta": 62899200,
+                  "max_delta": 63244800
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       }

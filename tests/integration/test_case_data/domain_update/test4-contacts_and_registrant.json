@@ -1,4 +1,9 @@
 {
+  "when": {
+    "profile.contact_labels": {
+      "contains": "admin"
+    }
+  },
   "test_id": "test4-contacts_and_registrant",
   "steps": [
     {
@@ -27,6 +32,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -36,12 +49,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -80,6 +113,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -89,12 +130,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -117,35 +178,89 @@
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
           },
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:uf1}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "billing",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
+            ]
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
               }
-            },
-            {
-              "label": "billing",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
-              }
-            }
-          ]
+            ]
+          }
         },
         "headers": {
           "Content-Type": "application/rpp+json",
@@ -160,39 +275,80 @@
         "body": {
           "@type": "domainName",
           "name": "up-test4-{random_name}.{tld}",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:uf1}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "billing",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
-              }
-            },
-            {
-              "label": "billing",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
-              }
-            }
-          ]
+            ]
+          }
         }
       }
     },
@@ -237,39 +393,80 @@
         "body": {
           "@type": "domainName",
           "name": "up-test4-{random_name}.{tld}",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:uf1}"
           },
-          "contacts": [
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf2}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
-              }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf2}"
-              }
-            }
-          ]
+            ]
+          }
         }
       }
     },
@@ -300,39 +497,80 @@
         "body": {
           "@type": "domainName",
           "name": "up-test4-{random_name}.{tld}",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:uf2}"
           },
-          "contacts": [
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf2}"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf2}"
+                    }
+                  },
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  },
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:uf1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
-              }
-            },
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:uf1}"
-              }
-            }
-          ]
+            ]
+          }
         }
       }
     }

@@ -1,4 +1,9 @@
 {
+  "when": {
+    "profile.contact_labels": {
+      "contains": "admin"
+    }
+  },
   "test_id": "test6-invalid_schema",
   "steps": [
     {

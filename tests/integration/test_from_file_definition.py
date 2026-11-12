@@ -36,6 +36,7 @@ facts = selectors.Facts(app.app.config["RPP_BACKEND_PROFILE"], environment.facts
 all_facts = {name: selectors.Facts(env.declared_profile(), env.facts)
              for name in environment_names()
              for env in [load(name, with_credentials=False)]}
+all_facts[environment.name] = facts  # the app under test may offer more than its declared profile, such as LGRs
 
 # --- Test Client Fixture ---
 @pytest.fixture(scope='module')

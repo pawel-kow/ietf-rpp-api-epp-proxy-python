@@ -8,7 +8,7 @@ import base64
 import importlib
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import yaml
@@ -49,11 +49,13 @@ class TestEnvironment:
     facts: dict
     wrong_password: str | None = field(default=None, repr=False)
     unknown_user: tuple[str, str] | None = field(default=None, repr=False)
+    lgrs: tuple[str, ...] = ()
 
     def declared_profile(self):
-        """The `BackendProfile` the descriptor names, for selectors evaluated outside the app under test."""
+        """The `BackendProfile` the descriptor names, with the LGRs its config offers (`lgrs`), for selectors
+        evaluated outside the app under test."""
         module, _, name = self.profile.partition(":")
-        return getattr(importlib.import_module(module), name)
+        return replace(getattr(importlib.import_module(module), name), lgrs=frozenset(self.lgrs))
 
 
 def environment_names() -> list[str]:
@@ -119,7 +121,8 @@ def load(name: str, environ=None, with_credentials: bool = True) -> TestEnvironm
         name=name, config=data["config"], profile=data["profile"], max_workers=int(data.get("max_workers", 8)),
         rpp_requests_per_minute=data.get("rpp_requests_per_minute"), registrars=registrars,
         facts=dict(data.get("facts") or {}), wrong_password=data.get("wrong_password"),
-        unknown_user=(unknown["user"], unknown["password"]) if unknown else None)
+        unknown_user=(unknown["user"], unknown["password"]) if unknown else None,
+        lgrs=tuple(data.get("lgrs") or ()))
 
 
 VALUE_PLACEHOLDER = re.compile(r"\{(handle|regacc|gen_req|abuse):([a-z])(?::([^{}]*))?\}")

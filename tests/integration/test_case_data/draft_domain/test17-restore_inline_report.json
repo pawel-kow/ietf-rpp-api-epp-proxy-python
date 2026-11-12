@@ -1,5 +1,7 @@
 {
-  "when": {"env.restore_within_run": true},
+  "when": {
+    "env.restore_within_run": true
+  },
   "test_id": "test17-restore_inline_report",
   "steps": [
     {

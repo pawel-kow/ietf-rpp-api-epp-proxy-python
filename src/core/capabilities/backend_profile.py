@@ -23,6 +23,8 @@ class BackendProfile:
     `domain_dns_required` is whether a domain needs DNS data (name servers or records) from its create on, and
     `contact_phone_required` whether a contact needs a voice number. The proxy leaves both to the registry to refuse
     (gap Q13); the test selectors read them.
+    `registrant_required` is whether a domain needs a registrant, which the registry refuses otherwise; the test
+    selectors read it.
     `registration_periods` is whether a domain is registered for a period, with an expiry date; the domain mapper
     refuses a period otherwise.
     `metadata` are the provisioning metadata a read shows besides the sponsor, as `<object>.<member>`
@@ -41,6 +43,8 @@ class BackendProfile:
     contact_region: bool
     contact_phones_max: int
     contact_auth_info: bool
+    contact_org_person_name: bool
+    contact_name_changeable: bool
     supports_renew: bool
     supports_contact_delete: bool
     domain_transfer_operations: frozenset[str]
@@ -49,6 +53,7 @@ class BackendProfile:
     auth_info_readable: bool
     domain_dns_required: bool
     contact_phone_required: bool
+    registrant_required: bool
     registration_periods: bool
     metadata: frozenset[str]
     objects: tuple[str, ...]

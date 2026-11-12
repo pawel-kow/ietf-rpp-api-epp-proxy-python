@@ -20,7 +20,21 @@
             "version": "2.0",
             "kind": "org",
             "name": {
-              "full": "John Doe"
+              "select": [
+                {
+                  "when": {
+                    "profile.contact_org_person_name": true
+                  },
+                  "then": {
+                    "full": "John Doe"
+                  }
+                },
+                {
+                  "then": {
+                    "full": "Example Inc."
+                  }
+                }
+              ]
             },
             "organizations": {
               "org": {
@@ -39,8 +53,20 @@
                     "value": "Reston"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",
@@ -62,9 +88,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -107,8 +145,20 @@
                     "value": "Reston"
                   },
                   {
-                    "kind": "region",
-                    "value": "VA"
+                    "select": [
+                      {
+                        "when": {
+                          "profile.contact_region": true
+                        },
+                        "then": {
+                          "kind": "region",
+                          "value": "VA"
+                        }
+                      },
+                      {
+                        "omit": true
+                      }
+                    ]
                   },
                   {
                     "kind": "postcode",

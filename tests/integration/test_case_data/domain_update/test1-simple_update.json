@@ -1,6 +1,79 @@
 {
+  "when": {
+    "profile.host_objects": true,
+    "env.delegation_checked": false,
+    "profile.contact_labels": {
+      "contains": "admin"
+    },
+    "profile.contact_auth_info": true
+  },
   "test_id": "test1-simple_update",
   "steps": [
+    {
+      "when": {
+        "profile.registrant_required": true
+      },
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:HU1}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
     {
       "request": {
         "method": "POST",
@@ -27,6 +100,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -36,12 +117,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -80,6 +181,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -89,12 +198,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -133,6 +262,14 @@
                   {
                     "kind": "locality",
                     "value": "Anytown"
+                  },
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "US"
@@ -142,12 +279,32 @@
               "email": {
                 "address": "foo@example.com"
               }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -244,7 +401,48 @@
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
+          },
+          "registrant": {
+            "select": [
+              {
+                "when": {
+                  "profile.registrant_required": true
+                },
+                "then": {
+                  "@type": "contact",
+                  "id": "{handle:a:HU1}"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domain_dns_required": true
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         },
         "headers": {
@@ -260,19 +458,43 @@
         "body": {
           "@type": "domainName",
           "name": "up-test1-{random_name}.{tld}",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ]
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          }
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test1-{random_name}.{tld}?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.auth_info_readable": true
+              },
+              "then": "/domainNames/up-test1-{random_name}.{tld}?includeElements=authInfo"
+            },
+            {
+              "then": "/domainNames/up-test1-{random_name}.{tld}"
+            }
+          ]
+        },
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -286,7 +508,7 @@
             "value": {
               "@type": "authInfo",
               "method": "authinfo",
-              "authdata": "NewPassword1!@"
+              "authdata": "NewAbc2345678"
             }
           },
           {
@@ -365,16 +587,40 @@
         "body": {
           "@type": "domainName",
           "name": "up-test1-{random_name}.{tld}",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "NewPassword1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.auth_info_readable": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "NewAbc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "nameservers": [
             {
@@ -390,43 +636,84 @@
             "@type": "contact",
             "id": "{handle:a:ud2}"
           },
-          "contacts": [
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:ud2}"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:ud2}"
+                    }
+                  },
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:ud2}"
+                    }
+                  },
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:ud1}"
+                    }
+                  },
+                  {
+                    "label": "billing",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:ud1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:ud2}"
-              }
-            },
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:ud1}"
-              }
-            },
-            {
-              "label": "billing",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:ud1}"
-              }
-            }
-          ]
+            ]
+          }
         }
       }
     },
     {
       "request": {
         "method": "PATCH",
-        "url": "/domainNames/up-test1-{random_name}.{tld}?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.auth_info_readable": true
+              },
+              "then": "/domainNames/up-test1-{random_name}.{tld}?includeElements=authInfo"
+            },
+            {
+              "then": "/domainNames/up-test1-{random_name}.{tld}"
+            }
+          ]
+        },
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",
@@ -440,7 +727,7 @@
             "value": {
               "@type": "authInfo",
               "method": "authinfo",
-              "authdata": "NewPassword2!@"
+              "authdata": "NewPass6789+"
             }
           },
           {
@@ -526,16 +813,40 @@
         "body": {
           "@type": "domainName",
           "name": "UP-TEST1-{random_name}.{tld}",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "ok"
-            }
-          ],
+          "status": {
+            "select": [
+              {
+                "when": {
+                  "env.domain_active_at_create": true
+                },
+                "then": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "ok"
+                  }
+                ]
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "NewPassword2!@"
+            "select": [
+              {
+                "when": {
+                  "profile.auth_info_readable": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "NewPass6789+"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           },
           "nameservers": [
             {
@@ -555,22 +866,51 @@
             "@type": "contact",
             "id": "{handle:a:ud3}"
           },
-          "contacts": [
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:ud3}"
+          "contacts": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact_labels": {
+                    "contains": "admin"
+                  }
+                },
+                "then": [
+                  {
+                    "label": "tech",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:ud3}"
+                    }
+                  },
+                  {
+                    "label": "admin",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{handle:a:ud1}"
+                    }
+                  }
+                ]
+              },
+              {
+                "then": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ]
               }
-            },
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:ud1}"
-              }
-            }
-          ]
+            ]
+          }
         }
       }
     }

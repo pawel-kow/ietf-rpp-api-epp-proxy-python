@@ -64,7 +64,7 @@ def contact_from_rri(data: rri.InfoData) -> Contact:
     return Contact(
         id=handle,
         type=ContactType.ORG if is_org else ContactType.PERSON,
-        name=None if is_org else _text(data.name),
+        name=_text(data.name),
         organisationName=_text(data.name) if is_org else (data.organisation[0].value if data.organisation else None),
         email=[e.value for e in data.email] or None,
         phone=[data.phone.value] if data.phone else None,

@@ -124,10 +124,13 @@ def substitute_captures(value, captures):
     return value
 
 UPPER = re.compile(r"\{upper:([^{}]*)\}")
+LOWER = re.compile(r"\{lower:([^{}]*)\}")
 
 def replace_upper_placeholders(value: str) -> str:
     """Replaces {upper:TEXT} by TEXT in upper case, the form the registry stores a name in, for an exact `match`."""
-    return UPPER.sub(lambda match: match.group(1).upper(), value)
+    """`{lower:TEXT}` is TEXT in lower case, for an id the client sends in another case than the registry stores."""
+    value = UPPER.sub(lambda match: match.group(1).upper(), value)
+    return LOWER.sub(lambda match: match.group(1).lower(), value)
 
 def endpoint_test(client, case_sequence, sleep=time.sleep, credentials=None, pacer=None):
     """

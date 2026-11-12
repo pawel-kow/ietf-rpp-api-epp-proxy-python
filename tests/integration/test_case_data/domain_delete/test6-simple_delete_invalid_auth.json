@@ -1,5 +1,7 @@
 {
-  "when": {"env.failed_logins_lock": false},
+  "when": {
+    "env.failed_logins_lock": false
+  },
   "test_id": "test6-simple_delete_invalid_auth",
   "steps": [
     {

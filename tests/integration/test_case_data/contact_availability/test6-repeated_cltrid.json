@@ -1,5 +1,4 @@
 {
-  "when": {"profile.contact_phone_required": false},
   "test_id": "test6-repeated_cltrid",
   "steps": [
     {
@@ -35,14 +34,36 @@
         }
       },
       "response": {
-        "status": 500,
-        "headers": {
-          "RPP-Code": "02400"
-        },
-        "body": {
-          "type": "urn:ietf:params:rpp:error"
-        },
-        "content_type": "application/problem+json"
+        "select": [
+          {
+            "when": {
+              "env.cltrid_reuse_refused": true
+            },
+            "then": {
+              "status": 500,
+              "headers": {
+                "RPP-Code": "02400"
+              },
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              },
+              "content_type": "application/problem+json"
+            }
+          },
+          {
+            "then": {
+              "status": 200,
+              "headers": {
+                "RPP-Code": "01000"
+              },
+              "body": {
+                "@type": "contactAvailability",
+                "available": true
+              },
+              "content_type": "application/rpp+json"
+            }
+          }
+        ]
       }
     }
   ]

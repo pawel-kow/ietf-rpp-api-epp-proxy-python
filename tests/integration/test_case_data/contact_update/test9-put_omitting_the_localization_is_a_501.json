@@ -1,5 +1,9 @@
 {
+  "when": {
+    "profile.contact_localization": true
+  },
   "test_id": "test9-put_keeps_the_localization",
+  "description": "A full update without the localization the contact has asks to remove it, which EPP cannot do: 501, see spec-issues.md (Full update of a contact).",
   "steps": [
     {
       "request": {
@@ -69,9 +73,21 @@
             }
           },
           "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
+            "select": [
+              {
+                "when": {
+                  "profile.contact_auth_info": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
           }
         }
       },
@@ -159,6 +175,5 @@
         }
       }
     }
-  ],
-  "description": "A full update without the localization the contact has asks to remove it, which EPP cannot do: 501, see spec-issues.md (Full update of a contact)."
+  ]
 }

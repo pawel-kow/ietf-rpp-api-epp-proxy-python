@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.client_statuses": true
+  },
   "test_id": "test28-patch_missing",
   "steps": [
     {

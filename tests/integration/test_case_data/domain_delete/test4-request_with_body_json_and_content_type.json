@@ -11,7 +11,7 @@
           "authInfo": {
             "@type": "authInfo",
             "method": "authinfo",
-            "authdata": "Password1!@"
+            "authdata": "Abc2345678"
           }
         },
         "headers": {

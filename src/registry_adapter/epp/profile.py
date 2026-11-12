@@ -17,6 +17,8 @@ EPP_PROFILE = BackendProfile(
     contact_localization=True,
     contact_region=True,
     contact_phones_max=1,
+    contact_org_person_name=True,  # RFC 5733 postalInfo name and org
+    contact_name_changeable=True,
     contact_auth_info=True,  # RFC 5733 §2.8
     supports_renew=True,
     supports_contact_delete=True,
@@ -26,6 +28,7 @@ EPP_PROFILE = BackendProfile(
     auth_info_readable=True,
     domain_dns_required=False,  # RFC 5731 §3.2.1: ns is optional
     contact_phone_required=False,  # RFC 5733 §3.2.1: voice is optional
+    registrant_required=False,  # RFC 5731 §3.2.1: registrant is optional
     registration_periods=True,  # RFC 5731 §2.6
     metadata=frozenset(f"{obj}.{member}" for obj in ("domainName", "contact")
                        for member in ("crClientId", "crDate", "upClientId", "upDate", "trDate")),

@@ -8,7 +8,7 @@
         "body_json": {
           "domain_name": "FREE.EXAMPLE",
           "authInfo": {
-            "pw": "Password1!@"
+            "pw": "Abc2345678"
           }
         },
         "headers": {

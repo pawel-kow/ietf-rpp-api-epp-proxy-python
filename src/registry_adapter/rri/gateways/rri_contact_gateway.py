@@ -1,7 +1,7 @@
 from core.model.contact import contact_application
 from core.model.contact.contact_replacement import ContactReplacement
 from core.model.contact.contact_update import ContactUpdate
-from core.model.contact.contacts import Contact
+from core.model.contact.contacts import Contact, ContactType
 from core.ports import derived_update
 from core.ports.replace_outcome import ReplaceOutcome
 from core.result.error_response import ErrorResponse
@@ -18,6 +18,20 @@ AUTH_INFO = "authInfo"
 
 def _no_auth_info(client_transaction_id) -> ErrorResponse:
     return refused(ResultCode.UNIMPLEMENTED_OPTION, "RRI holds no authInfo for a contact", client_transaction_id)
+
+
+def _cleared(stored: Contact, wanted: ContactReplacement) -> str | None:
+    """What RRI requires of a PERSON or ORG and so cannot clear: the name, the address, the email and the phone."""
+    for member, label in (("name", "the name"), ("address", "the address"), ("email", "the email"),
+                          ("phone", "the phone number")):
+        if getattr(stored, member) and not getattr(wanted, member):
+            return f"Removing {label} cannot be expressed in RRI"
+    return None
+
+
+def _name(stored: Contact, contact_type: ContactType) -> str:
+    """The name RRI holds: an ORG's is its organisation's."""
+    return stored.organisationName or stored.name if contact_type == ContactType.ORG else stored.name
 
 
 class RriContactGateway:
@@ -56,9 +70,21 @@ class RriContactGateway:
             if isinstance(current, ErrorResponse):
                 return current
         stored: Contact = current.payload
-        if same_contact(wanted.id, stored.type, wanted, stored):
+        # An RPP contact with an organisation is an ORG, which RRI names by the organisation only.
+        contact_type = ContactType.ORG if wanted.organisationName else ContactType.PERSON
+        if contact_type == ContactType.ORG and wanted.name and wanted.name != wanted.organisationName:
+            return refused(ResultCode.UNIMPLEMENTED_OPTION,
+                           "The name of a person in the contact of an organisation cannot be expressed in RRI",
+                           client_transaction_id)
+        if stored.name and wanted.name and _name(stored, contact_type) != wanted.name:
+            return refused(ResultCode.UNIMPLEMENTED_OPTION, "Changing the name of a contact cannot be expressed in RRI",
+                           client_transaction_id)
+        cleared = _cleared(stored, wanted)
+        if cleared:
+            return refused(ResultCode.UNIMPLEMENTED_OPTION, cleared, client_transaction_id)
+        if contact_type == stored.type and same_contact(wanted.id, stored.type, wanted, stored):
             return ReplaceOutcome(current=current)
-        mutation = rri_contact_update(self.client, wanted.id, stored.type, wanted, stored.carried_over,
+        mutation = rri_contact_update(self.client, wanted.id, contact_type, wanted, stored.carried_over,
                                       client_transaction_id)
         if isinstance(mutation, ErrorResponse):
             return mutation
