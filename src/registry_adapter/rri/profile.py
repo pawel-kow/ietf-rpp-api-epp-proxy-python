@@ -23,6 +23,8 @@ RRI_PROFILE = BackendProfile(
     auth_info_readable=False,  # RRI holds the hash of an AuthInfo1 only
     domain_dns_required=True,  # 1 to 20 dnsentry
     contact_phone_required=True,  # mandatory since 2026-01-28
+    registration_periods=False,  # a domain runs until it is deleted
+    metadata=frozenset({"domainName.crDate", "domainName.upDate", "contact.upDate"}),  # registrationDate, changed
     objects=("domainName", "contact"),
     profiles=(),  # the EPP compatibility profile does not describe RRI (refactoring.md §3.10)
 )

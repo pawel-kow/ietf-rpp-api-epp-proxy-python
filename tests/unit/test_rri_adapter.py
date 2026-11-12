@@ -15,6 +15,7 @@ from core.model.contact.contacts import ContactMinimal
 from core.model.domain.zone_record import ZoneRecord
 from core.model.shared.common import AuthInfo
 from core.result.error_response import ErrorResponse
+from core.result.partially_applied import PartiallyApplied
 from core.result.result_code import ResultCode
 from registry_adapter.rri.commands.shared.rri_command import ctid
 from registry_adapter.rri.gateways.rri_backend import RriBackend
@@ -71,14 +72,15 @@ def test_a_refusal_carries_the_denic_code():
     assert resp.client_transaction_id == "cl-1"
 
 
-def test_a_deleted_domain_is_gone_for_reads_but_not_for_its_restore():
+def test_a_deleted_domain_reads_with_what_rri_shows():
     deleted = reply(data=('<domain:infoData xmlns:domain="http://registry.denic.de/domain/5.0">'
                           f'<domain:handle>{NAME}</domain:handle><domain:ace>{NAME}</domain:ace>'
                           '<domain:status>redemptionPeriod</domain:status>'
                           '<domain:changed>2026-11-12T01:20:34+01:00</domain:changed></domain:infoData>'))
     gateway, _ = backend(deleted, deleted)
 
-    assert gateway.domains.info(NAME).code == ResultCode.OBJECT_DOES_NOT_EXIST
+    domain = gateway.domains.info(NAME).payload
+    assert domain.status == ["pendingDelete"] and domain.clID == "unknown"
     assert gateway.domains.restore_info(NAME).payload.rgpStatus == ["redemptionPeriod"]
 
 
@@ -135,13 +137,23 @@ def test_create_with_an_auth_info_rri_cannot_take_sends_nothing():
     assert client.sent == []
 
 
-def test_create_whose_auth_info_fails_says_the_domain_was_created():
-    gateway, _ = backend(reply(), error("63391068704", "AuthInfo1 already exists"))
+def test_create_whose_auth_info_fails_is_partly_applied():
+    gateway, _ = backend(reply(stid="sv-create"), error("63391068704", "AuthInfo1 already exists"))
 
-    resp = gateway.domains.create(_domain(authInfo=AuthInfo(pw="Abc2345678")))
+    resp = gateway.domains.create(_domain(authInfo=AuthInfo(pw="Abc2345678")), client_transaction_id="cl-1")
 
-    assert resp.code == ResultCode.OBJECT_EXISTS
-    assert resp.msg.startswith("The domain create was applied")
+    assert isinstance(resp, PartiallyApplied)
+    assert resp.server_transaction_id == "sv-create" and resp.client_transaction_id == "cl-1"
+    assert resp.refusal.code == ResultCode.OBJECT_EXISTS
+
+
+def test_a_full_update_whose_auth_info_fails_is_partly_applied():
+    gateway, _ = backend(DOMAIN_INFO, reply(stid="sv-update"), error("63391068704", "AuthInfo1 already exists"))
+
+    outcome = gateway.domains.replace(_wanted(records=[], unchanged=frozenset(), authInfo=AuthInfo(pw="Xyz2345678")))
+
+    assert isinstance(outcome.mutation, PartiallyApplied)
+    assert outcome.mutation.server_transaction_id == "sv-update"
 
 
 def _wanted(**extra):

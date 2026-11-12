@@ -63,7 +63,7 @@ def _rpp_to_contacts(domain_rpp: RPPDomain, profile: BackendProfile) -> list[Con
     return contacts or None
 
 
-def _rpp_to_processes(domain_rpp: RPPDomain) -> dict | None:
+def _rpp_to_processes(domain_rpp: RPPDomain, profile: BackendProfile) -> dict | None:
     create_processes = domain_rpp.processes.createProcess if domain_rpp.processes else None
     if not create_processes:
         return None
@@ -72,6 +72,8 @@ def _rpp_to_processes(domain_rpp: RPPDomain) -> dict | None:
     period = create_processes[0].period
     if period is None:
         return None
+    if not profile.registration_periods:
+        raise NotSupportedByBackend("A registration period")
     return {"creation": CreationProcess(duration=period_duration(period))}
 
 
@@ -113,7 +115,7 @@ def rpp_to_model(rpp: dict, *, profile: BackendProfile) -> Domain:
         dnsSEC=dns_sec,
         records=records or None,
         contacts=_rpp_to_contacts(domain_rpp, profile),
-        processes=_rpp_to_processes(domain_rpp),
+        processes=_rpp_to_processes(domain_rpp, profile),
         idn=_rpp_to_idn(domain_rpp, profile),
     )
 

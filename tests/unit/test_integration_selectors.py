@@ -145,3 +145,17 @@ def test_pacer_spaces_the_requests_of_each_registrar():
         pacer.wait({"Authorization": slot})
     pacer.wait({})
     assert waits == [4.0, 4.0]
+
+
+def test_an_omitting_select_leaves_the_member_or_element_out():
+    value = {"a": 1, "b": {"select": [{"when": {"env.tld": "example"}, "omit": True}, {"then": 2}]},
+             "c": [1, {"select": [{"when": {"env.tld": "example"}, "omit": True}, {"then": 2}]}]}
+    assert selectors.resolve(value, FACTS) == {"a": 1, "c": [1]}
+    assert selectors.resolve({"b": {"select": [{"when": {"env.tld": "de"}, "omit": True}, {"then": 2}]}}, FACTS) == {"b": 2}
+
+
+def test_check_accepts_omit_and_refuses_both():
+    selectors.check({"steps": [{"request": {"x": {"select": [{"when": {"env.tld": "x"}, "omit": True}, {"then": 1}]}},
+                                "response": {}}]}, FACTS)
+    with pytest.raises(SelectorError):
+        selectors.check({"steps": [{"request": {"x": {"select": [{"omit": True, "then": 1}]}}, "response": {}}]}, FACTS)

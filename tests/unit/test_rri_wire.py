@@ -124,3 +124,33 @@ def test_discovery_states_the_objects_of_rri():
 
     assert response.status_code == 200, response.text
     assert response.json()["objects"] == ["domainName", "contact"]
+
+
+def test_a_deleted_domain_reads_with_a_placeholder_sponsor():
+    client, _ = setup(reply(data=('<domain:infoData xmlns:domain="http://registry.denic.de/domain/5.0">'
+                                  f'<domain:handle>{NAME}</domain:handle><domain:ace>{NAME}</domain:ace>'
+                                  '<domain:status>redemptionPeriod</domain:status>'
+                                  '<domain:changed>2026-11-12T01:20:34+01:00</domain:changed></domain:infoData>')))
+
+    response = client.get(f"/domainNames/{NAME}", headers=HEADERS)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == [{"@type": "domainStatus", "label": "pendingDelete"}]
+    assert body["provMetadata"]["spClientId"] == "unknown"
+
+
+def test_a_create_applied_in_part_is_accepted_without_a_read_back():
+    client, clients = setup(reply(stid="sv-create"),
+                            reply("failed", messages='<tr:message level="error" code="63391068704"><tr:text>AuthInfo1 '
+                                                     'already exists</tr:text></tr:message>'))
+
+    response = client.post("/domainNames", json={
+        "@type": "domainName", "name": NAME, "registrant": {"@type": "contact", "id": "DENIC-1000022-HOLDER"},
+        "dns": {"@type": "dnsData", "records": [{"@type": "dnsRecord", "name": "@", "type": "a",
+                                                 "rdata": {"address": "192.0.2.10"}}]},
+        "authInfo": {"@type": "authInfo", "method": "authinfo", "authdata": "Abc2345678"}}, headers=BODY_HEADERS)
+
+    assert response.status_code == 202, response.text
+    assert response.headers["RPP-Svtrid"] == "sv-create"
+    assert len(clients[0].sent) == 2

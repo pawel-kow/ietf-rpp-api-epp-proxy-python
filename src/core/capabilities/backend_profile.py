@@ -23,6 +23,10 @@ class BackendProfile:
     `domain_dns_required` is whether a domain needs DNS data (name servers or records) from its create on, and
     `contact_phone_required` whether a contact needs a voice number. The proxy leaves both to the registry to refuse
     (gap Q13); the test selectors read them.
+    `registration_periods` is whether a domain is registered for a period, with an expiry date; the domain mapper
+    refuses a period otherwise.
+    `metadata` are the provisioning metadata a read shows besides the sponsor, as `<object>.<member>`
+    (`domainName.crDate`); the test selectors read them.
     `objects` are the data objects and `profiles` the profiles the discovery document states.
     `lgrs` are the label generation rulesets the backend offers for IDNs, none when it takes no IDN.
     """
@@ -45,6 +49,8 @@ class BackendProfile:
     auth_info_readable: bool
     domain_dns_required: bool
     contact_phone_required: bool
+    registration_periods: bool
+    metadata: frozenset[str]
     objects: tuple[str, ...]
     profiles: tuple[str, ...]
     lgrs: frozenset[str] = frozenset()

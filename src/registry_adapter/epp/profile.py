@@ -26,6 +26,9 @@ EPP_PROFILE = BackendProfile(
     auth_info_readable=True,
     domain_dns_required=False,  # RFC 5731 §3.2.1: ns is optional
     contact_phone_required=False,  # RFC 5733 §3.2.1: voice is optional
+    registration_periods=True,  # RFC 5731 §2.6
+    metadata=frozenset(f"{obj}.{member}" for obj in ("domainName", "contact")
+                       for member in ("crClientId", "crDate", "upClientId", "upDate", "trDate")),
     objects=("domainName", "host", "contact"),
     profiles=("urn:ietf:params:rpp:profile:epp-compatibility",),  # core §12.4, data-objects §2.8, json §8.7.1
 )

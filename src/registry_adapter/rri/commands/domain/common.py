@@ -28,6 +28,10 @@ LABELS = {role: label for label, role in ROLES.items()}
 
 AUTH_INFO1 = "authInfo1"
 
+# The sponsor of a domain whose INFO names none (one in its redemption period): RPP requires one, so it is a
+# placeholder (spec-issues.md, "Sponsor of a deleted domain").
+UNKNOWN_SPONSOR = "unknown"
+
 
 @dataclass(kw_only=True)
 class DomainState:
@@ -193,7 +197,7 @@ def domain_from_rri(data: InfoData, lgr: str | None) -> Domain:
         idn=idn,
         crDate=_datetime(registration) if registration and not registration.startswith("before") else None,
         upDate=_datetime(data.changed),
-        clID=data.reg_acc.reg_acc_id if data.reg_acc else None,
+        clID=data.reg_acc.reg_acc_id if data.reg_acc else UNKNOWN_SPONSOR,
         carried_over={AUTH_INFO1: _datetime(data.auth_info1)} if data.auth_info1 else {},
     )
 

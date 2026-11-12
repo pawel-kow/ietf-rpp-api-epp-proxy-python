@@ -8,6 +8,7 @@ from core.ports import derived_update
 from core.ports.replace_outcome import ReplaceOutcome
 from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
+from core.result.partially_applied import PartiallyApplied
 from core.result.result_code import ResultCode
 from registry_adapter.rri.commands.domain.auth_info import (
     rri_create_auth_info1, rri_delete_auth_info1, valid_auth_info1,
@@ -34,12 +35,13 @@ def _bad_auth_info(client_transaction_id) -> ErrorResponse:
                    client_transaction_id)
 
 
-def _partly_applied(first: str, error: ErrorResponse) -> ErrorResponse:
-    """The refusal of a later command of a request whose first command the registry applied (gap Q7)."""
-    logger.warning("RRI %s applied, a later command refused with %s", first, error.registry_code)
-    return ErrorResponse(code=error.code, msg=f"The {first} was applied, but then: {error.msg}",
-                         server_transaction_id=error.server_transaction_id,
-                         client_transaction_id=error.client_transaction_id, registry_code=error.registry_code)
+def _partly_applied(what: str, first: OperationResponse, error: ErrorResponse) -> PartiallyApplied:
+    """A request whose first command the registry applied and a later one refused (gap Q7): accepted, with the first
+    command's transaction ids, and the refusal logged by its code."""
+    logger.warning("RRI %s applied, a later command refused with %s", what, error.registry_code)
+    return PartiallyApplied(code=first.code, msg=f"The {what} was applied, but then: {error.msg}",
+                            server_transaction_id=first.server_transaction_id,
+                            client_transaction_id=first.client_transaction_id, payload=first.payload, refusal=error)
 
 
 class RriDomainGateway:
@@ -54,17 +56,10 @@ class RriDomainGateway:
         return rri_domain_check(self.client, name, client_transaction_id)
 
     def info(self, name, client_transaction_id=None):
-        """A domain in its redemption period has no sponsor in RRI's INFO, which a read must show: it is gone for
-        reads, and only its restore can be read."""
-        resp = self.restore_info(name, client_transaction_id)
-        if not isinstance(resp, ErrorResponse) and resp.payload.clID is None:
-            return ErrorResponse(code=ResultCode.OBJECT_DOES_NOT_EXIST, msg="The domain is deleted",
-                                 server_transaction_id=resp.server_transaction_id,
-                                 client_transaction_id=client_transaction_id)
-        return resp
+        return rri_domain_info(self.client, name, client_transaction_id, lgr=self.lgr)
 
     def restore_info(self, name, client_transaction_id=None):
-        return rri_domain_info(self.client, name, client_transaction_id, lgr=self.lgr)
+        return self.info(name, client_transaction_id)
 
     def create(self, domain: Domain, client_transaction_id=None):
         password = domain.authInfo.pw if domain.authInfo else None
@@ -75,7 +70,7 @@ class RriDomainGateway:
             return self._named(created, domain.name)
         auth = rri_create_auth_info1(self.client, domain.name, password, client_transaction_id, n=2)
         if isinstance(auth, ErrorResponse):
-            return _partly_applied("domain create", auth)
+            return _partly_applied("domain create", self._named(created, domain.name), auth)
         return self._named(created, domain.name)
 
     @staticmethod
@@ -126,11 +121,15 @@ class RriDomainGateway:
                     self.client, wanted.name, password, client_transaction_id, n)))
         if not steps:
             return ReplaceOutcome(current=current)
-        mutation = None
+        mutation = first = None
         for n, (what, step) in enumerate(steps, start=1):
             resp = step(n)
             if isinstance(resp, ErrorResponse):
-                return resp if n == 1 else _partly_applied(f"domain {steps[0][0]}", resp)
+                if n == 1:
+                    return resp
+                mutation = _partly_applied(f"domain {steps[0][0]}", first, resp)
+                break
+            first = first or resp
             mutation = resp
         return ReplaceOutcome(current=current, update=after, mutation=mutation)
 

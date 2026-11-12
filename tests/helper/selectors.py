@@ -71,23 +71,34 @@ def holds(selector, facts: Facts) -> bool:
     return not unmet(selector, facts)
 
 
+# What an entry `{"omit": true}` of a select gives: the member or list element that holds the select is left out.
+OMIT = object()
+
+
 def _is_select(value) -> bool:
     return isinstance(value, dict) and set(value) == {"select"}
 
 
 def resolve(value, facts: Facts):
     """Replaces every `{"select": [{"when": …, "then": …}, …, {"then": …}]}` by the `then` of its first entry that
-    holds, recursively."""
+    holds, recursively. An entry `{"omit": true}` instead of `then` leaves the member or list element out."""
+    resolved = _resolve(value, facts)
+    if resolved is OMIT:
+        raise SelectorError("a select at the top of a step value cannot omit it")
+    return resolved
+
+
+def _resolve(value, facts: Facts):
     if _is_select(value):
-        entries = value["select"]
-        for entry in entries:
+        for entry in value["select"]:
             if "when" not in entry or holds(entry["when"], facts):
-                return resolve(entry["then"], facts)
+                return OMIT if entry.get("omit") else _resolve(entry["then"], facts)
         raise SelectorError("no entry of a select holds")
     if isinstance(value, dict):
-        return {k: resolve(v, facts) for k, v in value.items()}
+        items = {k: _resolve(v, facts) for k, v in value.items()}
+        return {k: v for k, v in items.items() if v is not OMIT}
     if isinstance(value, list):
-        return [resolve(v, facts) for v in value]
+        return [item for item in (_resolve(v, facts) for v in value) if item is not OMIT]
     return value
 
 
@@ -100,13 +111,15 @@ def check(case: dict, facts: Facts) -> None:
             if not isinstance(entries, list) or not entries:
                 raise SelectorError(f"{path}: select needs a list of entries")
             for i, entry in enumerate(entries):
-                if not isinstance(entry, dict) or "then" not in entry or set(entry) - {"when", "then"}:
-                    raise SelectorError(f"{path}: select entry {i} needs then and at most when")
+                if not isinstance(entry, dict) or ("then" in entry) == (entry.get("omit") is True) \
+                        or set(entry) - {"when", "then", "omit"}:
+                    raise SelectorError(f"{path}: select entry {i} needs then or omit, and at most when")
                 if "when" in entry:
                     unmet(entry["when"], facts)
                 elif i != len(entries) - 1:
                     raise SelectorError(f"{path}: only the last select entry may lack when")
-                walk(entry["then"], f"{path}.select[{i}]")
+                if "then" in entry:
+                    walk(entry["then"], f"{path}.select[{i}]")
             if "when" in entries[-1]:
                 raise SelectorError(f"{path}: the last select entry is the default and has no when")
             return
