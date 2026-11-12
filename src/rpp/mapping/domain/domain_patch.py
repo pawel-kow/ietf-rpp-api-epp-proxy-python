@@ -10,7 +10,7 @@ from rpp.dto.rpp_host_reference import RPPHostReference
 from rpp.dto.rpp_labelled_contact import RPPLabelledContact
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
 from rpp.mapping.domain import domain_wanted
-from rpp.mapping.domain.domains import check_contact_label, REGISTRANT
+from rpp.mapping.domain.domains import check_contact_label, check_host_objects, REGISTRANT
 from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
 from rpp.mapping.shared.common import parse_rpp
 from rpp.mapping.shared.dns_records import DNS_PARENTS
@@ -88,6 +88,7 @@ class _PatchedUpdate:
     def _add_element(self, operation: RPPPatchOperation):
         if operation.path == "/nameservers":
             _validated("nameservers", [operation.value])
+            check_host_objects([operation.value], self.profile)
             host = parse_rpp(RPPHostReference, operation.value)
             self.add_hosts.append(HostObj(id=host.hostName))
         else:

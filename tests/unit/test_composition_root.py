@@ -7,6 +7,11 @@ from registry_adapter.common.transport.tcp_client import TCPClient
 from registry_adapter.epp.gateways.epp_backend import EppBackend
 from settings.load_settings import load_settings
 
+import pytest
+
+# The tests of the EPP composition hold where the test environment composes the app for EPP.
+epp_only = pytest.mark.skipif(settings.backend != "epp", reason="the app under test is not composed for EPP")
+
 
 def test_default_factory_connects_to_the_configured_backend():
     client = new_epp_client("user", "pw")
@@ -22,6 +27,7 @@ def test_default_factory_uses_the_request_credentials():
     assert client.verify_credentials("user", "pw")
 
 
+@epp_only
 def test_the_backend_is_epp_over_the_default_client():
     backend = new_backend("user", "pw")
 
@@ -84,10 +90,12 @@ def test_the_composition_root_hands_the_configuration_to_the_app():
     assert main.app.app.config["RPP_DISCOVERY_SETTINGS"] is settings.discovery
 
 
+@epp_only
 def test_the_app_offers_the_configured_lgrs():
     assert main.app.app.config["RPP_BACKEND_PROFILE"].lgrs == frozenset(settings.epp.rpp_idn_lgr_tables or {})
 
 
+@epp_only
 def test_the_backend_maps_lgr_to_the_configured_idn_tables():
     tables = main.idn_tables
 

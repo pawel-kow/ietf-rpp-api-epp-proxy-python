@@ -6,10 +6,13 @@ RPP API stays the same. Which RRI transaction serves which RPP operation, and wh
 XML schemas in [xsd/](xsd/). The feature is tracked as
 [issue #126](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/126).
 
-Status: **proposal, for acceptance.** Under [process.md](../agents/process.md) rule 2 and the working agreement in
-[AGENTS.md](../../AGENTS.md), nothing here is implemented until the maintainer accepts it. The open questions in
-[gap-analysis.md §7](gap-analysis.md#7-open-questions) and in [§8](#8-open-questions-of-this-plan) below must be
-answered first.
+Status: **implemented** in [PR #130](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/pull/130), with the
+proposals of [gap-analysis.md §7](gap-analysis.md#7-open-questions) taken as decisions, except Q7 (the alternative:
+the error of the later command, with a detail that the first was applied). Where the implementation differs from
+this plan, [architecture.project.md](../agents/architecture.project.md) and
+[testing.project.md](../agents/testing.project.md) describe what is built: the RRI adapter has the operation-per-file
+shape of the EPP one, the handle prefix of each registrar is a variable in `.env`, and the cases that need
+an EPP-shaped domain or contact skip on RRI by `profile.domain_dns_required` and `profile.contact_phone_required`.
 
 **Prerequisite:** [#120](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/120) ("Restructure `src/`
 into core, rpp and registry adapters") is merged. This plan builds on its target layout, as

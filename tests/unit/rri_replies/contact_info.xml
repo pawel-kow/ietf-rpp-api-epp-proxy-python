@@ -1,0 +1,23 @@
+<contact:infoData xmlns:contact="http://registry.denic.de/contact/5.0" xmlns:verification="http://registry.denic.de/verification/5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <contact:handle>DENIC-1000022-HOLDER</contact:handle>
+  <contact:type>PERSON</contact:type>
+  <contact:name>Erika Mustermann</contact:name>
+  <contact:postal>
+    <contact:address>Musterweg 12</contact:address>
+    <contact:postalCode>60596</contact:postalCode>
+    <contact:city>Frankfurt am Main</contact:city>
+    <contact:countryCode>DE</contact:countryCode>
+  </contact:postal>
+  <contact:email>erika@example.com</contact:email>
+  <contact:phone>+49.6912345678</contact:phone>
+  <contact:changed>2026-11-12T01:20:20+01:00</contact:changed>
+  <verification:verificationInformation xsi:type="verification:verificationInformationType">
+    <verification:verifiedClaims><verification:claim>name</verification:claim></verification:verifiedClaims>
+    <verification:verificationResult>success</verification:verificationResult>
+    <verification:verificationReference>ABC123</verification:verificationReference>
+    <verification:verificationTimestamp>2023-11-11T15:36:21+02:00</verification:verificationTimestamp>
+    <verification:verificationEvidence>idcard</verification:verificationEvidence>
+    <verification:verificationMethod>auth</verification:verificationMethod>
+    <verification:trustFramework>de_denic</verification:trustFramework>
+  </verification:verificationInformation>
+</contact:infoData>

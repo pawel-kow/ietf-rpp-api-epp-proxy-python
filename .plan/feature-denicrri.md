@@ -9,13 +9,14 @@ The maintainer asked to work through the phases without waiting for confirmation
 - [x] Extract the EPP test values for `.env` (`TEST_EPP_*`), probe MTEST.
 - [x] R1: test environments, `.env`, placeholders, selectors, cases moved; the new profile facts.
 - [x] R2: `TCPClient` framing; the models widened (§3.6), EPP mapping unchanged.
-- [~] R3: `rri/session`, `rri/xml` (generated), CTIDs, result codes, `FakeRriClient`, `RriSettings`, `RRI_PROFILE`,
-      composition, `rri-mtest.yaml`; LOGIN/LOGOUT on MTEST.
-- [ ] R4: RRI domains (CHECK, INFO, CREATE + AuthInfo1, UPDATE/CHHOLDER, DELETE, RESTORE), `derived_update.update`.
-- [ ] R5: RRI contacts (CHECK, INFO, CREATE, UPDATE with verification carried over).
-- [ ] R6: RRI messages (QUEUE-READ, QUEUE-DELETE, type mapping).
-- [ ] R7: transfer per Q3 (option C: 501), Q8–Q10, Q16 not exposed.
-- [ ] R8: docs.
+- [x] R3: `rri/session`, `rri/xml` (generated), CTIDs, result codes, `FakeRriClient`, `RriSettings`, `RRI_PROFILE`,
+      composition, `rri-mtest.yaml`; LOGIN/LOGOUT on MTEST. `SerialSession` in `common/session` shared by both clients.
+- [x] R4: RRI domains (CHECK, INFO, CREATE + AuthInfo1, UPDATE/CHHOLDER, DELETE, RESTORE), `derived_update.update`.
+- [x] R5: RRI contacts (CHECK, INFO, CREATE, UPDATE with verification carried over).
+- [x] R6: RRI messages (QUEUE-READ, QUEUE-DELETE). Every message is a service notice (see open points).
+- [x] R7: transfer per Q3 option C (501 `02101` from the profile), Q8–Q10 and Q16 not exposed.
+- [x] R8: docs (architecture, testing, security, process, overview, README, refactoring.md status).
+- [~] Full EPP run and MTEST run on the final state, recorded below.
 - [ ] Before merge: file unfixed defects as issues, `git rm` this plan, release the mutex.
 
 ## Decisions
@@ -25,8 +26,8 @@ The maintainer asked to work through the phases without waiting for confirmation
 - **Open questions of gap-analysis §7 take the proposal** written there, as the maintainer asked to proceed without
   confirmation: Q1 first holder is `registrant`, the others `contacts` labelled `registrant`; Q2 labels
   `generalRequest` and `abuse`; Q3 option C (transfer answers 501 `02101`); Q4 30 days, charset checked up front
-  (422 `02306`); Q5 `failed` → `inactive`, DISPUTE left out; Q6 RESTORE without a report, a report → 501; Q7 202 with
-  the first command's headers and a logged warning; Q8–Q10 not exposed; Q11 refuse `lgr` unless one is configured;
+  (422 `02306`); Q5 `failed` → `inactive`, DISPUTE left out; Q6 RESTORE without a report, a report → 501; Q7 see
+  below; Q8–Q10 not exposed; Q11 refuse `lgr` unless one is configured;
   Q12 yes; Q13 DENIC refuses; Q14 synthesise `ok`; Q15 as proposed; Q16 out of scope; Q18 `<cltrid>-n`; Q19 409.
 - **EPP credentials in `.env` too** (maintainer): the EPP environment names `TEST_EPP_REGACC1`/`_PASSWORD` and
   `TEST_EPP_REGACC2`/`_PASSWORD` instead of writing `foo`/`bar` and `baz`/`qux` into its descriptor. The wrong
@@ -40,6 +41,15 @@ The maintainer asked to work through the phases without waiting for confirmation
   error of the second command, with a detail that the first was applied. The flows have no way to make a gateway
   answer a 202, and a Problem says more than a 202 without a body.
 - **Reading a REQUEST contact** answers 501 `02102`: RPP has no Card form for a URI template yet (gap Q2), follow-up.
+- **A domain in its redemption period reads as 404** on RRI: its INFO names no sponsor, which `provMetadata` needs.
+  Its restore still reads (`restore_info`).
+- **New profile facts** beyond refactoring.md §3.7: `contact_auth_info` (EPP requires a contact authInfo, RRI has
+  none; the contact mapper refuses one), `domain_dns_required` and `contact_phone_required` (left to the registry,
+  read by the test selectors).
+- **A poll on RRI answers 1301/1300** like EPP, so a client sees the same codes.
+- **The EPP cases** that create domains without DNS data or contacts without a phone skip on RRI by those facts at
+  group level. The cases that run on both backends are the new `domain_lifecycle/` group, plus the availability,
+  discovery and message groups.
 
 ## Findings
 

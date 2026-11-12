@@ -110,6 +110,25 @@ into the `Authorization` header when it sends the request, never into the case, 
 | `{gen_req:a}`, `{abuse:a}` | the REQUEST contacts of `a` (RRI only) |
 | `{tld}` | the TLD the environment registers under (`env.tld`) |
 
+### DENIC MTEST
+
+`RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration` runs the suite against DENIC's RRI test environment through
+[config.rri-mtest.yaml](../../config.rri-mtest.yaml). It needs the IPv4 address of the machine on the allowlist of
+both RegAccs (the devcontainer goes out with the host's address), and the `TEST_RRI_*` variables in `.env`: the two
+logins, their passwords, the prefix of the handles the cases create (it starts with the RegAccId), and a REQUEST
+contact of each RegAcc for the General Request and Abuse roles, created beforehand outside the suite (RPP cannot
+create one yet, gap Q2). Of the run's limits: 4 sessions and 100 RRI requests a minute per RegAcc, so at most 4
+workers and 25 RPP requests a minute per registrar, paced by the runner. 10 failed LOGINs lock a user for an hour, so
+no case with wrong credentials runs there (`env.failed_logins_lock`). The RGP is a day, so restores are tested in unit
+tests only. MTEST keeps what the cases create: they delete their domains, and the contacts stay (RRI cannot delete
+one), which the random part of the handle keeps apart. A domain on MTEST needs DNS data and the REQUEST contacts, and a
+contact a phone, so the cases written for EPP skip there by `profile.domain_dns_required` and
+`profile.contact_phone_required`; `domain_lifecycle/` holds the cases that run on both, selecting what differs.
+
+Behaviour of MTEST the cases depend on: every reply carries info `13000000011`; a new domain is `pendingCreate`; an
+MX exchange must resolve; CREATE-AUTHINFO1 without an expiry gives one two days ahead; handles come back in upper
+case and IPv6 addresses uncompressed.
+
 ## Selectors
 
 A case file says which backends a case, a step or an expected value is for (implemented in
@@ -149,6 +168,10 @@ Unit tests in `tests/unit/` inject test doubles through constructors:
   a registry. See [test_app_injection.py](../../tests/unit/test_app_injection.py).
 - The domain mappers take `profile=EPP_PROFILE`. A test that calls `map_request` directly uses the fixture of
   [epp_app_context](../../tests/helper/epp_app_context.py), from which `map_request` names the backend.
+- `RriBackend(FakeRriClient(replies=[...]))` runs the RRI adapter over RRI XML replies
+  ([fake_rri_client.py](../../tests/helper/fake_rri_client.py)); the replies recorded from MTEST are in
+  `tests/unit/rri_replies/`, with personal data replaced. `rri_backends(factory)` builds an app around them, as
+  `epp_backends` does.
 - `TCPClient(host, port, tls_context)` connects to a
   [LoopbackEppServer](../../tests/helper/loopback_epp_server.py). Its certificate is
   generated per test session with the `openssl` CLI, so no key is in the repository.

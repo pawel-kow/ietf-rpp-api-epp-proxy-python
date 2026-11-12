@@ -1,4 +1,5 @@
 {
+  "when": {"env.failed_logins_lock": false},
   "test_id": "test5-unknown_user",
   "steps": [
     {

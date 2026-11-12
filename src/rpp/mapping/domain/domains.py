@@ -26,6 +26,19 @@ def check_contact_label(label: str, profile: BackendProfile) -> str:
     return label
 
 
+def check_host_objects(host_names: list, profile: BackendProfile):
+    """`nameservers` are host objects, which a backend without them (`profile.host_objects`) cannot hold: it takes
+    name servers as `ns` records in `dns` (gap Q12)."""
+    if host_names and not profile.host_objects:
+        raise NotSupportedByBackend("'nameservers' (host objects)")
+
+
+def check_client_statuses(labels, profile: BackendProfile):
+    """A backend whose statuses are all its own (`profile.client_statuses`) takes none from a client."""
+    if labels and not profile.client_statuses:
+        raise NotSupportedByBackend(f"Client status '{next(iter(labels))}'")
+
+
 def check_registrants(registrants: int, profile: BackendProfile):
     if registrants > profile.max_registrants:
         raise NotSupportedByBackend(f"More than {profile.max_registrants} registrants")
@@ -65,6 +78,7 @@ def _rpp_to_processes(domain_rpp: RPPDomain) -> dict | None:
 def _rpp_to_delegation(domain_rpp: RPPDomain, profile: BackendProfile
                        ) -> tuple[NS | None, DnsSec | None, list[ZoneRecord]]:
     ns = None
+    check_host_objects(domain_rpp.nameservers, profile)
     if domain_rpp.nameservers:
         ns = NS(host_objs=[HostObj(id=h.hostName) for h in domain_rpp.nameservers], host_attrs=None)
     if domain_rpp.dns is None:

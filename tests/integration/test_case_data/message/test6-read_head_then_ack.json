@@ -1,4 +1,5 @@
 {
+  "when": {"profile.domain_transfer_operations": {"contains": "request"}},
   "test_id": "test6-read_head_then_ack",
   "steps": [
     {

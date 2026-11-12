@@ -17,12 +17,15 @@ EPP_PROFILE = BackendProfile(
     contact_localization=True,
     contact_region=True,
     contact_phones_max=1,
+    contact_auth_info=True,  # RFC 5733 §2.8
     supports_renew=True,
     supports_contact_delete=True,
     domain_transfer_operations=TRANSFER_OPERATIONS,
     contact_transfer_operations=TRANSFER_OPERATIONS,
     restore_report=True,  # RFC 3915 §4.2.5
     auth_info_readable=True,
+    domain_dns_required=False,  # RFC 5731 §3.2.1: ns is optional
+    contact_phone_required=False,  # RFC 5733 §3.2.1: voice is optional
     objects=("domainName", "host", "contact"),
     profiles=("urn:ietf:params:rpp:profile:epp-compatibility",),  # core §12.4, data-objects §2.8, json §8.7.1
 )

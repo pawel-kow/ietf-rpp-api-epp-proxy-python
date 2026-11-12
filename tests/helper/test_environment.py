@@ -124,10 +124,12 @@ def load(name: str, environ=None, with_credentials: bool = True) -> TestEnvironm
 
 VALUE_PLACEHOLDER = re.compile(r"\{(handle|regacc|gen_req|abuse):([a-z])(?::([^{}]*))?\}")
 TLD_PLACEHOLDER = "{tld}"
+FACT_PLACEHOLDER = re.compile(r"\{env:([a-z_]+)\}")
 
 
 def replace_values(value: str, env: TestEnvironment, random_id: str) -> str:
-    """Replaces `{handle:a:SUFFIX}`, `{regacc:a}`, `{gen_req:a}`, `{abuse:a}` and `{tld}`. None of them is a secret."""
+    """Replaces `{handle:a:SUFFIX}`, `{regacc:a}`, `{gen_req:a}`, `{abuse:a}`, `{tld}` and `{env:FACT}` (a fact of the
+    environment). None of them is a secret."""
     def replace(match):
         kind, slot, suffix = match.groups()
         registrar = env.registrars.get(slot)
@@ -142,7 +144,13 @@ def replace_values(value: str, env: TestEnvironment, random_id: str) -> str:
             raise EnvironmentError(f"{match.group(0)}: {env.name} has no {kind} handle for registrar {slot!r}")
         return result
 
-    return VALUE_PLACEHOLDER.sub(replace, value).replace(TLD_PLACEHOLDER, str(env.facts.get("tld", "")))
+    def fact(match):
+        if match.group(1) not in env.facts:
+            raise EnvironmentError(f"{match.group(0)}: {env.name} has no such fact")
+        return str(env.facts[match.group(1)])
+
+    value = VALUE_PLACEHOLDER.sub(replace, value).replace(TLD_PLACEHOLDER, str(env.facts.get("tld", "")))
+    return FACT_PLACEHOLDER.sub(fact, value)
 
 
 AUTH_PLACEHOLDER = re.compile(r"\{auth:([a-z_]+)(?::([a-z_]+))?\}")

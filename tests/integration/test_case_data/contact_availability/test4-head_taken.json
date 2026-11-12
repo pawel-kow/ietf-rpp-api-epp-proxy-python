@@ -1,4 +1,5 @@
 {
+  "when": {"profile.contact_phone_required": false},
   "test_id": "test4-head_taken",
   "steps": [
     {

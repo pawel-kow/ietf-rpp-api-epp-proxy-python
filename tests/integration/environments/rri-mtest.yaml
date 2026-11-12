@@ -1,0 +1,18 @@
+# DENIC's RRI test environment, MTEST (docs/rri/refactoring.md §5.4). The machine must be on the IPv4 allowlist of
+# both RegAccs.
+config: config.rri-mtest.yaml          # RPP_CONFIG_FILE of the app under test
+profile: registry_adapter.rri.profile:RRI_PROFILE
+max_workers: 4                         # MTEST allows 4 sessions per RegAcc
+rpp_requests_per_minute: 25            # under the ACL of 100 RRI requests a minute: one RPP request is up to 4
+regacc: login_prefix                   # the sponsor id is the RegAccId the login starts with
+registrars:                            # the slots the cases name, each naming its variables in .env
+  a: {user: TEST_RRI_REGACC1, password: TEST_RRI_REGACC1_PASSWORD, prefix: TEST_RRI_REGACC1_PREFIX,
+      gen_req: TEST_RRI_REGACC1_GEN_REQ, abuse: TEST_RRI_REGACC1_ABUSE}
+  b: {user: TEST_RRI_REGACC2, password: TEST_RRI_REGACC2_PASSWORD, prefix: TEST_RRI_REGACC2_PREFIX,
+      gen_req: TEST_RRI_REGACC2_GEN_REQ, abuse: TEST_RRI_REGACC2_ABUSE}
+# No wrong password and no unknown user: 10 failed LOGINs lock the user for an hour.
+facts:
+  tld: de
+  restore_within_run: false            # the RGP lasts a day on MTEST
+  environment_name: rpp-rri-proxy.example       # rpp_environment_name of its config
+  failed_logins_lock: true

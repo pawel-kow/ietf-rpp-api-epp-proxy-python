@@ -5,6 +5,7 @@ import yaml
 
 from settings.discovery_settings import DiscoverySettings
 from settings.epp_settings import EppSettings
+from settings.rri_settings import RriSettings
 from settings.settings import Settings
 
 
@@ -22,4 +23,7 @@ def load_settings() -> Settings:
     if os.path.exists(local_path):
         with open(local_path) as f:
             data.update(yaml.safe_load(f) or {})
-    return Settings(epp=_section(EppSettings, data), discovery=_section(DiscoverySettings, data))
+    return Settings(
+        epp=_section(EppSettings, data), discovery=_section(DiscoverySettings, data), rri=_section(RriSettings, data),
+        backend=data.get("rpp_backend", "epp"),
+    )

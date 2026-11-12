@@ -26,20 +26,47 @@
           ],
           "environment": {
             "@type": "discoveryEnvironment",
-            "name": "rpp-epp-proxy.example",
+            "name": "{env:environment_name}",
             "status": "test"
           },
           "tlds": [
-            "example"
+            "{tld}"
           ],
-          "profiles": [
-            "urn:ietf:params:rpp:profile:epp-compatibility"
-          ],
-          "objects": [
-            "domainName",
-            "host",
-            "contact"
-          ]
+          "profiles": {
+            "select": [
+              {
+                "when": {
+                  "profile.host_objects": true
+                },
+                "then": [
+                  "urn:ietf:params:rpp:profile:epp-compatibility"
+                ]
+              },
+              {
+                "then": []
+              }
+            ]
+          },
+          "objects": {
+            "select": [
+              {
+                "when": {
+                  "profile.host_objects": true
+                },
+                "then": [
+                  "domainName",
+                  "host",
+                  "contact"
+                ]
+              },
+              {
+                "then": [
+                  "domainName",
+                  "contact"
+                ]
+              }
+            ]
+          }
         },
         "fields": {
           "datetime": {

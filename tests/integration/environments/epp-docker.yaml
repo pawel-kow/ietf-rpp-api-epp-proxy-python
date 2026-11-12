@@ -12,4 +12,5 @@ unknown_user: {user: ghost, password: nope}
 facts:
   tld: example
   restore_within_run: true             # the RGP periods are minutes (EPP-server-docker#5)
+  environment_name: rpp-epp-proxy.example       # rpp_environment_name of its config
   failed_logins_lock: false

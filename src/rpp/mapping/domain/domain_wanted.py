@@ -6,7 +6,9 @@ from core.model.shared.client_statuses import is_client_label
 from core.model.shared.common import AuthInfo
 from rpp.dto.rpp_dns_data import RPPDnsData
 from rpp.mapping.domain import domain_dns
-from rpp.mapping.domain.domains import REGISTRANT, check_contact_label, check_registrants
+from rpp.mapping.domain.domains import (
+    REGISTRANT, check_client_statuses, check_contact_label, check_host_objects, check_registrants,
+)
 from rpp.mapping.shared.common import parse_rpp, reject_set
 
 # Members a client may replace. Any other member of the domain cannot be changed.
@@ -41,6 +43,7 @@ def _client_statuses(domain: dict) -> dict[str, str | None]:
 
 def _ns(domain_name: str, domain: dict, profile: BackendProfile):
     host_names = [host["hostName"] for host in domain.get("nameservers") or []]
+    check_host_objects(host_names, profile)
     if not domain.get("dns"):
         attrs, dns_sec, records = [], None, []
     else:
@@ -61,6 +64,7 @@ def rpp_to_model(
     _reject_nameservers_with_records(domain)
     ns, dns_sec, records = _ns(domain_name, domain, profile)
     statuses = _client_statuses(domain)
+    check_client_statuses(statuses, profile)
     registrant = (domain.get("registrant") or {}).get("id")
     contacts = [
         ContactReferenceNew(type=check_contact_label(contact["label"], profile), contact=ContactMinimal(id=contact["object"]["id"]))

@@ -1,0 +1,41 @@
+{
+  "test_id": "test6-nameservers_need_host_objects",
+  "when": {
+    "profile.host_objects": false
+  },
+  "description": "A backend without host objects refuses nameservers before any command.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "t6-{random_name}.{tld}",
+          "nameservers": [
+            {
+              "@type": "host",
+              "hostName": "ns1.example.com"
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02102"
+        }
+      }
+    }
+  ]
+}
