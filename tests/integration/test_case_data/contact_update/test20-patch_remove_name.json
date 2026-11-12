@@ -1,7 +1,4 @@
 {
-  "when": {
-    "profile.contact_name_changeable": true
-  },
   "test_id": "test20-patch_remove_name",
   "steps": [
     {

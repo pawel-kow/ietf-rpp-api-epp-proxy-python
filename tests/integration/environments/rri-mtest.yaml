@@ -2,6 +2,7 @@
 # both RegAccs.
 config: config.rri-mtest.yaml          # RPP_CONFIG_FILE of the app under test
 profile: registry_adapter.rri.profile:RRI_PROFILE
+lgrs: [latn-1.0]                       # rpp_rri_lgr of its config
 max_workers: 4                         # MTEST allows 4 sessions per RegAcc
 rpp_requests_per_minute: 25            # under the ACL of 100 RRI requests a minute: one RPP request is up to 4
 regacc: login_prefix                   # the sponsor id is the RegAccId the login starts with
@@ -15,8 +16,9 @@ facts:
   tld: de
   restore_within_run: false            # the RGP lasts a day on MTEST
   environment_name: rpp-rri-proxy.example       # rpp_environment_name of its config
-  delegation_checked: true             # name servers must serve the zone (predelegation check)
   domain_active_at_create: false        # a new domain is ok at once, not pendingCreate
   cltrid_reuse_refused: false           # a reused client transaction id is refused, also on a read
   idn_table_required: false            # the registry refuses an IDN without an IDN table
+  lgr_without_enye: false               # the IDN table of latn-1.0 lacks ñ
+  deleted_domain_readable: true       # a domain deleted right after its create is read in its redemption period, not purged
   failed_logins_lock: true

@@ -1,13 +1,22 @@
 {
-  "when": {
-    "profile.contact_auth_info": true
-  },
   "test_id": "test1-simple_create_minimal_person",
   "steps": [
     {
       "request": {
         "method": "POST",
-        "url": "/contacts?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.contact_auth_info": true
+              },
+              "then": "/contacts?includeElements=authInfo"
+            },
+            {
+              "then": "/contacts"
+            }
+          ]
+        },
         "body_json": {
           "@type": "contact",
           "id": "{handle:a:-01}",

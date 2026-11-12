@@ -3,8 +3,7 @@
     "profile.host_objects": true,
     "profile.domain_record_types": {
       "contains": "ds"
-    },
-    "env.delegation_checked": false
+    }
   },
   "test_id": "test24-put_nameservers_and_ds",
   "steps": [

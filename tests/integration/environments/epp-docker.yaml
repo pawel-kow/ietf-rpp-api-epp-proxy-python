@@ -14,8 +14,9 @@ facts:
   tld: example
   restore_within_run: true             # the RGP periods are minutes (EPP-server-docker#5)
   environment_name: rpp-epp-proxy.example       # rpp_environment_name of its config
-  delegation_checked: false             # name servers must serve the zone (predelegation check)
   domain_active_at_create: true        # a new domain is ok at once, not pendingCreate
   cltrid_reuse_refused: true           # a reused client transaction id is refused, also on a read
   idn_table_required: true            # the registry refuses an IDN without an IDN table
+  lgr_without_enye: true               # the IDN table of latn-1.0 lacks ñ
+  deleted_domain_readable: false       # a domain deleted right after its create is read in its redemption period, not purged
   failed_logins_lock: false

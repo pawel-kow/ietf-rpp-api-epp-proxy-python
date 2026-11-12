@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.auth_info_readable": true
+  },
   "test_id": "test26-put_auth_info",
   "steps": [
     {

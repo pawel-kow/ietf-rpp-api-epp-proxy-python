@@ -1,7 +1,6 @@
 {
   "when": {
     "profile.host_objects": true,
-    "env.delegation_checked": false,
     "profile.contact_labels": {
       "contains": "admin"
     },

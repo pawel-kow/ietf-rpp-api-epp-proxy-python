@@ -223,9 +223,13 @@ flow, the port and the EPP commands of one object.
     `derived_update.update`, which reads, applies the delta with `<object>_application.apply` and replaces. A
     domain's further holders are contacts labelled `registrant`, General Request and Abuse are `generalRequest` and
     `abuse`, and `a`/`aaaa`/`mx` entries are `ZoneRecord`s. An IDN is sent with its U-label as `handle` and its
-    A-label as `ace`. A domain in its redemption period has no sponsor in INFO and reads as 404; its restore reads
-    from `restore_info`. A request whose second command fails answers that error with a detail that the first was
-    applied (gap Q7). Hosts, transfers, renew and contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
+    A-label as `ace`. A domain in its redemption period has no sponsor in INFO and reads with the sponsor `unknown`
+    (spec-issues.md, "Sponsor of a deleted domain"). A request whose second command fails answers a
+    `PartiallyApplied` (core/result) with the first command's transaction ids and the refusal, which `read_back` does
+    not read back, so the handler answers 202 (gap Q7). What RRI cannot express is refused before any command:
+    changing or clearing a contact's name, clearing its address, email or phone, a person's name on an
+    organisation's contact (an ORG is named by its organisation; a contact with an organisation is an ORG), a domain
+    without DNS data, an `lgr` on an ASCII name and a `uName` that is not the name. Hosts, transfers, renew and contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
     message is a service notice naming its RRI type and the domains and handles it is about, with 1301 or 1300 as a
     poll has.
 

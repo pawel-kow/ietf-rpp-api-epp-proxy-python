@@ -109,6 +109,8 @@ into the `Authorization` header when it sends the request, never into the case, 
 | `{regacc:a}` | the sponsor id of `a`: its login on EPP, the RegAccId of its login on RRI |
 | `{gen_req:a}`, `{abuse:a}` | the REQUEST contacts of `a` (RRI only) |
 | `{tld}` | the TLD the environment registers under (`env.tld`) |
+| `{env:FACT}` | a fact of the environment, such as `{env:environment_name}` |
+| `{lower:TEXT}` | TEXT in lower case, after the placeholders in it, for an id sent in another case than stored |
 
 ### DENIC MTEST
 
@@ -121,13 +123,26 @@ create one yet, gap Q2). Of the run's limits: 4 sessions and 100 RRI requests a 
 workers and 25 RPP requests a minute per registrar, paced by the runner. 10 failed LOGINs lock a user for an hour, so
 no case with wrong credentials runs there (`env.failed_logins_lock`). The RGP is a day, so restores are tested in unit
 tests only. MTEST keeps what the cases create: they delete their domains, and the contacts stay (RRI cannot delete
-one), which the random part of the handle keeps apart. A domain on MTEST needs DNS data and the REQUEST contacts, and a
-contact a phone, so the cases written for EPP skip there by `profile.domain_dns_required` and
-`profile.contact_phone_required`; `domain_lifecycle/` holds the cases that run on both, selecting what differs.
+one), which the random part of the handle keeps apart. Every case runs on both backends unless it needs a function one of them lacks, which its `when`
+names: host objects, client statuses, `ds` records, registration periods, renew, transfers, restore within the run,
+contact delete, a contact's authInfo, a localization, a fax, a region, a changeable contact name, a person's name
+on an organisation, a readable domain authInfo, the admin, tech and billing roles, or wrong credentials. Where the
+backends differ in what a case sends or expects, the case selects by the fact: a contact has a phone and a full
+address on both (RRI requires them); a domain gets an `a` record (`profile.domain_dns_required`) and a registrant,
+created in a first step of its own (`profile.registrant_required`); the roles are `generalRequest` and `abuse` where
+the backend has no `admin`; `expiryDate`, the provisioning metadata RRI does not show (`profile.metadata`), a
+domain's authInfo and its `ok` status right after its create (`env.domain_active_at_create`; an MTEST domain is
+`pendingCreate`, and `failed` with name servers that do not serve it) are left out where they do not apply. Passwords
+are of the characters an RRI AuthInfo takes. Where a function exists on one backend only, a counterpart case covers
+the other (`domain_update/test35` to `test37`, `domain_lifecycle/`).
 
-Behaviour of MTEST the cases depend on: every reply carries info `13000000011`; a new domain is `pendingCreate`; an
-MX exchange must resolve; CREATE-AUTHINFO1 without an expiry gives one two days ahead; handles come back in upper
-case and IPv6 addresses uncompressed.
+Behaviour of MTEST the cases depend on: every reply carries info `13000000011`; a new domain is `pendingCreate`, or
+`failed` when its name servers do not pass the predelegation check (the create still succeeds); an MX exchange must
+resolve; CREATE-AUTHINFO1 without an expiry gives one two days ahead (#134); handles come back in upper case and IPv6
+addresses uncompressed; the IDN repertoire holds `ñ`, which the `de` table of the EPP test server does not
+(`env.lgr_without_enye`); a read reusing a client transaction id is not refused, only a write would be
+(`env.cltrid_reuse_refused`). [config.rri-mtest.yaml](../../config.rri-mtest.yaml) offers `latn-1.0` as the LGR, which
+the descriptor states as `lgrs`, as `epp-docker.yaml` does for `config.yaml`.
 
 ## Selectors
 
@@ -144,7 +159,7 @@ added to it when it is true of the protocol, to the environment when it is true 
 | A group | `_group.json` in the group directory: `{"when": …}` | every case of the group is skipped where it does not hold |
 | A case | `"when"` at the top level | the case is skipped where it does not hold |
 | A step | `"when"` in the step | the step is left out. A step with `when` cannot `capture` |
-| Any value of a step | `{"select": [{"when": …, "then": …}, …, {"then": …}]}` | the `then` of the first entry that holds; the last entry is the default |
+| Any value of a step | `{"select": [{"when": …, "then": …}, …, {"then": …}]}` | the `then` of the first entry that holds; the last entry is the default. An entry `{"omit": true}` instead of `then` leaves the member or list element out |
 
 Selectors are resolved first, then the placeholders, then the captures. A selector key that names no fact, in any
 known environment, fails the case at load. A skip names the facts that did not hold. A case whose selectors skip it

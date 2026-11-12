@@ -1,7 +1,6 @@
 {
   "when": {
     "profile.host_objects": true,
-    "env.delegation_checked": false,
     "profile.registration_periods": true
   },
   "test_id": "test6-read",

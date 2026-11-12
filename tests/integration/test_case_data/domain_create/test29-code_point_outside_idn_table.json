@@ -2,7 +2,8 @@
   "when": {
     "profile.lgrs": {
       "contains": "latn-1.0"
-    }
+    },
+    "env.lgr_without_enye": true
   },
   "test_id": "test29-code_point_outside_idn_table",
   "steps": [

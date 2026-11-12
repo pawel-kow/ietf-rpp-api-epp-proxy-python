@@ -15,7 +15,7 @@ from registry_adapter.rri.commands.domain.auth_info import (
 )
 from registry_adapter.rri.commands.domain.check import rri_domain_check
 from registry_adapter.rri.commands.domain.common import (
-    has_auth_info1, state_of, state_of_domain,
+    handle_and_ace, has_auth_info1, state_of, state_of_domain,
 )
 from registry_adapter.rri.commands.domain.create import rri_domain_create
 from registry_adapter.rri.commands.domain.delete import rri_domain_delete
@@ -44,6 +44,19 @@ def _partly_applied(what: str, first: OperationResponse, error: ErrorResponse) -
                             client_transaction_id=first.client_transaction_id, payload=first.payload, refusal=error)
 
 
+def _idn_refusal(domain: Domain) -> str | None:
+    """RRI takes the U-label as the domain's handle and has no IDN table of its own: an `lgr` on an ASCII name, or a
+    `uName` that is not the name, is refused here, as an EPP server refuses it."""
+    if domain.idn is None:
+        return None
+    handle, ace = handle_and_ace(domain.name)
+    if ace is None:
+        return "An LGR is given for a name that is not an IDN"
+    if domain.idn.uname and domain.idn.uname.lower() != handle:
+        return "The uName does not match the name"
+    return None
+
+
 class RriDomainGateway:
     """The domain commands of RRI. RRI updates a domain only by replacing it: UPDATE, or CHHOLDER when the holders
     change, sends the full state, and AuthInfo1 has commands of its own. A partial update is derived from it."""
@@ -62,6 +75,9 @@ class RriDomainGateway:
         return self.info(name, client_transaction_id)
 
     def create(self, domain: Domain, client_transaction_id=None):
+        idn_refusal = _idn_refusal(domain)
+        if idn_refusal:
+            return refused(ResultCode.PARAMETER_VALUE_POLICY_ERROR, idn_refusal, client_transaction_id)
         password = domain.authInfo.pw if domain.authInfo else None
         if password is not None and not valid_auth_info1(password):
             return _bad_auth_info(client_transaction_id)
@@ -99,6 +115,9 @@ class RriDomainGateway:
             contacts=[(c.type, c.contact.id) for c in wanted.contacts], ns=wanted.ns, records=wanted.records,
             dns_sec=wanted.dnsSEC,
         )
+        if not after.dnsentries(wanted.name):
+            return refused(ResultCode.UNIMPLEMENTED_OPTION, "A domain without DNS data cannot be expressed in RRI",
+                           client_transaction_id)
         keep_auth_info = AUTH_INFO in wanted.unchanged
         password = wanted.authInfo.pw if wanted.authInfo else None
         if not keep_auth_info and password is not None and not valid_auth_info1(password):

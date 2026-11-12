@@ -1,7 +1,6 @@
 {
   "when": {
-    "profile.host_objects": true,
-    "env.delegation_checked": false
+    "profile.host_objects": true
   },
   "test_id": "test29-put_repeated_with_ns_records",
   "steps": [

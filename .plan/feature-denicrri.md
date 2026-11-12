@@ -39,12 +39,20 @@ The maintainer asked to work through the phases without waiting for confirmation
   The descriptors name the variable instead of a fixed prefix.
 - **CTID** (gap Q18): the client's `RPP-Cltrid` is the CTID of the first write of a request when it is a token of 3
   to 60 characters, `<cltrid>-n` of the n-th; otherwise a new UUID. Every answer echoes the client's id.
-- **Q7 takes the alternative**: a request whose second command fails (CREATE then CREATE-AUTHINFO1) answers the
-  error of the second command, with a detail that the first was applied. The flows have no way to make a gateway
-  answer a 202, and a Problem says more than a 202 without a body.
+- **Q7 as proposed** (maintainer, after review): a request whose second command fails answers 202 with the first
+  command's headers and a logged warning. `PartiallyApplied` in `core/result` carries it, and `read_back` does not
+  read it back.
 - **Reading a REQUEST contact** answers 501 `02102`: RPP has no Card form for a URI template yet (gap Q2), follow-up.
-- **A domain in its redemption period reads as 404** on RRI: its INFO names no sponsor, which `provMetadata` needs.
-  Its restore still reads (`restore_info`).
+- **A domain in its redemption period reads with what RRI shows** (maintainer): its INFO names no sponsor, which RPP
+  requires, so `spClientId` is the placeholder `unknown` (spec-issues.md, "Sponsor of a deleted domain").
+- **Every case runs on both backends** unless it needs a function one lacks (maintainer). The contacts get a phone
+  and a full address, the domains an `a` record and a registrant, passwords RRI's characters; differences are
+  selected by profile and environment facts. RRI counterparts: `domain_update/test35` to `test37`.
+- **RRI contact rules**: a contact with an organisation is an ORG, named by the organisation; a different person's
+  name on it is refused (501, `contact_org_person_name`). The name is immutable on RRI: a change is refused (501,
+  `contact_name_changeable`), as is clearing the name, address, email or phone. Open for the maintainer: an RPP
+  `org` card with a person's name could instead become an RRI PERSON with an `organisation`, which keeps both names
+  but makes the person the holder.
 - **New profile facts** beyond refactoring.md §3.7: `contact_auth_info` (EPP requires a contact authInfo, RRI has
   none; the contact mapper refuses one), `domain_dns_required` and `contact_phone_required` (left to the registry,
   read by the test selectors).
@@ -74,6 +82,8 @@ The maintainer asked to work through the phases without waiting for confirmation
 | R1 + R2 (`bf7f223`) | the same | 12 contracts kept; 2209 passed, 6 skipped (the same integration skips: #49, #50, #54) |
 | R3–R8 (`1bc9732`) | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2272 passed, 8 skipped (#49, #50, #54, the two empty legacy modules, three RRI-only `domain_lifecycle` cases) |
 | R3–R8 (`1bc9732`) | `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration` (MTEST) | **20 passed**, 290 skipped (each skip names its fact); `domain_lifecycle` 7 of 7 |
+| Review round 1 | `PYTHONPATH=src lint-imports`; `pytest -n 8` (EPP) | 15 contracts kept; 2287 passed, 9 skipped |
+| Review round 1 | MTEST, `pytest -n 4 tests/integration` | **105 passed**, 208 skipped (each skip names the function RRI lacks); the one failure of the full run, `domain_lifecycle/test1` (a deleted domain now reads), fixed and rerun |
 
 ## Open questions
 

@@ -1,7 +1,6 @@
 {
   "when": {
-    "profile.host_objects": true,
-    "env.delegation_checked": false
+    "profile.host_objects": true
   },
   "test_id": "test31-patch_without_change_by_another_client",
   "steps": [

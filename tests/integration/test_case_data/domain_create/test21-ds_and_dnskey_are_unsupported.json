@@ -2,8 +2,7 @@
   "when": {
     "profile.domain_record_types": {
       "contains": "ds"
-    },
-    "env.delegation_checked": false
+    }
   },
   "test_id": "test21-ds_and_dnskey_are_unsupported",
   "steps": [

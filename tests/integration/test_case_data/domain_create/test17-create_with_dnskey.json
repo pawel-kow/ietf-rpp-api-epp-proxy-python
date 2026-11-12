@@ -2,8 +2,7 @@
   "when": {
     "profile.domain_record_types": {
       "contains": "ds"
-    },
-    "env.delegation_checked": false
+    }
   },
   "test_id": "test17-create_with_dnskey",
   "steps": [

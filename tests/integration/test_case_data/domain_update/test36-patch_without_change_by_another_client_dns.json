@@ -1,0 +1,274 @@
+{
+  "test_id": "test36-patch_without_change_by_another_client_dns",
+  "description": "A partial update by a client that is not the sponsor is refused: the counterpart of test31 without host objects.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "select": [
+            {
+              "when": {
+                "profile.contact_auth_info": true
+              },
+              "then": {
+                "@type": "contact",
+                "id": "{handle:a:U36}",
+                "contactInfo": {
+                  "@type": "Card",
+                  "version": "2.0",
+                  "kind": "individual",
+                  "name": {
+                    "full": "Erika Mustermann"
+                  },
+                  "addresses": {
+                    "addr": {
+                      "components": [
+                        {
+                          "kind": "name",
+                          "value": "Musterweg 12"
+                        },
+                        {
+                          "kind": "locality",
+                          "value": "Frankfurt am Main"
+                        },
+                        {
+                          "kind": "postcode",
+                          "value": "60596"
+                        }
+                      ],
+                      "countryCode": "DE"
+                    }
+                  },
+                  "emails": {
+                    "email": {
+                      "address": "erika@example.com"
+                    }
+                  },
+                  "phones": {
+                    "voice": {
+                      "number": "tel:+49.6912345678",
+                      "features": {
+                        "voice": true
+                      }
+                    }
+                  }
+                },
+                "authInfo": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              }
+            },
+            {
+              "then": {
+                "@type": "contact",
+                "id": "{handle:a:U36}",
+                "contactInfo": {
+                  "@type": "Card",
+                  "version": "2.0",
+                  "kind": "individual",
+                  "name": {
+                    "full": "Erika Mustermann"
+                  },
+                  "addresses": {
+                    "addr": {
+                      "components": [
+                        {
+                          "kind": "name",
+                          "value": "Musterweg 12"
+                        },
+                        {
+                          "kind": "locality",
+                          "value": "Frankfurt am Main"
+                        },
+                        {
+                          "kind": "postcode",
+                          "value": "60596"
+                        }
+                      ],
+                      "countryCode": "DE"
+                    }
+                  },
+                  "emails": {
+                    "email": {
+                      "address": "erika@example.com"
+                    }
+                  },
+                  "phones": {
+                    "voice": {
+                      "number": "tel:+49.6912345678",
+                      "features": {
+                        "voice": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:U36}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "Content-Type": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "select": [
+            {
+              "when": {
+                "profile.domain_dns_required": true
+              },
+              "then": {
+                "@type": "domainName",
+                "name": "t36-{random_name}.{tld}",
+                "registrant": {
+                  "@type": "contact",
+                  "id": "{handle:a:U36}"
+                },
+                "contacts": [
+                  {
+                    "label": "generalRequest",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{gen_req:a}"
+                    }
+                  },
+                  {
+                    "label": "abuse",
+                    "object": {
+                      "@type": "contact",
+                      "id": "{abuse:a}"
+                    }
+                  }
+                ],
+                "dns": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                },
+                "authInfo": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              }
+            },
+            {
+              "then": {
+                "@type": "domainName",
+                "name": "t36-{random_name}.{tld}",
+                "registrant": {
+                  "@type": "contact",
+                  "id": "{handle:a:U36}"
+                },
+                "authInfo": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "domainName",
+          "name": "t36-{random_name}.{tld}",
+          "registrant": {
+            "id": "{handle:a:U36}"
+          }
+        },
+        "fields": {
+          "provMetadata.spClientId": {
+            "type": "not_null"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/t36-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/registrant",
+            "value": {
+              "@type": "contact",
+              "id": "{handle:a:U36}"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 403,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02201"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/t36-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    }
+  ]
+}

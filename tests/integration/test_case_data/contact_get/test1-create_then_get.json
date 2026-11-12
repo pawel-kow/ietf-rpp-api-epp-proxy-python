@@ -1,7 +1,4 @@
 {
-  "when": {
-    "profile.contact_auth_info": true
-  },
   "test_id": "test1-create_then_get",
   "steps": [
     {
@@ -145,7 +142,19 @@
     {
       "request": {
         "method": "GET",
-        "url": "/contacts/{handle:a:-G1}?includeElements=authInfo",
+        "url": {
+          "select": [
+            {
+              "when": {
+                "profile.contact_auth_info": true
+              },
+              "then": "/contacts/{handle:a:-G1}?includeElements=authInfo"
+            },
+            {
+              "then": "/contacts/{handle:a:-G1}"
+            }
+          ]
+        },
         "headers": {
           "Authorization": "{auth:a}",
           "Accept": "application/rpp+json",

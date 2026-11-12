@@ -156,13 +156,48 @@
         ]
       },
       "response": {
-        "status": 200,
+        "select": [
+          {
+            "when": {
+              "profile.domain_dns_required": true
+            },
+            "then": {
+              "status": 501,
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              },
+              "headers": {
+                "RPP-Code": "02102"
+              }
+            }
+          },
+          {
+            "then": {
+              "status": 200,
+              "headers": {
+                "RPP-Code": "01000"
+              },
+              "body": {
+                "@type": "domainName"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/t15-{random_name}.{tld}",
         "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "domainName"
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
         }
+      },
+      "response": {
+        "status": 200
       }
     }
   ]

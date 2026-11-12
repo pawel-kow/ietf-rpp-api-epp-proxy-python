@@ -270,14 +270,40 @@
         }
       },
       "response": {
-        "status": 404,
-        "headers": {
-          "RPP-Code": "02303"
-        },
-        "content_type": "application/problem+json",
-        "body": {
-          "type": "urn:ietf:params:rpp:error"
-        }
+        "select": [
+          {
+            "when": {
+              "env.deleted_domain_readable": true
+            },
+            "then": {
+              "status": 200,
+              "body": {
+                "@type": "domainName",
+                "status": [
+                  {
+                    "@type": "domainStatus",
+                    "label": "pendingDelete"
+                  }
+                ],
+                "provMetadata": {
+                  "spClientId": "unknown"
+                }
+              }
+            }
+          },
+          {
+            "then": {
+              "status": 404,
+              "headers": {
+                "RPP-Code": "02303"
+              },
+              "content_type": "application/problem+json",
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              }
+            }
+          }
+        ]
       }
     }
   ]

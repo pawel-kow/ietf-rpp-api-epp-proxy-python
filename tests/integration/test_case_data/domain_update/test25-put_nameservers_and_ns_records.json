@@ -1,7 +1,6 @@
 {
   "when": {
-    "profile.host_objects": true,
-    "env.delegation_checked": false
+    "profile.host_objects": true
   },
   "test_id": "test25-put_nameservers_and_ns_records",
   "steps": [

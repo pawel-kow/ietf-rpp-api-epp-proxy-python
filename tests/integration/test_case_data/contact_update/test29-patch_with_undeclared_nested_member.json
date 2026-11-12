@@ -1,7 +1,4 @@
 {
-  "when": {
-    "profile.contact_name_changeable": true
-  },
   "test_id": "test29-patch_with_undeclared_nested_member",
   "steps": [
     {
