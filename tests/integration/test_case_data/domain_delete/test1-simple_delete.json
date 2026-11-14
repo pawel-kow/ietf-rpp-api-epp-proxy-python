@@ -139,24 +139,12 @@
         "body": {
           "@type": "domainName",
           "name": "TEST1-{random_name}.{tld}",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domainName.processes.create.active_at_once": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ]
         }
       }
     },

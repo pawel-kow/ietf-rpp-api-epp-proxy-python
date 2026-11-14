@@ -409,24 +409,12 @@
         "body": {
           "@type": "domainName",
           "name": "ex6-{random_name}.{tld}",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domainName.processes.create.active_at_once": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ],
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:J6}"
@@ -594,24 +582,12 @@
         "body": {
           "@type": "domainName",
           "name": "ex6-{random_name}.{tld}",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domainName.processes.create.active_at_once": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ],
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:J6}"

@@ -111,6 +111,7 @@ into the `Authorization` header when it sends the request, never into the case, 
 | `{gen_req:a}`, `{abuse:a}` | the REQUEST contacts of `a` (RRI only) |
 | `{tld}` | the TLD the environment registers under, the first of `rpp_tlds` of its config |
 | `{env:environment_name}` | `rpp_environment_name` of its config |
+| `{env:<path>}` | a fact of the environment. A list fact is a whole value only, and the response may hold any of its entries: `"label": "{env:domainName.processes.create.success_status}"` |
 | `{lower:TEXT}` | TEXT in lower case, after the placeholders in it, for an id sent in another case than stored |
 
 ### DENIC MTEST
@@ -132,9 +133,9 @@ backends differ in what a case sends or expects, the case selects by the fact: a
 address on both (RRI requires them); a domain gets an `a` record (`profile.domainName.dns.min_count`) and a
 registrant, created in a first step of its own (`profile.domainName.registrant.min_count`); the roles are
 `generalRequest` and `abuse` where the backend has no `admin`; `expiryDate`, the provisioning metadata RRI does not
-show (`profile.domainName.metadata`), a domain's authInfo and its `ok` status right after its create
-(`env.domainName.processes.create.active_at_once`; an MTEST domain is
-`pendingCreate`, and `failed` with name servers that do not serve it) are left out where they do not apply. Passwords
+show (`profile.domainName.metadata`) and a domain's authInfo are left out where they do not apply; the status a domain
+reads with right after its create is one of `env.domainName.processes.create.success_status` (`ok` on the EPP test
+server; on MTEST `pendingCreate` while the predelegation check runs, `ok` once it passed, `inactive` when it failed). Passwords
 are of the characters an RRI AuthInfo takes. Where a function exists on one backend only, a counterpart case covers
 the other (`domain_update/test35` to `test37`, `domain_lifecycle/`).
 

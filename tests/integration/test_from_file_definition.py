@@ -14,7 +14,7 @@ from tests.helper.idn_labels import replace_idn_placeholders
 from tests.helper.integration_api_test import endpoint_test, replace_pad_placeholders, replace_upper_placeholders
 from tests.helper.pacer import Pacer
 from tests.helper.test_environment import (
-    REPOSITORY, Credentials, EnvironmentError, environment_names, load, replace_values, selected_name,
+    REPOSITORY, Credentials, EnvironmentError, environment_names, load, replace_fact, replace_values, selected_name,
 )
 
 app.app.config.update({
@@ -152,6 +152,9 @@ def process_placeholders(json_data=dict|list|str|None, obj=None, started=None):
     elif isinstance(json_data, list):
         return [process_placeholders(item, obj, started) for item in json_data] # type: ignore
     elif isinstance(json_data, str):
+        one_of = replace_fact(json_data, environment)
+        if not isinstance(one_of, str):
+            return one_of
         replaced = json_data\
             .replace("{random_name}", f"{obj['test_group'].replace('_', '-')}-{random_name}" if "test_group" in obj else random_name)\
             .replace("{random_id_10}", f"{random_id_10}")\

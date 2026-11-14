@@ -13,7 +13,8 @@ class SelectorError(ValueError):
     """A selector that cannot be evaluated: a key that names no fact, or a value of the wrong form."""
 
 
-def _env_fact(facts: dict, path: str):
+def env_fact(facts: dict, path: str):
+    """The leaf of the environment's facts at a dotted path. A path that names no leaf is a `KeyError`."""
     node = facts
     for key in path.split("."):
         if not isinstance(node, dict) or key not in node:
@@ -38,7 +39,7 @@ class Facts:
             if scope == "profile":
                 return self.profile.fact(path)
             if scope == "env":
-                return _env_fact(self.env_facts, path)
+                return env_fact(self.env_facts, path)
         except KeyError:
             pass
         raise SelectorError(f"selector key {key!r} names no fact")

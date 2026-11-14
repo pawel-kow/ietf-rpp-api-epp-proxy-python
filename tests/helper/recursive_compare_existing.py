@@ -1,5 +1,7 @@
 import json
 
+from tests.helper.one_of import OneOf
+
 def _matches(case, path, actual_data, expected_data, case_sensitive):
     try:
         recusive_compare_existing(case, path, actual_data, expected_data, case_sensitive=case_sensitive)
@@ -22,13 +24,16 @@ def recusive_compare_existing(case, path, actual_data, expected_data, case_sensi
     Recursively traverses a dictionary or list (representing JSON) and compares if values of existing_data are present and equal actual_data.
     """
 
-    if isinstance(expected_data, dict):
+    if isinstance(expected_data, OneOf):
+        assert any(_matches(case, path, actual_data, value, case_sensitive) for value in expected_data.values), \
+            f"Case {case}. Path: {path}. Value {json.dumps(actual_data)} is not {expected_data!r}."
+    elif isinstance(expected_data, dict):
         for key, value in expected_data.items():
             assert key in actual_data, f"Case {case}. Path: {path}. Key '{key}' not found in actual_data."
             recusive_compare_existing(case, f"{path}.{key}", actual_data[key], value, case_sensitive=case_sensitive) # Recurse/process value
     elif isinstance(expected_data, list):
         assert len(actual_data) == len(expected_data), f"Case {case}. Path: {path}. Length of actual_data and expected_data lists do not match."
-        assert _pairs_up(case, path, actual_data, expected_data, case_sensitive), f"Case {case}. Path: {path}. {json.dumps(actual_data)} does not match {json.dumps(expected_data)}."
+        assert _pairs_up(case, path, actual_data, expected_data, case_sensitive), f"Case {case}. Path: {path}. {json.dumps(actual_data)} does not match {json.dumps(expected_data, default=repr)}."
     else:
         if isinstance(actual_data, str) and isinstance(expected_data, str):
             if case_sensitive:

@@ -39,7 +39,8 @@ facts:
       dnskey_supported: false          # secDNS takes DS records only, no DNSKEY (RFC 5910 §4)
     processes:
       create:
-        active_at_once: true           # a new domain is ok, not pendingCreate
+        success_status:                # what a domain reads with right after its create: one of these
+          - ok
       delete:
         readable_after: false          # a domain deleted right after its create is purged, not read in redemption
       restore:

@@ -330,24 +330,12 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "domainName",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domainName.processes.create.active_at_once": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ]
         },
         "headers": {
           "RPP-Code": "01000"

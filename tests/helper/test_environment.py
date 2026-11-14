@@ -15,6 +15,8 @@ import yaml
 
 from core.capabilities.backend_profile import BackendProfile
 from settings.load_settings import load_settings
+from tests.helper.one_of import OneOf
+from tests.helper.selectors import env_fact
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 ENVIRONMENTS = REPOSITORY / "tests" / "integration" / "environments"
@@ -125,12 +127,12 @@ def load(name: str, environ=None, with_credentials: bool = True) -> TestEnvironm
 
 VALUE_PLACEHOLDER = re.compile(r"\{(handle|regacc|gen_req|abuse):([a-z])(?::([^{}]*))?\}")
 TLD_PLACEHOLDER = "{tld}"
-FACT_PLACEHOLDER = re.compile(r"\{env:([a-z_]+)\}")
+FACT_PLACEHOLDER = re.compile(r"\{env:([A-Za-z_.]+)\}")
 
 
 def replace_values(value: str, env: TestEnvironment, random_id: str) -> str:
-    """Replaces `{handle:a:SUFFIX}`, `{regacc:a}`, `{gen_req:a}`, `{abuse:a}`, `{tld}` and `{env:FACT}` (a fact of the
-    environment). None of them is a secret."""
+    """Replaces `{handle:a:SUFFIX}`, `{regacc:a}`, `{gen_req:a}`, `{abuse:a}`, `{tld}` and `{env:<path>}` (a fact of
+    the environment that is not a list, see `replace_fact`). None of them is a secret."""
     def replace(match):
         kind, slot, suffix = match.groups()
         registrar = env.registrars.get(slot)
@@ -146,12 +148,30 @@ def replace_values(value: str, env: TestEnvironment, random_id: str) -> str:
         return result
 
     def fact(match):
-        if match.group(1) not in env.facts:
-            raise EnvironmentError(f"{match.group(0)}: {env.name} has no such fact")
-        return str(env.facts[match.group(1)])
+        value = _fact(match, env)
+        if isinstance(value, list):
+            raise EnvironmentError(f"{match.group(0)}: a list fact is a whole value, not part of a string")
+        return str(value)
 
     value = VALUE_PLACEHOLDER.sub(replace, value).replace(TLD_PLACEHOLDER, str(env.facts.get("tld", "")))
     return FACT_PLACEHOLDER.sub(fact, value)
+
+
+def _fact(match, env: TestEnvironment):
+    try:
+        return env_fact(env.facts, match.group(1))
+    except KeyError:
+        raise EnvironmentError(f"{match.group(0)}: {env.name} has no such fact") from None
+
+
+def replace_fact(value: str, env: TestEnvironment):
+    """A value that is `{env:<path>}` alone and names a list fact is `OneOf` its entries, which the response
+    comparison takes any of; any other value is returned as it is, for `replace_values`."""
+    match = FACT_PLACEHOLDER.fullmatch(value)
+    if match is None:
+        return value
+    fact = _fact(match, env)
+    return OneOf(fact) if isinstance(fact, list) else value
 
 
 AUTH_PLACEHOLDER = re.compile(r"\{auth:([a-z_]+)\}")

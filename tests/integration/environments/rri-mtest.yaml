@@ -45,7 +45,10 @@ facts:
       dnskey_supported: null           # RRI has no secDNS: DENIC computes the DS from the DNSKEY
     processes:
       create:
-        active_at_once: false          # a new domain is not ok at once
+        success_status:                # what a domain reads with right after its create: one of these
+          - pendingCreate              # the predelegation check is still running
+          - ok                         # it passed (RRI `connect`): which of the two depends on timing
+          - inactive                   # it failed (RRI `failed`, with a `due`)
       delete:
         readable_after: true           # a domain deleted right after its create is read in its redemption period
       restore:

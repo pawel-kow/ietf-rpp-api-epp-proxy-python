@@ -4,10 +4,12 @@ import pytest
 
 from tests.helper.profiles import EPP_PROFILE
 from tests.helper import selectors
+from tests.helper.one_of import OneOf
 from tests.helper.pacer import Pacer
+from tests.helper.recursive_compare_existing import recusive_compare_existing
 from tests.helper.selectors import Facts, SelectorError
 from tests.helper.test_environment import (
-    Credentials, EnvironmentError, environment_names, load, replace_values,
+    Credentials, EnvironmentError, environment_names, load, replace_fact, replace_values,
 )
 
 FACTS = Facts(EPP_PROFILE, {"tld": "example", "domainName": {"processes": {"restore": {"within_run": True}}}})
@@ -159,3 +161,25 @@ def test_check_accepts_omit_and_refuses_both():
                                 "response": {}}]}, FACTS)
     with pytest.raises(SelectorError):
         selectors.check({"steps": [{"request": {"x": {"select": [{"omit": True, "then": 1}]}}, "response": {}}]}, FACTS)
+
+
+def test_a_list_fact_as_a_whole_value_is_one_of_its_entries():
+    env = load("epp-docker", environ=EPP_ENV)
+    env.facts["domainName"]["processes"]["create"]["success_status"] = ["pendingCreate", "inactive"]
+
+    assert replace_fact("{env:domainName.processes.create.success_status}", env) == OneOf(["pendingCreate", "inactive"])
+    assert replace_fact("{env:domainName.authInfo.min_length}", env) == "{env:domainName.authInfo.min_length}"
+    assert replace_values("at least {env:domainName.authInfo.min_length}", env, "r") == "at least 6"
+    with pytest.raises(EnvironmentError, match="whole value"):
+        replace_values("is {env:domainName.processes.create.success_status}", env, "r")
+    with pytest.raises(EnvironmentError, match="no such fact"):
+        replace_fact("{env:domainName.processes}", env)
+
+
+def test_one_of_takes_any_of_its_entries_case_blind():
+    expected = [{"@type": "domainStatus", "label": OneOf(["pendingCreate", "inactive"])}]
+
+    recusive_compare_existing("c", "$", [{"@type": "domainStatus", "label": "pendingcreate"}], expected, False)
+    recusive_compare_existing("c", "$", [{"@type": "domainStatus", "label": "inactive", "due": "x"}], expected, False)
+    with pytest.raises(AssertionError, match="does not match"):
+        recusive_compare_existing("c", "$", [{"@type": "domainStatus", "label": "ok"}], expected, False)

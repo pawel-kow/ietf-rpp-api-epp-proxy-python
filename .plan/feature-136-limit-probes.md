@@ -127,6 +127,11 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
   63 skipped. MTEST integration: 205 passed, 311 skipped, 1 failed (`domain_update/test35`, a later command
   refused with `56000000013` after the create); it passed when run again.
 
+- T22 (maintainer, 2026-11-14): `domainName.processes.create.active_at_once` became `success_status`, a list; a
+  case writes `"label": "{env:domainName.processes.create.success_status}"` and the response holds one of its entries
+  (`OneOf`). EPP: `ok`. MTEST, observed: `pendingCreate` right after the create, `ok` a step later, by timing; and
+  `inactive` (documented `failed`). The 19 changed cases: epp-docker 19 passed; MTEST 7 passed, 12 skipped.
+
 ## Open questions
 
 - None.
