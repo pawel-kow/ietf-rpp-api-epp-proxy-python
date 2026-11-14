@@ -59,4 +59,15 @@ for its integration run), in the worktree `.claude/worktrees/133-rri-transfer`.
 - A domain label longer than the XSD allows (66 characters with the TLD) is an RRI schema failure, 500 (`02400`):
   the group name is part of `{random_name}`, so a group name over about 20 characters breaks RRI cases.
 
+## Checks (2026-11-14)
+
+- `lint-imports`: 15 kept, 0 broken. Unit tests: 2072 passed.
+- EPP test server, `-k domain_transfer`: 14 passed (with `test14`), the `rri` group skipped.
+- MTEST, `-k domain_transfer`: `domain_transfer_ext/` test1–4 passed; test5 and test6 had wrong expectations
+  (409 and 403, now fixed) and were not rerun.
+- **Pending:** the full `pytest -n 8` on the EPP test server and the full MTEST run. Another session was running
+  integration suites against both backends from the main checkout, and MTEST allows 4 sessions per RegAcc.
+
 ## Open questions
+
+- Draft PR base: `chores/remove-old-tests` (not merged yet, no PR) or `main` once it is merged.
