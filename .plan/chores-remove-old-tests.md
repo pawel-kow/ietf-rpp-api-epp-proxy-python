@@ -17,6 +17,9 @@ Branch `chores/remove-old-tests` (worked on as asked, not from `main`).
       by the `host` groups' selector, as the maintainer asked; the rule that a smoke case runs everywhere goes
 - [x] T9 Log out at the end of a run: `SessionPool.close()`, `Composition.sessions`, `pytest_sessionfinish` in each
       worker; unit tests. Two smoke runs back to back: 57 passed, 9 skipped, each. The proxy's own shutdown is #144
+- [x] T10 `process.project.md`: the checks of an iteration are the unit tests and the smoke suite; the full run only
+      when the maintainer asks (maintainer's decision)
+- [~] T11 Draft PR
 
 ## Findings (evidence)
 

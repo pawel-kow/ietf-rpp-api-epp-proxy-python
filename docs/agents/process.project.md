@@ -27,15 +27,18 @@ docker run --rm -p 8000:8091 pawelk/rpp_server_epp_proxy
 
 ## Checks before done
 
-There is no CI in this repository. Run both checks from the repository root, in this order:
+There is no CI in this repository. Run these checks from the repository root, in this order:
 
 1. `PYTHONPATH=src lint-imports`: the module boundaries, see
    [architecture.project.md](architecture.project.md#the-check).
-2. The full `pytest -n 4` run, which needs the live backends: it tests every environment whose credentials are in
-   `.env`. See [testing.project.md](testing.project.md#test-environments).
-3. For a change to `registry_adapter/rri/`, `core` or `rpp`: that run includes DENIC MTEST, from a machine on the
-   allowlist of both RegAccs, before the PR leaves draft. A coder without such a machine runs
-   `RPP_TEST_ENV=epp-docker pytest -n 8` and records the MTEST run as pending in the plan.
+2. The unit tests, `pytest -n 4 tests/unit`.
+3. The smoke suite, `pytest -n 4 -m smoke tests/integration` (about 2.5 minutes), which needs the live backends: it
+   tests every environment whose credentials are in `.env`. See
+   [testing.project.md](testing.project.md#test-data-format). The full run, `pytest -n 4` (about 40 minutes), only
+   when the maintainer asks for it.
+4. For a change to `registry_adapter/rri/`, `core` or `rpp`: the smoke run includes DENIC MTEST, from a machine on
+   the allowlist of both RegAccs, before the PR leaves draft. A coder without such a machine runs
+   `RPP_TEST_ENV=epp-docker pytest -n 8 -m smoke tests/integration` and records the MTEST run as pending in the plan.
 
 ## Issue labels
 

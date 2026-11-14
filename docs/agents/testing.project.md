@@ -20,8 +20,9 @@ pytest "tests/integration/file_cases.py::epp-docker::domain_update::test1-simple
 pytest tests/integration/test_case_data/domain_update/test1-simple_update.json  # one case file, in every environment
 ```
 
-Run the full suite with `-n 4`, the most workers DENIC MTEST allows, since a run tests every environment whose
-credentials are in `.env`. Against the EPP test server alone (`RPP_TEST_ENV=epp-docker`) `-n 8` takes about 15
+Each iteration runs the unit tests and the smoke suite ([process.project.md](process.project.md#checks-before-done)),
+the full suite only when the maintainer asks for it. Run it with `-n 4`, the most workers DENIC MTEST allows, since a
+run tests every environment whose credentials are in `.env`; on both backends it takes about 40 minutes. Against the EPP test server alone (`RPP_TEST_ENV=epp-docker`) `-n 8` takes about 15
 minutes on 4 cores, most of it the cases that wait for the periods of the EPP test server (`domain_lifecycle/test8`
 waits about 14 minutes). The unit tests are bound by CPU,
 mostly building an app per test from `openapi.yaml`, so more workers than cores do not speed them up, and the backend refuses logins under about
