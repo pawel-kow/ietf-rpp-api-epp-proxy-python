@@ -5,6 +5,7 @@ import main
 from main import new_backend, new_epp_client, settings, tls_context, tls_context_from_config
 from registry_adapter.common.transport.tcp_client import TCPClient
 from registry_adapter.epp.gateways.epp_backend import EppBackend
+from core.session.session_pool import SessionPool
 from registry_adapter.rri.gateways.rri_backend import RriBackend
 from settings.load_settings import load_settings
 from tests.helper.test_environment import REPOSITORY
@@ -114,3 +115,4 @@ def test_compose_builds_an_app_for_other_settings():
     assert rri.app is not main.app
     assert rri.app.app.config["RPP_BACKEND_PROFILE"] is rri.profile
     assert isinstance(rri.new_backend("user", "pw"), RriBackend)
+    assert isinstance(rri.sessions, SessionPool)

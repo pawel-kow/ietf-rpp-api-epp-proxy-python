@@ -27,6 +27,16 @@ def pytest_collect_file(file_path: Path, parent: pytest.Collector):
     return None
 
 
+def pytest_sessionfinish(session):
+    """Logs out the registry sessions of this process, in each xdist worker too, also after a Ctrl-C."""
+    import sys
+
+    file_cases = sys.modules.get("tests.integration.file_cases")
+    if file_cases is not None:
+        for run in file_cases.environment_runs().values():
+            run.close()
+
+
 class CaseTree(pytest.File):
     """The root: one branch per test environment. `only` is the one case file of a tree of a case file."""
 

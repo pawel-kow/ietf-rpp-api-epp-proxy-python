@@ -15,6 +15,8 @@ Branch `chores/remove-old-tests` (worked on as asked, not from `main`).
       `pytest -n 4 -m smoke` (48 tests) passed in 2 min 23 s. An unknown marker fails that case
 - [x] T8 Smoke: 9 host cases (check, create external/with addresses/internal, read, update, delete), skipped on RRI
       by the `host` groups' selector, as the maintainer asked; the rule that a smoke case runs everywhere goes
+- [x] T9 Log out at the end of a run: `SessionPool.close()`, `Composition.sessions`, `pytest_sessionfinish` in each
+      worker; unit tests. Two smoke runs back to back: 57 passed, 9 skipped, each. The proxy's own shutdown is #144
 
 ## Findings (evidence)
 
@@ -28,6 +30,9 @@ Branch `chores/remove-old-tests` (worked on as asked, not from `main`).
    (`no match in any of [<Dir domain_create>]`) unless the JSON file collects that id. A case file named on the command
    line is therefore collected as a tree of that one case (`session.isinitpath`); a directory run does not collect
    it, so nothing runs twice. The item's path stays its JSON file, which the editor opens.
+6. Nothing logged the registry sessions out: no caller of `SessionPool`'s backends' `disconnect()` at the end of a
+   run or on shutdown. A smoke run about 2 minutes after another had 4 failures, `401 02200` from MTEST's
+   `73100000005` (maximum number of logins reached; 4 workers hold one session a RegAcc each, the limit is 4).
 
 ## Decisions
 

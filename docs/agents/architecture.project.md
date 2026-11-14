@@ -413,7 +413,7 @@ settings, which both the backend and the app get; nothing else knows which backe
 `new_epp_backend` builds an `EppBackend` over the default
 `EPPClient`, with the namespace map and the `IdnTables`, and `new_rri_backend` an `RriBackend` over an `RriClient`
 on a `TCPClient` with payload-only framing. The chosen one is `new_backend`, the factory main passes to
-[`SessionPool`](../../src/core/session/session_pool.py), which keeps one backend per user. The pool goes to
+[`SessionPool`](../../src/core/session/session_pool.py), which keeps one backend per user; `close()` logs them all out (the proxy does not call it on shutdown yet, #144). The pool goes to
 `create_app` in [app.py](../../src/rpp/http/app.py), with the `BackendProfile` and the
 `DiscoverySettings`, which the handlers read through [context.py](../../src/rpp/http/context.py). `create_app` hands
 `SessionSecurityHandler` to Connexion through `security_map`, because Connexion would otherwise resolve the function

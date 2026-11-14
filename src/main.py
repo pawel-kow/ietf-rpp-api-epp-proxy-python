@@ -46,6 +46,7 @@ class Composition:
     idn_tables: IdnTables
     new_epp_client: Callable
     new_backend: Callable
+    sessions: SessionPool
     app: object
 
 
@@ -79,9 +80,10 @@ def compose(settings: Settings) -> Composition:
         "rri": new_rri_backend,
     }
     new_backend = backends[settings.backend]
-    app = create_app(SessionPool(new_backend), profile, discovery_settings=settings.discovery)
+    sessions = SessionPool(new_backend)
+    app = create_app(sessions, profile, discovery_settings=settings.discovery)
     return Composition(settings=settings, profile=profile, tls_context=tls_context, idn_tables=idn_tables,
-                       new_epp_client=new_epp_client, new_backend=new_backend, app=app)
+                       new_epp_client=new_epp_client, new_backend=new_backend, sessions=sessions, app=app)
 
 
 # The app of the settings loaded once (RPP_CONFIG_FILE, else config.yaml), which uvicorn serves as `main:app`.

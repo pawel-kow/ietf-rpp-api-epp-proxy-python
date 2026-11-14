@@ -134,7 +134,10 @@ both RegAccs (the devcontainer goes out with the host's address), and the `TEST_
 logins, their passwords, the prefix of the handles the cases create (it starts with the RegAccId), and a REQUEST
 contact of each RegAcc for the General Request and Abuse roles, created beforehand outside the suite (RPP cannot
 create one yet, gap Q2). Of the run's limits: 4 sessions and 100 RRI requests a minute per RegAcc, so at most 4
-workers and 25 RPP requests a minute per registrar, paced by the runner. 10 failed LOGINs lock a user for an hour,
+workers and 25 RPP requests a minute per registrar, paced by the runner. A session dropped without LOGOUT counts
+until its idle timeout of 5 minutes, and a LOGIN past the limit is refused with `73100000005`, so each worker logs its
+sessions out when the run ends (`pytest_sessionfinish`, `SessionPool.close`); a killed run cannot, and the next run
+within 5 minutes may be refused. Two runs at once (a terminal and VS Code) share the 4 sessions. 10 failed LOGINs lock a user for an hour,
 so the failed logins are of an unknown user. A RESTORE is one step and needs no wait; the RGP and the purge after it
 take up to two days, which a run waits for only with `RPP_TEST_MAX_WAIT` of `P2DT6H` or more. MTEST keeps what the cases create: they delete their domains, and the contacts stay (RRI cannot delete
 one), which the random part of the handle keeps apart. Every case runs on both backends unless it needs a function one of them lacks, which its `when`

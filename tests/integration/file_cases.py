@@ -66,10 +66,20 @@ class EnvironmentRun:
                 f"{name} allows at most {self.environment.max_workers} workers, the run has {workers}")
 
     @functools.cached_property
+    def composition(self):
+        composition = compose(load_settings(str(REPOSITORY / self.environment.config)))
+        composition.app.app.config.update({"TESTING": True})
+        return composition
+
+    @property
     def app(self):
-        app = compose(load_settings(str(REPOSITORY / self.environment.config))).app
-        app.app.config.update({"TESTING": True})
-        return app
+        return self.composition.app
+
+    def close(self):
+        """Logs out the sessions of the environment's app, if it was built, so the next run finds the server's
+        session slots free (MTEST allows 4 a RegAcc and counts a dropped session until its idle timeout)."""
+        if "composition" in self.__dict__:
+            self.composition.sessions.close()
 
     @functools.cached_property
     def credentials(self):
