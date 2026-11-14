@@ -19,7 +19,7 @@
             "select": [
               {
                 "when": {
-                  "env.limit_contact_id_length": 32
+                  "env.contact.id.max_length": 32
                 },
                 "then": "{pad:33:{handle:a:Z2}}"
               },
@@ -72,7 +72,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

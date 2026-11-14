@@ -1,7 +1,7 @@
 {
   "test_id": "test51-patch_adds_voice",
   "when": {
-    "profile.contact_phone_required": false
+    "profile.contact.phone.min_count": 0
   },
   "description": "A PATCH adds a voice number to a contact without one.",
   "steps": [
@@ -54,7 +54,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

@@ -1,8 +1,10 @@
 {
   "test_id": "test47-patch_adds_ns_record",
   "when": {
-    "profile.host_objects": true,
-    "profile.registrant_required": false
+    "profile.objects": {
+      "contains": "host"
+    },
+    "profile.domainName.registrant.min_count": 0
   },
   "skip": "pawel-kow/epp#33",
   "description": "ns records added by PATCH to a domain without delegation; the registry keeps them as host objects.",
@@ -101,7 +103,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

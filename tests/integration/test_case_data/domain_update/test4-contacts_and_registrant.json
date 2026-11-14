@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.contact_labels": {
+    "profile.domainName.contacts.labels": {
       "contains": "admin"
     }
   },
@@ -63,7 +63,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -144,7 +144,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -188,7 +188,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -240,7 +240,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -279,7 +281,7 @@
             "select": [
               {
                 "when": {
-                  "env.domain_active_at_create": true
+                  "env.domainName.processes.create.active_at_once": true
                 },
                 "then": [
                   {
@@ -301,7 +303,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -397,7 +399,7 @@
             "select": [
               {
                 "when": {
-                  "env.domain_active_at_create": true
+                  "env.domainName.processes.create.active_at_once": true
                 },
                 "then": [
                   {
@@ -419,7 +421,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -501,7 +503,7 @@
             "select": [
               {
                 "when": {
-                  "env.domain_active_at_create": true
+                  "env.domainName.processes.create.active_at_once": true
                 },
                 "then": [
                   {
@@ -523,7 +525,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },

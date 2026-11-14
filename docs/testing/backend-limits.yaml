@@ -101,7 +101,7 @@ domainName:
     kind: count
     rpp: {defined: false, gap: "no maximum, no rule for a repeated label"}
     epp-docker: {max: null, note: "one row per status, client values clientDeleteProhibited, clientHold, clientRenewProhibited, clientTransferProhibited, clientUpdateProhibited", source: db}
-    rri-mtest: {client_values: [], note: "every status is the registry's", source: code, ref: "RRI_PROFILE.client_statuses=False"}
+    rri-mtest: {client_values: [], note: "every status is the registry's", source: code, ref: "src/settings/profiles/rri.yaml domainName.status.client_supported"}
     probe: [limits_domain/test12-all_client_statuses, limits_domain/test13-status_twice]
     verified: {epp-docker: "passed", rri-mtest: "n/a"}
   - path: /status/*/reason
@@ -115,7 +115,7 @@ domainName:
   - path: /registrant
     kind: count
     rpp: {defined: true, min: 0, max: 1, gap: "several holders (RRI) are contacts labelled registrant, gap Q1"}
-    epp-docker: {min: 0, max: 1, source: code, ref: "EPP_PROFILE.max_registrants"}
+    epp-docker: {min: 0, max: 1, source: code, ref: "src/settings/profiles/epp.yaml domainName.registrant.max_count"}
     rri-mtest: {min: 1, max: 5, rule: "all different", over: "XSD (contact 1-7) 83000000004", expected: "422 02306", note: "the proxy answers a 6th holder 501 02102 before RRI sees it (#140)", source: doc, ref: "§5.2 Holder"}
     probe: [limits_domain/test14-five_registrants, limits_domain/test15-six_registrants, limits_domain/test16-same_registrant_twice]
     verified: {epp-docker: "n/a", rri-mtest: "passed except defect #140"}
@@ -177,7 +177,7 @@ domainName:
     kind: count
     what: a, aaaa and mx records of the domain itself (Nsentry)
     rpp: {defined: false}
-    epp-docker: {values: [], note: "not supported, 501", source: code, ref: "EPP_PROFILE.domain_record_types"}
+    epp-docker: {values: [], note: "not supported, 501", source: code, ref: "src/settings/profiles/epp.yaml domainName.dns.record_types"}
     rri-mtest: {min: 1, max: 5, rule: "mx preference 0-999; null MX '.' allowed", note: "the doc's 'an aaaa needs an a' (66300063023) does not hold on MTEST: an aaaa alone is taken (limits_domain/test31)", source: doc, ref: "§5.2 Nsentry"}
     probe: [limits_domain/test29-five_address_records, limits_domain/test30-six_address_records, limits_domain/test31-aaaa_without_a, limits_domain/test32-null_mx_record]
     verified: {epp-docker: "n/a", rri-mtest: "passed"}
@@ -339,7 +339,7 @@ contact:
     kind: pattern
     rpp: {defined: false}
     epp-docker: {pattern: "^[A-Z][a-zA-Z-. ]{1,}$", max: 255, over: 2005, source: code}
-    rri-mtest: {note: "no region, 501 (profile contact_region=False)", source: code}
+    rri-mtest: {note: "no region, 501 (profile contact.region.supported: false)", source: code}
     probe: [contact_create/test28-region_lower_case]
     verified: {epp-docker: "passed: refused 400 02005", rri-mtest: "n/a"}
   - path: /contactInfo/addresses/addr/components/*/value (kind postcode)
@@ -402,7 +402,7 @@ contact:
     kind: length
     rpp: {defined: false}
     epp-docker: {min: 6, max: 16, rule: "at least one upper case letter and one digit", over: 2005, source: code}
-    rri-mtest: {note: "no contact authInfo (profile contact_auth_info=False)", source: code}
+    rri-mtest: {note: "no contact authInfo (profile contact.authInfo.supported: false)", source: code}
     probe: [limits_contact/test25-authinfo_under_minimum, limits_contact/test26-authinfo_of_17]
     verified: {epp-docker: "passed", rri-mtest: "n/a"}
 

@@ -43,7 +43,7 @@ Case references are `<group><number>`:
 | LH | `limits_host` | | |
 
 A case runs on both backends unless marked **(E)**, the EPP test server only, or **(R)**, RRI MTEST only. Of the
-515 cases, 166 run on both, 288 on EPP only, 36 on RRI only and 25 are skipped for a known
+515 cases, 170 run on both, 284 on EPP only, 36 on RRI only and 25 are skipped for a known
 defect or a limit of the test environment (§6). All host cases are (E), because RRI has no host objects; the host
 tables do not repeat the mark. A case skipped for a defect still counts as covering its point: it asserts what the
 drafts require and names the issue.
@@ -325,8 +325,8 @@ must convert to.
 What the drafts define is the oracle (DNS lengths, the 15 digits of a phone number, the period of 1 to 99,
 ISO 3166-1, RFC 5322, US-ASCII, the mutability rules of json §4.4); a limit they leave to the server is expected to
 be refused with 400 (`02001`, `02004`, `02005`) or 422 (`02306`), never 500 or 501. A duplicate the drafts leave
-open may also be taken, or refused with 409 (`02302`). Limits that differ by server are `limit_*` facts of the
-environment (testing.project.md, *Limits*). Each limit and its cases are in [backend-limits.yaml](backend-limits.yaml),
+open may also be taken, or refused with 409 (`02302`). Limits that differ by server are facts of the environment,
+such as `contact.city.max_length` (testing.project.md, *Selectors* and *Limits*). Each limit and its cases are in [backend-limits.yaml](backend-limits.yaml),
 with the outcome per backend under `verified`.
 
 ### 6.1 Probes of the limits
@@ -409,9 +409,9 @@ JSContact profile does not have and a value outside a schema pattern are 400 `02
 has no place for is 501 `02102`; a change is read back, and a removal is proven by a `match` that answers 422 `02308`
 (testing.project.md, *Isolating cases*). Where the drafts leave the answer to the registry, each case pins the answer
 of one server: where the two backends decide differently, there is one case for each, selected by an `env` fact of
-server policy (`limit_region_lower_case_refused`, `limit_postcode_lower_case_refused`, `limit_postcode_by_country`,
-`limit_contact_name_charset_restricted`, `limit_contact_name_completeness`, `foreign_contacts_refused`,
-`secdns_key_data_interface`). No case accepts a success and a refusal at once. The answers:
+server policy (`contact.region.lower_case_supported`, `contact.postcode.lower_case_supported`,
+`contact.postcode.format_by_country`, `contact.name.charset_restricted`, `contact.name.digits_only_supported`,
+`domainName.contacts.foreign_supported`, `domainName.dns.dnskey_supported`). No case accepts a success and a refusal at once. The answers:
 
 | Case | EPP test server | RRI MTEST |
 |---|---|---|

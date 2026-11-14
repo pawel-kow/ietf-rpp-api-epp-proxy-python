@@ -13,6 +13,7 @@ registry object (#120). The rules below are checked by `import-linter`.
 src/
 ├── main.py                  composition root, the only module that knows all others
 ├── settings/                loads config.yaml once into typed sections, which main.py passes on
+│   └── profiles/            epp.yaml, rri.yaml: the generic backend profile of each protocol
 ├── core/                    pure Python: no I/O, no framework, no protocol
 │   ├── model/{shared,domain,contact,host,message}/
 │   ├── result/              ResultCode, UnknownResultCode, OperationResponse, ErrorResponse
@@ -34,7 +35,6 @@ src/
     │   ├── commands/        {domain,contact,host,message}/<operation>.py, shared/
     │   ├── gateways/        EppBackend, Epp*Gateway
     │   ├── idn_tables.py    lgr <-> EPP IDN table
-    │   ├── profile.py       EPP_PROFILE, epp_profile
     │   └── refusals.py, contact_refusal.py
     ├── rri/
     │   ├── session/         RriClient: LOGIN (no greeting), LOGOUT, lock, re-login, RegAccId of the login
@@ -42,8 +42,7 @@ src/
     │   ├── commands/        {domain,contact,message}/<operation>.py, shared/rri_command.py (run, CTID)
     │   ├── gateways/        RriBackend, Rri*Gateway (hosts: every command UNIMPLEMENTED)
     │   ├── result_codes.py  DENIC code → ResultCode
-    │   ├── statuses.py      RRI domain status → RPP status
-    │   └── profile.py       RRI_PROFILE, rri_profile
+    │   └── statuses.py      RRI domain status → RPP status
     └── common/
         ├── session/         SerialSession: lock, re-login, retry rule
         ├── transport/       TCP client, TLS context
@@ -336,11 +335,25 @@ whether a restore takes a report (`domain_restore_report`), whether a read can s
 (`domains.check_host_objects`, which refuses `nameservers`), whether a client sets statuses
 (`domains.check_client_statuses`), what a contact holds (`contact_capabilities`: fax, localization, region, voice
 numbers, authInfo, statuses, an organisation on an individual unless `contact_kind_held`, a person's name on an
-organisation unless `contact_org_person_name`) and whether the backend renews (`renew_domain`, which sends no read without). The RRI
-values are `RRI_PROFILE` in `registry_adapter/rri/profile.py`. `domain_dns_required`, `contact_phone_required` and
-`contact_name_changeable` are left to the registry to enforce and read by the test selectors only. The domain mappers
-take the profile as the keyword `profile`, from `backend_profile()` in the handler. The EPP values are `EPP_PROFILE`
-in `registry_adapter/epp/profile.py`, and `epp_profile(idn_tables)` adds the LGRs of the configured IDN tables.
+organisation unless `contact.kind.supported`) and whether the backend renews (`renew_domain`, which sends no read
+without). The domain mappers take the profile as the keyword `profile`, from `backend_profile()` in the handler; the
+flows read it from the backend (`backend.profile`).
+
+### Backend profile
+
+The profile is data, not code. It is a tree, `<object>.<field>.<leaf>` and `<object>.processes.<process>.<leaf>`,
+objects and fields by their RPP names, with leaves that mean the same under every object (`min_count`, `max_count`,
+`<what>_supported`, `changeable`, `removable`; see
+[testing.project.md](testing.project.md#selectors)). `LEAVES` in `core/capabilities/backend_profile.py` lists every
+leaf and its type, and `BackendProfile` is the one class over the tree: an attribute is a node or a leaf
+(`profile.contact.fax.supported`). It is built in two layers, merged in order (a map merges, a list or a value
+replaces): the generic profile of the protocol, `src/settings/profiles/epp.yaml` (RFC 5730 to 5733, 5910 and 3915 as
+the EPP Compatibility Profile takes them, with the gaps commented) or `rri.yaml` (DENIC RRI 5.0), then the server's own,
+`rpp_backend_profile` in the config, which names the generic one with `extends` and states only what differs. Another
+EPP server starts from `extends: epp` alone. `main.py` adds `lgrs` from the config (`Settings.lgrs`: the LGRs of
+`rpp_idn_lgr_tables`, or `rpp_rri_lgr`). A missing, unknown or mistyped leaf stops the app at start.
+`domainName.registrant.min_count`, `domainName.dns.min_count`, `contact.phone.min_count`, `contact.name.changeable`
+and `contact.processes.delete.supported` are left to the registry to enforce and read by the test selectors only.
 
 A value that is not in the form the backend requires (a phone number, the parts of a restore report) is a 400. The
 mapper raises `BackendRequirement` (`core/capabilities/`) with `{backend}` in its text, and `map_request` names the
@@ -365,7 +378,8 @@ leading `0`.
 `load_settings` in [settings/load_settings.py](../../src/settings/load_settings.py) reads `config.yaml` (path
 overridable via `RPP_CONFIG_FILE`, and an untracked `<name>.local.yaml` next to it replaces the keys it has) into
 `Settings`, whose sections are `EppSettings` and `DiscoverySettings`; the section fields are the config.yaml keys.
-`main.py` loads it once and passes each section on; nothing else imports `settings`. The EPP backend host and port
+`main.py` loads it once and passes each section on; nothing else imports `settings`. `rpp_backend_profile` is the
+server's profile, see [Backend profile](#backend-profile). The EPP backend host and port
 come from `rpp_epp_host` and `rpp_epp_port`, and `new_epp_client` in [main.py](../../src/main.py) uses them to open
 the connection. `rpp_epp_ns_map` is the namespace map the EPP commands render with. `rpp_idn_lgr_tables` maps an LGR
 name to an IDN table id, one to one. `main.py` turns it into `IdnTables`, which refuses a map that is not one to one,
@@ -392,12 +406,13 @@ does not check the `version` parameter of the media type, so core §12's 406 is 
 ## Composition
 
 [src/main.py](../../src/main.py) is the composition root. `rpp_backend` (`epp` by default, or `rri`) picks
-`new_epp_backend` or `new_rri_backend` and its profile from `BACKENDS`; nothing else knows which backend runs.
+`new_epp_backend` or `new_rri_backend` from `BACKENDS`, and builds the `BackendProfile` from the layers of the
+settings, which both the backend and the app get; nothing else knows which backend runs.
 `new_epp_backend` builds an `EppBackend` over the default
 `EPPClient`, with the namespace map and the `IdnTables`, and `new_rri_backend` an `RriBackend` over an `RriClient`
 on a `TCPClient` with payload-only framing. The chosen one is `new_backend`, the factory main passes to
 [`SessionPool`](../../src/core/session/session_pool.py), which keeps one backend per user. The pool goes to
-`create_app` in [app.py](../../src/rpp/http/app.py), with the `BackendProfile` (`epp_profile(idn_tables)`) and the
+`create_app` in [app.py](../../src/rpp/http/app.py), with the `BackendProfile` and the
 `DiscoverySettings`, which the handlers read through [context.py](../../src/rpp/http/context.py). `create_app` hands
 `SessionSecurityHandler` to Connexion through `security_map`, because Connexion would otherwise resolve the function
 by name and it could not receive dependencies; the handler puts the user's backend into the token info (key

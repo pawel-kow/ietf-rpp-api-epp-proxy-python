@@ -10,24 +10,24 @@ def check_contact(contact, *, profile: BackendProfile):
     client status. `contact` is a `Contact` or a `ContactReplacement`; None passes."""
     if contact is None:
         return contact
-    if not profile.contact_fax and any(contact.fax or []):
+    if not profile.contact.fax.supported and any(contact.fax or []):
         raise NotSupportedByBackend("A fax number")
-    if not profile.contact_localization and contact.localizedPostalInfo is not None:
+    if not profile.contact.localization.supported and contact.localizedPostalInfo is not None:
         raise NotSupportedByBackend("A localized form of a contact")
-    if not profile.contact_region and contact.address is not None and contact.address.stateProvince:
+    if not profile.contact.region.supported and contact.address is not None and contact.address.stateProvince:
         raise NotSupportedByBackend("The region of an address")
-    if len([phone for phone in contact.phone or [] if phone]) > profile.contact_phones_max:
-        raise NotSupportedByBackend(f"More than {profile.contact_phones_max} voice numbers")
+    if len([phone for phone in contact.phone or [] if phone]) > profile.contact.phone.max_count:
+        raise NotSupportedByBackend(f"More than {profile.contact.phone.max_count} voice numbers")
     localized = contact.localizedPostalInfo
-    if not profile.contact_kind_held and getattr(contact, "type", None) == ContactType.PERSON \
+    if not profile.contact.kind.supported and getattr(contact, "type", None) == ContactType.PERSON \
             and (contact.organisationName or (localized is not None and localized.organisationName)):
         raise NotSupportedByBackend("'organizations' on an individual")
-    if not profile.contact_org_person_name and getattr(contact, "type", None) == ContactType.ORG \
+    if not profile.contact.org.person_name_supported and getattr(contact, "type", None) == ContactType.ORG \
             and contact.name and contact.organisationName and contact.name != contact.organisationName:
         raise NotSupportedByBackend("The name of a person in the contact of an organisation")
-    if not profile.contact_auth_info and contact.authInfo is not None and (contact.authInfo.pw or contact.authInfo.hash):
+    if not profile.contact.authInfo.supported and contact.authInfo is not None and (contact.authInfo.pw or contact.authInfo.hash):
         raise NotSupportedByBackend("The authInfo of a contact")
-    if not profile.client_statuses and any(label != "ok" for label in contact.status or []):
+    if not profile.contact.status.client_supported and any(label != "ok" for label in contact.status or []):
         raise NotSupportedByBackend("A client status")
     return contact
 
@@ -40,15 +40,15 @@ def check_contact_update(update: ContactUpdate | None, *, profile: BackendProfil
         return check_contact(update, profile=profile)
     change = update.change
     if change is not None:
-        if not profile.contact_auth_info and change.authInfo:
+        if not profile.contact.authInfo.supported and change.authInfo:
             raise NotSupportedByBackend("The authInfo of a contact")
-        if not profile.contact_fax and change.fax:
+        if not profile.contact.fax.supported and change.fax:
             raise NotSupportedByBackend("A fax number")
         for form in change.postal_info:
-            if not profile.contact_localization and form.form == "loc":
+            if not profile.contact.localization.supported and form.form == "loc":
                 raise NotSupportedByBackend("A localized form of a contact")
-            if not profile.contact_region and form.address is not None and form.address.stateProvince:
+            if not profile.contact.region.supported and form.address is not None and form.address.stateProvince:
                 raise NotSupportedByBackend("The region of an address")
-    if not profile.client_statuses and ((update.add and update.add.status) or (update.remove and update.remove.status)):
+    if not profile.contact.status.client_supported and ((update.add and update.add.status) or (update.remove and update.remove.status)):
         raise NotSupportedByBackend("A client status")
     return update

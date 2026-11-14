@@ -1,46 +1,79 @@
 # DENIC's RRI test environment, MTEST (docs/rri/refactoring.md §5.4). The machine must be on the IPv4 allowlist of
 # both RegAccs.
-config: config.rri-mtest.yaml          # RPP_CONFIG_FILE of the app under test
-profile: registry_adapter.rri.profile:RRI_PROFILE
-lgrs: [latn-1.0]                       # rpp_rri_lgr of its config
+config: config.rri-mtest.yaml          # RPP_CONFIG_FILE of the app under test: its profile, TLD, LGRs, environment name
 max_workers: 4                         # MTEST allows 4 sessions per RegAcc
 rpp_requests_per_minute: 25            # under the ACL of 100 RRI requests a minute: one RPP request is up to 4
 regacc: login_prefix                   # the sponsor id is the RegAccId the login starts with
 registrars:                            # the slots the cases name, each naming its variables in .env
-  a: {user: TEST_RRI_REGACC1, password: TEST_RRI_REGACC1_PASSWORD, prefix: TEST_RRI_REGACC1_PREFIX,
-      gen_req: TEST_RRI_REGACC1_GEN_REQ, abuse: TEST_RRI_REGACC1_ABUSE}
-  b: {user: TEST_RRI_REGACC2, password: TEST_RRI_REGACC2_PASSWORD, prefix: TEST_RRI_REGACC2_PREFIX,
-      gen_req: TEST_RRI_REGACC2_GEN_REQ, abuse: TEST_RRI_REGACC2_ABUSE}
-# No wrong password and no unknown user: 10 failed LOGINs lock the user for an hour.
+  a:
+    user: TEST_RRI_REGACC1
+    password: TEST_RRI_REGACC1_PASSWORD
+    prefix: TEST_RRI_REGACC1_PREFIX
+    gen_req: TEST_RRI_REGACC1_GEN_REQ
+    abuse: TEST_RRI_REGACC1_ABUSE
+  b:
+    user: TEST_RRI_REGACC2
+    password: TEST_RRI_REGACC2_PASSWORD
+    prefix: TEST_RRI_REGACC2_PREFIX
+    gen_req: TEST_RRI_REGACC2_GEN_REQ
+    abuse: TEST_RRI_REGACC2_ABUSE
+# Not a secret: a user MTEST does not know, for the failed logins. No case logs in to a test account with a wrong
+# password: 10 failed LOGINs lock a user for an hour.
+unknown_user:
+  user: ghost
+  password: nope
+
+# What this server does where the protocol leaves the choice to it (docs/agents/testing.project.md#selectors).
+# `<object>.<field>.<leaf>` and `<object>.processes.<process>.<leaf>`, objects and fields by their RPP names.
+# null: the field is not there, or the limit is not known.
 facts:
-  tld: de
-  restore_within_run: false            # the RGP lasts a day on MTEST
-  environment_name: rpp-rri-proxy.example       # rpp_environment_name of its config
-  domain_active_at_create: false        # a new domain is ok at once, not pendingCreate
-  cltrid_reuse_refused: false           # a reused client transaction id is refused, also on a read
-  idn_table_required: false            # the registry refuses an IDN without an IDN table
-  lgr_without_enye: false               # the IDN table of latn-1.0 lacks ñ
-  deleted_domain_readable: true       # a domain deleted right after its create is read in its redemption period, not purged
-  failed_logins_lock: true
-  lgr_on_ascii_refused: false      # an lgr on a name that is not an IDN is refused
-  contact_removal_refused_by_registry: true  # the registry, not the proxy, refuses clearing a contact's name or email
-  contact_postcode_required: true   # an address needs a postcode
-  # Limits that differ by server (docs/testing/backend-limits.yaml), for the limits_* cases
-  values_cut_at_column: false   # a value longer than its column is stored cut, not refused
-  limit_contact_id_length: 32
-  limit_authinfo_min_length: 8
-  limit_authinfo_upper_and_digit: false   # an authInfo needs an upper case letter and a digit
-  limit_authinfo_unambiguous: true   # an authInfo has none of I, O, l, o, 0, 1
-  limit_contact_name_min_length: 3
-  limit_street_lines_max: null   # null: no limit known
-  limit_street_lines_min: 1
-  limit_city_max_length: 80
-  limit_phone_subscriber_min_digits: 4
-  # Server policy where the drafts leave the choice to the server, so a case selects its expected answer
-  limit_region_lower_case_refused: null  # a region starting in lower case is refused (null: no region)
-  limit_postcode_lower_case_refused: false # a postcode with lower case letters is refused
-  limit_postcode_by_country: true  # a postcode is checked against the format of its country
-  limit_contact_name_charset_restricted: false # a name takes letters, digits, space and . , - only (no ', no character outside the BMP)
-  limit_contact_name_completeness: true  # a name of digits only, or of specials only, is refused
-  foreign_contacts_refused: null  # a domain cannot name a contact of another registrar (null: not known)
-  secdns_key_data_interface: null  # the server takes DNSKEY records in secDNS (RFC 5910 §4); else DS records only (null: no secDNS)
+  session:
+    cltrid_reuse_supported: true       # a reused client transaction id is taken
+  domainName:
+    name:
+      lgr:
+        required_for_idn: false        # an IDN without an lgr is taken
+        ascii_supported: true          # an lgr on a name that is not an IDN is taken
+        latn_enye_supported: true      # DENIC's repertoire has ñ
+    authInfo:
+      min_length: 8
+      upper_and_digit_required: false
+      ambiguous_supported: false       # it may not hold I, O, l, o, 0 and 1
+    contacts:
+      foreign_supported: null          # not known
+    dns:
+      dnskey_supported: null           # RRI has no secDNS: DENIC computes the DS from the DNSKEY
+    processes:
+      create:
+        active_at_once: false          # a new domain is not ok at once
+      delete:
+        readable_after: true           # a domain deleted right after its create is read in its redemption period
+      restore:
+        within_run: false              # the RGP lasts a day on MTEST
+  contact:
+    id:
+      max_length: 32
+    name:
+      min_count: 1
+      min_length: 3
+      charset_restricted: false
+      digits_only_supported: false     # a name of digits only, or of specials only, is refused
+    email:
+      min_count: 1
+    street:
+      min_count: 1
+      max_count: null
+    city:
+      max_length: 80
+    region:
+      lower_case_supported: null       # an RRI contact has no region
+    postcode:
+      min_count: 1
+      lower_case_supported: true
+      format_by_country: true          # the postcode is checked against the format of its country
+    phone:
+      subscriber:
+        min_length: 4                  # digits after the country code
+  # Defects of this server, which the cases it breaks do not run on.
+  bugs:
+    over_max_length_cut: false

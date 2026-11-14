@@ -5,7 +5,7 @@ from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domains import Domain, HostAttr, HostObj, NS
 from core.model.domain.ds_data import DsData
 from core.model.domain.key_data import KeyData
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.mapping.domain import domains
 
 DS_RDATA = {"keyTag": "12345", "algorithm": "3", "digestType": "1", "digest": "49FD46E6C4B45C55D4AC"}

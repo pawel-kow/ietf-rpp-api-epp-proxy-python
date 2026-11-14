@@ -1,8 +1,8 @@
 {
   "test_id": "test52-patch_clears_phones",
   "when": {
-    "profile.contact_phone_required": false,
-    "profile.contact_fax": true
+    "profile.contact.phone.min_count": 0,
+    "profile.contact.fax.supported": true
   },
   "description": "A PATCH removes every phone.",
   "steps": [
@@ -69,7 +69,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

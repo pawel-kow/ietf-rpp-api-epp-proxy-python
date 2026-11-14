@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.client_statuses": true
+    "profile.contact.status.client_supported": true
   },
   "test_id": "test7-put_status_with_reason",
   "description": "The backend accepts a status with a reason and repeats the label as its text (#54), so the reason is not read back: this case proves the update with a reason is accepted and the status is set and cleared, not that the reason is stored. The reason itself is covered by unit tests.",
@@ -40,7 +40,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -68,7 +68,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.456456456",
@@ -93,7 +93,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -154,7 +154,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -182,7 +182,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.456456456",
@@ -263,7 +263,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -291,7 +291,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.456456456",

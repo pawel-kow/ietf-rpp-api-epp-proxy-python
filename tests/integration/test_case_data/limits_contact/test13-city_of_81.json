@@ -2,7 +2,7 @@
   "test_id": "test13-city_of_81",
   "skip": "#139",
   "when": {
-    "env.limit_city_max_length": 80
+    "env.contact.city.max_length": 80
   },
   "description": "A city of 81 characters, over the most RRI holds.",
   "steps": [
@@ -63,7 +63,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

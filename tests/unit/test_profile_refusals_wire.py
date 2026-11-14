@@ -1,11 +1,10 @@
 """The refusals the profile drives, before any command: transfer operations, restore reports and a readable authInfo."""
 import base64
-from dataclasses import replace
 
 import pytest
 
 from core.session.session_pool import SessionPool
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.http.app import create_app
 from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
@@ -57,9 +56,13 @@ TRANSFERS = [
 ]
 
 
+OBJECTS = {"domain": "domainName", "contact": "contact"}
+
+
 @pytest.mark.parametrize("obj, operation, method, url, body", TRANSFERS)
 def test_a_transfer_operation_the_backend_lacks_is_refused_without_a_command(obj, operation, method, url, body):
-    profile = replace(EPP_PROFILE, **{f"{obj}_transfer_operations": EPP_PROFILE.domain_transfer_operations - {operation}})
+    operations = [o for o in EPP_PROFILE.domainName.processes.transfer.operations if o != operation]
+    profile = EPP_PROFILE.with_changes({OBJECTS[obj]: {"processes": {"transfer": {"operations": operations}}}})
     client, clients = setup(profile)
 
     response = client.request(method, url, json=body, headers=BODY_HEADERS if body else HEADERS)
@@ -68,7 +71,7 @@ def test_a_transfer_operation_the_backend_lacks_is_refused_without_a_command(obj
 
 
 def test_a_restore_report_is_refused_by_a_backend_without_reports():
-    client, clients = setup(replace(EPP_PROFILE, restore_report=False))
+    client, clients = setup(EPP_PROFILE.with_changes({"domainName": {"processes": {"restore": {"report_supported": False}}}}))
 
     response = client.put("/domainNames/foo.example/processes/restoreProcesses/latest",
                           json={"@type": "restoreProcess", "restoreReport": REPORT}, headers=BODY_HEADERS)
@@ -77,7 +80,7 @@ def test_a_restore_report_is_refused_by_a_backend_without_reports():
 
 
 def test_include_elements_auth_info_is_refused_where_auth_info_cannot_be_read():
-    client, clients = setup(replace(EPP_PROFILE, auth_info_readable=False))
+    client, clients = setup(EPP_PROFILE.with_changes({"domainName": {"authInfo": {"read_supported": False}}}))
 
     response = client.get("/domainNames/foo.example?includeElements=authInfo", headers=HEADERS)
 

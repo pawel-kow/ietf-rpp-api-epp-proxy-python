@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.contact_labels": {
+    "profile.domainName.contacts.labels": {
       "contains": "admin"
     }
   },

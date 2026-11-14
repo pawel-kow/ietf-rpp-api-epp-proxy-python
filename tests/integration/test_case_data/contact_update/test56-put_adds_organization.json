@@ -1,7 +1,7 @@
 {
   "test_id": "test56-put_adds_organization",
   "when": {
-    "profile.contact_org_person_name": true
+    "profile.contact.org.person_name_supported": true
   },
   "description": "A PUT adds an organization.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

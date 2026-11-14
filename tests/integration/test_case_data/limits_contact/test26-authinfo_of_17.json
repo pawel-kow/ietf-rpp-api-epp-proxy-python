@@ -1,7 +1,7 @@
 {
   "test_id": "test26-authinfo_of_17",
   "when": {
-    "profile.contact_auth_info": true
+    "profile.contact.authInfo.supported": true
   },
   "description": "A contact authInfo of 17 characters, over the 16 of the EPP test server.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

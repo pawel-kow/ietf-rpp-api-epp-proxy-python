@@ -4,7 +4,7 @@ import pytest
 
 from core.result.result_code import ResultCode
 from core.session.session_pool import SessionPool
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.http.app import create_app
 from rpp.http.headers import rpp_code
 from rpp.http.problem import http_status

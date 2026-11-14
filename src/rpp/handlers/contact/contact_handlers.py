@@ -68,7 +68,7 @@ def contacts_updatePartial(id, body):
 
     def wanted_from_current(current):
         return map_request(check_contact, map_request(contact_patch.rpp_to_model_with_current, id, body, current,
-                                       kind_held=backend_profile().contact_kind_held),
+                                       kind_held=backend_profile().contact.kind.supported),
                            profile=backend_profile())
 
     return _mutation_answer(patch_contact(get_backend(), id, update, wanted_from_current, client_transaction_id()), requested)

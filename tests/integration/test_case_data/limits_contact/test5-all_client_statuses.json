@@ -1,7 +1,7 @@
 {
   "test_id": "test5-all_client_statuses",
   "when": {
-    "profile.client_statuses": true
+    "profile.contact.status.client_supported": true
   },
   "description": "A contact holds every client status at once (data-objects §9.5).",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

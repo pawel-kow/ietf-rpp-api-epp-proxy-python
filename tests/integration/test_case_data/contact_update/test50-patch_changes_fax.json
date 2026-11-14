@@ -1,7 +1,7 @@
 {
   "test_id": "test50-patch_changes_fax",
   "when": {
-    "profile.contact_fax": true
+    "profile.contact.fax.supported": true
   },
   "description": "A PATCH changes the fax number.",
   "steps": [
@@ -68,7 +68,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

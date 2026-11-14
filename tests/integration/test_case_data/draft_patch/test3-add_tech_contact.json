@@ -1,10 +1,12 @@
 {
   "when": {
-    "profile.host_objects": true,
-    "profile.contact_labels": {
+    "profile.objects": {
+      "contains": "host"
+    },
+    "profile.domainName.contacts.labels": {
       "contains": "admin"
     },
-    "profile.registration_periods": true
+    "profile.domainName.period.supported": true
   },
   "test_id": "test3-add_tech_contact",
   "steps": [
@@ -117,7 +119,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -145,7 +147,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "features": {
@@ -170,7 +172,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -226,7 +228,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -254,7 +256,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "features": {
@@ -279,7 +281,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -335,7 +337,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -363,7 +365,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "features": {
@@ -388,7 +390,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -416,7 +418,7 @@
           "select": [
             {
               "when": {
-                "profile.auth_info_readable": true
+                "profile.domainName.authInfo.read_supported": true
               },
               "then": "/domainNames?includeElements=authInfo"
             },
@@ -452,7 +454,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -523,7 +525,7 @@
             "select": [
               {
                 "when": {
-                  "env.domain_active_at_create": true
+                  "env.domainName.processes.create.active_at_once": true
                 },
                 "then": [
                   {
@@ -545,7 +547,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -600,7 +602,7 @@
             "select": [
               {
                 "when": {
-                  "profile.auth_info_readable": true
+                  "profile.domainName.authInfo.read_supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -622,8 +624,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "domainName.crClientId"
+                  "profile.domainName.metadata": {
+                    "contains": "crClientId"
                   }
                 },
                 "then": {
@@ -639,8 +641,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "domainName.crDate"
+                  "profile.domainName.metadata": {
+                    "contains": "crDate"
                   }
                 },
                 "then": {
@@ -659,7 +661,7 @@
             "select": [
               {
                 "when": {
-                  "profile.registration_periods": true
+                  "profile.domainName.period.supported": true
                 },
                 "then": {
                   "type": "datetime_format_utc_and_delta",
@@ -709,7 +711,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },

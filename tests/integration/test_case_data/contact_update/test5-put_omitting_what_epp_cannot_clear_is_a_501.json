@@ -1,4 +1,14 @@
 {
+  "when": [
+    {
+      "profile.contact.name.removable": false
+    },
+    {
+      "env.contact.name.min_count": {
+        "min": 1
+      }
+    }
+  ],
   "test_id": "test5-put_keeps_what_epp_cannot_clear",
   "description": "A full update is the wanted state (core §16.8), so the name, address and email it omits are cleared, which EPP cannot do: 501, see spec-issues.md (Full update of a contact).",
   "steps": [
@@ -37,7 +47,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -65,7 +75,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.456456456",
@@ -90,7 +100,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -163,12 +173,12 @@
         "select": [
           {
             "when": {
-              "env.contact_removal_refused_by_registry": true
+              "profile.contact.name.removable": false
             },
             "then": {
-              "status": 422,
+              "status": 501,
               "headers": {
-                "RPP-Code": "02306"
+                "RPP-Code": "02102"
               },
               "content_type": "application/problem+json",
               "body": {
@@ -178,9 +188,9 @@
           },
           {
             "then": {
-              "status": 501,
+              "status": 422,
               "headers": {
-                "RPP-Code": "02102"
+                "RPP-Code": "02306"
               },
               "content_type": "application/problem+json",
               "body": {

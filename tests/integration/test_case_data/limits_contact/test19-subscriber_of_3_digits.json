@@ -1,7 +1,7 @@
 {
   "test_id": "test19-subscriber_of_3_digits",
   "when": {
-    "env.limit_phone_subscriber_min_digits": 4
+    "env.contact.phone.subscriber.min_length": 4
   },
   "description": "RRI needs at least 4 digits after the country code.",
   "steps": [
@@ -59,7 +59,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

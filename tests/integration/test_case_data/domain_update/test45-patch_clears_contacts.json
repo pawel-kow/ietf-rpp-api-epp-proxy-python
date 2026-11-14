@@ -1,10 +1,10 @@
 {
   "test_id": "test45-patch_clears_contacts",
   "when": {
-    "profile.contact_labels": {
+    "profile.domainName.contacts.labels": {
       "contains": "tech"
     },
-    "profile.registrant_required": false
+    "profile.domainName.registrant.min_count": 0
   },
   "description": "replace /contacts [] removes every contact.",
   "steps": [
@@ -65,7 +65,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -111,7 +111,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

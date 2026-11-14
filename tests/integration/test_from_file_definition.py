@@ -32,11 +32,11 @@ credentials = Credentials(environment)
 pacer = Pacer(environment.rpp_requests_per_minute, workers, credentials.slot)
 facts = selectors.Facts(app.app.config["RPP_BACKEND_PROFILE"], environment.facts)
 
-# The facts of every known environment, from the profile its descriptor names, to find a case that runs nowhere.
-all_facts = {name: selectors.Facts(env.declared_profile(), env.facts)
+# The facts of every known environment, with the profile of its config, to find a case that runs nowhere.
+all_facts = {name: selectors.Facts(env.profile, env.facts)
              for name in environment_names()
              for env in [load(name, with_credentials=False)]}
-all_facts[environment.name] = facts  # the app under test may offer more than its declared profile, such as LGRs
+all_facts[environment.name] = facts  # the app under test may be given another config through RPP_CONFIG_FILE
 
 # --- Test Client Fixture ---
 @pytest.fixture(scope='module')

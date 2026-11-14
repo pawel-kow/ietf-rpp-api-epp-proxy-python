@@ -1,7 +1,7 @@
 {
   "test_id": "test44-apostrophe_in_name_taken",
   "when": {
-    "env.limit_contact_name_charset_restricted": false
+    "env.contact.name.charset_restricted": false
   },
   "description": "An apostrophe in a name, which US-ASCII allows, read back.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

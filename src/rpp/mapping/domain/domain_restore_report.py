@@ -32,8 +32,8 @@ def _report(report_rpp: RPPRestoreReport) -> RestoreReport:
 
 def rpp_to_model(name: str, rpp: dict, *, profile: BackendProfile) -> DomainRestore:
     """Converts a restore report (json §8.1.14), which carries what RFC 3915 requires (json §6.2.10). A backend whose
-    restore takes no report (`profile.restore_report`) refuses it."""
-    if not profile.restore_report:
+    restore takes no report (`profile.domainName.processes.restore.report_supported`) refuses it."""
+    if not profile.domainName.processes.restore.report_supported:
         raise NotSupportedByBackend("A restore report")
     process_rpp = parse_request("restoreProcess.update", rpp)
     return DomainRestore(name=name, report=_report(process_rpp.restoreReport))

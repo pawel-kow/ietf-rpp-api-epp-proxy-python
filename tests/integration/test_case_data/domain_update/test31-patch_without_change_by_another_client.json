@@ -1,12 +1,16 @@
 {
   "when": {
-    "profile.host_objects": true
+    "profile.objects": {
+      "contains": "host"
+    }
   },
   "test_id": "test31-patch_without_change_by_another_client",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -134,7 +138,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",

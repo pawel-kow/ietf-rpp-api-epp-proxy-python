@@ -1,7 +1,7 @@
 import yaml
 
 from core.session.session_pool import SessionPool
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.http.app import create_app, OPENAPI_SPEC, parsed_spec
 
 

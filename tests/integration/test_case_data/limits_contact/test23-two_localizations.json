@@ -1,7 +1,7 @@
 {
   "test_id": "test23-two_localizations",
   "when": {
-    "profile.contact_localization": true
+    "profile.contact.localization.supported": true
   },
   "description": "Two localizations, more than the backend holds: 501 (spec-issues.md).",
   "steps": [
@@ -75,7 +75,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

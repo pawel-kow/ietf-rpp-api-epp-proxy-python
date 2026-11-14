@@ -2,7 +2,7 @@
   "test_id": "test7-name_of_256",
   "skip": "#139",
   "when": {
-    "env.values_cut_at_column": false
+    "env.bugs.over_max_length_cut": false
   },
   "description": "A name of 256 characters is over what RFC 5733 and RRI hold; a server that cuts it instead is a defect.",
   "steps": [
@@ -63,7 +63,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

@@ -5,6 +5,9 @@ rpp_rri_host: rri.test.denic.de
 rpp_rri_port: 51131
 rpp_rri_use_tls: true
 rpp_rri_tls_insecure_skip_verify: false
+# The profile of this server (see config.yaml): DENIC's, src/settings/profiles/rri.yaml.
+rpp_backend_profile:
+  extends: rri
 rpp_rri_lgr: latn-1.0   # the one LGR name a client may give for DENIC's IDN repertoire (gap Q11)
 
 # What the discovery document states (placeholders for the test deployment).

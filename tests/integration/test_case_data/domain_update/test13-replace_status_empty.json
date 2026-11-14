@@ -1,12 +1,14 @@
 {
   "when": {
-    "profile.client_statuses": true
+    "profile.domainName.status.client_supported": true
   },
   "test_id": "test13-replace_status_empty",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -91,7 +93,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -107,7 +111,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -200,7 +206,7 @@
             "select": [
               {
                 "when": {
-                  "env.domain_active_at_create": true
+                  "env.domainName.processes.create.active_at_once": true
                 },
                 "then": [
                   {

@@ -1,6 +1,5 @@
 """What the domain model holds beyond EPP, for a backend whose profile says so: records the registry serves itself,
 several registrants and the deadline of a status. The EPP profile still refuses them."""
-from dataclasses import replace
 
 import pytest
 
@@ -8,11 +7,12 @@ from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.domain import domain_application, domain_difference
 from core.model.domain.domains import ContactReference, Domain, DomainUpdate, HostAttr
 from core.model.domain.zone_record import ZoneRecord
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.mapping.domain import domain_patch, domain_wanted, domains
 
-OTHER = replace(EPP_PROFILE, name="Other", contact_labels=("generalRequest", "abuse"), max_registrants=5,
-                domain_record_types=("ns", "a", "aaaa", "mx", "dnskey"))
+OTHER = EPP_PROFILE.with_changes({"name": "Other", "domainName": {
+    "registrant": {"max_count": 5}, "contacts": {"labels": ["generalRequest", "abuse"]},
+    "dns": {"record_types": ["ns", "a", "aaaa", "mx", "dnskey"]}}})
 
 
 def record(name, record_type, rdata):
@@ -94,13 +94,14 @@ def test_further_registrants_are_contacts_labelled_registrant():
 
 def test_epp_refuses_a_second_registrant():
     with pytest.raises(NotSupportedByBackend, match="Contact label 'registrant'"):
-        create(profile=replace(OTHER, max_registrants=1), **REGISTRANTS)
+        create(profile=OTHER.with_changes({"domainName": {"registrant": {"max_count": 1}}}), **REGISTRANTS)
 
 
 def test_more_registrants_than_the_backend_holds_are_refused():
     with pytest.raises(NotSupportedByBackend, match="More than 1 registrants"):
         domain_wanted.rpp_to_model("foo.example", REGISTRANTS, None, frozenset(),
-                                   profile=replace(OTHER, max_registrants=1, contact_labels=("abuse", "registrant")))
+                                   profile=OTHER.with_changes({"domainName": {
+                                       "registrant": {"max_count": 1}, "contacts": {"labels": ["abuse", "registrant"]}}}))
 
 
 def test_full_update_keeps_further_registrants_and_records():

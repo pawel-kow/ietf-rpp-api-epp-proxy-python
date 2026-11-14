@@ -36,7 +36,9 @@
             "select": [
               {
                 "when": {
-                  "profile.host_objects": true
+                  "profile.objects": {
+                    "contains": "host"
+                  }
                 },
                 "then": [
                   "urn:ietf:params:rpp:profile:epp-compatibility"
@@ -51,7 +53,9 @@
             "select": [
               {
                 "when": {
-                  "profile.host_objects": true
+                  "profile.objects": {
+                    "contains": "host"
+                  }
                 },
                 "then": [
                   "domainName",

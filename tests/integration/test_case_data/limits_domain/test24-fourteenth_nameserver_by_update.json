@@ -2,13 +2,17 @@
   "test_id": "test24-fourteenth_nameserver_by_update",
   "skip": "pawel-kow/epp#29",
   "when": {
-    "profile.host_objects": true
+    "profile.objects": {
+      "contains": "host"
+    }
   },
   "description": "A fourteenth nameserver added to a domain with thirteen: the limit holds for the domain, not the command.",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -66,7 +70,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -600,7 +604,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -616,7 +622,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

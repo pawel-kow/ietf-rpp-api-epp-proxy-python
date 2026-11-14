@@ -6,7 +6,7 @@ from connexion import ProblemException
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.capabilities.not_supported_by_proxy import NotSupportedByProxy
 from core.result.result_code import ResultCode
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.http.operation import map_request
 from rpp.mapping.contact import contacts
 from rpp.mapping.contact.contact_capabilities import check_contact

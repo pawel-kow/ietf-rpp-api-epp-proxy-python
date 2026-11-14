@@ -1,7 +1,7 @@
 {
   "test_id": "test10-four_street_lines",
   "when": {
-    "env.limit_street_lines_max": 3
+    "env.contact.street.max_count": 3
   },
   "description": "Four street lines, over the three of the EPP Compatibility Profile: 501 (spec-issues.md).",
   "steps": [
@@ -74,7 +74,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

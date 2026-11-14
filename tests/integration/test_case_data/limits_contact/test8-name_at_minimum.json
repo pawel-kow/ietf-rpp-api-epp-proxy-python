@@ -24,7 +24,7 @@
                 "select": [
                   {
                     "when": {
-                      "env.limit_contact_name_min_length": 3
+                      "env.contact.name.min_length": 3
                     },
                     "then": "Max"
                   },
@@ -71,7 +71,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

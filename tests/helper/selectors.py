@@ -1,31 +1,46 @@
 """Selectors in the case files: which backends a case, a step or an expected value is for (docs/rri/refactoring.md
 §5.2).
 
-A selector is a JSON object whose keys name facts and which holds when every key holds. `profile.<fact>` is a fact of
-the `BackendProfile` the app under test was composed with, `env.<fact>` a fact of the test environment. A list of
-selectors holds when one of them holds.
+A selector is a JSON object whose keys name facts and which holds when every key holds. `profile.<path>` is a leaf of
+the `BackendProfile` the app under test was composed with, `env.<path>` one of the facts of the test environment; the
+path is dotted (`profile.contact.fax.supported`, `env.contact.postcode.min_count`). A list of selectors holds when one
+of them holds.
 """
-from dataclasses import fields, is_dataclass
+from core.capabilities.backend_profile import BackendProfile
 
 
 class SelectorError(ValueError):
     """A selector that cannot be evaluated: a key that names no fact, or a value of the wrong form."""
 
 
+def _env_fact(facts: dict, path: str):
+    node = facts
+    for key in path.split("."):
+        if not isinstance(node, dict) or key not in node:
+            raise KeyError(path)
+        node = node[key]
+    if isinstance(node, dict):
+        raise KeyError(path)
+    return node
+
+
 class Facts:
-    def __init__(self, profile, env_facts: dict):
-        if not is_dataclass(profile):
-            raise SelectorError("the profile is not a dataclass")
+    def __init__(self, profile: BackendProfile, env_facts: dict):
+        if not isinstance(profile, BackendProfile):
+            raise SelectorError("the profile is not a BackendProfile")
         self.profile = profile
-        self.profile_names = {f.name for f in fields(profile)}
         self.env_facts = env_facts
 
     def value(self, key: str):
-        scope, _, name = key.partition(".")
-        if scope == "profile" and name in self.profile_names:
-            return getattr(self.profile, name)
-        if scope == "env" and name in self.env_facts:
-            return self.env_facts[name]
+        """The leaf a key names. A key that names no leaf, or a node with leaves under it, names no fact."""
+        scope, _, path = key.partition(".")
+        try:
+            if scope == "profile":
+                return self.profile.fact(path)
+            if scope == "env":
+                return _env_fact(self.env_facts, path)
+        except KeyError:
+            pass
         raise SelectorError(f"selector key {key!r} names no fact")
 
 

@@ -1,7 +1,7 @@
 {
   "test_id": "test32-client_status_at_create",
   "when": {
-    "profile.client_statuses": true
+    "profile.domainName.status.client_supported": true
   },
   "description": "The data objects allow a status at create, which an EPP domain create has no element for (RFC 5731).",
   "steps": [
@@ -27,7 +27,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

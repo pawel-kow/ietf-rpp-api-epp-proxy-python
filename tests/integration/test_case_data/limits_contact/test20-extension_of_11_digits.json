@@ -1,7 +1,7 @@
 {
   "test_id": "test20-extension_of_11_digits",
   "when": {
-    "env.values_cut_at_column": false
+    "env.bugs.over_max_length_cut": false
   },
   "description": "The profile puts no limit on the extension; it is read back whole.",
   "steps": [
@@ -59,7 +59,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

@@ -3,7 +3,7 @@ import base64
 import pytest
 
 from core.session.session_pool import SessionPool
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from registry_adapter.epp.session.epp_client import RGP_EXTENSION, SEC_DNS_EXTENSION
 from rpp.http.app import create_app
 from tests.helper.epp_backends import epp_backends

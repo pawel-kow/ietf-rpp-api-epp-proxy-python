@@ -1,7 +1,7 @@
 {
   "test_id": "test32-name_of_digits_refused",
   "when": {
-    "env.limit_contact_name_completeness": true
+    "env.contact.name.digits_only_supported": false
   },
   "description": "A name of digits only: the server checks a name for completeness (env.limit_contact_name_completeness).",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

@@ -1,12 +1,11 @@
 {
-  "when": {
-    "env.failed_logins_lock": false
-  },
   "test_id": "test14-invalid-auth",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -85,7 +84,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -101,7 +102,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -126,7 +129,7 @@
         "headers": {
           "Content-Type": "application/rpp+json",
           "RPP-Cltrid": "test14-{random_name}-clTRID",
-          "Authorization": "{auth:a:wrong_password}",
+          "Authorization": "{auth:unknown_user}",
           "Accept": "application/rpp+json"
         }
       },

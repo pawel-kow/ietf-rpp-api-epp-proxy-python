@@ -2,7 +2,7 @@
   "test_id": "test11-no_street_line",
   "skip": "#139",
   "when": {
-    "env.limit_street_lines_min": 1
+    "env.contact.street.min_count": 1
   },
   "description": "RRI needs at least one address line.",
   "steps": [
@@ -59,7 +59,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

@@ -1,7 +1,7 @@
 {
   "test_id": "test3-several_registrants",
   "when": {
-    "profile.max_registrants": {
+    "profile.domainName.registrant.max_count": {
       "min": 2
     }
   },
@@ -21,7 +21,7 @@
           "select": [
             {
               "when": {
-                "profile.contact_auth_info": true
+                "profile.contact.authInfo.supported": true
               },
               "then": {
                 "@type": "contact",
@@ -147,7 +147,7 @@
           "select": [
             {
               "when": {
-                "profile.contact_auth_info": true
+                "profile.contact.authInfo.supported": true
               },
               "then": {
                 "@type": "contact",
@@ -273,7 +273,9 @@
           "select": [
             {
               "when": {
-                "profile.domain_dns_required": true
+                "profile.domainName.dns.min_count": {
+                  "min": 1
+                }
               },
               "then": {
                 "@type": "domainName",

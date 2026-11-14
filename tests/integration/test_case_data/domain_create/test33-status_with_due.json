@@ -1,7 +1,7 @@
 {
   "test_id": "test33-status_with_due",
   "when": {
-    "profile.client_statuses": true
+    "profile.domainName.status.client_supported": true
   },
   "description": "EPP has no due date of a status, so the proxy refuses it before any command.",
   "steps": [
@@ -27,7 +27,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

@@ -1,15 +1,17 @@
 {
   "when": {
-    "profile.domain_record_types": {
+    "profile.domainName.dns.record_types": {
       "contains": "ds"
     },
-    "env.secdns_key_data_interface": false
+    "env.domainName.dns.dnskey_supported": false
   },
   "test_id": "test17-create_with_dnskey",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -104,7 +106,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",

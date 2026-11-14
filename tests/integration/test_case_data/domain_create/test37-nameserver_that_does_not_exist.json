@@ -1,7 +1,9 @@
 {
   "test_id": "test37-nameserver_that_does_not_exist",
   "when": {
-    "profile.host_objects": true
+    "profile.objects": {
+      "contains": "host"
+    }
   },
   "description": "A host object that does not exist is refused by the registry.",
   "steps": [
@@ -27,7 +29,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

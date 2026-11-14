@@ -1,7 +1,7 @@
 {
   "test_id": "test29-postcode_lower_case_refused",
   "when": {
-    "env.limit_postcode_lower_case_refused": true
+    "env.contact.postcode.lower_case_supported": false
   },
   "description": "A British postcode in lower case: the drafts put no case on it, the server refuses it (env.limit_postcode_lower_case_refused).",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

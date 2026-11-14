@@ -1,7 +1,7 @@
 {
   "test_id": "test52-patch_adds_ns_record_rri",
   "when": {
-    "profile.domain_record_types": {
+    "profile.domainName.dns.record_types": {
       "contains": "aaaa"
     }
   },
@@ -10,7 +10,9 @@
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -68,7 +70,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -113,7 +115,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",

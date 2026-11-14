@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.contact_kind_held": true
+    "profile.contact.kind.supported": true
   },
   "test_id": "test35-individual_with_organisation_put_and_patch",
   "steps": [

@@ -1,7 +1,9 @@
 {
   "test_id": "test22-without_phone",
   "when": {
-    "profile.contact_phone_required": true
+    "profile.contact.phone.min_count": {
+      "min": 1
+    }
   },
   "description": "RRI needs a phone number.",
   "steps": [
@@ -54,7 +56,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

@@ -1,8 +1,8 @@
 {
   "test_id": "test41-localized_name_outside_bmp",
   "when": {
-    "profile.contact_localization": true,
-    "env.limit_contact_name_charset_restricted": true
+    "profile.contact.localization.supported": true,
+    "env.contact.name.charset_restricted": true
   },
   "description": "A localized name with a character outside the BMP (U+1D504); the server takes fewer characters (env.limit_contact_name_charset_restricted).",
   "steps": [
@@ -71,7 +71,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

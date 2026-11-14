@@ -12,7 +12,7 @@ from core.model.domain.ds_data import DsData
 from core.model.host import host_application, host_difference
 from core.model.host.host import Host
 from core.model.shared.common import AuthInfo
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.mapping.contact import contact_patch
 from rpp.mapping.domain import domain_patch
 from rpp.mapping.host import host_patch

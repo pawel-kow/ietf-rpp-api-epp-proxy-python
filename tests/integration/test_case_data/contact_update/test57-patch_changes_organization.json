@@ -1,7 +1,7 @@
 {
   "test_id": "test57-patch_changes_organization",
   "when": {
-    "profile.contact_org_person_name": true
+    "profile.contact.org.person_name_supported": true
   },
   "description": "A PATCH changes the name of the organization.",
   "steps": [
@@ -67,7 +67,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

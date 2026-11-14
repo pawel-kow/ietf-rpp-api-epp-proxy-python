@@ -1,7 +1,7 @@
 {
   "test_id": "test30-german_postcode_of_4_digits_refused",
   "when": {
-    "env.limit_postcode_by_country": true
+    "env.contact.postcode.format_by_country": true
   },
   "description": "A German postcode of 4 digits: the server checks the postcode by country (env.limit_postcode_by_country).",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

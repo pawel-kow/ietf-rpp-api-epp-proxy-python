@@ -1,7 +1,7 @@
 {
   "test_id": "test34-without_auth_info",
   "when": {
-    "profile.registrant_required": false
+    "profile.domainName.registrant.min_count": 0
   },
   "description": "The data objects allow a domain without authInfo (0-1); RFC 5731 requires one at create, which the registry refuses as a missing parameter.",
   "steps": [

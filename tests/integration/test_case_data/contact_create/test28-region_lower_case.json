@@ -1,8 +1,8 @@
 {
   "test_id": "test28-region_lower_case",
   "when": {
-    "profile.contact_region": true,
-    "env.limit_region_lower_case_refused": true
+    "profile.contact.region.supported": true,
+    "env.contact.region.lower_case_supported": false
   },
   "description": "A region in lower case: the drafts put no case on it, the server refuses it (env.limit_region_lower_case_refused).",
   "steps": [
@@ -67,7 +67,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

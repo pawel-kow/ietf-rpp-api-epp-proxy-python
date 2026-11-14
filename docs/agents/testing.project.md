@@ -90,10 +90,11 @@ The backend refuses a renew period under one year (`2306`), so month periods are
 
 A test environment is one backend server the integration suite runs against, chosen with `RPP_TEST_ENV` (default
 `epp-docker`) and described in `tests/integration/environments/<name>.yaml`: the config file of the app under test
-(`tests/conftest.py` sets `RPP_CONFIG_FILE` from it before any test module composes the app), the `BackendProfile` it
-is composed with, the most workers it allows, the requests a minute per registrar (`rpp_requests_per_minute`, paced
-by [pacer.py](../../tests/helper/pacer.py)), the registrars, and its `facts`. A run with more workers than the
-environment allows does not start.
+(`tests/conftest.py` sets `RPP_CONFIG_FILE` from it before any test module composes the app), the most workers it
+allows, the requests a minute per registrar (`rpp_requests_per_minute`, paced
+by [pacer.py](../../tests/helper/pacer.py)), the registrars, a user the backend does not know, and its `facts`. The
+`BackendProfile`, the TLD, the environment name and the LGRs are read from that config, as the app reads them, and not
+repeated. A run with more workers than the environment allows does not start.
 
 The registrars name the variables that hold their credentials, the prefix of the handles they create, and on RRI
 their General Request and Abuse contacts. The runner reads them from the process environment or from `.env` in the
@@ -104,12 +105,12 @@ into the `Authorization` header when it sends the request, never into the case, 
 | Placeholder | Is |
 |---|---|
 | `{auth:a}`, `{auth:b}` | HTTP Basic of registrar `a` or `b` |
-| `{auth:a:wrong_password}`, `{auth:unknown_user}` | a wrong password of `a`, a user the backend does not know. Refused where `env.failed_logins_lock` is true |
+| `{auth:unknown_user}` | a user the backend does not know. No case logs in to a test account with a wrong password, which could lock it |
 | `{handle:a:SUFFIX}` | `<prefix of a>{random_id_10}SUFFIX`, a contact id `a` may create |
 | `{regacc:a}` | the sponsor id of `a`: its login on EPP, the RegAccId of its login on RRI |
 | `{gen_req:a}`, `{abuse:a}` | the REQUEST contacts of `a` (RRI only) |
-| `{tld}` | the TLD the environment registers under (`env.tld`) |
-| `{env:FACT}` | a fact of the environment, such as `{env:environment_name}` |
+| `{tld}` | the TLD the environment registers under, the first of `rpp_tlds` of its config |
+| `{env:environment_name}` | `rpp_environment_name` of its config |
 | `{lower:TEXT}` | TEXT in lower case, after the placeholders in it, for an id sent in another case than stored |
 
 ### DENIC MTEST
@@ -120,18 +121,19 @@ both RegAccs (the devcontainer goes out with the host's address), and the `TEST_
 logins, their passwords, the prefix of the handles the cases create (it starts with the RegAccId), and a REQUEST
 contact of each RegAcc for the General Request and Abuse roles, created beforehand outside the suite (RPP cannot
 create one yet, gap Q2). Of the run's limits: 4 sessions and 100 RRI requests a minute per RegAcc, so at most 4
-workers and 25 RPP requests a minute per registrar, paced by the runner. 10 failed LOGINs lock a user for an hour, so
-no case with wrong credentials runs there (`env.failed_logins_lock`). The RGP is a day, so restores are tested in unit
+workers and 25 RPP requests a minute per registrar, paced by the runner. 10 failed LOGINs lock a user for an hour,
+so the failed logins are of an unknown user. The RGP is a day, so restores are tested in unit
 tests only. MTEST keeps what the cases create: they delete their domains, and the contacts stay (RRI cannot delete
 one), which the random part of the handle keeps apart. Every case runs on both backends unless it needs a function one of them lacks, which its `when`
 names: host objects, client statuses, `ds` records, registration periods, renew, transfers, restore within the run,
 contact delete, a contact's authInfo, a localization, a fax, a region, a changeable contact name, a person's name
-on an organisation, a readable domain authInfo, the admin, tech and billing roles, or wrong credentials. Where the
+on an organisation, a readable domain authInfo, or the admin, tech and billing roles. Where the
 backends differ in what a case sends or expects, the case selects by the fact: a contact has a phone and a full
-address on both (RRI requires them); a domain gets an `a` record (`profile.domain_dns_required`) and a registrant,
-created in a first step of its own (`profile.registrant_required`); the roles are `generalRequest` and `abuse` where
-the backend has no `admin`; `expiryDate`, the provisioning metadata RRI does not show (`profile.metadata`), a
-domain's authInfo and its `ok` status right after its create (`env.domain_active_at_create`; an MTEST domain is
+address on both (RRI requires them); a domain gets an `a` record (`profile.domainName.dns.min_count`) and a
+registrant, created in a first step of its own (`profile.domainName.registrant.min_count`); the roles are
+`generalRequest` and `abuse` where the backend has no `admin`; `expiryDate`, the provisioning metadata RRI does not
+show (`profile.domainName.metadata`), a domain's authInfo and its `ok` status right after its create
+(`env.domainName.processes.create.active_at_once`; an MTEST domain is
 `pendingCreate`, and `failed` with name servers that do not serve it) are left out where they do not apply. Passwords
 are of the characters an RRI AuthInfo takes. Where a function exists on one backend only, a counterpart case covers
 the other (`domain_update/test35` to `test37`, `domain_lifecycle/`).
@@ -140,24 +142,42 @@ Behaviour of MTEST the cases depend on: every reply carries info `13000000011`; 
 `failed` when its name servers do not pass the predelegation check (the create still succeeds, and the domain reads
 back `inactive` with a `due`); an update that keeps or adds such name servers is refused (`53300102912`), so a change
 of `ns` or `dnskey` records cannot succeed there and its cases expect the refusal; a DNSKEY must be a valid key, and a
-domain takes at most 5; an MX exchange must resolve; an address needs a postcode (`env.contact_postcode_required`);
+domain takes at most 5; an MX exchange must resolve; an address needs a postcode (`env.contact.postcode.min_count`);
 CREATE-AUTHINFO1 without an expiry gives one two days ahead (#134); handles come back in upper case and IPv6
 addresses uncompressed; the IDN repertoire holds `ñ`, which the `de` table of the EPP test server does not
-(`env.lgr_without_enye`); a read reusing a client transaction id is not refused, only a write would be
-(`env.cltrid_reuse_refused`); an `lgr` on an ASCII name is not refused, RRI takes no LGR (`env.lgr_on_ascii_refused`);
-clearing a contact's name or email is refused by RRI with 422 `02306`, where the EPP adapter refuses it with 501
-(`env.contact_removal_refused_by_registry`). [config.rri-mtest.yaml](../../config.rri-mtest.yaml) offers `latn-1.0` as the LGR, which
-the descriptor states as `lgrs`, as `epp-docker.yaml` does for `config.yaml`.
+(`env.domainName.name.lgr.latn_enye_supported`); a read reusing a client transaction id is not refused, only a write
+would be (`env.session.cltrid_reuse_supported`); an `lgr` on an ASCII name is not refused, RRI takes no LGR
+(`env.domainName.name.lgr.ascii_supported`); clearing a contact's name or email is refused by RRI with 422 `02306`
+(`env.contact.name.min_count`), where EPP cannot clear them and the proxy refuses with 501
+(`profile.contact.name.removable`). [config.rri-mtest.yaml](../../config.rri-mtest.yaml) offers `latn-1.0` as the
+LGR.
 
 ## Selectors
 
 A case file says which backends a case, a step or an expected value is for (implemented in
 [selectors.py](../../tests/helper/selectors.py)). A selector is an object whose keys name facts and which holds when
-every key holds. `profile.<fact>` is a field of the `BackendProfile` of the app under test, `env.<fact>` one of the
-environment's `facts`. A value holds when the fact equals it; `{"contains": x}`, `{"min": n}`, `{"max": n}` and
+every key holds. `profile.<path>` is a leaf of the `BackendProfile` of the app under test, `env.<path>` one of the
+environment's `facts`, by a dotted path. A value holds when the fact equals it; `{"contains": x}`, `{"min": n}`, `{"max": n}` and
 `{"not": v}` test a collection, a number or the opposite. A list of selectors holds when one of them does. There is
-no selector on the backend's name: a difference is stated as the fact it comes from, and a fact the profile lacks is
-added to it when it is true of the protocol, to the environment when it is true of one server.
+no selector on the backend's name: a difference is stated as the fact it comes from. What the proxy checks before
+any command is a profile fact ([Backend profile](architecture.project.md#backend-profile)); what only the server
+decides, and the tests read, is an environment fact.
+
+Facts and profile are trees of the same shape: `<object>.<field>.<leaf>` and `<object>.processes.<process>.<leaf>`,
+objects and fields by their RPP names (`domainName.authInfo`, `contact.postcode`), and `session` for what is not of
+an object. A leaf means the same wherever it is:
+
+| Leaf | Means |
+|---|---|
+| `min_count`, `max_count` | how many the field holds; presence is `min_count: 1`, for a single value too |
+| `min_length`, `max_length` | the length of a value, in characters |
+| `<what>_supported`, `supported` | whether the server takes it (rather than `<what>_refused`) |
+| `<what>_required` | whether a value must have it, such as `upper_and_digit_required` |
+| `changeable`, `removable` | whether an update can change or clear the field |
+
+`null` says the field is not there or the limit is not known. A defect of a server that breaks cases is a fact under
+`bugs`, with its issue in the comment, so the cases it breaks do not run there (`env.bugs.over_max_length_cut`).
+Facts are in block style, without `{}`.
 
 | Where | Form | Effect |
 |---|---|---|
@@ -171,7 +191,7 @@ known environment, fails the case at load. A skip names the facts that did not h
 in every known environment fails, because it never runs. `any_of` stays for what the protocol leaves to the server,
 `select` is for what differs by backend or server, and `"skip": "#<issue>"` for a known defect. A case never accepts
 a success and a refusal at once: where servers decide differently, one case each states the answer, selected by the
-fact that tells them apart (a server policy is an `env` fact, such as `limit_postcode_by_country`), and a twin that
+fact that tells them apart (a server policy is an `env` fact, such as `contact.postcode.format_by_country`), and a twin that
 no known environment would run is not written.
 
 ## Tests without the backend
@@ -179,7 +199,7 @@ no known environment would run is not written.
 Unit tests in `tests/unit/` inject test doubles through constructors:
 
 - `EPPClient(transport, username, password)` takes a fake transport.
-- `EppBackend(epp_client, ns_map, idn_tables=None)` takes a fake client, such as
+- `EppBackend(epp_client, ns_map, profile, idn_tables=None)` takes a fake client, such as
   [FakeEppClient](../../tests/helper/fake_epp_client.py), and a flow takes that backend. Tests pass
   [EPP_NS_MAP](../../tests/helper/epp_ns_map.py), the namespace map of `config.yaml`, which the XML tests assert;
   the `*_xml` functions take it as `ns_map`, and the domain ones `IdnTables` as `idn_tables`.
@@ -187,11 +207,12 @@ Unit tests in `tests/unit/` inject test doubles through constructors:
   [epp_backends](../../tests/helper/epp_backends.py) turns a factory of fake EPP clients into one, so the test still
   sees the clients.
 - `create_app(sessions, profile)` builds a full app around that session pool and a `BackendProfile`
-  (`EPP_PROFILE`, or `epp_profile(idn_tables)` for IDNs), so a handler can be tested through `test_client()` without
-  a registry. See [test_app_injection.py](../../tests/unit/test_app_injection.py).
+  (`EPP_PROFILE` or `RRI_PROFILE` of [profiles.py](../../tests/helper/profiles.py), the generic profiles; a test
+  changes one with `with_changes({"contact": {"fax": {"supported": False}}})`), so a handler can be tested through
+  `test_client()` without a registry. See [test_app_injection.py](../../tests/unit/test_app_injection.py).
 - The domain mappers take `profile=EPP_PROFILE`. A test that calls `map_request` directly uses the fixture of
   [epp_app_context](../../tests/helper/epp_app_context.py), from which `map_request` names the backend.
-- `RriBackend(FakeRriClient(replies=[...]))` runs the RRI adapter over RRI XML replies
+- `RriBackend(FakeRriClient(replies=[...]), RRI_PROFILE)` runs the RRI adapter over RRI XML replies
   ([fake_rri_client.py](../../tests/helper/fake_rri_client.py)); the replies recorded from MTEST are in
   `tests/unit/rri_replies/`, with personal data replaced. `rri_backends(factory)` builds an app around them, as
   `epp_backends` does.
@@ -261,9 +282,9 @@ afterwards.
 
 `limits_domain/`, `limits_contact/` and `limits_host/` probe each limit with the value at it and the value past it.
 What the drafts define is the oracle; a limit they leave to the server is expected to be refused with 400 (`02001`,
-`02004`, `02005`) or 422 (`02306`), never 500 or 501. A limit that differs by server is a `limit_*` fact of the
-environment, and `values_cut_at_column` marks a server that stores a value cut instead of refusing it, where the cases
-over a column do not run. The EPP test server cuts strings (pawel-kow/epp#21) and phone extensions (pawel-kow/epp#31),
+`02004`, `02005`) or 422 (`02306`), never 500 or 501. A limit that differs by server is a fact of the environment
+(`contact.city.max_length`), and `bugs.over_max_length_cut` marks a server that stores a value cut instead of refusing
+it, where the cases over a column do not run. The EPP test server cuts strings (pawel-kow/epp#21) and phone extensions (pawel-kow/epp#31),
 breaks on a label of 61 to 63 characters under `.example` (pawel-kow/epp#30), and counts nameservers, contacts a role
 and host addresses per command, so an update can pass its limits (pawel-kow/epp#29). It sends no reply to a domain
 create that names one contact twice in a role (pawel-kow/epp#32), and refuses a `hostAttr` without addresses, also of

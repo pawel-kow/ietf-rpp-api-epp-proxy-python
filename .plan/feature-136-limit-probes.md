@@ -31,8 +31,24 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 - [x] T16 Review §1 to §4 and §7 with every case (the `limits_*` ones and the new ones), recounted; testing.project.md
       for any new fact
 - [~] T17 Checks, PR body
+- [x] T18 Correction (maintainer, 2026-11-14): the facts as a tree, `<object>.<field>.<leaf>` and
+      `<object>.processes.<process>.<leaf>`, selector keys with dots, objects and fields by their RPP names. Leaves
+      mean the same everywhere: `min_length`/`max_length`, `min_count`/`max_count`, `<what>_supported` rather than
+      `<what>_refused`; server defects under `bugs`, with the issue in a comment. Block style YAML, no `{}`
+- [x] T19 `BackendProfile` as the same tree, out of Python into YAML: a generic profile per protocol
+      (`profiles/epp.yaml` from the EPP Compatibility Profile and RFC 5730–5733, 5910, 3915, gaps commented;
+      `profiles/rri.yaml`) and one per server that extends it (`profiles/epp-test-server.yaml`), named by
+      `rpp_backend_profile` in the app config. The proxy and the test runner read it from there. The environment
+      descriptor loses `profile` and `lgrs`, and the facts `tld` and `environment_name`: they come from the app config
+- [x] T20 No failed login with a test account: `wrong_password` and `failed_logins_lock` go, the cases use
+      `unknown_user` only, and they run on MTEST too
+- [x] T21 Docs (testing.project.md, architecture.project.md, review, backend-limits.yaml), checks on both backends
 
 ## Findings (evidence)
+
+6. Profile fields only the test selectors read: `contact_name_changeable`, `supports_contact_delete`,
+   `domain_dns_required`, `contact_phone_required`, `registrant_required`. `host_objects` repeats `"host" in objects`.
+
 
 1. No case tests a value at or over a limit; no array is filled to its maximum (review §2).
 2. EPP test server (container `epptest-epp-server-1`, read-only): MariaDB `sql_mode` has no `STRICT_*`, so values
@@ -43,6 +59,15 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 5. `tests/integration/test_domain_create.py` and `test_domain_delete.py` collect no test.
 
 ## Decisions
+
+- D8 (maintainer, 2026-11-14) Facts as a tree with dots; RPP names for objects and fields; the profile in YAML in two
+  levels (protocol, server), read by the proxy from the app config; `tld`, `environment_name` and the LGRs from the
+  app config; name and email removal is told apart by `profile.contact.<field>.removable` (EPP false: the proxy
+  answers 501) and `env.contact.<field>.min_count` (1: the registry refuses).
+- D9 Presence is `min_count` for every field, a single value included (`postcode.min_count`), as for name and email.
+- D10 The profile is one class, `BackendProfile`, over the tree; its keys and types are a table in
+  `core/capabilities/backend_profile.py`, checked when it is built, so a profile file with a missing or unknown key
+  stops the app. The layers are merged there (maps merge, lists and values replace), for the config and for tests.
 
 - D7 (maintainer, 2026-11-14) No case accepts a success and a refusal at once. Where the backends decide
   differently, one case each, selected by an `env` fact of server policy; where one backend runs a case, its answer is
@@ -93,6 +118,14 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 
 - D7 applied: 18 cases pinned or split (4 twins, contact_create/test42–45), 7 server policy facts in both
   environments. `pytest -n 8` on epp-docker: 2445 passed, 63 skipped; the reworked cases pass on MTEST.
+
+- T18–T20: 358 case files renamed by a script (keys only; negated where `_refused` became `_supported`); the four
+  name/email removal cases select by `profile.contact.<field>.removable`, then `env.contact.<field>.min_count`. The
+  generic profiles are `src/settings/profiles/{epp,rri}.yaml`; `config.yaml` and `config.rri-mtest.yaml` extend them
+  with nothing of their own yet. 4 failed-login cases now run on MTEST too (170 both, 284 EPP, 36 RRI, 25 skipped).
+  Unit tests 2010 passed; `lint-imports` 15 kept; `pytest -n 8 tests/integration` on epp-docker 454 passed,
+  63 skipped. MTEST integration: 205 passed, 311 skipped, 1 failed (`domain_update/test35`, a later command
+  refused with `56000000013` after the create); it passed when run again.
 
 ## Open questions
 

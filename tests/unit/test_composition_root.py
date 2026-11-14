@@ -92,7 +92,7 @@ def test_the_composition_root_hands_the_configuration_to_the_app():
 
 @epp_only
 def test_the_app_offers_the_configured_lgrs():
-    assert main.app.app.config["RPP_BACKEND_PROFILE"].lgrs == frozenset(settings.epp.rpp_idn_lgr_tables or {})
+    assert main.app.app.config["RPP_BACKEND_PROFILE"].lgrs == tuple(sorted(settings.epp.rpp_idn_lgr_tables or {}))
 
 
 @epp_only
@@ -102,4 +102,4 @@ def test_the_backend_maps_lgr_to_the_configured_idn_tables():
     for lgr, table in (settings.epp.rpp_idn_lgr_tables or {}).items():
         assert tables.table(lgr) == table
         assert tables.lgr(table) == lgr
-    assert new_backend("user", "pw").profile.lgrs == frozenset(settings.epp.rpp_idn_lgr_tables or {})
+    assert new_backend("user", "pw").profile.lgrs == tuple(sorted(settings.epp.rpp_idn_lgr_tables or {}))

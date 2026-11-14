@@ -44,6 +44,13 @@ rpp_epp_ns_map:
   rgp: "urn:ietf:params:xml:ns:rgp-1.0"
   idn: "urn:ietf:params:xml:ns:idn-1.0"
 
+# The profile of this server: what it holds, which the proxy checks before any command. It extends the generic profile
+# of its protocol (src/settings/profiles/epp.yaml, or rri.yaml) and states only what this server differs in: a map
+# merges, a list or a value replaces. Another EPP server starts from `extends: epp` alone.
+rpp_backend_profile:
+  extends: epp
+  # The EPP test server of EPP-server-docker holds all of RFC 5730 to 5733: nothing differs.
+
 # Maps an LGR name, which json §6.4 asks for in `lgr`, to the IDN table id of the EPP IDN extension
 # (urn:ietf:params:xml:ns:idn-1.0), one to one. A create with an `lgr` not listed is a 400. A domain whose table is not
 # listed reads without `uName` and `lgr`. Without this map no `lgr` can be sent. The entry below fits the test backend,

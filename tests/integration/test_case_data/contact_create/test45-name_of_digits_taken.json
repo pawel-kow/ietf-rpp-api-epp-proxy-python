@@ -1,7 +1,7 @@
 {
   "test_id": "test45-name_of_digits_taken",
   "when": {
-    "env.limit_contact_name_completeness": false
+    "env.contact.name.digits_only_supported": true
   },
   "description": "A name of digits only: the server does not check a name for completeness.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

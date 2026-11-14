@@ -52,7 +52,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -94,8 +94,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "contact.crDate"
+                  "profile.contact.metadata": {
+                    "contains": "crDate"
                   }
                 },
                 "then": {
@@ -114,8 +114,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "contact.crClientId"
+                  "profile.contact.metadata": {
+                    "contains": "crClientId"
                   }
                 },
                 "then": {

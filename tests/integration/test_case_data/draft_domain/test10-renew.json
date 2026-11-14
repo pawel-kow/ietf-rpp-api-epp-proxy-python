@@ -1,13 +1,15 @@
 {
   "when": {
-    "profile.registration_periods": true,
-    "profile.supports_renew": true
+    "profile.domainName.period.supported": true,
+    "profile.domainName.processes.renew.supported": true
   },
   "test_id": "test10-renew",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -86,7 +88,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -102,7 +106,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -169,7 +175,7 @@
             "select": [
               {
                 "when": {
-                  "profile.registration_periods": true
+                  "profile.domainName.period.supported": true
                 },
                 "then": {
                   "type": "datetime_format_utc_and_delta",

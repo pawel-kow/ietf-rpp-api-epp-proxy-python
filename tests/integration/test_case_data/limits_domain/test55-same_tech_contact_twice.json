@@ -1,10 +1,10 @@
 {
   "test_id": "test55-same_tech_contact_twice",
   "when": {
-    "profile.contact_labels": {
+    "profile.domainName.contacts.labels": {
       "contains": "tech"
     },
-    "profile.registrant_required": false
+    "profile.domainName.registrant.min_count": 0
   },
   "skip": "pawel-kow/epp#32",
   "description": "The same contact twice in one role: the drafts leave it open; refused as the same server refuses a nameserver twice (limits_domain/test56).",
@@ -66,7 +66,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -112,7 +112,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

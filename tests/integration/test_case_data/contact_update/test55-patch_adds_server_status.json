@@ -1,7 +1,7 @@
 {
   "test_id": "test55-patch_adds_server_status",
   "when": {
-    "profile.client_statuses": true
+    "profile.contact.status.client_supported": true
   },
   "description": "A server status is not the client's to set.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

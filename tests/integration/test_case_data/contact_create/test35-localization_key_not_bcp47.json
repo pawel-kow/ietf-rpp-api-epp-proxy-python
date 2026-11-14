@@ -1,7 +1,7 @@
 {
   "test_id": "test35-localization_key_not_bcp47",
   "when": {
-    "profile.contact_localization": true
+    "profile.contact.localization.supported": true
   },
   "description": "A localization key that is no BCP 47 tag is refused by the schema (JSContact profile §4.1.3, BCP 47).",
   "steps": [
@@ -78,7 +78,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

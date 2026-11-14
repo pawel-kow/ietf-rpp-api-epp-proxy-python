@@ -1,17 +1,23 @@
 {
   "test_id": "test56-patch_adds_dnskey",
   "when": {
-    "profile.domain_record_types": {
+    "profile.domainName.dns.record_types": {
       "contains": "dnskey"
     },
-    "profile.host_objects": false
+    "profile.objects": {
+      "not": {
+        "contains": "host"
+      }
+    }
   },
   "skip": "#143",
   "description": "A PATCH adds a DNSKEY to a delegated domain. MTEST checks the delegation of an update: name servers that do not serve the zone are refused.",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -69,7 +75,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -114,7 +120,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",

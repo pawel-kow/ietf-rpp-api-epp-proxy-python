@@ -1,7 +1,9 @@
 {
   "when": {
-    "profile.host_objects": true,
-    "profile.domain_record_types": {
+    "profile.objects": {
+      "contains": "host"
+    },
+    "profile.domainName.dns.record_types": {
       "contains": "ds"
     }
   },
@@ -9,7 +11,9 @@
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -110,7 +114,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",

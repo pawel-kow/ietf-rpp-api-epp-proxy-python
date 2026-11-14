@@ -1,8 +1,10 @@
 {
   "test_id": "test56-same_nameserver_twice",
   "when": {
-    "profile.host_objects": true,
-    "profile.registrant_required": false
+    "profile.objects": {
+      "contains": "host"
+    },
+    "profile.domainName.registrant.min_count": 0
   },
   "description": "The same nameserver twice: the drafts leave it open, the server refuses it as an object that exists.",
   "steps": [
@@ -64,7 +66,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

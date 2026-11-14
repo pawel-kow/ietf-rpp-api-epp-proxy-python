@@ -9,8 +9,8 @@ Generic rules are in [security.md](security.md).
   `loggable=False`, so `TCPClient` does not print it.
 - RRI locks a user for an hour after 10 failed LOGINs, and every HTTP Basic attempt with a wrong password for a user
   without a session costs one: anyone who can reach the proxy can lock a RegAcc out. Accepted as a known risk for
-  now (docs/rri/refactoring.md §7). The integration suite never sends wrong credentials where
-  `env.failed_logins_lock` is true.
+  now (docs/rri/refactoring.md §7). The integration suite never sends a wrong password for a test account: its
+  failed logins are of a user the backend does not know (`unknown_user` of the environment).
 - RRI message texts and arguments can hold personal data: the adapter logs the codes of a reply's warnings and
   errors only, and a queue message shows its type and the names of the domains and handles it is about.
 - The MTEST credentials are in `.env`, which is ignored by git; the runner reads it, the proxy never does.

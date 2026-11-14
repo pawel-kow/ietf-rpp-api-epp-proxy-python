@@ -1,7 +1,7 @@
 {
   "test_id": "test25-authinfo_under_minimum",
   "when": {
-    "profile.contact_auth_info": true
+    "profile.contact.authInfo.supported": true
   },
   "description": "A contact authInfo of 5 characters, under the 6 of the EPP test server.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

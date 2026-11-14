@@ -1,8 +1,10 @@
 {
   "test_id": "test46-patch_clears_nameservers",
   "when": {
-    "profile.host_objects": true,
-    "profile.registrant_required": false
+    "profile.objects": {
+      "contains": "host"
+    },
+    "profile.domainName.registrant.min_count": 0
   },
   "description": "replace /nameservers [] removes every nameserver.",
   "steps": [
@@ -100,7 +102,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

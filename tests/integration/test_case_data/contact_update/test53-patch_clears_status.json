@@ -1,7 +1,7 @@
 {
   "test_id": "test53-patch_clears_status",
   "when": {
-    "profile.client_statuses": true
+    "profile.contact.status.client_supported": true
   },
   "description": "replace /status [] removes every client status.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

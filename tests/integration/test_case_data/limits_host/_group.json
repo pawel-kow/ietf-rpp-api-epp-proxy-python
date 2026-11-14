@@ -1,5 +1,7 @@
 {
   "when": {
-    "profile.host_objects": true
+    "profile.objects": {
+      "contains": "host"
+    }
   }
 }

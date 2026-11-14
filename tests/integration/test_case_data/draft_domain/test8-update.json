@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.auth_info_readable": true
+    "profile.domainName.authInfo.read_supported": true
   },
   "test_id": "test8-update",
   "steps": [
@@ -61,7 +61,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -142,7 +142,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -192,7 +192,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -230,7 +232,7 @@
           "select": [
             {
               "when": {
-                "profile.auth_info_readable": true
+                "profile.domainName.authInfo.read_supported": true
               },
               "then": "/domainNames/ex8-{random_name}.{tld}?includeElements=authInfo"
             },
@@ -260,7 +262,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -296,7 +300,7 @@
             "select": [
               {
                 "when": {
-                  "profile.auth_info_readable": true
+                  "profile.domainName.authInfo.read_supported": true
                 },
                 "then": {
                   "@type": "authInfo",

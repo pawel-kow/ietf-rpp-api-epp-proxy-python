@@ -1,7 +1,7 @@
 {
   "test_id": "test58-put_changes_name",
   "when": {
-    "profile.contact_name_changeable": true
+    "profile.contact.name.changeable": true
   },
   "description": "A PUT changes the name.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

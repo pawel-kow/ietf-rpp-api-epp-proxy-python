@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.supports_contact_delete": true
+    "profile.contact.processes.delete.supported": true
   },
   "test_id": "test6-delete",
   "steps": [
@@ -39,7 +39,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -67,7 +67,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "features": {
@@ -92,7 +92,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

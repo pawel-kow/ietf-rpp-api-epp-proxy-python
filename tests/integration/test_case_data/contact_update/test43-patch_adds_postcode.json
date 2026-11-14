@@ -1,7 +1,7 @@
 {
   "test_id": "test43-patch_adds_postcode",
   "when": {
-    "env.contact_postcode_required": false
+    "env.contact.postcode.min_count": 0
   },
   "description": "A PATCH adds a postcode to an address without one.",
   "steps": [
@@ -58,7 +58,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

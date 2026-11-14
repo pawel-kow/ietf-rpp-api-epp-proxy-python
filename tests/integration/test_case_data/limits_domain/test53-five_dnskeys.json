@@ -1,16 +1,22 @@
 {
   "test_id": "test53-five_dnskeys",
   "when": {
-    "profile.domain_record_types": {
+    "profile.domainName.dns.record_types": {
       "contains": "dnskey"
     },
-    "profile.host_objects": false
+    "profile.objects": {
+      "not": {
+        "contains": "host"
+      }
+    }
   },
   "description": "Five DNSKEY records next to two ns records, the most MTEST takes.",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -68,7 +74,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -113,7 +119,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",

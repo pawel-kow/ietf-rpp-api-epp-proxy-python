@@ -1,7 +1,7 @@
 {
   "test_id": "test41-patch_adds_region",
   "when": {
-    "profile.contact_region": true
+    "profile.contact.region.supported": true
   },
   "description": "A PATCH adds a region.",
   "steps": [
@@ -62,7 +62,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
