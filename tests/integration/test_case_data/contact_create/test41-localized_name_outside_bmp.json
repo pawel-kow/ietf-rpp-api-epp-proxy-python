@@ -1,9 +1,10 @@
 {
   "test_id": "test41-localized_name_outside_bmp",
   "when": {
-    "profile.contact_localization": true
+    "profile.contact_localization": true,
+    "env.limit_contact_name_charset_restricted": true
   },
-  "description": "A localized name with a character outside the BMP (U+1D504).",
+  "description": "A localized name with a character outside the BMP (U+1D504); the server takes fewer characters (env.limit_contact_name_charset_restricted).",
   "steps": [
     {
       "request": {
@@ -86,56 +87,14 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 201,
-            "content_type": "application/rpp+json",
-            "body": {
-              "@type": "contact",
-              "id": "{handle:a:K41}"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02001"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02004"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02005"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 422,
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          }
-        ]
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02005"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
       }
     }
   ]

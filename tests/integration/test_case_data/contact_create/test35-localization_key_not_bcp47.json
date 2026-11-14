@@ -3,7 +3,7 @@
   "when": {
     "profile.contact_localization": true
   },
-  "description": "A localization key that is no BCP 47 tag: the proxy stores no language and reads back und (spec-issues).",
+  "description": "A localization key that is no BCP 47 tag is refused by the schema (JSContact profile §4.1.3, BCP 47).",
   "steps": [
     {
       "request": {
@@ -94,56 +94,14 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 201,
-            "content_type": "application/rpp+json",
-            "body": {
-              "@type": "contact",
-              "id": "{handle:a:K35}"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02001"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02004"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02005"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 422,
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          }
-        ]
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02001"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
       }
     }
   ]

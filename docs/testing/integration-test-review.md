@@ -4,7 +4,7 @@ Status: 2026-11-14, branch `feature/136-limit-probes` (#136). §2 to §4 show th
 the cases added for the gaps this review found on `main` at 414a86e (§6.3). §6 has the outcomes on both backends,
 the EPP test server and DENIC RRI MTEST. Companion file: [backend-limits.yaml](backend-limits.yaml).
 
-This review checks the data-driven integration suite (`tests/integration/test_case_data/`, 511 cases) against
+This review checks the data-driven integration suite (`tests/integration/test_case_data/`, 515 cases) against
 three criteria, for every writable field of the Domain Name, Contact and Host data objects and of the component
 objects they carry:
 
@@ -43,7 +43,7 @@ Case references are `<group><number>`:
 | LH | `limits_host` | | |
 
 A case runs on both backends unless marked **(E)**, the EPP test server only, or **(R)**, RRI MTEST only. Of the
-511 cases, 170 run on both, 284 on EPP only, 32 on RRI only and 25 are skipped for a known
+515 cases, 166 run on both, 288 on EPP only, 36 on RRI only and 25 are skipped for a known
 defect or a limit of the test environment (§6). All host cases are (E), because RRI has no host objects; the host
 tables do not repeat the mark. A case skipped for a defect still counts as covering its point: it asserts what the
 drafts require and names the issue.
@@ -109,7 +109,7 @@ C+ create with the value, C− create without it, U+ absent → present, U~ chan
 | `dns.records` `a`/`aaaa` | read-write | ✅ `DC1` (`a`, R fixture), `DC5`, `LD29`(R) | ✅ `DC1`(E) | PATCH ✅ `DL2`(R) · PUT ✅ `DU51`(R) | PUT ✅ `DU50`(R) | PATCH ✅ `DU49`(R) · PUT ◐ `DU48`(R, refusal) |
 | `dns.records` `mx` | read-write | ✅ `DC40`(R), null MX `LD32`(R) | ✅ | PATCH ✅ `DU54`(R) | PATCH ✅ `DU68`(R) | PATCH ✅ `DU55`(R) |
 | `dns.records` `ds` | read-write | ✅ `DC16`(E), refused next to `dnskey` `DC21`(E) | ✅ | PATCH ✅ `DU58`(E) | PATCH ✅ `DU16`(E) `DU23`(E) · PUT ✅ `DU24`(E) | PUT ✅ `DU23`(E) · PATCH ✅ `DU59`(E) |
-| `dns.records` `dnskey` | read-write | ◐ `DC17`(E) (`any_of`) · ✅ `LD37`(R) | ✅ | PATCH ◐ `DU56`(R, refusal) | PUT ◐ `DU69`(R, refusal) | PUT ◐ `DU57`(R, refusal) |
+| `dns.records` `dnskey` | read-write | ◐ `DC17`(E, refused: the server takes DS records only) · ✅ `LD37`(R) | ✅ | PATCH ◐ `DU56`(R, refusal) | PUT ◐ `DU69`(R, refusal) | PUT ◐ `DU57`(R, refusal) |
 | `dns` with `nameservers` | — | ✅ `DC19`(E) 400 | ➖ | PUT ✅ `DU25`(E) 400 | ➖ | ➖ |
 | `dns.controls.ttl` | read-write | 501 `DC20` | ✅ | PUT 501 `DU28` | ➖ | ➖ |
 | `dns.controls.maxSigLifetime` | read-write | 501 `DC39` | ✅ | PATCH 501 `DU64` | ➖ | ➖ |
@@ -216,14 +216,14 @@ C+ create with the value, C− create without it, U+ absent → present, U~ chan
 | `name.full` | non-ASCII in a localization | ✅ `CC20`(E) |
 | `name.full` | minimum (E 5, R 3) | ✅ `LC8`, `LC9` |
 | `name.full` | maximum 255 / 256 (E cuts it, pawel-kow/epp#21) | ✅ `LC6`, `LC7` (does not run on E; skip #139) |
-| `name.full` | punctuation outside E's set (`'`), a character outside the BMP in a localization | ✅ `CC31`, `CC41`(E) |
-| `name.full` | RRI completeness rules (digits only) | ✅ `CC32` |
+| `name.full` | punctuation outside E's set (`'`), a character outside the BMP in a localization | ✅ `CC31`(E) and `CC44`(R), `CC41`(E) |
+| `name.full` | RRI completeness rules (digits only) | ✅ `CC32`(R), `CC45`(E) |
 | `organizations.org.name` | minimum (E 5) and maximum 255 | ❌ (dropped, §6.4) |
 | street line | minimum (E 5) and maximum 255 | ❌ (dropped, §6.4) |
 | locality | maximum (R 80) | ✅ `LC12`, `LC13` (skip #139) |
 | locality | minimum (E 4), a digit (E refuses) | ❌ (dropped, §6.4) |
 | region | lower case first letter (E refuses) | ✅ `CC28`(E) |
-| postcode | maximum (E 16, R 20), lower case (E refuses), DE with 4 digits (R) | ✅ `LC14`, `CC29`, `CC30` |
+| postcode | maximum (E 16, R 20), lower case (E refuses), DE with 4 digits (R) | ✅ `LC14`, `CC29`(E) and `CC42`(R), `CC30`(R) and `CC43`(E) |
 | postcode | minimum (E 3) | ❌ (dropped, §6.4) |
 | `countryCode` | lower case (schema), unknown code `XX` | ✅ `CC27`, `LC15` |
 | email | without `@` | ✅ `LC16` |
@@ -363,7 +363,12 @@ On the EPP test server:
 | `limits_host/test10` | `2001:db8::1` (RFC 5952) | `2001:0db8::1` | #137 |
 
 A nameserver given twice is refused with 409 `02302` (`limits_domain/test56`), a DS record given twice with 422
-`02306` (`test58`), a contact status given twice is taken (`limits_contact/test27`).
+`02306` (`test58`), DS digest type 4 with 422 `02306` (`test35`), and a DNSKEY at create with 422 `02306`
+(`domain_create/test17`: the server takes DS records only); a private host address is taken (`limits_host/test9`).
+A status given twice in one PATCH is taken for a domain and a contact (`limits_domain/test13`,
+`limits_contact/test27`: the proxy sends the end state) and refused for a host (`limits_host/test12`: the proxy
+sends both adds, the server answers 2306 for the second). `limits_domain/test55` expects a contact given twice to be
+refused like a nameserver, 409 `02302`.
 
 Confirmed limits of the EPP test server: labels up to 60 under `.example`, 13 nameservers and 5 contacts a role at
 create, 13 host addresses at create, `keyTag` up to 65535, `authdata` of 6 to 16 characters with an upper case letter
@@ -396,14 +401,17 @@ contact ids of 32, names of at least 3 characters, cities of 80, a postcode requ
 
 ### 6.3 Cases for the gaps
 
-109 cases close the gaps §3 and §4 showed on `main`: `domain_create/test32`–`test42`, `domain_update/test38`–`test69`,
-`limits_domain/test53`–`test58`, `contact_create/test21`–`test41`, `contact_update/test36`–`test60`,
+113 cases close the gaps §3 and §4 showed on `main`: `domain_create/test32`–`test42`, `domain_update/test38`–`test69`,
+`limits_domain/test53`–`test58`, `contact_create/test21`–`test45`, `contact_update/test36`–`test60`,
 `limits_contact/test27`, `host_create/test13`–`test15`, `host_update/test38`–`test46` and `host_get/test4`. They
 assert what the drafts require: a create-only or read-only member in an update, an undeclared member, a key the
 JSContact profile does not have and a value outside a schema pattern are 400 `02001` (json §4.4); a member EPP or RRI
 has no place for is 501 `02102`; a change is read back, and a removal is proven by a `match` that answers 422 `02308`
-(testing.project.md, *Isolating cases*). Where the registry decides, they accept its refusal (`any_of`), and the
-outcome is below.
+(testing.project.md, *Isolating cases*). Where the drafts leave the answer to the registry, each case pins the answer
+of one server: where the two backends decide differently, there is one case for each, selected by an `env` fact of
+server policy (`limit_region_lower_case_refused`, `limit_postcode_lower_case_refused`, `limit_postcode_by_country`,
+`limit_contact_name_charset_restricted`, `limit_contact_name_completeness`, `foreign_contacts_refused`,
+`secdns_key_data_interface`). No case accepts a success and a refusal at once. The answers:
 
 | Case | EPP test server | RRI MTEST |
 |---|---|---|
@@ -414,8 +422,10 @@ outcome is below.
 | `contact_create/test23` (no name) | 400 `02003` from the registry | 422 `02306` (`63200040810`) |
 | `contact_create/test25` (no email) | 400 `02005`: the proxy sends an empty email | 422 `02306` (`63200041610`) |
 | `contact_create/test24`, `test40` (no locality, no country code) | 400 `02001` (schema) | 400 `02001` |
-| `contact_create/test28`, `test29`, `test31`, `test41` (lower case region or postcode, `'` or a character outside the BMP in a name) | 400 `02005` | postcode and `'` taken (201) |
-| `contact_create/test30`, `test32` (DE postcode of 4 digits, name of digits) | taken (201) | 422 `02306` (`63400000004`, `63400000001`) |
+| `contact_create/test28`, `test29`, `test31`, `test41` (lower case region or postcode, `'` or a character outside the BMP in a name) | 400 `02005` | — |
+| `contact_create/test42`, `test44` (lower case postcode, `'` in a name) | — | taken (201) |
+| `contact_create/test30`, `test32` (DE postcode of 4 digits, name of digits) | — | 422 `02306` (`63400000004`, `63400000001`) |
+| `contact_create/test43`, `test45` (DE postcode of 4 digits, name of digits) | taken (201) | — |
 | `contact_create/test35`, `test37`, `test38`, `test39` (localization key not BCP 47, `nicknames`, `org-1`, two localities) | 400 `02001` (schema) | 400 `02001` (`test35` does not run there) |
 | `host_create/test14` (`_` in a host name) | 400 `02005` from the registry | — |
 | `host_create/test15` (an invalid IPv6 address) | 400 `02001` from the proxy | — |

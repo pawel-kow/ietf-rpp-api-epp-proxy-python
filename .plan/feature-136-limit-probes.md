@@ -44,6 +44,10 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 
 ## Decisions
 
+- D7 (maintainer, 2026-11-14) No case accepts a success and a refusal at once. Where the backends decide
+  differently, one case each, selected by an `env` fact of server policy; where one backend runs a case, its answer is
+  pinned. Also applied to `domain_create/test16` and `test17` from `main`.
+
 - D1 (maintainer) Files in `docs/testing/`.
 - D2 (maintainer) Implement the probes; file the confirmed defects; add the open boundaries to spec-issues.
 - D3 A probe expects what the drafts say. Where they leave a limit to the server, a value over it is expected to be
@@ -86,6 +90,9 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
   310 skipped (host_create/test15 added after the runs, passed on epp-docker).
 - `.env` of this checkout has `TEST_EPP_REGACC2_PREFIX=BA-`, the backend wants `BZ-`: the runs set it in the
   environment. Only `domain_create/test38` and `test42` create a contact as registrar `b`.
+
+- D7 applied: 18 cases pinned or split (4 twins, contact_create/test42–45), 7 server policy facts in both
+  environments. `pytest -n 8` on epp-docker: 2445 passed, 63 skipped; the reworked cases pass on MTEST.
 
 ## Open questions
 

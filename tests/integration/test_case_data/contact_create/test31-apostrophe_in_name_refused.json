@@ -1,6 +1,9 @@
 {
-  "test_id": "test30-german_postcode_of_4_digits",
-  "description": "A German postcode of 4 digits, which RRI refuses.",
+  "test_id": "test31-apostrophe_in_name_refused",
+  "when": {
+    "env.limit_contact_name_charset_restricted": true
+  },
+  "description": "An apostrophe in a name, which US-ASCII allows; the server takes fewer characters (env.limit_contact_name_charset_restricted).",
   "steps": [
     {
       "request": {
@@ -14,13 +17,13 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:K30}",
+          "id": "{handle:a:K31}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
             "kind": "individual",
             "name": {
-              "full": "Erika Mustermann"
+              "full": "Erika O'Neill"
             },
             "addresses": {
               "addr": {
@@ -35,7 +38,7 @@
                   },
                   {
                     "kind": "postcode",
-                    "value": "6059"
+                    "value": "60596"
                   }
                 ],
                 "countryCode": "DE"
@@ -75,56 +78,14 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 201,
-            "content_type": "application/rpp+json",
-            "body": {
-              "@type": "contact",
-              "id": "{handle:a:K30}"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02001"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02004"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02005"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 422,
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          }
-        ]
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02005"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
       }
     }
   ]

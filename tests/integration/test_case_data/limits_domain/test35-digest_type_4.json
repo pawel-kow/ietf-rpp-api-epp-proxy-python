@@ -5,7 +5,7 @@
       "contains": "ds"
     }
   },
-  "description": "SHA-384 (digest type 4, RFC 6605): a server may support it or refuse it by policy.",
+  "description": "SHA-384 (digest type 4, RFC 6605): a server may support it; this one refuses it by policy, as its digest column holds 64 characters.",
   "steps": [
     {
       "when": {
@@ -142,24 +142,14 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 201,
-            "body": {
-              "@type": "domainName"
-            }
-          },
-          {
-            "status": 422,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          }
-        ]
+        "status": 422,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02306"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
       }
     }
   ]

@@ -298,7 +298,7 @@ contact:
     epp-docker: {min: 5, max: 255, over: truncates, note: "int form; pawel-kow/epp#21", source: code, ref: "command-create.cgi postalInfo_int_name {5,}, column varchar(255)"}
     rri-mtest: {min: 3, max: 255, rule: "not digits only, not specials only, not one repeated letter, not 5 identical in a row", immutable: true, source: doc, ref: "§5.1, §6.3"}
     charset: {epp-docker: "an apostrophe and a character outside the BMP are refused, 2005", rri-mtest: "an apostrophe is taken; digits only refused, 63400000001"}
-    probe: [limits_contact/test8-name_at_minimum, limits_contact/test9-name_under_minimum, limits_contact/test6-name_of_255, limits_contact/test7-name_of_256, contact_create/test31-apostrophe_in_name, contact_create/test32-name_of_digits, contact_create/test41-localized_name_outside_bmp]
+    probe: [limits_contact/test8-name_at_minimum, limits_contact/test9-name_under_minimum, limits_contact/test6-name_of_255, limits_contact/test7-name_of_256, contact_create/test31-apostrophe_in_name_refused, contact_create/test44-apostrophe_in_name_taken, contact_create/test32-name_of_digits_refused, contact_create/test45-name_of_digits_taken, contact_create/test41-localized_name_outside_bmp]
     verified: {epp-docker: "passed except defect pawel-kow/epp#21", rri-mtest: "passed except defect #139"}
   - path: /contactInfo/name/full
     kind: charset
@@ -347,7 +347,7 @@ contact:
     rpp: {defined: false}
     epp-docker: {pattern: "^[A-Z0-9- ]{3,}$", max: 16, over: "2005, truncates over 16", note: "lower case letters are refused", source: code}
     rri-mtest: {min: 1, max: 20, charset: "letters, digits, '-', space", rule: "DE 5 digits, AT and CH 4 digits; required (XSD)", note: "a DE postcode of 4 digits is refused, 63400000004; lower case is taken", source: doc}
-    probe: [limits_contact/test14-postcode_of_16, contact_create/test29-postcode_lower_case, contact_create/test30-german_postcode_of_4_digits]
+    probe: [limits_contact/test14-postcode_of_16, contact_create/test29-postcode_lower_case_refused, contact_create/test42-postcode_lower_case_taken, contact_create/test30-german_postcode_of_4_digits_refused, contact_create/test43-german_postcode_of_4_digits_taken]
     verified: {epp-docker: "passed: lower case refused 400 02005, 4 digits taken", rri-mtest: "passed"}
   - path: /contactInfo/addresses/addr/countryCode
     kind: enum

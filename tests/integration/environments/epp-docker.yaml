@@ -34,3 +34,11 @@ facts:
   limit_street_lines_min: 0
   limit_city_max_length: 255
   limit_phone_subscriber_min_digits: 1
+  # Server policy where the drafts leave the choice to the server, so a case selects its expected answer
+  limit_region_lower_case_refused: true  # a region starting in lower case is refused (null: no region)
+  limit_postcode_lower_case_refused: true  # a postcode with lower case letters is refused
+  limit_postcode_by_country: false # a postcode is checked against the format of its country
+  limit_contact_name_charset_restricted: true  # a name takes letters, digits, space and . , - only (no ', no character outside the BMP)
+  limit_contact_name_completeness: false # a name of digits only, or of specials only, is refused
+  foreign_contacts_refused: true  # a domain cannot name a contact of another registrar (null: not known)
+  secdns_key_data_interface: false # the server takes DNSKEY records in secDNS (RFC 5910 §4); else DS records only (null: no secDNS)

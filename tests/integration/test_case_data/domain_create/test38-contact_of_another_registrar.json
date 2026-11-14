@@ -4,9 +4,10 @@
     "profile.contact_labels": {
       "contains": "tech"
     },
-    "profile.registrant_required": false
+    "profile.registrant_required": false,
+    "env.foreign_contacts_refused": true
   },
-  "description": "A contact of another registrar: the drafts leave it to server policy whether it may be used.",
+  "description": "A contact of another registrar: the drafts leave it to server policy, the server refuses it (env.foreign_contacts_refused).",
   "steps": [
     {
       "request": {
@@ -144,45 +145,14 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 201,
-            "content_type": "application/rpp+json",
-            "body": {
-              "@type": "domainName"
-            }
-          },
-          {
-            "status": 403,
-            "headers": {
-              "RPP-Code": "02201"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 422,
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 409,
-            "headers": {
-              "RPP-Code": "02305"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          }
-        ]
+        "status": 403,
+        "headers": {
+          "RPP-Code": "02201"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
       }
     }
   ]

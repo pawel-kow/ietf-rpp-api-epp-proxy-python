@@ -1,6 +1,9 @@
 {
-  "test_id": "test29-postcode_lower_case",
-  "description": "A British postcode in lower case: the drafts put no case on it.",
+  "test_id": "test43-german_postcode_of_4_digits_taken",
+  "when": {
+    "env.limit_postcode_by_country": false
+  },
+  "description": "A German postcode of 4 digits: the server does not check the postcode by country.",
   "steps": [
     {
       "request": {
@@ -14,7 +17,7 @@
         },
         "body_json": {
           "@type": "contact",
-          "id": "{handle:a:K29}",
+          "id": "{handle:a:K43}",
           "contactInfo": {
             "@type": "Card",
             "version": "2.0",
@@ -27,18 +30,18 @@
                 "components": [
                   {
                     "kind": "name",
-                    "value": "10 Downing Street"
+                    "value": "Musterweg 12"
                   },
                   {
                     "kind": "locality",
-                    "value": "London"
+                    "value": "Frankfurt am Main"
                   },
                   {
                     "kind": "postcode",
-                    "value": "sw1a 2aa"
+                    "value": "6059"
                   }
                 ],
-                "countryCode": "GB"
+                "countryCode": "DE"
               }
             },
             "emails": {
@@ -75,56 +78,32 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 201,
-            "content_type": "application/rpp+json",
-            "body": {
-              "@type": "contact",
-              "id": "{handle:a:K29}"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02001"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02004"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "headers": {
-              "RPP-Code": "02005"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 422,
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:K43}",
+          "contactInfo": {
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "6059"
+                  }
+                ]
+              }
             }
           }
-        ]
+        }
       }
     }
   ]

@@ -3,7 +3,7 @@
   "when": {
     "profile.client_statuses": true
   },
-  "description": "The drafts do not say whether a label given twice is one status or an error; either is accepted.",
+  "description": "The same client status added twice in one PATCH: the proxy sends the end state, one status.",
   "steps": [
     {
       "when": {
@@ -185,52 +185,8 @@
         ]
       },
       "response": {
-        "any_of": [
-          {
-            "status": 200,
-            "body": {}
-          },
-          {
-            "status": 400,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02001"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02004"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 400,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02005"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          },
-          {
-            "status": 422,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          }
-        ]
+        "status": 200,
+        "body": {}
       }
     },
     {

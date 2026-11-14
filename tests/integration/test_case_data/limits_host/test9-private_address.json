@@ -1,6 +1,6 @@
 {
   "test_id": "test9-private_address",
-  "description": "A private address: a server MAY refuse it (data-objects §host dns).",
+  "description": "A private address: a server MAY refuse it (data-objects); this one takes it.",
   "steps": [
     {
       "when": {
@@ -189,24 +189,10 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 201,
-            "body": {
-              "@type": "host"
-            }
-          },
-          {
-            "status": 422,
-            "content_type": "application/problem+json",
-            "headers": {
-              "RPP-Code": "02306"
-            },
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            }
-          }
-        ]
+        "status": 201,
+        "body": {
+          "@type": "host"
+        }
       }
     }
   ]

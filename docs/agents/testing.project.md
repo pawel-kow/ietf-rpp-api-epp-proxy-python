@@ -169,7 +169,10 @@ added to it when it is true of the protocol, to the environment when it is true 
 Selectors are resolved first, then the placeholders, then the captures. A selector key that names no fact, in any
 known environment, fails the case at load. A skip names the facts that did not hold. A case whose selectors skip it
 in every known environment fails, because it never runs. `any_of` stays for what the protocol leaves to the server,
-`select` is for what differs by backend or server, and `"skip": "#<issue>"` for a known defect.
+`select` is for what differs by backend or server, and `"skip": "#<issue>"` for a known defect. A case never accepts
+a success and a refusal at once: where servers decide differently, one case each states the answer, selected by the
+fact that tells them apart (a server policy is an `env` fact, such as `limit_postcode_by_country`), and a twin that
+no known environment would run is not written.
 
 ## Tests without the backend
 
@@ -219,8 +222,8 @@ update → verify) run against a Flask test client.
   uppercase domain/host names and reorder list entries (see
   [RPP_IMPLEMENTATION_NOTES.md](../../RPP_IMPLEMENTATION_NOTES.md)).
 - A step's `response` can be `{"any_of": [...]}`, a list of responses of which one must match,
-  for behaviour the protocol leaves to the server. A create that may be refused, or may keep
-  the data in another form, lists each outcome, see `domain_create/test16` to `test18`.
+  for behaviour the protocol leaves to the server, such as the head of a shared message queue. The alternatives are
+  all successes or all refusals, never both (see *Selectors*).
 - A step's `capture` maps a name to a dotted field of its response body, where a number picks a list element (`0.id`). Later steps write `{capture:name}`
   in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
   a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
@@ -265,7 +268,8 @@ breaks on a label of 61 to 63 characters under `.example` (pawel-kow/epp#30), an
 and host addresses per command, so an update can pass its limits (pawel-kow/epp#29). It sends no reply to a domain
 create that names one contact twice in a role (pawel-kow/epp#32), and refuses a `hostAttr` without addresses, also of
 an external host (pawel-kow/epp#33), so `ns` records cannot be added to a domain there. A duplicate the drafts leave
-open (a status, contact, nameserver, `ns` or DS record given twice) may also be taken, or refused with 409 (`02302`).
+open (a status, contact, nameserver, `ns` or DS record given twice) is taken or refused as the server decides, each
+case pins that server's answer.
 The limits and their sources are in [backend-limits.yaml](../testing/backend-limits.yaml),
 the coverage of every field in [integration-test-review.md](../testing/integration-test-review.md).
 
