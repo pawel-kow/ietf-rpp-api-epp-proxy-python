@@ -12,8 +12,9 @@ Branch `chores/remove-old-tests` (worked on as asked, not from `main`).
 - [x] T5 Docs: `testing.project.md`, `process.project.md`, `architecture.project.md`
 - [x] T6 `lint-imports`; the full `pytest -n 4` run (both environments): 2715 passed, 367 skipped, 38 min
 - [x] T7 Smoke suite: `"markers": ["smoke"]` on 24 happy-path cases that run on both backends without a wait;
-      `pytest -n 4 -m smoke` (48 tests) passed in 2 min 23 s. An unknown marker, or a smoke case a backend skips,
-      fails that case
+      `pytest -n 4 -m smoke` (48 tests) passed in 2 min 23 s. An unknown marker fails that case
+- [x] T8 Smoke: 9 host cases (check, create external/with addresses/internal, read, update, delete), skipped on RRI
+      by the `host` groups' selector, as the maintainer asked; the rule that a smoke case runs everywhere goes
 
 ## Findings (evidence)
 

@@ -300,8 +300,8 @@ are needed. Add `"skip": "reason"` at the top level to skip one.
 
 `"markers"` at the top level lists pytest markers of the case, each registered under `markers` in `pyproject.toml`
 (an unknown one fails the case). `smoke` marks the smoke suite, `pytest -n 4 -m smoke`, to run on every iteration:
-one happy path of each operation that runs on every backend, without a `wait`. A smoke case runs in every known
-environment, so a case some backend skips is not one.
+one happy path of each operation, without a `wait`. Most run on every backend; those of an object a backend lacks
+(hosts on RRI) are skipped there, as any case is.
 
 ## Status codes and the spec
 

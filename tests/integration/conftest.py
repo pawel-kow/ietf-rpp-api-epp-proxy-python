@@ -103,9 +103,6 @@ class Case(pytest.Item):
         elif file_cases.runs_nowhere(case):
             self.failure = (f"The selectors skip this case in every environment "
                             f"({', '.join(file_cases.environment_runs())}), so it never runs")
-        elif "smoke" in case.get("markers", []) and file_cases.skipped_somewhere(case):
-            self.failure = (f"A smoke case runs in every environment, the selectors skip it in "
-                            f"{', '.join(file_cases.skipped_somewhere(case))}")
         else:
             reason = file_cases.skip_reason(case, run)
             if reason is not None:
