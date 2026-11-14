@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test12-simple_create-clTRID",
   "steps": [
     {

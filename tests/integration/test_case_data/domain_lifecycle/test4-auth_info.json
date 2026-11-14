@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test4-auth_info",
   "description": "A new authInfo is accepted by PATCH.",
   "steps": [

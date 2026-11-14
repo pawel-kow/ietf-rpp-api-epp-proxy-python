@@ -405,13 +405,15 @@ does not check the `version` parameter of the media type, so core §12's 406 is 
 
 ## Composition
 
-[src/main.py](../../src/main.py) is the composition root. `rpp_backend` (`epp` by default, or `rri`) picks
-`new_epp_backend` or `new_rri_backend` from `BACKENDS`, and builds the `BackendProfile` from the layers of the
+[src/main.py](../../src/main.py) is the composition root. `compose(settings)` builds the app of one settings, and
+`main` composes the settings it loads once as `main:app`; the integration tests compose one per test environment.
+`rpp_backend` (`epp` by default, or `rri`) picks
+`new_epp_backend` or `new_rri_backend` from `backends`, and builds the `BackendProfile` from the layers of the
 settings, which both the backend and the app get; nothing else knows which backend runs.
 `new_epp_backend` builds an `EppBackend` over the default
 `EPPClient`, with the namespace map and the `IdnTables`, and `new_rri_backend` an `RriBackend` over an `RriClient`
 on a `TCPClient` with payload-only framing. The chosen one is `new_backend`, the factory main passes to
-[`SessionPool`](../../src/core/session/session_pool.py), which keeps one backend per user. The pool goes to
+[`SessionPool`](../../src/core/session/session_pool.py), which keeps one backend per user; `close()` logs them all out (the proxy does not call it on shutdown yet, #144). The pool goes to
 `create_app` in [app.py](../../src/rpp/http/app.py), with the `BackendProfile` and the
 `DiscoverySettings`, which the handlers read through [context.py](../../src/rpp/http/context.py). `create_app` hands
 `SessionSecurityHandler` to Connexion through `security_map`, because Connexion would otherwise resolve the function

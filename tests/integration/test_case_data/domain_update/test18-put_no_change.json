@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test18-put_no_change",
   "steps": [
     {

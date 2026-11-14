@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "when": {
     "profile.lgrs": {
       "contains": "latn-1.0"

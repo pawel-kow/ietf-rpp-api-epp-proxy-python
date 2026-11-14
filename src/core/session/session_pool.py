@@ -31,3 +31,10 @@ class SessionPool:
             return None
 
         return backend
+
+    def close(self):
+        """Logs every session out, so the registry does not count it until its idle timeout. A later request of a
+        user logs in again."""
+        sessions, self._sessions = self._sessions, {}
+        for backend in sessions.values():
+            backend.disconnect()

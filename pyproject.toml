@@ -14,6 +14,10 @@ testpaths = [
 pythonpath = [
     "src",
 ]
+# A case file of the integration suite names its markers in "markers" (docs/agents/testing.project.md).
+markers = [
+    "smoke: a happy path of each operation, run on every iteration: pytest -m smoke",
+]
 addopts = "--strict-markers --tb=short -p no:warnings"
 
 # Module boundaries of #120, checked by `PYTHONPATH=src lint-imports` (docs/agents/architecture.project.md).

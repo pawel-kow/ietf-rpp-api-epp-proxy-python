@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test17-patch_email",
   "steps": [
     {

@@ -9,7 +9,7 @@ from tests.helper.pacer import Pacer
 from tests.helper.recursive_compare_existing import recusive_compare_existing
 from tests.helper.selectors import Facts, SelectorError
 from tests.helper.test_environment import (
-    Credentials, EnvironmentError, environment_names, load, replace_fact, replace_values,
+    Credentials, EnvironmentError, environment_names, load, replace_fact, replace_values, selected_name, selected_names,
 )
 
 FACTS = Facts(EPP_PROFILE, {"tld": "example", "domainName": {"processes": {"restore": {"within_run": True}}}})
@@ -248,3 +248,18 @@ def test_a_case_that_selects_its_waits_is_accepted():
                      "steps": [{"wait": ["domainName.processes.create.add_grace_period",
                                          "domainName.processes.delete.redemption_period"],
                                 "request": {}, "response": {}}]}, Facts(EPP_PROFILE, PERIODS))
+
+
+def test_every_environment_runs_unless_rpp_test_env_names_some():
+    assert selected_names({}) == environment_names()
+    assert selected_names({"RPP_TEST_ENV": "rri-mtest, epp-docker"}) == ["rri-mtest", "epp-docker"]
+
+
+def test_an_unknown_environment_is_an_error_that_names_the_known_ones():
+    with pytest.raises(EnvironmentError, match="epp-docker"):
+        selected_names({"RPP_TEST_ENV": "nope"})
+
+
+def test_the_unit_tests_compose_the_first_environment_named():
+    assert selected_name({}) == "epp-docker"
+    assert selected_name({"RPP_TEST_ENV": "rri-mtest,epp-docker"}) == "rri-mtest"

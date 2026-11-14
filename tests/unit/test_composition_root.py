@@ -5,7 +5,10 @@ import main
 from main import new_backend, new_epp_client, settings, tls_context, tls_context_from_config
 from registry_adapter.common.transport.tcp_client import TCPClient
 from registry_adapter.epp.gateways.epp_backend import EppBackend
+from core.session.session_pool import SessionPool
+from registry_adapter.rri.gateways.rri_backend import RriBackend
 from settings.load_settings import load_settings
+from tests.helper.test_environment import REPOSITORY
 
 import pytest
 
@@ -103,3 +106,13 @@ def test_the_backend_maps_lgr_to_the_configured_idn_tables():
         assert tables.table(lgr) == table
         assert tables.lgr(table) == lgr
     assert new_backend("user", "pw").profile.lgrs == tuple(sorted(settings.epp.rpp_idn_lgr_tables or {}))
+
+
+def test_compose_builds_an_app_for_other_settings():
+    rri = main.compose(load_settings(str(REPOSITORY / "config.rri-mtest.yaml")))
+
+    assert rri.settings.backend == "rri"
+    assert rri.app is not main.app
+    assert rri.app.app.config["RPP_BACKEND_PROFILE"] is rri.profile
+    assert isinstance(rri.new_backend("user", "pw"), RriBackend)
+    assert isinstance(rri.sessions, SessionPool)

@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test3-simple_create_with_all_contacts",
   "steps": [
     {

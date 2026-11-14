@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test3-a_label",
   "steps": [
     {

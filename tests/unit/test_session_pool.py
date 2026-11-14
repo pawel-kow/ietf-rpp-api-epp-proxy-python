@@ -108,3 +108,27 @@ def test_concurrent_first_logins_keep_one_session_and_disconnect_the_rest():
     assert results[1] is kept
     assert [c.disconnect_calls for c in created if c is not kept] == [1]
     assert kept.disconnect_calls == 0
+
+
+def test_close_logs_out_every_session():
+    factory = RecordingFactory()
+    sessions = SessionPool(factory)
+    sessions.session("user1", "pw")
+    sessions.session("user2", "pw")
+
+    sessions.close()
+
+    assert [client.disconnect_calls for client in factory.created] == [1, 1]
+    assert not any(client.connected for client in factory.created)
+
+
+def test_a_request_after_close_logs_in_again():
+    factory = RecordingFactory()
+    sessions = SessionPool(factory)
+    first = sessions.session("user", "pw")
+    sessions.close()
+
+    second = sessions.session("user", "pw")
+
+    assert second is not first
+    assert second.connected

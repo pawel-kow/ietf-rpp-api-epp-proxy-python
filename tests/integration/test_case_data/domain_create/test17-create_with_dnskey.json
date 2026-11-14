@@ -1,10 +1,4 @@
 {
-  "when": {
-    "profile.domainName.dns.record_types": {
-      "contains": "ds"
-    },
-    "env.domainName.dns.dnskey_supported": false
-  },
   "test_id": "test17-create_with_dnskey",
   "steps": [
     {
