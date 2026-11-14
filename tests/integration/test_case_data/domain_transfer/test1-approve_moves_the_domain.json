@@ -1,5 +1,6 @@
 {
   "test_id": "test1-approve_moves_the_domain",
+  "markers": ["smoke"],
   "steps": [
     {
       "request": {

@@ -6,13 +6,14 @@ from tests.helper.profiles import RRI_PROFILE
 
 class FakeRriClient(RriClient):
     """Stands in for the RRI session: answers each request with the next of `replies` (RRI XML), and keeps the XML it
-    was sent in `sent`. An Exception entry is raised."""
+    was sent in `sent`, and whether it may be printed in `loggable`. An Exception entry is raised."""
 
     def __init__(self, username="DENIC-1000022-RRI", password="pw", replies=None, reachable=True):
         super().__init__(transport=None, username=username, password=password)
         self.replies = list(replies or [])
         self.reachable = reachable
         self.sent: list[str] = []
+        self.loggable: list[bool] = []
 
     def connect(self):
         self._connected = self.reachable
@@ -20,8 +21,9 @@ class FakeRriClient(RriClient):
     def disconnect(self, send_logout=True):
         self._connected = False
 
-    def send(self, request):
+    def send(self, request, loggable=True):
         self.sent.append(rri_to_str(request))
+        self.loggable.append(loggable)
         reply = self.replies.pop(0)
         if isinstance(reply, Exception):
             raise reply

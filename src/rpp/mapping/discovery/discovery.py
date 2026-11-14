@@ -5,7 +5,14 @@ from core.model.shared.discovery import Discovery
 from rpp.dto.rpp_discovery import RPPDiscovery
 from rpp.dto.rpp_discovery_environment import RPPDiscoveryEnvironment
 from rpp.dto.rpp_discovery_version import RPPDiscoveryVersion
+from rpp.dto.rpp_extension import RPPExtension
+from rpp.schema.extensions import EXTENSIONS
+from rpp.schema.rpp_extension import RppExtension
 from rpp.schema.validator import validate_schema
+
+
+def _extension(extension: RppExtension) -> RPPExtension:
+    return RPPExtension(name=extension.name, id=extension.id, version=extension.version, url=extension.url)
 
 
 def model_to_rpp(discovery: Discovery) -> dict:
@@ -13,6 +20,7 @@ def model_to_rpp(discovery: Discovery) -> dict:
         versions=[RPPDiscoveryVersion(version=discovery.version, base_url=discovery.base_url)],
         environment=RPPDiscoveryEnvironment(name=discovery.environment_name, status=discovery.environment_status),
         tlds=discovery.tlds,
+        extensions=[_extension(EXTENSIONS[extension]) for extension in discovery.extensions] or None,
         profiles=discovery.profiles,
         objects=discovery.objects,
         datetime=discovery.datetime,

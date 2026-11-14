@@ -125,6 +125,12 @@ def test_a_profile_reads_as_a_tree():
         "request", "query", "cancel", "approve", "reject")
 
 
+def test_only_rri_offers_an_extension_and_transfers_with_it():
+    assert EPP_PROFILE.extensions == ()
+    assert RRI_PROFILE.extensions == ("rri",)
+    assert RRI_PROFILE.domainName.processes.transfer.operations == ("request",)
+
+
 @pytest.mark.parametrize("path", ["contact.fax", "contact.nope", "nope", "contact.fax.supported.x"])
 def test_a_path_that_names_no_leaf_is_a_key_error(path):
     with pytest.raises(KeyError):

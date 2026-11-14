@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from core.model.domain.domains import Domain
 from core.model.shared.common import AuthInfo
 from core.model.shared.transfer_operation import TransferOperation
 
@@ -12,3 +13,4 @@ class DomainTransfer:
     operation: TransferOperation
     authInfo: Optional[AuthInfo] = None
     duration: Optional[str] = None
+    domain: Optional[Domain] = None

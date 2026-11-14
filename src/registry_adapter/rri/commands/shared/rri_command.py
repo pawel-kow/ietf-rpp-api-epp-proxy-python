@@ -58,12 +58,13 @@ def first_error(transaction: TransactionType):
 
 
 def run(client, client_transaction_id, *, write: bool, n: int = 1, payload_of: Callable | None = None,
-        codes: dict | None = None, **command) -> OperationResponse | ErrorResponse:
+        codes: dict | None = None, loggable: bool = True, **command) -> OperationResponse | ErrorResponse:
     """Sends the command (one keyword: the field of `RegistryRequest` and its value). A write carries a CTID. The
     answer echoes the client's transaction id, as every answer of the proxy does. `codes` maps the DENIC codes whose
-    meaning depends on the command, ahead of the general table."""
+    meaning depends on the command, ahead of the general table. A command that holds a secret is sent with
+    `loggable=False`, so it is not printed."""
     request = RegistryRequest(**command, ctid=ctid(client_transaction_id, n) if write else None)
-    transaction = client.send(request).transaction
+    transaction = (client.send(request) if loggable else client.send(request, loggable=False)).transaction
     _log_messages(transaction)
     if transaction.result == ResultType.SUCCESS:
         return OperationResponse(

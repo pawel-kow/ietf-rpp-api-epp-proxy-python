@@ -1,1 +1,1 @@
-{"when": {"profile.domainName.processes.transfer.operations": {"contains": "request"}}}
+{"when": {"profile.domainName.processes.transfer.operations": {"contains": "request"}, "profile.extensions": {"not": {"contains": "rri"}}}}

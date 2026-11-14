@@ -1,9 +1,13 @@
 import logging
+from datetime import datetime, timezone
 
 from core.model.domain import domain_application
 from core.model.domain.domain_replacement import DomainReplacement
 from core.model.domain.domains import Domain, DomainUpdate
 from core.model.domain.domain_restore import DomainRestore
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.shared.domain_transfer_process import DomainTransferProcess
+from core.model.shared.transfer_operation import TransferOperation
 from core.ports import derived_update
 from core.ports.replace_outcome import ReplaceOutcome
 from core.result.error_response import ErrorResponse
@@ -21,7 +25,7 @@ from registry_adapter.rri.commands.domain.create import rri_domain_create
 from registry_adapter.rri.commands.domain.delete import rri_domain_delete
 from registry_adapter.rri.commands.domain.info import rri_domain_info
 from registry_adapter.rri.commands.domain.restore import rri_domain_restore
-from registry_adapter.rri.commands.domain.update import rri_domain_chholder, rri_domain_update
+from registry_adapter.rri.commands.domain.update import rri_domain_chholder, rri_domain_chprov, rri_domain_update
 from registry_adapter.rri.commands.shared.rri_command import refused
 
 logger = logging.getLogger(__name__)
@@ -59,6 +63,14 @@ def _idn_refusal(domain: Domain) -> str | None:
     if domain.idn.uname.lower() != handle:
         return "The uName does not match the name"
     return None
+
+
+def _completed_transfer(name: str, regacc_id: str) -> DomainTransferProcess:
+    """CHPROV is immediate, and its reply carries no transfer state: the gainer requested it, and the registry
+    completed it at the time of the reply."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    return DomainTransferProcess(name=name, trStatus="serverApproved", reqClientId=regacc_id, requestDate=now,
+                                 actClientId=regacc_id, actionDate=now)
 
 
 class RriDomainGateway:
@@ -166,8 +178,24 @@ class RriDomainGateway:
             return refused(ResultCode.UNIMPLEMENTED_OPTION, "RRI takes no restore report", client_transaction_id)
         return rri_domain_restore(self.client, restore.name, client_transaction_id)
 
-    def transfer(self, transfer, client_transaction_id=None):
-        return refused(ResultCode.UNIMPLEMENTED_COMMAND, "RRI has no transfer through this proxy", client_transaction_id)
+    def transfer(self, transfer: DomainTransfer, client_transaction_id=None):
+        """A transfer request is CHPROV, which states the domain's data with the gainer's contacts (the request
+        extension of .spec/spec-rri-extension.md) and moves the domain at once. RRI has no other transfer operation."""
+        if transfer.operation != TransferOperation.REQUEST:
+            return refused(ResultCode.UNIMPLEMENTED_COMMAND, f"RRI has no transfer {transfer.operation.value}",
+                           client_transaction_id)
+        if transfer.authInfo is None or not transfer.authInfo.pw:
+            return refused(ResultCode.REQUIRED_PARAMETER_MISSING,
+                           "A transfer on RRI needs the AuthInfo in RPP-Authorization", client_transaction_id)
+        state = state_of_domain(transfer.domain or Domain(name=transfer.name))
+        if not state.dnsentries(transfer.name):
+            return _no_dns_data(client_transaction_id)
+        resp = rri_domain_chprov(self.client, transfer.name, state, transfer.authInfo.pw, client_transaction_id)
+        if isinstance(resp, ErrorResponse):
+            return resp
+        return OperationResponse(code=resp.code, msg=resp.msg, server_transaction_id=resp.server_transaction_id,
+                                 client_transaction_id=resp.client_transaction_id,
+                                 payload=_completed_transfer(transfer.name, self.client.regacc_id))
 
     def renew(self, renew, client_transaction_id=None):
         return refused(ResultCode.UNIMPLEMENTED_COMMAND, "RRI has no renew", client_transaction_id)

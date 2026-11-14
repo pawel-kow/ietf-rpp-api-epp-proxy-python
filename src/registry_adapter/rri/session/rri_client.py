@@ -41,6 +41,7 @@ class RriClient(SerialSession):
         if self._connected:
             self._exchange(rri_to_str(RegistryRequest(logout=LogoutType.VALUE)))
 
-    def send(self, request: RegistryRequest) -> RegistryResponse:
-        """Sends one request on the session and answers its parsed reply."""
-        return str_to_rri(self._round_trip(rri_to_str(request)))
+    def send(self, request: RegistryRequest, loggable=True) -> RegistryResponse:
+        """Sends one request on the session and answers its parsed reply. `loggable` is False for a request that holds
+        a secret (a CHPROV holds the AuthInfo in plaintext), which is then not printed."""
+        return str_to_rri(self._round_trip(rri_to_str(request), loggable))

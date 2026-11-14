@@ -10,4 +10,5 @@ class Discovery:
     environment_status: str
     objects: list[str]
     profiles: list[str]
+    extensions: list[str]                  # the ids of the RPP extensions offered
     datetime: str

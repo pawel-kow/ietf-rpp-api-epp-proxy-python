@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json",
+  "rpp:extension": {
+    "name": "DENIC RRI",
+    "id": "rri",
+    "version": "0.1.0"
+  },
+  "rpp:extends": {
+    "#/$defs/domainTransferProcess.create": "#/$defs/ext.rri.domainTransferProcess.create"
+  },
+  "$defs": {
+    "ext.rri.domainTransferProcess.create": {
+      "type": "object",
+      "properties": {
+        "registrant": { "$ref": "#/$defs/contact.reference", "writeOnly": true },
+        "contacts": {
+          "type": "array",
+          "writeOnly": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "object": { "$ref": "#/$defs/contact.reference" }
+            },
+            "required": ["label", "object"]
+          }
+        },
+        "dns": { "$ref": "#/$defs/dnsData.create", "writeOnly": true }
+      },
+      "required": ["registrant", "dns"]
+    }
+  }
+}

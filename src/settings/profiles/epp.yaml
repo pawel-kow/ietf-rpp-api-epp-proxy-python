@@ -13,6 +13,7 @@ objects:                               # data-objects §2.8: the objects of EPP
 profiles:                              # core §12.4, json §8.7.1
   - urn:ietf:params:rpp:profile:epp-compatibility
 lgrs: []                               # from rpp_idn_lgr_tables of the config, not set here
+extensions: []                         # the proxy offers no RPP extension for EPP
 
 domainName:
   registrant:

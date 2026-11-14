@@ -61,20 +61,21 @@ class SerialSession:
         if not self._connected:
             raise ConnectionException(f"{self.name} server is not reachable")
 
-    def _round_trip(self, message: str) -> str:
-        """Sends a command on the session, opened or re-opened as needed, and answers the raw reply."""
+    def _round_trip(self, message: str, loggable=True) -> str:
+        """Sends a command on the session, opened or re-opened as needed, and answers the raw reply. `loggable` is
+        False for a command that holds a secret, which is then not printed."""
         with self._lock:
             if self._connected and self.client.closed_by_peer():
                 print(f"{self.name} session closed by the server, logging in again")
                 self.disconnect(send_logout=False)
             self._open_session()
             try:
-                self._write(message)
+                self._write(message, loggable)
             except Exception:
                 # A failed send leaves no complete command on the server, so sending it again on a new session
                 # cannot run it twice.
                 self._open_session()
-                self._write(message)
+                self._write(message, loggable)
             return self._read()
 
     def _exchange(self, message: str, loggable=True) -> str:

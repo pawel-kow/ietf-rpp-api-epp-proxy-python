@@ -26,7 +26,7 @@ src/
 │   ├── handlers/            {domain,contact,host,message}/, shared/, discovery.py
 │   ├── mapping/             shared/, {domain,contact,host,message,discovery}/
 │   ├── dto/                 the RPP dataclasses
-│   ├── schema/              validator, data_objects, schemas/ (generated)
+│   ├── schema/              validator, data_objects, extensions, schemas/ (generated; extensions/ copied)
 │   └── openapi.yaml         (generated)
 └── registry_adapter/
     ├── epp/
@@ -232,7 +232,11 @@ flow, the port and the EPP commands of one object.
     Everything else is sent, and RRI's refusal answered by its code: changing a contact's name, clearing a member it
     requires. An `lgr` is
     not sent. A contact create sends the kind of the Card (PERSON or ORG, a PERSON may name its organisation); an
-    update keeps the type RRI holds. Hosts, transfers, renew and contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
+    update keeps the type RRI holds. A transfer request is CHPROV (`commands/domain/update.py`), with the domain's data
+    from the `rri` extension and the AuthInfo in plaintext, so it is sent with `loggable=False`; its reply has no
+    transfer state, so the gateway answers a process `serverApproved` by the gainer at the time of the reply
+    ([spec-rri-extension.md](../../.spec/spec-rri-extension.md)). Hosts, the other transfer operations, renew and
+    contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
     message is a service notice naming its RRI type and the domains and handles it is about, with 1301 or 1300 as a
     poll has.
 
@@ -249,7 +253,20 @@ Transfer handlers are in `rpp/handlers/domain/domain_transfer_handlers.py` and
 functions over `TransferHandlers` in `rpp/handlers/shared/transfer_handlers.py`. An EPP `<transfer>` reply carries
 the state of the transfer, so they need no follow-up Info. `epp_domains_Transfer` and
 `epp_contacts_Transfer` run all five operations, chosen by the model's `operation`. EPP has no process ids, so only
-`latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process).
+`latest` is implemented, see [spec-issues.md](../../.spec/spec-issues.md#transfer-process). Where the backend profile
+offers an extension that adds members to `domainTransferProcess.create` (`rri`), `domain_transfer_process` takes them
+out of the request and converts them with `domains.rpp_to_model`, as a create's, into `DomainTransfer.domain`.
+
+## RPP extensions
+
+An RPP extension (json §7) is a schema file in `.spec/`, copied by [copy_models.sh](../../copy_models.sh) to
+`src/rpp/schema/schemas/extensions/`, and described next to it (`rri`:
+[spec-rri-extension.md](../../.spec/spec-rri-extension.md)). `rpp/schema/extensions.py` loads them (`RppExtension`):
+the Extension Object discovery states, and the definitions each adds to a base definition. A deployment offers those
+its backend profile lists in `extensions`; `create_app` refuses one the proxy does not know. `validate_schema(name,
+data, extensions=profile.extensions)` composes the effective schema (json §7.2) with `allOf`, and
+`added_members` names the members an extension adds, so a mapper names no extension. Without the extension those
+members are undeclared, a 400 as before.
 
 Messages are in `rpp/handlers/message/message_handlers.py`. `GET /messages` is EPP `poll req`,
 `DELETE /messages/{id}` is `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in
@@ -329,7 +346,8 @@ backends, is a fact of the `BackendProfile` (`core/capabilities/backend_profile.
 contact labels and how many registrants a domain has (`domains.check_contact_label`, `check_registrants`; further
 registrants are contacts labelled `registrant`), the record types of a domain (`domain_dns`; `a`, `aaaa` and `mx`
 records other than glue are `ZoneRecord`s the registry serves itself), the LGRs it offers (`domains.rpp_to_model`),
-the transfer operations of each object (`TransferHandlers`, which answer 501 `02101` for one the backend lacks),
+the transfer operations of each object (`TransferHandlers`, which answer 501 `02101` for one the backend lacks), the
+RPP extensions it offers (`extensions`, see [RPP extensions](#rpp-extensions)),
 whether a restore takes a report (`domain_restore_report`), whether a read can show a domain's authInfo
 (`domains.check_requested`, which refuses `includeElements=authInfo` otherwise), whether hosts are objects
 (`domains.check_host_objects`, which refuses `nameservers`), whether a client sets statuses

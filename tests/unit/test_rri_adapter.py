@@ -1,6 +1,7 @@
 """The RRI adapter over replies recorded from MTEST (personal data replaced): the commands it sends, how it composes a
 full update, and how it reads replies and refusals."""
 import hashlib
+import re
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,8 @@ from core.model.domain.domains import ContactReference, ContactReferenceNew, Dom
     DomainUpdateChange
 from core.model.contact.contacts import ContactMinimal
 from core.model.domain.domain_idn import DomainIdn
+from core.model.domain.domain_transfer import DomainTransfer
+from core.model.shared.transfer_operation import TransferOperation
 from core.model.domain.zone_record import ZoneRecord
 from core.model.shared.common import AuthInfo
 from core.result.error_response import ErrorResponse
@@ -238,11 +241,14 @@ def test_partial_update_that_changes_nothing_is_refused_to_another_regacc():
     assert resp.code == ResultCode.AUTHORIZATION_ERROR
 
 
-def test_hosts_transfer_and_renew_are_lacking_commands():
+def test_hosts_transfer_operations_but_request_and_renew_are_lacking_commands():
     gateway, client = backend()
 
     assert gateway.hosts.info("ns1.example.de").code == ResultCode.UNIMPLEMENTED_COMMAND
-    assert gateway.domains.transfer(None).code == ResultCode.UNIMPLEMENTED_COMMAND
+    for operation in (TransferOperation.QUERY, TransferOperation.CANCEL, TransferOperation.APPROVE,
+                      TransferOperation.REJECT):
+        assert gateway.domains.transfer(DomainTransfer(name=NAME, operation=operation)).code == \
+            ResultCode.UNIMPLEMENTED_COMMAND
     assert gateway.domains.renew(None).code == ResultCode.UNIMPLEMENTED_COMMAND
     assert gateway.contacts.delete("x").code == ResultCode.UNIMPLEMENTED_COMMAND
     assert client.sent == []
@@ -424,3 +430,89 @@ def test_an_idn_is_sent_with_its_u_label_and_a_label():
     gateway.domains.check("xn--bcher-kva.de")
 
     assert "<domain:handle>bücher.de</domain:handle><domain:ace>xn--bcher-kva.de</domain:ace>" in client.sent[0]
+
+
+def _transfer(name=NAME, password="Abc2345678", **domain):
+    data = Domain(name=name, contacts=[ContactReference(id="DENIC-1000099-HOLDER", types=["registrant"]),
+                                       ContactReference(id="DENIC-1000099-ABUSE", types=["abuse"])],
+                  records=[ZoneRecord(owner=name, type="a", address="192.0.2.10")], **domain)
+    return DomainTransfer(name=name, operation=TransferOperation.REQUEST,
+                          authInfo=AuthInfo(pw=password) if password else None, domain=data)
+
+
+def test_a_transfer_is_chprov_with_the_gainers_data_and_the_auth_info():
+    gateway, client = backend(reply(ctid="cl-1"))
+
+    resp = gateway.domains.transfer(_transfer(), client_transaction_id="cl-1")
+
+    sent = client.sent[0]
+    assert "<domain:chprov>" in sent and "<ctid>cl-1</ctid>" in sent
+    assert f"<domain:handle>{NAME}</domain:handle>" in sent
+    assert '<domain:contact role="holder">DENIC-1000099-HOLDER</domain:contact>' in sent
+    assert '<domain:contact role="abusecontact">DENIC-1000099-ABUSE</domain:contact>' in sent
+    assert 'xsi:type="dnsentry:A"' in sent
+    # chprovType extends updateType: the AuthInfo, in plaintext, comes after every dnsentry (ref §6.18)
+    assert sent.index("<domain:authInfo>Abc2345678</domain:authInfo>") > sent.rindex("dnsentry")
+    assert resp.code == ResultCode.COMMAND_COMPLETED_SUCCESSFULLY
+
+
+def test_a_transfer_is_not_printed_as_it_holds_the_auth_info_in_plaintext():
+    gateway, client = backend(DOMAIN_INFO, reply())
+
+    gateway.domains.info(NAME)
+    gateway.domains.transfer(_transfer())
+
+    assert client.loggable == [True, False]
+
+
+def test_a_transfer_answers_a_process_completed_by_the_server():
+    """CHPROV is immediate, and its reply has no transfer state: the gainer requested it and the registry did it."""
+    gateway, _ = backend(reply(stid="sv-chprov"))
+
+    resp = gateway.domains.transfer(_transfer(), client_transaction_id="cl-1")
+
+    process = resp.payload
+    assert resp.server_transaction_id == "sv-chprov"
+    assert process.name == NAME and process.trStatus == "serverApproved"
+    assert process.reqClientId == process.actClientId == "DENIC-1000022"
+    assert process.requestDate == process.actionDate
+    assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{6}Z", process.actionDate)
+    assert process.expiryDate is None
+
+
+def test_a_transfer_of_an_idn_names_its_u_label_and_a_label():
+    gateway, client = backend(reply())
+
+    gateway.domains.transfer(_transfer(name="xn--bcher-kva.de"))
+
+    assert "<domain:handle>bücher.de</domain:handle>" in client.sent[0]
+    assert "<domain:ace>xn--bcher-kva.de</domain:ace>" in client.sent[0]
+
+
+def test_a_transfer_without_the_auth_info_sends_nothing():
+    gateway, client = backend()
+
+    resp = gateway.domains.transfer(_transfer(password=None))
+
+    assert resp.code == ResultCode.REQUIRED_PARAMETER_MISSING and client.sent == []
+
+
+def test_a_transfer_without_dns_data_sends_nothing():
+    gateway, client = backend()
+    transfer = _transfer()
+    transfer.domain.records = None
+
+    resp = gateway.domains.transfer(transfer)
+
+    assert resp.code == ResultCode.UNIMPLEMENTED_OPTION and client.sent == []
+
+
+@pytest.mark.parametrize("code, expected", [
+    ("63370088701", ResultCode.INVALID_AUTHORIZATION_INFORMATION),  # the AuthInfo does not match
+    ("63380063209", ResultCode.COMMAND_USE_ERROR),  # the domain is the requester's own
+    ("53370080005", ResultCode.REQUIRED_PARAMETER_MISSING),  # required CHPROV data missing
+])
+def test_a_refused_transfer_answers_by_the_denic_code(code, expected):
+    gateway, _ = backend(error(code, "refused"))
+
+    assert gateway.domains.transfer(_transfer()).code == expected

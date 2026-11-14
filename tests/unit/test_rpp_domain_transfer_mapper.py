@@ -6,7 +6,8 @@ from core.model.domain.domain_transfer import DomainTransfer
 from core.model.shared.common import AuthInfo
 from core.model.shared.domain_transfer_process import DomainTransferProcess
 from core.model.shared.transfer_operation import TransferOperation
-from rpp.mapping.domain import domain_transfer_approve, domain_transfer_process, domain_transfer_reject
+from rpp.mapping.domain import domain_transfer_approve, domain_transfer_process, domain_transfer_reject, domains
+from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE
 
 PROCESS = {"@type": "domainTransferProcess"}
 
@@ -24,13 +25,13 @@ def process(**fields):
 
 
 def test_request_needs_only_the_type():
-    transfer = domain_transfer_process.rpp_to_model("foo.example", PROCESS, None)
+    transfer = domain_transfer_process.rpp_to_model("foo.example", PROCESS, None, profile=EPP_PROFILE)
     assert transfer == DomainTransfer(name="foo.example", operation=TransferOperation.REQUEST)
 
 
 def test_request_keeps_the_period_and_the_authorization():
     rpp = {**PROCESS, "transferDir": "pull", "transferPeriod": {"@type": "period", "value": 2, "unit": "y"}}
-    transfer = domain_transfer_process.rpp_to_model("foo.example", rpp, "authinfo value=MmZvb0JBUg==")
+    transfer = domain_transfer_process.rpp_to_model("foo.example", rpp, "authinfo value=MmZvb0JBUg==", profile=EPP_PROFILE)
     assert transfer.duration == "P2Y"
     assert transfer.authInfo == AuthInfo(pw="2fooBAR")
 
@@ -38,17 +39,17 @@ def test_request_keeps_the_period_and_the_authorization():
 def test_push_cannot_reach_epp():
     rpp = {**PROCESS, "transferDir": "push", "gainingClientId": "ClientX"}
     with pytest.raises(NotSupportedByBackend):
-        domain_transfer_process.rpp_to_model("foo.example", rpp, None)
+        domain_transfer_process.rpp_to_model("foo.example", rpp, None, profile=EPP_PROFILE)
 
 
 def test_gaining_client_without_direction_cannot_reach_epp():
     with pytest.raises(NotSupportedByBackend, match="gainingClientId"):
-        domain_transfer_process.rpp_to_model("foo.example", {**PROCESS, "gainingClientId": "ClientX"}, None)
+        domain_transfer_process.rpp_to_model("foo.example", {**PROCESS, "gainingClientId": "ClientX"}, None, profile=EPP_PROFILE)
 
 
 def test_request_is_validated():
     with pytest.raises(ValidationError):
-        domain_transfer_process.rpp_to_model("foo.example", {"@type": "transferProcess"}, None)
+        domain_transfer_process.rpp_to_model("foo.example", {"@type": "transferProcess"}, None, profile=EPP_PROFILE)
 
 
 @pytest.mark.parametrize("no_body", [None, {}])
@@ -84,7 +85,7 @@ def test_read_leaves_out_an_unknown_expiry_date():
 def test_request_with_a_read_only_member_is_rejected(member):
     """Json §4.4."""
     with pytest.raises(ValueError):
-        domain_transfer_process.rpp_to_model("foo.example", {**PROCESS, member: "x"}, None)
+        domain_transfer_process.rpp_to_model("foo.example", {**PROCESS, member: "x"}, None, profile=EPP_PROFILE)
 
 
 def test_approve_body_is_optional():
@@ -105,3 +106,46 @@ def test_approve_body_is_validated(body):
 def test_approve_reason_is_not_allowed_in_the_epp_profile():
     with pytest.raises(NotSupportedByBackend, match="reason"):
         domain_transfer_approve.rpp_to_model("foo.example", {**PROCESS, "reason": "ok"}, None)
+
+
+RRI_DATA = {
+    "registrant": {"@type": "contact", "id": "DENIC-1000022-HOLDER"},
+    "contacts": [{"label": "abuse", "object": {"@type": "contact", "id": "DENIC-1000022-ABUSE"}}],
+    "dns": {"@type": "dnsData", "records": [
+        {"@type": "dnsRecord", "name": "@", "type": "a", "rdata": {"address": "192.0.2.10"}}]},
+}
+
+
+def test_with_the_rri_extension_a_request_carries_the_domain_data():
+    """The members of the extension convert as those of a domain create do."""
+    transfer = domain_transfer_process.rpp_to_model(
+        "example.de", {**PROCESS, **RRI_DATA}, "authinfo value=MmZvb0JBUg==", profile=RRI_PROFILE)
+
+    assert transfer.operation == TransferOperation.REQUEST
+    assert transfer.authInfo == AuthInfo(pw="2fooBAR")
+    assert transfer.domain == domains.rpp_to_model(
+        {"@type": "domainName", "name": "example.de", **RRI_DATA}, profile=RRI_PROFILE)
+
+
+def test_with_the_rri_extension_the_domain_data_is_required():
+    with pytest.raises(ValidationError, match="registrant"):
+        domain_transfer_process.rpp_to_model("example.de", PROCESS, None, profile=RRI_PROFILE)
+
+
+def test_without_the_rri_extension_its_members_are_undeclared():
+    with pytest.raises(ValueError, match="Undeclared"):
+        domain_transfer_process.rpp_to_model("foo.example", {**PROCESS, **RRI_DATA}, None, profile=EPP_PROFILE)
+
+
+def test_the_rri_extension_has_no_host_objects():
+    nameservers = [{"@type": "host", "hostName": "ns1.example.com"}]
+    with pytest.raises(ValueError, match="Undeclared"):
+        domain_transfer_process.rpp_to_model(
+            "example.de", {**PROCESS, **RRI_DATA, "nameservers": nameservers}, None, profile=RRI_PROFILE)
+
+
+def test_with_the_rri_extension_a_role_rri_lacks_is_refused():
+    contacts = [{"label": "admin", "object": {"@type": "contact", "id": "DENIC-1000022-ADMIN"}}]
+    with pytest.raises(NotSupportedByBackend, match="admin"):
+        domain_transfer_process.rpp_to_model(
+            "example.de", {**PROCESS, **RRI_DATA, "contacts": contacts}, None, profile=RRI_PROFILE)
