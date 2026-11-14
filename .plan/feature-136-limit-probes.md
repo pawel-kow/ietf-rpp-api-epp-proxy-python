@@ -17,6 +17,20 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
 - [x] T9 Checks: `lint-imports`, `pytest -n 8` and the MTEST run `RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration`
 - [x] T10 Draft PR #142
 - [x] T11 MTEST outcomes into the cases, backend-limits.yaml and review §6
+- [~] T12 Correction (maintainer, 2026-11-14): the gaps left in review §3 and §4 get cases in this issue, not a
+      follow-up. Domain: create-only members by PATCH, client status at create, `status.due`, registrant and contacts
+      added, `dns` transitions (`ns` by PATCH, `a`/`aaaa`/`mx`/`dnskey` on RRI, DS added and removed), clearing
+      `contacts` and `nameservers`, duplicates, references that do not exist, `authInfo` absent and removed,
+      read-only members written, DNSKEY and record count on RRI
+- [ ] T13 Contact gaps: `language`, street lines, region, postcode, extension and fax transitions, `disclose` at
+      create, client status at create and `replace []`, missing members, value formats, `org-1`, two components of a
+      kind, unknown JSContact property, `version`, localization key, phone features
+- [ ] T14 Host gaps: rename of an external host, status one for another, `aaaa` and `a` by PUT, clearing addresses,
+      another record type, upper case and character set of the name, unknown status, `provMetadata` read
+- [ ] T15 Run on epp-docker and MTEST, file the confirmed defects, mark them `skip`
+- [ ] T16 Review §1 to §4 and §7 with every case (the `limits_*` ones and the new ones), recounted; testing.project.md
+      for any new fact
+- [ ] T17 Checks, PR body
 
 ## Findings (evidence)
 
