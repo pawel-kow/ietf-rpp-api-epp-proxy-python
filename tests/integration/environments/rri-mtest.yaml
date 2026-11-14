@@ -43,6 +43,8 @@ facts:
       foreign_supported: null          # not known
     dns:
       dnskey_supported: null           # RRI has no secDNS: DENIC computes the DS from the DNSKEY
+    # Periods are ISO 8601 durations, the longest a transition takes (null: the server has none). DENIC states some as
+    # a time of day (docs/rri/rri-5.0-reference.md §2.5, §6), so the period is the longest it can be.
     processes:
       create:
         success_status:                # what a domain reads with right after its create: one of these
@@ -50,11 +52,24 @@ facts:
           - ok                         # it passed (RRI `connect`): which of the two depends on timing
         failed_dns_status:             # what it reads with when its name servers do not serve it (null: not checked)
           - inactive                   # RRI `failed`, with a `due`: deleted after a day unless fixed
+        failed_dns_period: P1D         # a failed domain is deleted after a day on MTEST (30 days in production)
+        add_grace_period: PT0S         # none: a domain deleted right after its create goes to redemption
+      renew:
+        grace_period: null             # no renew
+        expiry_grace_period: null      # a domain runs until it is deleted
+      transfer:
+        pending_period: null           # CHPROV is not exposed (gap Q3)
+        grace_period: null
       delete:
         readable_after: true           # a domain deleted right after its create is read in its redemption period
+        redemption_period: P1DT14H     # the RGP lasts a day on MTEST and ends between 10:00 and 12:00
+        pending_delete_period: PT16H   # purged between 02:00 and 04:00 the day after the RGP ends
       restore:
-        within_run: false              # the RGP lasts a day on MTEST
+        pending_period: null           # RESTORE is one step
   contact:
+    processes:
+      transfer:
+        pending_period: null
     id:
       max_length: 32
     name:

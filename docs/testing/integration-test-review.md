@@ -4,7 +4,7 @@ Status: 2026-11-14, branch `feature/136-limit-probes` (#136). §2 to §4 show th
 the cases added for the gaps this review found on `main` at 414a86e (§6.3). §6 has the outcomes on both backends,
 the EPP test server and DENIC RRI MTEST. Companion file: [backend-limits.yaml](backend-limits.yaml).
 
-This review checks the data-driven integration suite (`tests/integration/test_case_data/`, 516 cases) against
+This review checks the data-driven integration suite (`tests/integration/test_case_data/`, 521 cases) against
 three criteria, for every writable field of the Domain Name, Contact and Host data objects and of the component
 objects they carry:
 
@@ -43,8 +43,9 @@ Case references are `<group><number>`:
 | LH | `limits_host` | | |
 
 A case runs on both backends unless marked **(E)**, the EPP test server only, or **(R)**, RRI MTEST only. Of the
-516 cases, 170 run on both, 284 on EPP only, 37 on RRI only and 25 are skipped for a known
-defect or a limit of the test environment (§6). All host cases are (E), because RRI has no host objects; the host
+521 cases, 181 run on both, 277 on EPP only, 38 on RRI only and 25 are skipped for a known
+defect or a limit of the test environment (§6). A case that waits for a lifecycle period runs where the run may wait
+that long (`RPP_TEST_MAX_WAIT`, testing.project.md); it is counted where it would run without that limit. All host cases are (E), because RRI has no host objects; the host
 tables do not repeat the mark. A case skipped for a defect still counts as covering its point: it asserts what the
 drafts require and names the issue.
 

@@ -137,6 +137,14 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
   status. `inactive` left `success_status`; new fact `failed_dns_status` (MTEST `[inactive]`, EPP null) and
   `domain_create/test43` (RRI only), passed on MTEST; the 19 cases passed again on both.
 
+- T24 (maintainer, 2026-11-14), checks: epp-docker full suite 458 passed, 65 skipped in 877.52s (0:14:37); lifecycle periods as ISO 8601 durations of the environments (the longest a
+  transition takes: cron interval and time-of-day windows included; null none, PT0S immediate); a step `wait`s for a
+  path, the case selects `wait.<path>`, held to `RPP_TEST_MAX_WAIT` (default PT10M) with `RPP_TEST_WAIT_BUFFER`
+  percent (default 10). `restore.within_run` gone: the restore cases select by `restore.report_supported` and run on
+  MTEST (RRI's 66310082014 now maps to 2304, like EPP). New: domain_transfer/test13, contact_transfer/test18,
+  domain_restore/test13, domain_lifecycle/test8 (passed on epp-docker), domain_create/test44 (MTEST, a day: not run).
+  521 cases: 181 both, 277 EPP, 38 RRI, 25 skipped.
+
 ## Open questions
 
 - None.

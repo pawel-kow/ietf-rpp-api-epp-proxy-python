@@ -15,7 +15,8 @@ pytest -k domain_update                                 # single test group by s
 pytest "tests/integration/test_from_file_definition.py::test_from_file_definition[domain_update-test1-simple_update]"  # one case by id
 ```
 
-Run the full suite with `-n 8`, which takes about 5.5 minutes on 4 cores. The unit tests are bound by CPU,
+Run the full suite with `-n 8`, which takes about 15 minutes on 4 cores, most of it the cases that wait for the
+periods of the EPP test server (`domain_lifecycle/test8` waits about 14 minutes). The unit tests are bound by CPU,
 mostly building an app per test from `openapi.yaml`, so more workers than cores do not speed them up, and the backend refuses logins under about
 16 concurrent sessions (pawel-kow/EPP-server-docker#7), so 8 is the most it takes. Every worker makes its own
 `{random_name}`, so cases in different workers do not collide.
@@ -60,8 +61,8 @@ is ignored although the reply is 1000 (pawel-kow/epp#23), so the proxy answers 5
 An empty `org`, `voice` or `fax` clears it and reads back as an empty element. Contact cases prove absence with a PATCH
 `remove` that answers 422 (`02308`) because the property is gone, after the same removal answered 200 on a twin contact.
 
-A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait for
-`serverApproved`. The domain Info returns no status reason, so a domain PUT with a `reason` is a remove and add each time, and a contact PUT with one is too (the contact Info repeats the label, `contact_update/test7` proves only that the backend accepts it). A registrar that is not
+A pending transfer is approved by the server after 5 minutes (`domain_transfer/test13`, `contact_transfer/test18`).
+The domain Info returns no status reason, so a domain PUT with a `reason` is a remove and add each time, and a contact PUT with one is too (the contact Info repeats the label, `contact_update/test7` proves only that the backend accepts it). A registrar that is not
 the sponsor gets `2201` from the Info itself, so the refusal of a change of nothing by a non-sponsor is tested only in unit tests
 (`domain_update/test30` and `test31` pass on the backend's `2201`). A domain PUT without `registrant` removes it, the backend answers 200. Absence of the registrant is shown
 by a PATCH that removes it and `/status`, which forces the read path: 422 `02308` without a registrant, 200 with one (`domain_update/test32`). A domain create with `hostAttr` and no address is refused with `2003` (pawel-kow/epp#33), so the host
@@ -77,11 +78,11 @@ that does not match the name. Its IDN tables and the session table come from mig
 only when the database is first created: a database from before them answers `2306 Unknown idn:table` and needs them
 applied by hand.
 
-Its RFC 3915 periods are minutes (pawel-kow/EPP-server-docker#5): a domain deleted within 2 minutes of its create is
-purged at once, a later delete puts it in `redemptionPeriod`, and a request then holds it in `pendingRestore` for 3
-minutes. So a restore case creates its domain and deletes it after `delay_seconds` of 125, see `domain_restore/test12`
-and the draft examples. The backend sends no `rgp:upData`. A read of `pendingDelete` would need the 5-minute
-redemption period to pass, so it is tested only in unit tests.
+Its RFC 3915 periods are minutes (pawel-kow/EPP-server-docker#5), stated as the environment's periods (see
+[Waiting for a period](#waiting-for-a-period)): a domain deleted within its add grace period is purged at once, a
+later delete puts it in `redemptionPeriod`, and a request then holds it in `pendingRestore`. So a restore case
+deletes its domain after `wait` for `domainName.processes.create.add_grace_period`, see `domain_restore/test12`. The
+backend sends no `rgp:upData`.
 
 The backend refuses a renew period under one year (`2306`), so month periods are 12 or more. A wrong
 `expiryDate` is `2306`. A renew without `renewalPeriod` leaves the expiry as it was (pawel-kow/epp#25), so `test2` proves acceptance only.
@@ -123,10 +124,10 @@ logins, their passwords, the prefix of the handles the cases create (it starts w
 contact of each RegAcc for the General Request and Abuse roles, created beforehand outside the suite (RPP cannot
 create one yet, gap Q2). Of the run's limits: 4 sessions and 100 RRI requests a minute per RegAcc, so at most 4
 workers and 25 RPP requests a minute per registrar, paced by the runner. 10 failed LOGINs lock a user for an hour,
-so the failed logins are of an unknown user. The RGP is a day, so restores are tested in unit
-tests only. MTEST keeps what the cases create: they delete their domains, and the contacts stay (RRI cannot delete
+so the failed logins are of an unknown user. A RESTORE is one step and needs no wait; the RGP and the purge after it
+take up to two days, which a run waits for only with `RPP_TEST_MAX_WAIT` of `P2DT6H` or more. MTEST keeps what the cases create: they delete their domains, and the contacts stay (RRI cannot delete
 one), which the random part of the handle keeps apart. Every case runs on both backends unless it needs a function one of them lacks, which its `when`
-names: host objects, client statuses, `ds` records, registration periods, renew, transfers, restore within the run,
+names: host objects, client statuses, `ds` records, registration periods, renew, transfers, a restore report, a period longer than the run waits,
 contact delete, a contact's authInfo, a localization, a fax, a region, a changeable contact name, a person's name
 on an organisation, a readable domain authInfo, or the admin, tech and billing roles. Where the
 backends differ in what a case sends or expects, the case selects by the fact: a contact has a phone and a full
@@ -197,6 +198,24 @@ a success and a refusal at once: where servers decide differently, one case each
 fact that tells them apart (a server policy is an `env` fact, such as `contact.postcode.format_by_country`), and a twin that
 no known environment would run is not written.
 
+## Waiting for a period
+
+The lifecycle periods of a server are facts of its environment, ISO 8601 durations under the process they belong to:
+`domainName.processes.create.add_grace_period`, `…delete.redemption_period`, `…delete.pending_delete_period`,
+`…restore.pending_period`, `…transfer.pending_period`, `…renew.grace_period` and the others in the environment
+files, and `contact.processes.transfer.pending_period`. A period is the longest the transition takes there: a server
+that runs it by cron adds its interval, one stated as a time of day its longest case. `null` says the server has no
+such transition, `PT0S` that it is immediate.
+
+A step writes `"wait": "<path>"` (or a list of paths, which add up), and the runner sleeps for the period and a
+buffer of `RPP_TEST_WAIT_BUFFER` percent (default 10) before its request. A case names every period it waits for in
+its own `when` as `"wait.<path>": true`, which a load checks. That selector holds where the server has the
+transition and its wait is within `RPP_TEST_MAX_WAIT` (an ISO 8601 duration, default `PT10M`); otherwise the case is
+skipped with the wait it needs. Each wait is held to the maximum on its own. A case that runs nowhere is looked for
+without the maximum, so a case of a day is not reported as broken:
+`RPP_TEST_MAX_WAIT=P2DT6H RPP_TEST_ENV=rri-mtest pytest -k domain_lifecycle-test8` runs the RGP and the purge of
+MTEST. `domain_create/test44` (a `failed` domain deleted by DENIC after a day) has not been run yet.
+
 ## Tests without the backend
 
 Unit tests in `tests/unit/` inject test doubles through constructors:
@@ -251,8 +270,8 @@ update → verify) run against a Flask test client.
 - A step's `capture` maps a name to a dotted field of its response body, where a number picks a list element (`0.id`). Later steps write `{capture:name}`
   in their request or expected response, and `{capture:name+Ny}` for that timestamp N years later. It is how
   a renew sends the exact current `expiryDate`, see `domain_renew/test10`.
-- A step's `delay_seconds` waits that long before its request, for a registry period that must pass first. Each
-  wait adds to the run, so a case waits at most once, see `domain_restore/`.
+- A step's `wait` names a period of the environment, or a list of them that add up, which must pass before its
+  request; see [Waiting for a period](#waiting-for-a-period).
 - `fields`/`headers` support condition dicts (`not_null`,
   `datetime_format_utc_and_delta`, …) via `evaluate_condition`. `fields` keys are dotted
   paths, for example `provMetadata.crDate`.

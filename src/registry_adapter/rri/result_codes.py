@@ -16,6 +16,7 @@ CODES = {
     "63300062010": ResultCode.OBJECT_DOES_NOT_EXIST,  # RegAcc does not exist
     "63310062004": ResultCode.OBJECT_EXISTS,  # domain exists
     "56310082011": ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION,  # domain in redemption period
+    "66310082014": ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION,  # RESTORE of a domain not in redemption period
     "53000080009": ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION,  # locked
     "53000080011": ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION,  # dispute
     "63370088701": ResultCode.INVALID_AUTHORIZATION_INFORMATION,  # AuthInfo does not match

@@ -153,7 +153,8 @@ def endpoint_test(client, case_sequence, sleep=time.sleep, credentials=None, pac
     Args:
         client: The Flask test client fixture.
         cases: A sequence of test steps as parameterized test case dictionaries.
-        sleep: Waits for a step's "delay_seconds" before its request, for registry periods that must pass.
+        sleep: Waits for a step's "delay_seconds" before its request, for registry periods that must pass (the
+            runner computes them from the step's `wait`; a case file does not write them).
         credentials: Replaces a `{auth:…}` header by the credential when the request is sent, so the case never
             holds one (`tests.helper.test_environment.Credentials`).
         pacer: Waits before a request of a registrar so its requests stay under the backend's limit.

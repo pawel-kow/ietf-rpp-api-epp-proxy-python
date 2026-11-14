@@ -1,6 +1,6 @@
 {
   "when": {
-    "env.domainName.processes.restore.within_run": true
+    "wait.domainName.processes.create.add_grace_period": true
   },
   "test_id": "test19-restore_query",
   "steps": [
@@ -145,7 +145,7 @@
       }
     },
     {
-      "delay_seconds": 125,
+      "wait": "domainName.processes.create.add_grace_period",
       "request": {
         "method": "DELETE",
         "url": "/domainNames/ex19-{random_name}.{tld}",
@@ -181,7 +181,19 @@
         },
         "body": {
           "@type": "restoreProcess",
-          "restoreStatus": "pendingRestore"
+          "restoreStatus": {
+            "select": [
+              {
+                "when": {
+                  "profile.domainName.processes.restore.report_supported": true
+                },
+                "then": "pendingRestore"
+              },
+              {
+                "then": "restored"
+              }
+            ]
+          }
         }
       }
     },
@@ -196,12 +208,33 @@
         }
       },
       "response": {
-        "status": 200,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "restoreProcess",
-          "restoreStatus": "pendingRestore"
-        }
+        "select": [
+          {
+            "when": {
+              "profile.domainName.processes.restore.report_supported": true
+            },
+            "then": {
+              "status": 200,
+              "content_type": "application/rpp+json",
+              "body": {
+                "@type": "restoreProcess",
+                "restoreStatus": "pendingRestore"
+              }
+            }
+          },
+          {
+            "then": {
+              "status": 404,
+              "content_type": "application/problem+json",
+              "headers": {
+                "RPP-Code": "02303"
+              },
+              "body": {
+                "type": "urn:ietf:params:rpp:error"
+              }
+            }
+          }
+        ]
       }
     }
   ]

@@ -37,16 +37,32 @@ facts:
       foreign_supported: false         # a domain cannot name a contact of another registrar
     dns:
       dnskey_supported: false          # secDNS takes DS records only, no DNSKEY (RFC 5910 §4)
+    # Periods are ISO 8601 durations, the longest a transition takes (null: the server has none). They are the RGP_*
+    # and TRANSFER_* minutes of the server (EPP-server-docker#5); a cron job runs the transitions every minute, so
+    # one it runs is a minute longer than its setting.
     processes:
       create:
         success_status:                # what a domain reads with right after its create: one of these
           - ok
         failed_dns_status: null        # the name servers are not checked
+        failed_dns_period: null
+        add_grace_period: PT2M         # a delete within it purges the domain; checked by the delete itself
+      renew:
+        grace_period: PT6M
+        expiry_grace_period: PT10M     # an expired domain goes to redemptionPeriod (auto-renew is off)
+      transfer:
+        pending_period: PT6M           # a pending transfer is approved by the server (serverApproved)
+        grace_period: PT8M
       delete:
         readable_after: false          # a domain deleted right after its create is purged, not read in redemption
+        redemption_period: PT6M        # then pendingDelete
+        pending_delete_period: PT5M    # then purged
       restore:
-        within_run: true               # the RGP periods are minutes (EPP-server-docker#5)
+        pending_period: PT4M           # a pendingRestore without a report goes back to redemptionPeriod
   contact:
+    processes:
+      transfer:
+        pending_period: PT6M           # a pending transfer is approved by the server (serverApproved)
     id:
       max_length: 16
     name:

@@ -90,6 +90,7 @@ def test_a_deleted_domain_reads_with_what_rri_shows():
     ("63200020603", ResultCode.AUTHORIZATION_ERROR),
     ("63310062004", ResultCode.OBJECT_EXISTS),
     ("53000000012", ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION),
+    ("66310082014", ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION),  # RESTORE of an active domain, like EPP's 2304
     ("63299999999", ResultCode.PARAMETER_VALUE_POLICY_ERROR),
     ("53999999999", ResultCode.COMMAND_FAILED),
     ("83000000004", ResultCode.COMMAND_FAILED),

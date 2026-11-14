@@ -1,6 +1,6 @@
 {
   "when": {
-    "env.domainName.processes.restore.within_run": true
+    "wait.domainName.processes.create.add_grace_period": true
   },
   "test_id": "test16-restore_request",
   "steps": [
@@ -145,7 +145,7 @@
       }
     },
     {
-      "delay_seconds": 125,
+      "wait": "domainName.processes.create.add_grace_period",
       "request": {
         "method": "DELETE",
         "url": "/domainNames/ex16-{random_name}.{tld}",
@@ -178,7 +178,19 @@
         "content_type": "application/rpp+json",
         "body": {
           "@type": "restoreProcess",
-          "restoreStatus": "pendingRestore"
+          "restoreStatus": {
+            "select": [
+              {
+                "when": {
+                  "profile.domainName.processes.restore.report_supported": true
+                },
+                "then": "pendingRestore"
+              },
+              {
+                "then": "restored"
+              }
+            ]
+          }
         }
       }
     }

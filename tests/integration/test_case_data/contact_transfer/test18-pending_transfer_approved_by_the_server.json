@@ -1,0 +1,115 @@
+{
+  "when": {
+    "wait.contact.processes.transfer.pending_period": true
+  },
+  "test_id": "test18-pending_transfer_approved_by_the_server",
+  "description": "A contact transfer nobody approves or rejects is approved by the server when its pending period ends.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:C18}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "John Doe"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "locality",
+                    "value": "Anytown"
+                  }
+                ],
+                "countryCode": "US"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "foo@example.com"
+              }
+            }
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:C18}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts/{handle:a:C18}/processes/transferProcesses",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=UGFzc3dvcmQxIUA="
+        },
+        "body_json": {
+          "@type": "transferProcess",
+          "transferDir": "pull"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "transferProcess",
+          "trStatus": "pending",
+          "transferDir": "pull",
+          "reqClientId": "{regacc:b}",
+          "actClientId": "{regacc:a}"
+        },
+        "headers": {
+          "RPP-Code": "01001"
+        }
+      }
+    },
+    {
+      "wait": "contact.processes.transfer.pending_period",
+      "request": {
+        "method": "GET",
+        "url": "/contacts/{handle:a:C18}",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "provMetadata": {
+            "spClientId": "{regacc:b}"
+          }
+        }
+      }
+    }
+  ]
+}

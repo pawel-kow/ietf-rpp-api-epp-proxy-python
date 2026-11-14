@@ -3,7 +3,7 @@ import base64
 import pytest
 
 from tests.helper.profiles import EPP_PROFILE
-from tests.helper import selectors
+from tests.helper import durations, selectors
 from tests.helper.one_of import OneOf
 from tests.helper.pacer import Pacer
 from tests.helper.recursive_compare_existing import recusive_compare_existing
@@ -183,3 +183,68 @@ def test_one_of_takes_any_of_its_entries_case_blind():
     recusive_compare_existing("c", "$", [{"@type": "domainStatus", "label": "inactive", "due": "x"}], expected, False)
     with pytest.raises(AssertionError, match="does not match"):
         recusive_compare_existing("c", "$", [{"@type": "domainStatus", "label": "ok"}], expected, False)
+
+
+@pytest.mark.parametrize("duration, expected", [
+    ("PT2M", 120), ("PT1M30S", 90), ("P1D", 86400), ("P1DT14H", 136800), ("P1W", 604800), ("PT0S", 0),
+])
+def test_iso_durations_are_seconds(duration, expected):
+    assert durations.seconds(duration) == expected
+
+
+@pytest.mark.parametrize("duration", ["P", "PT", "P1M", "P1Y", "PT1.5M", "2M", "P1DT", None])
+def test_a_duration_without_a_fixed_length_is_refused(duration):
+    with pytest.raises(ValueError):
+        durations.seconds(duration)
+
+
+def test_the_run_waits_ten_minutes_and_ten_percent_unless_told_otherwise():
+    assert durations.max_wait({}) == 600
+    assert durations.buffer_percent({}) == 10
+    assert durations.max_wait({"RPP_TEST_MAX_WAIT": "P2D"}) == 172800
+    assert durations.buffer_percent({"RPP_TEST_WAIT_BUFFER": "25"}) == 25
+
+
+PERIODS = {"domainName": {"processes": {"create": {"add_grace_period": "PT2M"},
+                                        "delete": {"redemption_period": "P1DT14H"},
+                                        "transfer": {"pending_period": None}}}}
+
+
+def test_a_wait_holds_within_the_longest_wait_of_the_run():
+    run = Facts(EPP_PROFILE, PERIODS, max_wait=600, buffer_percent=10)
+
+    assert selectors.holds({"wait.domainName.processes.create.add_grace_period": True}, run)
+    assert run.wait_seconds("domainName.processes.create.add_grace_period") == 132
+    assert selectors.unmet({"wait.domainName.processes.delete.redemption_period": True}, run) == [
+        "wait.domainName.processes.delete.redemption_period needs 150480 s, the run waits at most 600 s "
+        "(RPP_TEST_MAX_WAIT)"]
+    assert selectors.holds({"wait.domainName.processes.delete.redemption_period": True},
+                           Facts(EPP_PROFILE, PERIODS, max_wait=None))
+
+
+def test_a_case_does_not_run_where_the_server_lacks_the_transition_it_waits_for():
+    run = Facts(EPP_PROFILE, PERIODS, max_wait=600)
+
+    assert selectors.unmet({"wait.domainName.processes.transfer.pending_period": True}, run) == [
+        "wait.domainName.processes.transfer.pending_period: the server has no such transition"]
+
+
+@pytest.mark.parametrize("case", [
+    {"steps": [{"wait": "domainName.processes.create.add_grace_period", "request": {}, "response": {}}]},
+    {"when": {"wait.domainName.processes.create.add_grace_period": True},
+     "steps": [{"wait": "domainName.processes.delete.redemption_period", "request": {}, "response": {}}]},
+    {"steps": [{"delay_seconds": 125, "request": {}, "response": {}}]},
+    {"when": {"wait.domainName.processes.create.add_grace_period": False}, "steps": []},
+    {"when": {"wait.domainName.nope": True}, "steps": []},
+])
+def test_a_case_names_the_waits_it_relies_on(case):
+    with pytest.raises(SelectorError):
+        selectors.check(case, Facts(EPP_PROFILE, PERIODS))
+
+
+def test_a_case_that_selects_its_waits_is_accepted():
+    selectors.check({"when": {"wait.domainName.processes.create.add_grace_period": True,
+                              "wait.domainName.processes.delete.redemption_period": True},
+                     "steps": [{"wait": ["domainName.processes.create.add_grace_period",
+                                         "domainName.processes.delete.redemption_period"],
+                                "request": {}, "response": {}}]}, Facts(EPP_PROFILE, PERIODS))
