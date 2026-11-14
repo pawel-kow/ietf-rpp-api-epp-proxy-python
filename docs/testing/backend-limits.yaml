@@ -33,6 +33,7 @@
 schema: rpp-backend-limits/0.1
 status: draft
 generated: 2026-11-12
+updated: 2026-11-14
 
 backends:
   epp-docker:
@@ -135,8 +136,9 @@ domainName:
       expected: "422 02306"
       source: doc
       ref: "§5.2 GeneralRequest, AbuseContact"
-    probe: [limits_domain/test17-five_tech_contacts, limits_domain/test18-six_tech_contacts, limits_domain/test19-sixth_tech_contact_by_update, limits_domain/test20-second_abuse_contact]
-    verified: {epp-docker: "passed except defect pawel-kow/epp#29", rri-mtest: "not run: test20 needs two different REQUEST handles, MTEST has one"}
+    duplicate: {rpp: "open", epp-docker: "no reply to a contact named twice in a role (pawel-kow/epp#32)"}
+    probe: [limits_domain/test17-five_tech_contacts, limits_domain/test18-six_tech_contacts, limits_domain/test19-sixth_tech_contact_by_update, limits_domain/test20-second_abuse_contact, limits_domain/test55-same_tech_contact_twice]
+    verified: {epp-docker: "passed except defects pawel-kow/epp#29, pawel-kow/epp#32", rri-mtest: "not run: test20 needs two different REQUEST handles, MTEST has one"}
   - path: /contacts/*/label
     kind: enum
     rpp: {defined: false, gap: "open string, spec-issues.md Contact labels"}
@@ -157,7 +159,8 @@ domainName:
       source: code
       ref: "command-create.cgi hostObj_list->size() > 13, command-update.cgi same on the add list"
     rri-mtest: {note: "no host objects: nameservers answer 501 02102 (domain_lifecycle/test6); see /dns/records ns", source: code}
-    probe: [limits_domain/test22-thirteen_nameservers, limits_domain/test23-fourteen_nameservers, limits_domain/test24-fourteenth_nameserver_by_update]
+    duplicate: {rpp: "open", epp-docker: "2302 Duplicate nameserver, 409 02302"}
+    probe: [limits_domain/test22-thirteen_nameservers, limits_domain/test23-fourteen_nameservers, limits_domain/test24-fourteenth_nameserver_by_update, limits_domain/test56-same_nameserver_twice]
     verified: {epp-docker: "passed except defect pawel-kow/epp#29", rri-mtest: "n/a"}
 
   - path: /dns/records
@@ -166,7 +169,9 @@ domainName:
     rpp: {defined: false}
     epp-docker: {max: 13, note: "domain:hostAttr, stored as host objects", over: 2306, source: code}
     rri-mtest: {min: 2, max: 13, over: 53300102920, expected: "422 02306", note: "a class-5 code: the proxy answers 500 02400 (#139, seen on MTEST for 1 and 14)", source: doc, ref: "§5.2 Nserver, message 53300102920"}
-    probe: [limits_domain/test25-one_ns_record, limits_domain/test26-two_ns_records, limits_domain/test27-thirteen_ns_records, limits_domain/test28-fourteen_ns_records]
+    duplicate: {rpp: "open", rri-mtest: "taken, 201"}
+    update: {rri-mtest: "an update that keeps or adds name servers which do not serve the zone is refused, 53300102912 (class 5, #139)"}
+    probe: [limits_domain/test25-one_ns_record, limits_domain/test26-two_ns_records, limits_domain/test27-thirteen_ns_records, limits_domain/test28-fourteen_ns_records, limits_domain/test57-same_ns_record_twice]
     verified: {epp-docker: "n/a", rri-mtest: "passed except defect #139"}
   - path: /dns/records
     kind: count
@@ -180,7 +185,7 @@ domainName:
     kind: count
     what: all dnsentry together
     rpp: {defined: false}
-    rri-mtest: {max: 20, over: "XSD 83000000004", expected: "422 02306", source: xsd, ref: "domain-5.0.xsd dnsentry 1..20"}
+    rri-mtest: {max: 20, over: "XSD 83000000004", expected: "422 02306", note: "not reachable: 13 ns and 5 DNSKEY records are 18, and an Nsentry cannot go with a DNSKEY", source: xsd, ref: "domain-5.0.xsd dnsentry 1..20"}
     probe: []
     verified: {epp-docker: "n/a", rri-mtest: "n/a"}
   - path: /dns/records/*/type
@@ -199,26 +204,26 @@ domainName:
       digestType: {values: [1, 2, 3], note: "4 (SHA-384) refused: digest column varchar(64)", over: 2306}
       digest: {length_by_type: {1: 40, 2: 64, 3: 64}, charset: hex, over: 2306}
       count: {max: null}
-      duplicate_digest: {over: 2306}
+      duplicate_digest: {over: 2306, note: "also within one request: 422 02306 (limits_domain/test58)"}
       interface: {note: "key data interface refused 2306 (pawel-kow/epp#20)"}
       source: code
       ref: "lib/EPP/SecDNS.pm _parse_ds_data"
     rri-mtest: {note: "no ds input", source: doc}
-    probe: [domain_create/test22-invalid_ds_digest, limits_domain/test33-keytag_65535, limits_domain/test34-keytag_65536, limits_domain/test35-digest_type_4, limits_domain/test36-two_ds_records]
+    probe: [domain_create/test22-invalid_ds_digest, limits_domain/test33-keytag_65535, limits_domain/test34-keytag_65536, limits_domain/test35-digest_type_4, limits_domain/test36-two_ds_records, limits_domain/test58-same_ds_twice]
     verified: {epp-docker: "passed", rri-mtest: "n/a"}
   - path: /dns/records/*/rdata (dnskey)
     kind: range
     rpp: {defined: false}
     epp-docker: {flags: {min: 0, max: 65535}, protocol: {min: 0, max: 255}, algorithm: {min: 0, max: 255}, publicKey: {max: 255, charset: base64}, note: "only inside dsData; dnskey alone 2306", source: code}
-    rri-mtest: {flags: {values: [256, 257]}, protocol: {values: [3]}, algorithm: {values: [3, 5, 6, 7, 8, 10, 12, 13, 14]}, publicKey: {min: 30, max: 999, charset: "A-Za-z0-9-./+"}, count: {max: 20}, rule: "only with Nserver: a DNSKEY next to an Nsentry is refused with 66300048905 (MTEST)", source: doc, ref: "§3.6 dnskey-rule, §5.2 Dnskey"}
-    probe: [limits_domain/test37-dnskey_flags_256, limits_domain/test38-dnskey_algorithm_9]
+    rri-mtest: {flags: {values: [256, 257]}, protocol: {values: [3]}, algorithm: {values: [3, 5, 6, 7, 8, 10, 12, 13, 14]}, publicKey: {min: 30, max: 999, charset: "A-Za-z0-9-./+", rule: "a valid key of its algorithm, else 66300068807"}, count: {max: 5, over: "66300068807 too many dnskeys", expected: "422 02306", source: observed, note: "the doc names only the 20 dnsentry in all"}, rule: "only with Nserver: a DNSKEY next to an Nsentry is refused with 66300048905 (MTEST)", source: doc, ref: "§3.6 dnskey-rule, §5.2 Dnskey"}
+    probe: [limits_domain/test37-dnskey_flags_256, limits_domain/test38-dnskey_algorithm_9, limits_domain/test53-five_dnskeys, limits_domain/test54-six_dnskeys]
     verified: {epp-docker: "n/a", rri-mtest: "passed"}
   - path: /dns/controls
     kind: range
     rpp: {defined: partly, rule: "ttl and maxSigLifetime >= 1", gap: "no maximum"}
-    epp-docker: {maxSigLifetime: {min: 1, max: 2147483647, note: "server holds it; the proxy answers 501 02103 for any control"}, source: code, ref: "SecDNS.pm MAX_SIG_LIFE"}
+    epp-docker: {maxSigLifetime: {min: 1, max: 2147483647, note: "server holds it; the proxy answers 501 02102 for it and 501 02103 for ttl"}, source: code, ref: "SecDNS.pm MAX_SIG_LIFE"}
     rri-mtest: {note: "not supported", source: doc}
-    probe: [domain_create/test20-dns_controls_are_unsupported]
+    probe: [domain_create/test20-dns_controls_are_unsupported, domain_create/test39-max_sig_lifetime, domain_update/test64-patch_max_sig_lifetime]
     verified: {epp-docker: "passed", rri-mtest: "passed"}
 
   - path: /authInfo/authdata
@@ -283,7 +288,8 @@ contact:
     rpp: {defined: false}
     epp-docker: {client_values: [clientDeleteProhibited, clientTransferProhibited, clientUpdateProhibited], source: db}
     rri-mtest: {client_values: [], note: "ok is synthesised (gap Q14)", source: code}
-    probe: [limits_contact/test5-all_client_statuses]
+    duplicate: {rpp: "open", epp-docker: "taken, 200"}
+    probe: [limits_contact/test5-all_client_statuses, limits_contact/test27-status_twice]
     verified: {epp-docker: "passed", rri-mtest: "n/a"}
 
   - path: /contactInfo/name/full
@@ -291,7 +297,8 @@ contact:
     rpp: {defined: false, gap: "spec-issues.md Length of contact fields"}
     epp-docker: {min: 5, max: 255, over: truncates, note: "int form; pawel-kow/epp#21", source: code, ref: "command-create.cgi postalInfo_int_name {5,}, column varchar(255)"}
     rri-mtest: {min: 3, max: 255, rule: "not digits only, not specials only, not one repeated letter, not 5 identical in a row", immutable: true, source: doc, ref: "§5.1, §6.3"}
-    probe: [limits_contact/test8-name_at_minimum, limits_contact/test9-name_under_minimum, limits_contact/test6-name_of_255, limits_contact/test7-name_of_256]
+    charset: {epp-docker: "an apostrophe and a character outside the BMP are refused, 2005", rri-mtest: "an apostrophe is taken; digits only refused, 63400000001"}
+    probe: [limits_contact/test8-name_at_minimum, limits_contact/test9-name_under_minimum, limits_contact/test6-name_of_255, limits_contact/test7-name_of_256, contact_create/test31-apostrophe_in_name, contact_create/test32-name_of_digits, contact_create/test41-localized_name_outside_bmp]
     verified: {epp-docker: "passed except defect pawel-kow/epp#21", rri-mtest: "passed except defect #139"}
   - path: /contactInfo/name/full
     kind: charset
@@ -333,21 +340,21 @@ contact:
     rpp: {defined: false}
     epp-docker: {pattern: "^[A-Z][a-zA-Z-. ]{1,}$", max: 255, over: 2005, source: code}
     rri-mtest: {note: "no region, 501 (profile contact_region=False)", source: code}
-    probe: []
-    verified: {epp-docker: "n/a", rri-mtest: "n/a"}
+    probe: [contact_create/test28-region_lower_case]
+    verified: {epp-docker: "passed: refused 400 02005", rri-mtest: "n/a"}
   - path: /contactInfo/addresses/addr/components/*/value (kind postcode)
     kind: pattern
     rpp: {defined: false}
     epp-docker: {pattern: "^[A-Z0-9- ]{3,}$", max: 16, over: "2005, truncates over 16", note: "lower case letters are refused", source: code}
-    rri-mtest: {min: 1, max: 20, charset: "letters, digits, '-', space", rule: "DE 5 digits, AT and CH 4 digits", source: doc}
-    probe: [limits_contact/test14-postcode_of_16]
-    verified: {epp-docker: "passed", rri-mtest: "passed"}
+    rri-mtest: {min: 1, max: 20, charset: "letters, digits, '-', space", rule: "DE 5 digits, AT and CH 4 digits; required (XSD)", note: "a DE postcode of 4 digits is refused, 63400000004; lower case is taken", source: doc}
+    probe: [limits_contact/test14-postcode_of_16, contact_create/test29-postcode_lower_case, contact_create/test30-german_postcode_of_4_digits]
+    verified: {epp-docker: "passed: lower case refused 400 02005, 4 digits taken", rri-mtest: "passed"}
   - path: /contactInfo/addresses/addr/countryCode
     kind: enum
     rpp: {defined: true, rule: "ISO 3166-1 alpha-2; schema ^[A-Z]{2}$"}
     epp-docker: {values: "ISO 3166-1 list in command-create.cgi", over: 2005, source: code}
     rri-mtest: {values: "ISO 3166-1 alpha-2", source: doc}
-    probe: [limits_contact/test15-country_xx]
+    probe: [limits_contact/test15-country_xx, contact_create/test27-country_code_lower_case, contact_create/test40-without_country_code]
     verified: {epp-docker: "passed", rri-mtest: "passed"}
   - path: /contactInfo/emails/email/address
     kind: format
@@ -405,7 +412,7 @@ host:
     rpp: {defined: true, label: {max: 63}, total: {max: 253}, ref: "FQDN → RFC 1035 §2.3.4"}
     epp-docker: {label: {max: 63}, total: {max: 253}, pattern: "^([A-Z0-9]([A-Z0-9-]{0,61}[A-Z0-9])?\\.){1,125}[A-Z0-9]([A-Z0-9-]{0,61}[A-Z0-9])$", over: 2005, source: code}
     rri-mtest: {note: "no host objects; a name server host 1-254 characters (nserver-rule)", source: doc}
-    probe: [limits_host/test1-label_of_63, limits_host/test2-label_of_64, limits_host/test3-name_of_253, limits_host/test4-name_of_254]
+    probe: [limits_host/test1-label_of_63, limits_host/test2-label_of_64, limits_host/test3-name_of_253, limits_host/test4-name_of_254, host_create/test13-upper_case_name, host_create/test14-underscore_in_name]
     verified: {epp-docker: "passed", rri-mtest: "n/a"}
   - path: /dns/records (a, aaaa)
     kind: count
@@ -430,5 +437,5 @@ host:
     kind: count
     rpp: {defined: false}
     epp-docker: {client_values: [clientDeleteProhibited, clientUpdateProhibited], source: db}
-    probe: [limits_host/test11-both_client_statuses, limits_host/test12-status_twice]
+    probe: [limits_host/test11-both_client_statuses, limits_host/test12-status_twice, host_update/test46-patch_adds_unknown_status]
     verified: {epp-docker: "passed", rri-mtest: "n/a"}

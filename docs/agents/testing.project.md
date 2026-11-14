@@ -64,7 +64,7 @@ A pending transfer auto-approves after 5 minutes by cron, so a case cannot wait 
 `serverApproved`. The domain Info returns no status reason, so a domain PUT with a `reason` is a remove and add each time, and a contact PUT with one is too (the contact Info repeats the label, `contact_update/test7` proves only that the backend accepts it). A registrar that is not
 the sponsor gets `2201` from the Info itself, so the refusal of a change of nothing by a non-sponsor is tested only in unit tests
 (`domain_update/test30` and `test31` pass on the backend's `2201`). A domain PUT without `registrant` removes it, the backend answers 200. Absence of the registrant is shown
-by a PATCH that removes it and `/status`, which forces the read path: 422 `02308` without a registrant, 200 with one (`domain_update/test32`). A domain create with `hostAttr` and no address is refused with `2003`, so the host
+by a PATCH that removes it and `/status`, which forces the read path: 422 `02308` without a registrant, 200 with one (`domain_update/test32`). A domain create with `hostAttr` and no address is refused with `2003` (pawel-kow/epp#33), so the host
 objects are created with `nameservers` and a PUT with `ns` records follows (`domain_update/test29`).
 
 Info does not show `pendingTransfer` (#64), a completed transfer cannot be
@@ -137,8 +137,11 @@ are of the characters an RRI AuthInfo takes. Where a function exists on one back
 the other (`domain_update/test35` to `test37`, `domain_lifecycle/`).
 
 Behaviour of MTEST the cases depend on: every reply carries info `13000000011`; a new domain is `pendingCreate`, or
-`failed` when its name servers do not pass the predelegation check (the create still succeeds); an MX exchange must
-resolve; CREATE-AUTHINFO1 without an expiry gives one two days ahead (#134); handles come back in upper case and IPv6
+`failed` when its name servers do not pass the predelegation check (the create still succeeds, and the domain reads
+back `inactive` with a `due`); an update that keeps or adds such name servers is refused (`53300102912`), so a change
+of `ns` or `dnskey` records cannot succeed there and its cases expect the refusal; a DNSKEY must be a valid key, and a
+domain takes at most 5; an MX exchange must resolve; an address needs a postcode (`env.contact_postcode_required`);
+CREATE-AUTHINFO1 without an expiry gives one two days ahead (#134); handles come back in upper case and IPv6
 addresses uncompressed; the IDN repertoire holds `ñ`, which the `de` table of the EPP test server does not
 (`env.lgr_without_enye`); a read reusing a client transaction id is not refused, only a write would be
 (`env.cltrid_reuse_refused`); an `lgr` on an ASCII name is not refused, RRI takes no LGR (`env.lgr_on_ascii_refused`);
@@ -259,7 +262,11 @@ What the drafts define is the oracle; a limit they leave to the server is expect
 environment, and `values_cut_at_column` marks a server that stores a value cut instead of refusing it, where the cases
 over a column do not run. The EPP test server cuts strings (pawel-kow/epp#21) and phone extensions (pawel-kow/epp#31),
 breaks on a label of 61 to 63 characters under `.example` (pawel-kow/epp#30), and counts nameservers, contacts a role
-and host addresses per command, so an update can pass its limits (pawel-kow/epp#29). The limits and their sources are in [backend-limits.yaml](../testing/backend-limits.yaml),
+and host addresses per command, so an update can pass its limits (pawel-kow/epp#29). It sends no reply to a domain
+create that names one contact twice in a role (pawel-kow/epp#32), and refuses a `hostAttr` without addresses, also of
+an external host (pawel-kow/epp#33), so `ns` records cannot be added to a domain there. A duplicate the drafts leave
+open (a status, contact, nameserver, `ns` or DS record given twice) may also be taken, or refused with 409 (`02302`).
+The limits and their sources are in [backend-limits.yaml](../testing/backend-limits.yaml),
 the coverage of every field in [integration-test-review.md](../testing/integration-test-review.md).
 
 ## Isolating cases

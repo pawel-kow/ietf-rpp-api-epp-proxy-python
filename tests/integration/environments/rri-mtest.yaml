@@ -24,6 +24,7 @@ facts:
   failed_logins_lock: true
   lgr_on_ascii_refused: false      # an lgr on a name that is not an IDN is refused
   contact_removal_refused_by_registry: true  # the registry, not the proxy, refuses clearing a contact's name or email
+  contact_postcode_required: true   # an address needs a postcode
   # Limits that differ by server (docs/testing/backend-limits.yaml), for the limits_* cases
   values_cut_at_column: false   # a value longer than its column is stored cut, not refused
   limit_contact_id_length: 32
