@@ -10,9 +10,11 @@ Run from the repository root. `pyproject.toml` sets `pythonpath=src` and
 ```bash
 pytest -n 8                                             # all tests, in 8 workers (pytest-xdist)
 pytest                                                  # all tests, one at a time
-pytest tests/integration/test_from_file_definition.py   # the data-driven integration suite
+pytest tests/integration                                # the data-driven integration suite
+pytest tests/integration/test_case_data/domain_update   # single test group by its directory
 pytest -k domain_update                                 # single test group by substring
-pytest "tests/integration/test_from_file_definition.py::test_from_file_definition[domain_update-test1-simple_update]"  # one case by id
+pytest -k domain_update-test1-simple_update             # one case by <group>-<test_id>
+pytest tests/integration/test_case_data/domain_update/test1-simple_update.json  # one case by its file
 ```
 
 Run the full suite with `-n 8`, which takes about 15 minutes on 4 cores, most of it the cases that wait for the
@@ -244,9 +246,10 @@ Unit tests in `tests/unit/` inject test doubles through constructors:
 
 ## Test data format
 
-[tests/integration/test_from_file_definition.py](../../tests/integration/test_from_file_definition.py)
-auto-discovers every `*.json` under `tests/integration/test_case_data/<group>/` and
-parametrizes one test per file. Each file is a `steps` sequence (e.g. create →
+[tests/integration/conftest.py](../../tests/integration/conftest.py) collects every `*.json` under
+`tests/integration/test_case_data/<group>/` as one test, named by its `test_id` (the file name without `.json` by
+default), so the test tree follows the data directories. A file that cannot be loaded is still listed and fails. The
+runner is [file_cases.py](../../tests/integration/file_cases.py). Each file is a `steps` sequence (e.g. create →
 update → verify) run against a Flask test client.
 
 - Placeholders `{random_name}`, `{random_id_10}`, `{test_start}` (start of the case)

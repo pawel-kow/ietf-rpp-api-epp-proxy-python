@@ -1,3 +1,8 @@
+"""The data-driven integration cases: loading a case file and running it against the app under test.
+
+`conftest.py` of this directory collects every `test_case_data/<group>/<case>.json` as a pytest item, so the test tree
+follows the data folders; this module holds what those items run, and is not itself a test module.
+"""
 import datetime
 import json
 import os
@@ -16,6 +21,9 @@ from tests.helper.pacer import Pacer
 from tests.helper.test_environment import (
     REPOSITORY, Credentials, EnvironmentError, environment_names, load, replace_fact, replace_values, selected_name,
 )
+
+CASE_DATA = Path(__file__).parent / "test_case_data"
+GROUP_FILE = "_group.json"
 
 app.app.config.update({
         "TESTING": True,
@@ -42,21 +50,12 @@ all_facts = {name: selectors.Facts(env.profile, env.facts, None, durations.buffe
 all_facts[environment.name] = selectors.Facts(  # the app under test may be given another config by RPP_CONFIG_FILE
     facts.profile, facts.env_facts, None, facts.buffer_percent)
 
-# --- Test Client Fixture ---
-@pytest.fixture(scope='module')
-def client():
-    """Provides a test client for the Flask application."""
-    with app.test_client() as c:
-        yield c # The test client instance
-
 
 random_name = str(uuid.uuid4()) # Generate a random name for testing
 random_id_10 = str(uuid.uuid4())[:10]
 
-GROUP_FILE = "_group.json"
 
-
-def _natural_key(path: Path):
+def natural_key(path: Path):
     """Sort key that orders test2 before test10 (numeric-aware)."""
     return [int(part) if part.isdigit() else part.lower()
             for part in re.split(r"(\d+)", path.stem)]
@@ -67,83 +66,34 @@ def _read_json(path: Path):
         return json.load(f)
 
 
-def _collect_test_cases(root: Path):
+def load_group_when(group_dir: Path):
+    """The `when` of the group's `_group.json`, checked against every environment, or None without one.
+
+    Raises when the file cannot be read or names a fact no environment has; every case of the group then fails.
     """
-    Discover every *.json test-case file under ``root/<group>/`` and return a
-    list of case dicts.
+    if not (group_dir / GROUP_FILE).exists():
+        return None
+    group_when = _read_json(group_dir / GROUP_FILE)["when"]
+    for env_facts in [facts, *all_facts.values()]:
+        selectors.unmet(group_when, env_facts)
+    return group_when
 
-    The parametrized test id is ``<test_group>-<test_id>`` (``test_id`` comes
-    from inside each file). Files are visited in natural-numeric order so that
-    test2 lists before test10. ``_group.json`` is not a case: its ``when`` applies
-    to every case of the group.
 
-    Files that cannot be parsed are NOT silently dropped: a sentinel case is
-    emitted that fails loudly when run, so a broken file still shows up in the
-    listing instead of vanishing. A selector that names no fact is such a file.
+def load_case(path: Path, group_when):
+    """The case of a file, with its `test_group`, `test_id` and the `when` of its group.
+
+    Raises when the file cannot be read or a selector names no fact; the case then fails when run, so a broken file
+    still shows up instead of vanishing.
     """
-    cases: list[dict] = []
-    if not (root.exists() and root.is_dir()):
-        return cases
+    data = _read_json(path)
+    for env_facts in [facts, *all_facts.values()]:
+        selectors.check(data, env_facts)
+    data["test_group"] = path.parent.name
+    data.setdefault("test_id", path.stem)
+    if group_when is not None:
+        data["_group_when"] = group_when
+    return data
 
-    for subdir in sorted(root.iterdir(), key=lambda p: p.name.lower()):
-        if not subdir.is_dir():
-            continue
-        group_when = None
-        group_error = None
-        if (subdir / GROUP_FILE).exists():
-            try:
-                group_when = _read_json(subdir / GROUP_FILE)["when"]
-                for env_facts in [facts, *all_facts.values()]:
-                    selectors.unmet(group_when, env_facts)
-            except Exception as exc:  # noqa: BLE001 - surface, don't swallow
-                group_error = f"{GROUP_FILE}: {type(exc).__name__}: {exc}"
-        for json_file in sorted(subdir.glob("*.json"), key=_natural_key):
-            if json_file.name == GROUP_FILE:
-                continue
-            try:
-                if group_error:
-                    raise ValueError(group_error)
-                data = _read_json(json_file)
-                for env_facts in [facts, *all_facts.values()]:
-                    selectors.check(data, env_facts)
-            except Exception as exc:  # noqa: BLE001 - surface, don't swallow
-                cases.append({
-                    "test_group": subdir.name,
-                    "test_id": json_file.stem,
-                    "_load_error": f"{type(exc).__name__}: {exc}",
-                })
-                continue
-
-            data["test_group"] = subdir.name
-            data.setdefault("test_id", json_file.stem)
-            if group_when is not None:
-                data["_group_when"] = group_when
-            cases.append(data)
-
-    return cases
-
-
-test_cases = _collect_test_cases(Path("./tests/integration/test_case_data"))
-
-# Build the parametrize ids from <test_group>-<test_id>. Duplicate ids must not
-# be silently coalesced/dropped by pytest — instead, tag every case sharing a
-# duplicated id so it FAILS individually (see the sentinel check in the test),
-# while making the pytest id unique enough that both are still listed and run.
-_id_counts: dict[str, int] = {}
-for _case in test_cases:
-    _base_id = f'{_case["test_group"]}-{_case["test_id"]}'
-    _id_counts[_base_id] = _id_counts.get(_base_id, 0) + 1
-
-test_ids = []
-_seen_counts: dict[str, int] = {}
-for _case in test_cases:
-    _base_id = f'{_case["test_group"]}-{_case["test_id"]}'
-    if _id_counts[_base_id] > 1:
-        _case["_duplicate_id"] = _base_id
-        _seen_counts[_base_id] = _seen_counts.get(_base_id, 0) + 1
-        test_ids.append(f"{_base_id}#{_seen_counts[_base_id]}")
-    else:
-        test_ids.append(_base_id)
 
 def process_placeholders(json_data=dict|list|str|None, obj=None, started=None):
     """
@@ -194,14 +144,8 @@ def select(case):
     return {**{k: v for k, v in case.items() if k not in ("when", "_group_when")}, "steps": steps}
 
 
-# --- Test Function ---
-@pytest.mark.parametrize("case", test_cases, ids=test_ids) # type: ignore
-def test_from_file_definition(client, case):
-    if "_load_error" in case:
-        pytest.fail(f"Could not load test case file: {case['_load_error']}")
-    if "_duplicate_id" in case:
-        pytest.fail(f"Duplicate test id: {case['_duplicate_id']} "
-                    f"(two test-case files share <test_group>-<test_id>)")
+def run_case(case):
+    """Runs a loaded case in a test client of its own, or skips it where its selectors do not hold."""
     if all(unmet_case_selectors(case, env_facts) for env_facts in all_facts.values()):
         pytest.fail(f"The selectors skip this case in every environment ({', '.join(all_facts)}), so it never runs")
     unmet = unmet_case_selectors(case, facts)
@@ -209,5 +153,6 @@ def test_from_file_definition(client, case):
         pytest.skip(reason=f"skipped in {environment.name}: {'; '.join(unmet)}")
     # The selectors are resolved first, then the placeholders, then the captures.
     # {test_start} is the start of this case, so the time windows in the data do not depend on suite length.
-    return endpoint_test(client, process_placeholders(select(case), started=datetime.datetime.now(datetime.UTC)),
-                         credentials=credentials, pacer=pacer)
+    with app.test_client() as client:
+        endpoint_test(client, process_placeholders(select(case), started=datetime.datetime.now(datetime.UTC)),
+                      credentials=credentials, pacer=pacer)
