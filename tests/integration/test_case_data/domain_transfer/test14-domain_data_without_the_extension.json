@@ -1,0 +1,50 @@
+{
+  "test_id": "test14-domain_data_without_the_extension",
+  "description": "Without the rri extension, the domain data of a transfer request are undeclared members (json §4.9.1).",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/t14-{random_name}.{tld}/processes/transferProcesses",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=QWJjMjM0NTY3OA=="
+        },
+        "body_json": {
+          "@type": "domainTransferProcess",
+          "transferDir": "pull",
+          "registrant": {
+            "@type": "contact",
+            "id": "{handle:b:T14}"
+          },
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.10"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02001"
+        }
+      }
+    }
+  ]
+}

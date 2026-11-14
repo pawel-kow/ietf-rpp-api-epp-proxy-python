@@ -1,0 +1,209 @@
+{
+  "test_id": "test6-foreign_contacts",
+  "description": "The contacts must belong to the gainer: the loser's holder is refused (63200020603).",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:X6}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:X6}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "x6-{random_name}.{tld}",
+          "registrant": {
+            "@type": "contact",
+            "id": "{handle:a:X6}"
+          },
+          "contacts": [
+            {
+              "label": "generalRequest",
+              "object": {
+                "@type": "contact",
+                "id": "{gen_req:a}"
+              }
+            },
+            {
+              "label": "abuse",
+              "object": {
+                "@type": "contact",
+                "id": "{abuse:a}"
+              }
+            }
+          ],
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.10"
+                }
+              }
+            ]
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc2345678"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "domainName",
+          "name": "x6-{random_name}.{tld}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/x6-{random_name}.{tld}/processes/transferProcesses",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=QWJjMjM0NTY3OA=="
+        },
+        "body_json": {
+          "@type": "domainTransferProcess",
+          "registrant": {
+            "@type": "contact",
+            "id": "{handle:a:X6}"
+          },
+          "contacts": [
+            {
+              "label": "generalRequest",
+              "object": {
+                "@type": "contact",
+                "id": "{gen_req:b}"
+              }
+            },
+            {
+              "label": "abuse",
+              "object": {
+                "@type": "contact",
+                "id": "{abuse:b}"
+              }
+            }
+          ],
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.10"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 403,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02201"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/x6-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    }
+  ]
+}

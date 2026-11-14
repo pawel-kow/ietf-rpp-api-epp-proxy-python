@@ -142,7 +142,8 @@ within 5 minutes may be refused. Two runs at once (a terminal and VS Code) share
 so the failed logins are of an unknown user. A RESTORE is one step and needs no wait; the RGP and the purge after it
 take up to two days, which a run waits for only with `RPP_TEST_MAX_WAIT` of `P2DT6H` or more. MTEST keeps what the cases create: they delete their domains, and the contacts stay (RRI cannot delete
 one), which the random part of the handle keeps apart. Every case runs on both backends unless it needs a function one of them lacks, which its `when`
-names: host objects, client statuses, `ds` records, registration periods, renew, transfers, a restore report, a period longer than the run waits,
+names: host objects, client statuses, `ds` records, registration periods, renew, a transfer process (`domain_transfer/`, which RRI's
+immediate CHPROV has not; `domain_transfer_ext/` is its counterpart with the `rri` extension, run on MTEST only), contact transfers, a restore report, a period longer than the run waits,
 contact delete, a contact's authInfo, a localization, a fax, a region, a changeable contact name, a person's name
 on an organisation, a readable domain authInfo, or the admin, tech and billing roles. Where the
 backends differ in what a case sends or expects, the case selects by the fact: a contact has a phone and a full

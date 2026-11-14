@@ -69,7 +69,7 @@ Legend for **Fit**: ✅ direct; 🟡 maps, with new orchestration or partial dat
 | domain CREATE-AUTHINFO1 (§6.15) | `authInfo` in domain create, PUT and PATCH | 🟡 | The proxy hashes `authdata` (SHA-256, hex) and sends `AuthInfoHash`. Lifetime is ≤ 30 days, see Q4. |
 | domain DELETE-AUTHINFO1 (§6.16) | removing `authInfo` in PUT and PATCH; replacing it (delete, then create) | 🟡 | Only one AuthInfo1 per domain, so a change is DELETE then CREATE, which is not atomic. |
 | domain CREATE-AUTHINFO2 (§6.17) | — | ⛔ | Any registrar asks DENIC to post a code to the holders. Nothing in RPP fits, see Q9. |
-| domain CHPROV (§6.18) | `domainNameTransferProcesses_transferCreate` (pull, with `RPP-Authorization`) | 🟠 | Immediate. Needs complete domain data with the gainer's handles, see §4.3 and Q3. |
+| domain CHPROV (§6.18) | `domainNameTransferProcesses_transferCreate` (pull, with `RPP-Authorization`) | 🟡 | Immediate. Needs complete domain data with the gainer's handles, which the `rri` request extension carries, see §4.3 and Q3. |
 | regacc INFO (§6.19) | `organisations_read`? | ⛔ | Public registrar data. `/organisations` is 501 in the proxy today, see Q10. |
 | QUEUE-READ (§6.20) | `messages_query`, `messages_read` | ✅ | Oldest message. `Msgcnt` → `RPP-Queue-Size`. The `msgType` filter could serve the RPP `type` parameter, see §3.4. |
 | QUEUE-DELETE (§6.21) | `messages_delete` | ✅ | Only the oldest message can be deleted (`63650063607`), as with EPP `poll ack`. |
@@ -278,9 +278,9 @@ Options (Q3):
   (without handles) and the DNS data. It creates new contacts in the gainer's RegAcc, with generated handles, then
   sends CHPROV. This leaves contacts behind if CHPROV fails, and it re-registers personal data the gainer may not
   be permitted to process (NIS2 verification). Not recommended without the maintainer's agreement.
-- **B. A request extension.** The client passes `registrant`, `contacts` and `dns`/`nameservers` with the transfer
-  request. That is not in the RPP drafts, so it goes to [spec-issues.md](../../.spec/spec-issues.md) and into a
-  profile of its own.
+- **B. A request extension.** The client passes `registrant`, `contacts` and `dns` with the transfer request. That is
+  not in the RPP drafts, so it is the `rri` extension, described in
+  [spec-rri-extension.md](../../.spec/spec-rri-extension.md). **Chosen by the maintainer (#133).**
 - **C. 501.** Transfer is not available over RPP on RRI.
 
 Whichever option is chosen, the result is immediate. That matches the existing "completed at once" path of
@@ -390,7 +390,7 @@ Each needs the maintainer's decision before implementation.
 |---|---|---|
 | Q1 | How to read and write domains with 2–5 holders, given one RPP `registrant`. | First holder as `registrant`, the others as `contacts` labelled `registrant`. Spec issue. |
 | Q2 | Contact labels for GeneralRequest and Abuse, and how a `REQUEST` contact (URI template) appears in RPP. | Labels `generalRequest` and `abuse`. A REQUEST contact is a Card with only one `links` entry. Spec issue. |
-| Q3 | Transfer (CHPROV): proxy-built data (A), a request extension (B), or 501 (C). | C first, then B through the spec. |
+| Q3 | Transfer (CHPROV): proxy-built data (A), a request extension (B), or 501 (C). | B, the `rri` extension ([spec-rri-extension.md](../../.spec/spec-rri-extension.md)). Confirmed by the maintainer (#133). |
 | Q4 | AuthInfo1: lifetime (always 30 days, or from a client value), and whether the proxy checks the 8–16 character charset itself. | Default 30 days. Check up front → 422 `2306`. |
 | Q5 | RPP status for `failed` and for DISPUTE. | `failed` → `inactive` with `due`. DISPUTE left out. |
 | Q6 | Restore: one-step RESTORE on `restoreProcesses_create`, and what to do with a `restoreReport`. | RESTORE when no report is given. With a report → 501. |

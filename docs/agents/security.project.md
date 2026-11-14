@@ -6,7 +6,8 @@ Generic rules are in [security.md](security.md).
 
 - HTTP Basic credentials are passed straight through as the EPP `clID`/`pw`, or the RRI LOGIN `user`/`password`.
   They are the registrar's registry credentials, so treat them as high-value secrets. The RRI LOGIN is sent with
-  `loggable=False`, so `TCPClient` does not print it.
+  `loggable=False`, so `TCPClient` does not print it. A CHPROV holds the domain's AuthInfo in plaintext and is sent
+  with `loggable=False` too.
 - RRI locks a user for an hour after 10 failed LOGINs, and every HTTP Basic attempt with a wrong password for a user
   without a session costs one: anyone who can reach the proxy can lock a RegAcc out. Accepted as a known risk for
   now (docs/rri/refactoring.md §7). The integration suite never sends a wrong password for a test account: its

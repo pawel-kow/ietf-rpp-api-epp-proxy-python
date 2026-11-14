@@ -1,0 +1,333 @@
+{
+  "test_id": "test1-transfer_moves_the_domain_at_once",
+  "description": "The gainer states its holder, REQUEST contacts and DNS data with the AuthInfo: the domain is its own at once, with no process to query (.spec/spec-rri-extension.md).",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:X1}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:X1}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "x1-{random_name}.{tld}",
+          "registrant": {
+            "@type": "contact",
+            "id": "{handle:a:X1}"
+          },
+          "contacts": [
+            {
+              "label": "generalRequest",
+              "object": {
+                "@type": "contact",
+                "id": "{gen_req:a}"
+              }
+            },
+            {
+              "label": "abuse",
+              "object": {
+                "@type": "contact",
+                "id": "{abuse:a}"
+              }
+            }
+          ],
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.10"
+                }
+              }
+            ]
+          },
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc2345678"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "domainName",
+          "name": "x1-{random_name}.{tld}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:b:X1}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact",
+          "id": "{handle:b:X1}"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/x1-{random_name}.{tld}/processes/transferProcesses",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=QWJjMjM0NTY3OA=="
+        },
+        "body_json": {
+          "@type": "domainTransferProcess",
+          "transferDir": "pull",
+          "registrant": {
+            "@type": "contact",
+            "id": "{handle:b:X1}"
+          },
+          "contacts": [
+            {
+              "label": "generalRequest",
+              "object": {
+                "@type": "contact",
+                "id": "{gen_req:b}"
+              }
+            },
+            {
+              "label": "abuse",
+              "object": {
+                "@type": "contact",
+                "id": "{abuse:b}"
+              }
+            }
+          ],
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.10"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "domainTransferProcess",
+          "transferDir": "pull",
+          "trStatus": "serverApproved",
+          "reqClientId": "{regacc:b}",
+          "actClientId": "{regacc:b}"
+        },
+        "fields": {
+          "requestDate": {
+            "type": "not_null"
+          },
+          "actionDate": {
+            "type": "not_null"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/x1-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "@type": "domainName",
+          "name": "x1-{random_name}.{tld}",
+          "registrant": {
+            "id": "{handle:b:X1}"
+          },
+          "provMetadata": {
+            "spClientId": "{regacc:b}"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/x1-{random_name}.{tld}/processes/transferProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02101"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/x1-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    }
+  ]
+}

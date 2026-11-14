@@ -34,22 +34,29 @@ for its integration run), in the worktree `.claude/worktrees/133-rri-transfer`.
   answers the synthesised `DomainTransferProcess`. A request without the AuthInfo is refused before a command
   (`2003`). `53370080005` → `2003`.
 - Discovery: `Discovery.extensions`, rendered as `extension.read`.
-- Tests: the existing EPP-style transfer cases are gated on `profile.extensions` not containing `rri`; a new group of
-  RRI transfer cases (success, wrong AuthInfo, missing data, own domain).
+- Tests: the existing EPP-style transfer cases are gated on `profile.extensions` not containing `rri`; a new group
+  `domain_transfer_ext/` of RRI transfer cases (success, wrong AuthInfo, no AuthInfo, missing data, own domain,
+  foreign contacts); `domain_transfer/test14` pins the 400 of the members without the extension.
+- Extension ids are checked at start (`create_app`). The extension's url is its schema on GitHub (`$id`).
 
 ## Tasks
 
-- [~] T1 Plan
-- [ ] T2 Extension schema, `.spec/spec-rri-extension.md`, copy_models.sh, validator composition (unit tests first)
-- [ ] T3 Profile leaf `extensions`, rri.yaml transfer `request`
-- [ ] T4 Mapper + model (`DomainTransfer.domain`), handler passes the profile (unit tests first)
-- [ ] T5 RRI CHPROV command + gateway + result code (unit tests first)
-- [ ] T6 Discovery `extensions` (unit tests first)
-- [ ] T7 Integration cases: gate the EPP transfer group, new RRI transfer cases
-- [ ] T8 Docs: gap-analysis Q3/§4.3, architecture.project.md, testing.project.md
-- [ ] T9 Checks: lint-imports, `pytest -n 8` (EPP), MTEST run
+- [x] T1 Plan
+- [x] T2 Extension schema, `.spec/spec-rri-extension.md`, copy_models.sh, validator composition (unit tests first)
+- [x] T3 Profile leaf `extensions`, rri.yaml transfer `request`
+- [x] T4 Mapper + model (`DomainTransfer.domain`), handler passes the profile (unit tests first)
+- [x] T5 RRI CHPROV command + gateway + result code (unit tests first)
+- [x] T6 Discovery `extensions` (unit tests first)
+- [x] T7 Integration cases: gate the EPP transfer group, new RRI transfer cases (`domain_transfer_ext/`)
+- [x] T8 Docs: gap-analysis Q3/§4.3, architecture.project.md, testing.project.md, security.project.md
+- [~] T9 Checks: lint-imports, `pytest -n 8` (EPP), MTEST run
 - [ ] T10 Draft PR
 
 ## Findings
+
+- MTEST takes CHPROV on a domain still `pendingCreate` (`domain_transfer_ext/test1`, 2026-11-14).
+- A foreign contact in CHPROV is `63200020603` (403 `02201`), the own domain `63380063209` (409 `02002`).
+- A domain label longer than the XSD allows (66 characters with the TLD) is an RRI schema failure, 500 (`02400`):
+  the group name is part of `{random_name}`, so a group name over about 20 characters breaks RRI cases.
 
 ## Open questions
