@@ -30,7 +30,7 @@ for its integration run), in the worktree `.claude/worktrees/133-rri-transfer`.
   without it, as today (an undeclared member is 400).
 - `core.model.domain.DomainTransfer.domain: Domain | None`: the domain's data after the transfer, for a backend whose
   transfer states it.
-- RRI: `commands/domain/chprov.py` (`rri_domain_chprov`), `RriDomainGateway.transfer` builds the `DomainState` and
+- RRI: `rri_domain_chprov` in `commands/domain/update.py` (with UPDATE and CHHOLDER), `RriDomainGateway.transfer` builds the `DomainState` and
   answers the synthesised `DomainTransferProcess`. A request without the AuthInfo is refused before a command
   (`2003`). `53370080005` → `2003`.
 - Discovery: `Discovery.extensions`, rendered as `extension.read`.
