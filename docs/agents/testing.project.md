@@ -12,6 +12,7 @@ pytest -n 4                                             # all tests, in 4 worker
 pytest                                                  # all tests, one at a time
 RPP_TEST_ENV=epp-docker pytest -n 8                     # the cases of one environment only, the others skipped
 pytest tests/integration                                # the data-driven integration suite
+pytest -n 4 -m smoke                                    # the smoke suite, in every environment
 pytest -k domain_update                                 # single test group by substring, in every environment
 pytest -k "rri-mtest and domain_update"                 # single test group in one environment
 pytest -k domain_update-test1-simple_update             # one case by <group>-<test_id>
@@ -296,6 +297,11 @@ without it leaves the password alone and does not show it, so a GET that include
 
 To add a case, drop a new JSON file in the appropriate group dir. No Python changes
 are needed. Add `"skip": "reason"` at the top level to skip one.
+
+`"markers"` at the top level lists pytest markers of the case, each registered under `markers` in `pyproject.toml`
+(an unknown one fails the case). `smoke` marks the smoke suite, `pytest -n 4 -m smoke`, to run on every iteration:
+one happy path of each operation that runs on every backend, without a `wait`. A smoke case runs in every known
+environment, so a case some backend skips is not one.
 
 ## Status codes and the spec
 

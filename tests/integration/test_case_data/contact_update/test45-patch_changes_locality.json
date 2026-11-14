@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test45-patch_changes_locality",
   "description": "A PATCH replaces the locality component.",
   "steps": [

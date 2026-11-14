@@ -93,11 +93,19 @@ class Case(pytest.Item):
         self.run = run
         self.extra_keyword_matches.add(f"{self.path.parent.name}-{self.name}")
         self.failure = None  # why the case fails without running
+        try:
+            for marker in (case or {}).get("markers", []):  # registered in pyproject.toml, as --strict-markers requires
+                self.add_marker(marker)
+        except (Exception, pytest.fail.Exception) as exc:  # noqa: BLE001 - an unknown marker fails the case only
+            load_error = f"{type(exc).__name__}: {exc}"
         if load_error is not None:
             self.failure = f"Could not load test case file: {load_error}"
         elif file_cases.runs_nowhere(case):
             self.failure = (f"The selectors skip this case in every environment "
                             f"({', '.join(file_cases.environment_runs())}), so it never runs")
+        elif "smoke" in case.get("markers", []) and file_cases.skipped_somewhere(case):
+            self.failure = (f"A smoke case runs in every environment, the selectors skip it in "
+                            f"{', '.join(file_cases.skipped_somewhere(case))}")
         else:
             reason = file_cases.skip_reason(case, run)
             if reason is not None:

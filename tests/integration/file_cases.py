@@ -157,6 +157,11 @@ def runs_nowhere(case) -> bool:
     return all(unmet_case_selectors(case, run.unlimited_facts) for run in environment_runs().values())
 
 
+def skipped_somewhere(case) -> list[str]:
+    """The environments whose selectors skip the case, with the longest wait of the run."""
+    return [run.name for run in environment_runs().values() if unmet_case_selectors(case, run.facts)]
+
+
 def skip_reason(case, run: EnvironmentRun) -> str | None:
     """Why the case does not run in the environment, or None when it does."""
     if run.inactive_reason is not None:

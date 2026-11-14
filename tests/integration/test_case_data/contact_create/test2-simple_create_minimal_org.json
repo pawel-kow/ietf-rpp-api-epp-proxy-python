@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test2-simple_create_minimal_org",
   "steps": [
     {

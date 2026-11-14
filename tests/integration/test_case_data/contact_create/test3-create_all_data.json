@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test3-create_all_data",
   "steps": [
     {

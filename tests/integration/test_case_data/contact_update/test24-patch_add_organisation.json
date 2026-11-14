@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test24-patch_add_organisation",
   "steps": [
     {

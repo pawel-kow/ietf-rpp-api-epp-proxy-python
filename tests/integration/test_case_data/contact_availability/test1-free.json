@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test1-free",
   "steps": [
     {

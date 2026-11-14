@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test31-patch_adds_a_number",
   "steps": [
     {

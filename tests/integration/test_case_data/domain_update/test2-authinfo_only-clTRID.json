@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test2-authinfo_only-clTRID",
   "steps": [
     {
