@@ -2,7 +2,7 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.testing.pytestArgs": [
-        "-rP"
+        "-rsP"
     ],
     "testExplorer.useNativeTesting": true,
     "testExplorer.gutterDecoration": false,

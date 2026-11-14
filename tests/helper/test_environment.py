@@ -1,6 +1,7 @@
 """The test environment: one backend server the integration suite runs against (docs/rri/refactoring.md §5.3).
 
-It is chosen with `RPP_TEST_ENV` (default `epp-docker`) and described in `tests/integration/environments/<name>.yaml`.
+Each is described in `tests/integration/environments/<name>.yaml`, and a run tests every one, or those `RPP_TEST_ENV`
+names (comma-separated). The unit tests compose the app of the first one it names (default `epp-docker`).
 Credentials are not in the descriptor: it names the variables that hold them, which come from the process
 environment or from `.env` in the repository root. The backend profile, the TLD, the LGRs and the environment name
 are not in it either: they come from the config of the app under test, which the descriptor names.
@@ -59,8 +60,21 @@ def environment_names() -> list[str]:
     return sorted(p.stem for p in ENVIRONMENTS.glob("*.yaml"))
 
 
-def selected_name() -> str:
-    return os.getenv("RPP_TEST_ENV", DEFAULT_ENVIRONMENT)
+def selected_names(environ=None) -> list[str]:
+    """The environments `RPP_TEST_ENV` names, comma-separated, or every known one when it is unset."""
+    environ = os.environ if environ is None else environ
+    value = environ.get("RPP_TEST_ENV", "")
+    names = [name.strip() for name in value.split(",") if name.strip()]
+    for name in names:
+        _descriptor(name)  # an unknown name is an error that lists the known ones
+    return names or environment_names()
+
+
+def selected_name(environ=None) -> str:
+    """The environment whose config the app of the unit tests is composed with: the first `RPP_TEST_ENV` names."""
+    environ = os.environ if environ is None else environ
+    names = [name.strip() for name in environ.get("RPP_TEST_ENV", "").split(",") if name.strip()]
+    return names[0] if names else DEFAULT_ENVIRONMENT
 
 
 def _descriptor(name: str) -> dict:

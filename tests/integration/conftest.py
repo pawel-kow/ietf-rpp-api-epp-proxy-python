@@ -1,76 +1,114 @@
-"""Collects the data-driven cases as a tree that follows their files: `test_case_data/<group>/<case>.json` is a case.
+"""Collects the data-driven cases as a tree: `file_cases.py` › environment › group › case.
 
-A group directory reads its `_group.json` once and lists its files in natural order (test2 before test10). A file that
-cannot be loaded is still a case, which fails when run, so a broken file shows up instead of vanishing. The runner
-is in `file_cases.py`.
+Every case file (`test_case_data/<group>/<case>.json`) is a case in the branch of every test environment. A case
+whose selectors do not hold in an environment, or of an environment that is not selected or lacks a credential, is
+marked skipped there while collecting. A file that cannot be loaded, or a case that runs in no environment, is still
+listed and fails when run, so it does not vanish. The environment and group nodes are `pytest.Class` nodes, because
+that is what the VS Code test explorer nests. The runner is in `file_cases.py`.
+
+A case's path is its JSON file, so the editor opens it. VS Code runs a test as `<path>::<environment>::<group>::<case>`,
+so a case file named on the command line is collected as a tree of its own, of that one case; a run of a directory
+does not collect it, so no case runs twice.
 """
 from pathlib import Path
 
 import pytest
 
+CASE_TREE = Path(__file__).parent / "file_cases.py"
 CASE_DATA = Path(__file__).parent / "test_case_data"
 
 
-def pytest_collect_directory(path: Path, parent: pytest.Collector):
-    if path.parent == CASE_DATA:
-        return CaseGroup.from_parent(parent, path=path)
+def pytest_collect_file(file_path: Path, parent: pytest.Collector):
+    if file_path == CASE_TREE:
+        return CaseTree.from_parent(parent, path=file_path)
+    if (file_path.suffix == ".json" and file_path.parent.parent == CASE_DATA and file_path.name != "_group.json"
+            and parent.session.isinitpath(file_path)):
+        return CaseTree.from_parent(parent, path=file_path, only=file_path)
     return None
 
 
-class CaseGroup(pytest.Directory):
-    """A directory of cases: one group."""
+class CaseTree(pytest.File):
+    """The root: one branch per test environment. `only` is the one case file of a tree of a case file."""
+
+    def __init__(self, *, only=None, **kwargs):
+        super().__init__(**kwargs)
+        self.only = only
 
     def collect(self):
-        from tests.integration import file_cases  # loads the test environment, only when cases are collected
+        from tests.integration import file_cases  # loads the test environments, only when cases are collected
 
-        group_when, group_error = None, None
-        try:
-            group_when = file_cases.load_group_when(self.path)
-        except Exception as exc:  # noqa: BLE001 - surface, don't swallow
-            group_error = f"{file_cases.GROUP_FILE}: {type(exc).__name__}: {exc}"
-        for path in sorted(self.path.glob("*.json"), key=file_cases.natural_key):
-            if path.name != file_cases.GROUP_FILE:
-                yield CaseFile.from_parent(self, path=path, group_when=group_when, group_error=group_error)
+        for name, run in file_cases.environment_runs().items():
+            yield EnvironmentNode.from_parent(self, name=name, run=run, only=self.only)
 
 
-class CaseFile(pytest.File):
-    """A case file, which holds one case."""
+class _Node(pytest.Class):
+    """A branch of the tree with no Python class behind it."""
 
-    def __init__(self, *, group_when=None, group_error=None, **kwargs):
+    def _getobj(self):
+        return type(self.name, (), {})
+
+
+class EnvironmentNode(_Node):
+    def __init__(self, *, run, only, **kwargs):
         super().__init__(**kwargs)
-        self.group_when = group_when
-        self.group_error = group_error
+        self.run = run
+        self.only = only
 
     def collect(self):
         from tests.integration import file_cases
 
-        group = self.path.parent.name
-        case, error = None, self.group_error
-        if error is None:
+        for group_dir in file_cases.groups() if self.only is None else [self.only.parent]:
+            yield GroupNode.from_parent(self, name=group_dir.name, group_dir=group_dir, run=self.run, only=self.only)
+
+
+class GroupNode(_Node):
+    def __init__(self, *, group_dir, run, only, **kwargs):
+        super().__init__(**kwargs)
+        self.group_dir = group_dir
+        self.run = run
+        self.only = only
+
+    def collect(self):
+        from tests.integration import file_cases
+
+        for path in file_cases.case_files(self.group_dir) if self.only is None else [self.only]:
+            case, error = None, None
             try:
-                case = file_cases.load_case(self.path, self.group_when)
+                case = file_cases.load_case(path)
             except Exception as exc:  # noqa: BLE001 - surface, don't swallow
                 error = f"{type(exc).__name__}: {exc}"
-        name = case["test_id"] if case is not None else self.path.stem
-        yield Case.from_parent(self, name=name, group=group, case=case, load_error=error)
+            name = case["test_id"] if case is not None else path.stem
+            yield Case.from_parent(self, name=name, path=path, case=case, load_error=error, run=self.run)
 
 
 class Case(pytest.Item):
-    """One case. `-k <group>-<test_id>` selects it, as the id did when the cases were parameters of one test."""
+    """One case in one environment. `-k <group>-<test_id>` selects it in every environment, as the id did when the
+    cases were parameters of one test."""
 
-    def __init__(self, *, group, case, load_error, **kwargs):
+    def __init__(self, *, case, load_error, run, **kwargs):
         super().__init__(**kwargs)
-        self.group = group
-        self.case = case
-        self.load_error = load_error
-        self.extra_keyword_matches.add(f"{group}-{self.name}")
-
-    def runtest(self):
-        if self.load_error is not None:
-            pytest.fail(f"Could not load test case file: {self.load_error}")
         from tests.integration import file_cases
 
-        file_cases.run_case(self.case)
+        self.case = case
+        self.run = run
+        self.extra_keyword_matches.add(f"{self.path.parent.name}-{self.name}")
+        self.failure = None  # why the case fails without running
+        if load_error is not None:
+            self.failure = f"Could not load test case file: {load_error}"
+        elif file_cases.runs_nowhere(case):
+            self.failure = (f"The selectors skip this case in every environment "
+                            f"({', '.join(file_cases.environment_runs())}), so it never runs")
+        else:
+            reason = file_cases.skip_reason(case, run)
+            if reason is not None:
+                self.add_marker(pytest.mark.skip(reason=reason))
+
+    def runtest(self):
+        if self.failure is not None:
+            pytest.fail(self.failure)
+        from tests.integration import file_cases
+
+        file_cases.run_case(self.case, self.run)
 
     def reportinfo(self):
-        return self.path, None, f"{self.group}/{self.name}"
+        return self.path, 0, f"{self.run.name}/{self.path.parent.name}/{self.name}"

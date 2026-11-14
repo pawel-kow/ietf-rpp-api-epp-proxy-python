@@ -8,17 +8,21 @@ Run from the repository root. `pyproject.toml` sets `pythonpath=src` and
 `testpaths=tests`.
 
 ```bash
-pytest -n 8                                             # all tests, in 8 workers (pytest-xdist)
+pytest -n 4                                             # all tests, in 4 workers (pytest-xdist), every environment
 pytest                                                  # all tests, one at a time
+RPP_TEST_ENV=epp-docker pytest -n 8                     # the cases of one environment only, the others skipped
 pytest tests/integration                                # the data-driven integration suite
-pytest tests/integration/test_case_data/domain_update   # single test group by its directory
-pytest -k domain_update                                 # single test group by substring
+pytest -k domain_update                                 # single test group by substring, in every environment
+pytest -k "rri-mtest and domain_update"                 # single test group in one environment
 pytest -k domain_update-test1-simple_update             # one case by <group>-<test_id>
-pytest tests/integration/test_case_data/domain_update/test1-simple_update.json  # one case by its file
+pytest "tests/integration/file_cases.py::epp-docker::domain_update::test1-simple_update"  # one case by id
+pytest tests/integration/test_case_data/domain_update/test1-simple_update.json  # one case file, in every environment
 ```
 
-Run the full suite with `-n 8`, which takes about 15 minutes on 4 cores, most of it the cases that wait for the
-periods of the EPP test server (`domain_lifecycle/test8` waits about 14 minutes). The unit tests are bound by CPU,
+Run the full suite with `-n 4`, the most workers DENIC MTEST allows, since a run tests every environment whose
+credentials are in `.env`. Against the EPP test server alone (`RPP_TEST_ENV=epp-docker`) `-n 8` takes about 15
+minutes on 4 cores, most of it the cases that wait for the periods of the EPP test server (`domain_lifecycle/test8`
+waits about 14 minutes). The unit tests are bound by CPU,
 mostly building an app per test from `openapi.yaml`, so more workers than cores do not speed them up, and the backend refuses logins under about
 16 concurrent sessions (pawel-kow/EPP-server-docker#7), so 8 is the most it takes. Every worker makes its own
 `{random_name}`, so cases in different workers do not collide.
@@ -91,13 +95,17 @@ The backend refuses a renew period under one year (`2306`), so month periods are
 
 ## Test environments
 
-A test environment is one backend server the integration suite runs against, chosen with `RPP_TEST_ENV` (default
-`epp-docker`) and described in `tests/integration/environments/<name>.yaml`: the config file of the app under test
-(`tests/conftest.py` sets `RPP_CONFIG_FILE` from it before any test module composes the app), the most workers it
+A test environment is one backend server the integration suite runs against, described in
+`tests/integration/environments/<name>.yaml`. A run tests every environment, each with an app of its own composed
+from its config by `main.compose`, its credentials and its pacer, or only those `RPP_TEST_ENV` names
+(comma-separated); the cases of the others are skipped as not selected, and those of an environment whose
+credentials are missing from `.env` are skipped with the variables it needs. The unit tests compose the app of the
+first environment `RPP_TEST_ENV` names, default `epp-docker` (`tests/conftest.py` sets `RPP_CONFIG_FILE` from it
+before any test module imports `main`). The descriptor holds the config file of the app under test, the most workers it
 allows, the requests a minute per registrar (`rpp_requests_per_minute`, paced
 by [pacer.py](../../tests/helper/pacer.py)), the registrars, a user the backend does not know, and its `facts`. The
 `BackendProfile`, the TLD, the environment name and the LGRs are read from that config, as the app reads them, and not
-repeated. A run with more workers than the environment allows does not start.
+repeated. A run with more workers than an environment it tests allows does not start.
 
 The registrars name the variables that hold their credentials, the prefix of the handles they create, and on RRI
 their General Request and Abuse contacts. The runner reads them from the process environment or from `.env` in the
@@ -119,7 +127,7 @@ into the `Authorization` header when it sends the request, never into the case, 
 
 ### DENIC MTEST
 
-`RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration` runs the suite against DENIC's RRI test environment through
+`RPP_TEST_ENV=rri-mtest pytest -n 4 tests/integration` runs the suite against DENIC's RRI test environment alone through
 [config.rri-mtest.yaml](../../config.rri-mtest.yaml). It needs the IPv4 address of the machine on the allowlist of
 both RegAccs (the devcontainer goes out with the host's address), and the `TEST_RRI_*` variables in `.env`: the two
 logins, their passwords, the prefix of the handles the cases create (it starts with the RegAccId), and a REQUEST
@@ -247,9 +255,10 @@ Unit tests in `tests/unit/` inject test doubles through constructors:
 ## Test data format
 
 [tests/integration/conftest.py](../../tests/integration/conftest.py) collects every `*.json` under
-`tests/integration/test_case_data/<group>/` as one test, named by its `test_id` (the file name without `.json` by
-default), so the test tree follows the data directories. A file that cannot be loaded is still listed and fails. The
-runner is [file_cases.py](../../tests/integration/file_cases.py). Each file is a `steps` sequence (e.g. create →
+`tests/integration/test_case_data/<group>/` as one test per environment, named by its `test_id` (the file name
+without `.json` by default), in a tree of `file_cases.py` › environment › group › case. A case whose selectors do not
+hold in an environment is marked skipped there while collecting, with the facts that did not hold. A file that cannot
+be loaded is still listed and fails. The runner is [file_cases.py](../../tests/integration/file_cases.py). Each file is a `steps` sequence (e.g. create →
 update → verify) run against a Flask test client.
 
 - Placeholders `{random_name}`, `{random_id_10}`, `{test_start}` (start of the case)
