@@ -50,7 +50,7 @@ once that was merged, in the worktree `.claude/worktrees/133-rri-transfer`.
 - [x] T7 Integration cases: gate the EPP transfer group, new RRI transfer cases (`domain_transfer_ext/`)
 - [x] T8 Docs: gap-analysis Q3/§4.3, architecture.project.md, testing.project.md, security.project.md
 - [x] T9 Checks: lint-imports, unit tests, smoke suite on both backends, transfer groups on both
-- [~] T10 Draft PR
+- [x] T10 Draft PR #147
 
 ## Findings
 
