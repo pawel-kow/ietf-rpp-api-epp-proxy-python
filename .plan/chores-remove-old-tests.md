@@ -10,7 +10,7 @@ Branch `chores/remove-old-tests` (worked on as asked, not from `main`).
 - [x] T4 A tree per test environment (`file_cases.py` › environment › group › case), each with its own app,
       credentials and pacer; skips marked at collection
 - [x] T5 Docs: `testing.project.md`, `process.project.md`, `architecture.project.md`
-- [~] T6 `lint-imports`; the full `pytest -n 4` run (both environments)
+- [x] T6 `lint-imports`; the full `pytest -n 4` run (both environments): 2715 passed, 367 skipped, 38 min
 
 ## Findings (evidence)
 
