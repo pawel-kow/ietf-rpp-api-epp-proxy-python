@@ -1,0 +1,67 @@
+{
+  "test_id": "test15-invalid_ipv6_address",
+  "description": "An aaaa record whose address is no IPv6 address (RFC 4291).",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "ns1.hc15.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.hc15.{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "ns1.hc15.{random_name}.net.",
+                "type": "aaaa",
+                "rdata": {
+                  "address": "2001:db8::zz"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "any_of": [
+          {
+            "status": 400,
+            "headers": {
+              "RPP-Code": "02001"
+            },
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          },
+          {
+            "status": 400,
+            "headers": {
+              "RPP-Code": "02005"
+            },
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

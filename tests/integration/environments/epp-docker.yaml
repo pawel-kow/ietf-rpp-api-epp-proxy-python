@@ -1,24 +1,91 @@
 # The EPP test server of EPP-server-docker (docs/agents/testing.project.md#backend).
-config: config.yaml                    # RPP_CONFIG_FILE of the app under test
-profile: registry_adapter.epp.profile:EPP_PROFILE
-lgrs: [latn-1.0]                       # the LGRs config.yaml maps (rpp_idn_lgr_tables)
+config: config.yaml                    # RPP_CONFIG_FILE of the app under test: its profile, TLD, LGRs, environment name
 max_workers: 8                         # the backend refuses logins above about 16 sessions
 regacc: user                           # the sponsor id is the login
 registrars:                            # the slots the cases name, each naming its variables in .env
-  a: {user: TEST_EPP_REGACC1, password: TEST_EPP_REGACC1_PASSWORD, prefix: TEST_EPP_REGACC1_PREFIX}
-  b: {user: TEST_EPP_REGACC2, password: TEST_EPP_REGACC2_PASSWORD, prefix: TEST_EPP_REGACC2_PREFIX}
-# Not secrets: a wrong password of a registrar, and a user the backend does not know.
-wrong_password: cat
-unknown_user: {user: ghost, password: nope}
+  a:
+    user: TEST_EPP_REGACC1
+    password: TEST_EPP_REGACC1_PASSWORD
+    prefix: TEST_EPP_REGACC1_PREFIX
+  b:
+    user: TEST_EPP_REGACC2
+    password: TEST_EPP_REGACC2_PASSWORD
+    prefix: TEST_EPP_REGACC2_PREFIX
+# Not a secret: a user the backend does not know, for the failed logins. No case logs in to a test account with a
+# wrong password.
+unknown_user:
+  user: ghost
+  password: nope
+
+# What this server does where the protocol leaves the choice to it (docs/agents/testing.project.md#selectors).
+# `<object>.<field>.<leaf>` and `<object>.processes.<process>.<leaf>`, objects and fields by their RPP names.
+# null: the field is not there, or the limit is not known.
 facts:
-  tld: example
-  restore_within_run: true             # the RGP periods are minutes (EPP-server-docker#5)
-  environment_name: rpp-epp-proxy.example       # rpp_environment_name of its config
-  domain_active_at_create: true        # a new domain is ok at once, not pendingCreate
-  cltrid_reuse_refused: true           # a reused client transaction id is refused, also on a read
-  idn_table_required: true            # the registry refuses an IDN without an IDN table
-  lgr_without_enye: true               # the IDN table of latn-1.0 lacks ñ
-  deleted_domain_readable: false       # a domain deleted right after its create is read in its redemption period, not purged
-  failed_logins_lock: false
-  lgr_on_ascii_refused: true       # an lgr on a name that is not an IDN is refused
-  contact_removal_refused_by_registry: false  # the registry, not the proxy, refuses clearing a contact's name or email
+  session:
+    cltrid_reuse_supported: false      # a reused client transaction id is refused, also on a read
+  domainName:
+    name:
+      lgr:
+        required_for_idn: true         # an IDN without an lgr is refused
+        ascii_supported: false         # an lgr on a name that is not an IDN is refused
+        latn_enye_supported: false     # the IDN table of latn-1.0 lacks ñ
+    authInfo:
+      min_length: 6
+      upper_and_digit_required: true   # it needs an upper case letter and a digit
+      ambiguous_supported: true        # it may hold I, O, l, o, 0 and 1
+    contacts:
+      foreign_supported: false         # a domain cannot name a contact of another registrar
+    dns:
+      dnskey_supported: false          # secDNS takes DS records only, no DNSKEY (RFC 5910 §4)
+    # Periods are ISO 8601 durations, the longest a transition takes (null: the server has none). They are the RGP_*
+    # and TRANSFER_* minutes of the server (EPP-server-docker#5); a cron job runs the transitions every minute, so
+    # one it runs is a minute longer than its setting.
+    processes:
+      create:
+        success_status:                # what a domain reads with right after its create: one of these
+          - ok
+        failed_dns_status: null        # the name servers are not checked
+        failed_dns_period: null
+        add_grace_period: PT2M         # a delete within it purges the domain; checked by the delete itself
+      renew:
+        grace_period: PT6M
+        expiry_grace_period: PT10M     # an expired domain goes to redemptionPeriod (auto-renew is off)
+      transfer:
+        pending_period: PT6M           # a pending transfer is approved by the server (serverApproved)
+        grace_period: PT8M
+      delete:
+        readable_after: false          # a domain deleted right after its create is purged, not read in redemption
+        redemption_period: PT6M        # then pendingDelete
+        pending_delete_period: PT5M    # then purged
+      restore:
+        pending_period: PT4M           # a pendingRestore without a report goes back to redemptionPeriod
+  contact:
+    processes:
+      transfer:
+        pending_period: PT6M           # a pending transfer is approved by the server (serverApproved)
+    id:
+      max_length: 16
+    name:
+      min_count: 1
+      min_length: 5
+      charset_restricted: true         # letters, digits, space and . , - only: no ', nothing outside the BMP
+      digits_only_supported: true      # a name of digits only, or of specials only, is taken
+    email:
+      min_count: 1
+    street:
+      min_count: 0
+      max_count: 3
+    city:
+      max_length: 255
+    region:
+      lower_case_supported: false      # a region starting in lower case is refused
+    postcode:
+      min_count: 0
+      lower_case_supported: false
+      format_by_country: false         # the postcode is not checked against its country
+    phone:
+      subscriber:
+        min_length: 1                  # digits after the country code
+  # Defects of this server, which the cases it breaks do not run on.
+  bugs:
+    over_max_length_cut: true          # a value longer than its column is stored cut, not refused (pawel-kow/epp#21)

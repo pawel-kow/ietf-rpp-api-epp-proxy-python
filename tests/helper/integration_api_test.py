@@ -45,7 +45,7 @@ def assert_headers(expected_headers, response, test_name):
             continue
         assert header in response.headers, f"Header '{header}' not found in response for test case: {test_name}"
         if isinstance(test, str):
-            assert response.headers[header] == test, f"Header '{header}' has unexpected value for test case: {test_name}"
+            assert response.headers[header] == test, f"Header '{header}' is {response.headers[header]!r}, not {test!r}, for test case: {test_name}"
         elif isinstance(test, dict) and "type" in test:
             assert evaluate_condition(response.headers[header], test), f"Header '{header}' does not meet the condition {test['type']} for test case: {test_name}"
         else:
@@ -132,6 +132,20 @@ def replace_upper_placeholders(value: str) -> str:
     value = UPPER.sub(lambda match: match.group(1).upper(), value)
     return LOWER.sub(lambda match: match.group(1).lower(), value)
 
+PAD = re.compile(r"\{pad:(\d+):([^{}]*)\}")
+DIGITS = "0123456789"
+
+def replace_pad_placeholders(value: str) -> str:
+    """Replaces {pad:N:TEXT} by TEXT followed by the digits 0 to 9, repeated, to N characters: a name or id of an exact
+    length that keeps the random part of TEXT. TEXT longer than N fails the test."""
+    def replace(match):
+        length, text = int(match.group(1)), match.group(2)
+        if len(text) > length:
+            pytest.fail(f"{match.group(0)}: the text is longer than {length} characters")
+        missing = length - len(text)
+        return text + (DIGITS * (missing // len(DIGITS) + 1))[:missing]
+    return PAD.sub(replace, value)
+
 def endpoint_test(client, case_sequence, sleep=time.sleep, credentials=None, pacer=None):
     """
     Tests the POST /domains endpoint using the Flask test client.
@@ -139,7 +153,8 @@ def endpoint_test(client, case_sequence, sleep=time.sleep, credentials=None, pac
     Args:
         client: The Flask test client fixture.
         cases: A sequence of test steps as parameterized test case dictionaries.
-        sleep: Waits for a step's "delay_seconds" before its request, for registry periods that must pass.
+        sleep: Waits for a step's "delay_seconds" before its request, for registry periods that must pass (the
+            runner computes them from the step's `wait`; a case file does not write them).
         credentials: Replaces a `{auth:…}` header by the credential when the request is sent, so the case never
             holds one (`tests.helper.test_environment.Credentials`).
         pacer: Waits before a request of a registrar so its requests stay under the backend's limit.

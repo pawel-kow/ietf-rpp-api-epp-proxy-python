@@ -9,12 +9,12 @@ import pytest
 from dotenv import load_dotenv
 
 from main import app
-from tests.helper import selectors
+from tests.helper import durations, selectors
 from tests.helper.idn_labels import replace_idn_placeholders
-from tests.helper.integration_api_test import endpoint_test, replace_upper_placeholders
+from tests.helper.integration_api_test import endpoint_test, replace_pad_placeholders, replace_upper_placeholders
 from tests.helper.pacer import Pacer
 from tests.helper.test_environment import (
-    REPOSITORY, Credentials, EnvironmentError, environment_names, load, replace_values, selected_name,
+    REPOSITORY, Credentials, EnvironmentError, environment_names, load, replace_fact, replace_values, selected_name,
 )
 
 app.app.config.update({
@@ -30,13 +30,17 @@ if workers > environment.max_workers:
     raise EnvironmentError(f"{environment.name} allows at most {environment.max_workers} workers, the run has {workers}")
 credentials = Credentials(environment)
 pacer = Pacer(environment.rpp_requests_per_minute, workers, credentials.slot)
-facts = selectors.Facts(app.app.config["RPP_BACKEND_PROFILE"], environment.facts)
+# The longest wait of this run, and the buffer of each wait (tests/helper/durations.py); the facts of the other
+# environments wait without limit, so a long wait does not make a case look as if it ran nowhere.
+facts = selectors.Facts(app.app.config["RPP_BACKEND_PROFILE"], environment.facts, durations.max_wait(),
+                        durations.buffer_percent())
 
-# The facts of every known environment, from the profile its descriptor names, to find a case that runs nowhere.
-all_facts = {name: selectors.Facts(env.declared_profile(), env.facts)
+# The facts of every known environment, with the profile of its config, to find a case that runs nowhere.
+all_facts = {name: selectors.Facts(env.profile, env.facts, None, durations.buffer_percent())
              for name in environment_names()
              for env in [load(name, with_credentials=False)]}
-all_facts[environment.name] = facts  # the app under test may offer more than its declared profile, such as LGRs
+all_facts[environment.name] = selectors.Facts(  # the app under test may be given another config by RPP_CONFIG_FILE
+    facts.profile, facts.env_facts, None, facts.buffer_percent)
 
 # --- Test Client Fixture ---
 @pytest.fixture(scope='module')
@@ -152,12 +156,15 @@ def process_placeholders(json_data=dict|list|str|None, obj=None, started=None):
     elif isinstance(json_data, list):
         return [process_placeholders(item, obj, started) for item in json_data] # type: ignore
     elif isinstance(json_data, str):
+        one_of = replace_fact(json_data, environment)
+        if not isinstance(one_of, str):
+            return one_of
         replaced = json_data\
             .replace("{random_name}", f"{obj['test_group'].replace('_', '-')}-{random_name}" if "test_group" in obj else random_name)\
             .replace("{random_id_10}", f"{random_id_10}")\
             .replace("{test_start}", started.isoformat())# type: ignore
         replaced = replace_values(replaced, environment, random_id_10)
-        replaced = replace_upper_placeholders(replace_idn_placeholders(replaced, random_id_10))
+        replaced = replace_upper_placeholders(replace_pad_placeholders(replace_idn_placeholders(replaced, random_id_10)))
         return replaced.replace("{unique_cltrid}", str(uuid.uuid4())) # RPP-Cltrid is unique per request
     else:
         return json_data
@@ -171,9 +178,18 @@ def unmet_case_selectors(case, case_facts) -> list[str]:
     return [reason for when in _case_selectors(case) for reason in selectors.unmet(when, case_facts)]
 
 
+def _with_wait(step):
+    """A step's `wait`, the periods it waits for, as the seconds the runner sleeps before its request."""
+    paths = selectors.wait_paths(step)
+    step = {k: v for k, v in step.items() if k != "wait"}
+    if paths:
+        step["delay_seconds"] = sum(facts.wait_seconds(path) for path in paths)
+    return step
+
+
 def select(case):
     """The case as the environment under test runs it: the steps whose `when` holds, each `select` resolved."""
-    steps = [selectors.resolve({k: v for k, v in step.items() if k != "when"}, facts)
+    steps = [_with_wait(selectors.resolve({k: v for k, v in step.items() if k != "when"}, facts))
              for step in case["steps"] if "when" not in step or selectors.holds(step["when"], facts)]
     return {**{k: v for k, v in case.items() if k not in ("when", "_group_when")}, "steps": steps}
 

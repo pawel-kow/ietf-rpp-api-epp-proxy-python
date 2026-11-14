@@ -1,0 +1,193 @@
+{
+  "when": {
+    "wait.domainName.processes.create.failed_dns_period": true,
+    "env.domainName.processes.create.failed_dns_status": {
+      "not": null
+    }
+  },
+  "test_id": "test44-failed_domain_deleted_by_the_registry",
+  "description": "A domain whose name servers fail the registry's check, and that nobody fixes, is deleted by the registry when its failed period ends, into its redemption period (rri-5.0-reference §5.2: a failed domain must be fixed or is deleted). Not run yet: it needs RPP_TEST_MAX_WAIT of a day or more.",
+  "steps": [
+    {
+      "when": {
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:G44}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          },
+          "authInfo": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact.authInfo.supported": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "dc44-{random_name}.{tld}",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc2345678"
+          },
+          "registrant": {
+            "select": [
+              {
+                "when": {
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
+                },
+                "then": {
+                  "@type": "contact",
+                  "id": "{handle:a:G44}"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.n44-{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns2.n44-{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "@type": "domainName",
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.failed_dns_status}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "wait": "domainName.processes.create.failed_dns_period",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/dc44-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "pendingDelete"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

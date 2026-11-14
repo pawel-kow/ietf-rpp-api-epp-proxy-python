@@ -1,3 +1,5 @@
+import pytest
+
 from settings.load_settings import load_settings
 
 
@@ -42,3 +44,31 @@ def test_the_local_file_sits_next_to_the_file_named_by_the_environment(tmp_path,
                     name="other.yaml")
 
     assert settings.epp.rpp_epp_host == "local.example"
+
+
+def test_the_profile_is_the_protocols_without_a_profile_of_the_server(tmp_path, monkeypatch):
+    settings = load(tmp_path, monkeypatch, "rpp_backend: rri\n")
+
+    generic, specific = settings.profile_layers
+    assert generic["name"] == "RRI"
+    assert specific == {}
+
+
+def test_the_profile_of_the_server_extends_a_generic_one(tmp_path, monkeypatch):
+    settings = load(tmp_path, monkeypatch,
+                    "rpp_backend_profile:\n  extends: epp\n  contact:\n    fax:\n      supported: false\n")
+
+    generic, specific = settings.profile_layers
+    assert generic["name"] == "EPP"
+    assert specific == {"contact": {"fax": {"supported": False}}}
+
+
+def test_a_profile_extends_only_a_generic_one(tmp_path, monkeypatch):
+    with pytest.raises(ValueError, match="extends one of epp, rri"):
+        load(tmp_path, monkeypatch, "rpp_backend_profile:\n  extends: ../secrets\n")
+
+
+def test_the_lgrs_come_from_the_config_of_the_protocol(tmp_path, monkeypatch):
+    assert load(tmp_path, monkeypatch, "rpp_idn_lgr_tables:\n  latn-1.0: de\n").lgrs == ("latn-1.0",)
+    assert load(tmp_path, monkeypatch, "rpp_backend: rri\nrpp_rri_lgr: latn-1.0\n").lgrs == ("latn-1.0",)
+    assert load(tmp_path, monkeypatch, "rpp_backend: rri\n").lgrs == ()

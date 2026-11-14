@@ -16,7 +16,7 @@
           "select": [
             {
               "when": {
-                "profile.contact_auth_info": true
+                "profile.contact.authInfo.supported": true
               },
               "then": {
                 "@type": "contact",
@@ -142,7 +142,9 @@
           "select": [
             {
               "when": {
-                "profile.domain_dns_required": true
+                "profile.domainName.dns.min_count": {
+                  "min": 1
+                }
               },
               "then": {
                 "@type": "domainName",
@@ -273,7 +275,7 @@
         "select": [
           {
             "when": {
-              "env.deleted_domain_readable": true
+              "env.domainName.processes.delete.readable_after": true
             },
             "then": {
               "status": 200,

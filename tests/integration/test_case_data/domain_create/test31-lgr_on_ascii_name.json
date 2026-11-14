@@ -3,7 +3,9 @@
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -83,7 +85,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -99,7 +103,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -132,7 +138,7 @@
         "select": [
           {
             "when": {
-              "env.lgr_on_ascii_refused": false
+              "env.domainName.name.lgr.ascii_supported": true
             },
             "then": {
               "status": 201,
@@ -179,7 +185,7 @@
     },
     {
       "when": {
-        "env.lgr_on_ascii_refused": false
+        "env.domainName.name.lgr.ascii_supported": true
       },
       "request": {
         "method": "DELETE",

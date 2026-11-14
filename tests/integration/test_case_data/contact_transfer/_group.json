@@ -1,1 +1,1 @@
-{"when": {"profile.contact_transfer_operations": {"contains": "request"}}}
+{"when": {"profile.contact.processes.transfer.operations": {"contains": "request"}}}

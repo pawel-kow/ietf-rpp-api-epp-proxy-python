@@ -2,6 +2,7 @@ from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
 from registry_adapter.epp.gateways.epp_backend import EppBackend
 from tests.helper.epp_ns_map import EPP_NS_MAP
+from tests.helper.profiles import EPP_PROFILE
 from tests.helper.fake_epp_client import FakeEppClient
 
 MISSING = (False, "2303", (
@@ -11,7 +12,7 @@ MISSING = (False, "2303", (
 
 
 def backend(**options):
-    return EppBackend(FakeEppClient("Foo", "pw", **options), EPP_NS_MAP)
+    return EppBackend(FakeEppClient("Foo", "pw", **options), EPP_NS_MAP, EPP_PROFILE)
 
 
 def test_the_sponsor_id_is_the_login():

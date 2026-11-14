@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from core.session.session_pool import SessionPool
-from registry_adapter.rri.profile import RRI_PROFILE
+from tests.helper.profiles import RRI_PROFILE
 from rpp.http.app import create_app
 from tests.helper.fake_rri_client import FakeRriClient, reply, rri_backends
 from tests.unit.test_rri_adapter import DOMAIN_INFO, NAME

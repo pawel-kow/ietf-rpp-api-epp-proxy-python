@@ -70,8 +70,8 @@ def replace_domain(backend: RegistryBackend, wanted: DomainReplacement, client_t
 def renew_domain(backend: RegistryBackend, renew: DomainRenew, client_transaction_id) -> OperationResponse[DomainRenewProcess] | ErrorResponse:
     """Renews a domain. The backend needs the current expiry date, so a client that gave none has it read (json §8.1.7).
     The read and the renew are not atomic, and without the client's date nothing guards against a double renewal.
-    A backend without renew (`profile.supports_renew`) is not sent the read, which would be wasted."""
-    if not backend.profile.supports_renew:
+    A backend without renew (`profile.domainName.processes.renew.supported`) is not sent the read, which would be wasted."""
+    if not backend.profile.domainName.processes.renew.supported:
         return ErrorResponse(
             code=ResultCode.UNIMPLEMENTED_COMMAND, msg=f"{backend.profile.name} has no renew",
             server_transaction_id=None, client_transaction_id=client_transaction_id,

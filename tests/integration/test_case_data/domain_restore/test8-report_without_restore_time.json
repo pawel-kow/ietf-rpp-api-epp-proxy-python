@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.domainName.processes.restore.report_supported": true
+  },
   "test_id": "test8-report_without_restore_time",
   "steps": [
     {

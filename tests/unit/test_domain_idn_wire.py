@@ -2,7 +2,7 @@ import pytest
 
 from core.session.session_pool import SessionPool
 from registry_adapter.epp.idn_tables import IdnTables
-from registry_adapter.epp.profile import epp_profile
+from tests.helper.profiles import EPP_PROFILE
 from registry_adapter.epp.session.epp_client import IDN_EXTENSION, SEC_DNS_EXTENSION
 from rpp.http.app import create_app
 from tests.helper.epp_backends import epp_backends
@@ -43,7 +43,7 @@ def setup(*replies, extensions=IDN_SERVER, idn_tables=TABLES):
 
     idn_tables = idn_tables or IdnTables()
     return create_app(
-        SessionPool(epp_backends(factory, idn_tables)), epp_profile(idn_tables),
+        SessionPool(epp_backends(factory, idn_tables)), EPP_PROFILE.with_changes({"lgrs": list(idn_tables.lgrs())}),
     ).test_client(), clients
 
 

@@ -80,7 +80,7 @@ def _in_domain(domain_name: str, owner: str) -> bool:
 def _zone_record(domain_name: str, owner: str, record: RPPDnsRecord, profile: BackendProfile) -> ZoneRecord:
     """A record the registry serves itself, of a type the backend holds (`profile`), for the domain or below it."""
     kind = record_type(record)
-    if kind not in profile.domain_record_types or not _in_domain(domain_name, owner):
+    if kind not in profile.domainName.dns.record_types or not _in_domain(domain_name, owner):
         raise NotSupportedByBackend(f"A DNS record for '{record.name}'")
     if kind == "mx":
         preference, exchange = record_rdata(record, "preference", "exchange")
@@ -123,7 +123,7 @@ def rpp_to_model(domain_name: str, dns: RPPDnsData, *, profile: BackendProfile
         owner = _owner(domain_name, record.name)
         if kind in ADDRESS_RECORDS:
             glue.append((owner, record))
-        elif kind not in profile.domain_record_types:
+        elif kind not in profile.domainName.dns.record_types:
             raise NotSupportedByBackend(f"DNS record type '{record.type}'")
         elif kind in ZONE_RECORDS:
             records.append(_zone_record(domain_name, owner, record, profile))

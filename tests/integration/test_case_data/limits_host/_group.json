@@ -1,0 +1,7 @@
+{
+  "when": {
+    "profile.objects": {
+      "contains": "host"
+    }
+  }
+}

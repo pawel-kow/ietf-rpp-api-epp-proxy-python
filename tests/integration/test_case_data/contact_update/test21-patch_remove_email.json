@@ -1,4 +1,14 @@
 {
+  "when": [
+    {
+      "profile.contact.email.removable": false
+    },
+    {
+      "env.contact.email.min_count": {
+        "min": 1
+      }
+    }
+  ],
   "test_id": "test21-patch_remove_email",
   "steps": [
     {
@@ -36,7 +46,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -64,7 +74,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.456456456",
@@ -89,7 +99,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -137,12 +147,12 @@
         "select": [
           {
             "when": {
-              "env.contact_removal_refused_by_registry": true
+              "profile.contact.email.removable": false
             },
             "then": {
-              "status": 422,
+              "status": 501,
               "headers": {
-                "RPP-Code": "02306"
+                "RPP-Code": "02102"
               },
               "content_type": "application/problem+json",
               "body": {
@@ -152,9 +162,9 @@
           },
           {
             "then": {
-              "status": 501,
+              "status": 422,
               "headers": {
-                "RPP-Code": "02102"
+                "RPP-Code": "02306"
               },
               "content_type": "application/problem+json",
               "body": {

@@ -2,16 +2,21 @@
 
 It is chosen with `RPP_TEST_ENV` (default `epp-docker`) and described in `tests/integration/environments/<name>.yaml`.
 Credentials are not in the descriptor: it names the variables that hold them, which come from the process
-environment or from `.env` in the repository root.
+environment or from `.env` in the repository root. The backend profile, the TLD, the LGRs and the environment name
+are not in it either: they come from the config of the app under test, which the descriptor names.
 """
 import base64
-import importlib
 import os
 import re
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+
+from core.capabilities.backend_profile import BackendProfile
+from settings.load_settings import load_settings
+from tests.helper.one_of import OneOf
+from tests.helper.selectors import env_fact
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 ENVIRONMENTS = REPOSITORY / "tests" / "integration" / "environments"
@@ -33,8 +38,8 @@ class Registrar:
     gen_req: str | None = None
     abuse: str | None = None
 
-    def basic(self, password: str | None = None) -> str:
-        token = f"{self.user}:{self.password if password is None else password}".encode()
+    def basic(self) -> str:
+        token = f"{self.user}:{self.password}".encode()
         return "Basic " + base64.b64encode(token).decode("ascii")
 
 
@@ -42,20 +47,12 @@ class Registrar:
 class TestEnvironment:
     name: str
     config: str
-    profile: str
     max_workers: int
     rpp_requests_per_minute: int | None
     registrars: dict[str, Registrar]
     facts: dict
-    wrong_password: str | None = field(default=None, repr=False)
+    profile: BackendProfile
     unknown_user: tuple[str, str] | None = field(default=None, repr=False)
-    lgrs: tuple[str, ...] = ()
-
-    def declared_profile(self):
-        """The `BackendProfile` the descriptor names, with the LGRs its config offers (`lgrs`), for selectors
-        evaluated outside the app under test."""
-        module, _, name = self.profile.partition(":")
-        return replace(getattr(importlib.import_module(module), name), lgrs=frozenset(self.lgrs))
 
 
 def environment_names() -> list[str]:
@@ -117,22 +114,25 @@ def load(name: str, environ=None, with_credentials: bool = True) -> TestEnvironm
     if missing:
         raise EnvironmentError(f"Test environment {name!r} needs {', '.join(missing)} in .env or the environment")
     unknown = data.get("unknown_user")
+    settings = load_settings(str(REPOSITORY / data["config"]))
+    # What the config states, which the cases read as facts too: `{tld}` and `{env:environment_name}`.
+    facts = {**(data.get("facts") or {}), "tld": (settings.discovery.rpp_tlds or [""])[0],
+             "environment_name": settings.discovery.rpp_environment_name}
     return TestEnvironment(
-        name=name, config=data["config"], profile=data["profile"], max_workers=int(data.get("max_workers", 8)),
-        rpp_requests_per_minute=data.get("rpp_requests_per_minute"), registrars=registrars,
-        facts=dict(data.get("facts") or {}), wrong_password=data.get("wrong_password"),
-        unknown_user=(unknown["user"], unknown["password"]) if unknown else None,
-        lgrs=tuple(data.get("lgrs") or ()))
+        name=name, config=data["config"], max_workers=int(data.get("max_workers", 8)),
+        rpp_requests_per_minute=data.get("rpp_requests_per_minute"), registrars=registrars, facts=facts,
+        profile=BackendProfile.from_layers(*settings.profile_layers, {"lgrs": list(settings.lgrs)}),
+        unknown_user=(unknown["user"], unknown["password"]) if unknown else None)
 
 
 VALUE_PLACEHOLDER = re.compile(r"\{(handle|regacc|gen_req|abuse):([a-z])(?::([^{}]*))?\}")
 TLD_PLACEHOLDER = "{tld}"
-FACT_PLACEHOLDER = re.compile(r"\{env:([a-z_]+)\}")
+FACT_PLACEHOLDER = re.compile(r"\{env:([A-Za-z_.]+)\}")
 
 
 def replace_values(value: str, env: TestEnvironment, random_id: str) -> str:
-    """Replaces `{handle:a:SUFFIX}`, `{regacc:a}`, `{gen_req:a}`, `{abuse:a}`, `{tld}` and `{env:FACT}` (a fact of the
-    environment). None of them is a secret."""
+    """Replaces `{handle:a:SUFFIX}`, `{regacc:a}`, `{gen_req:a}`, `{abuse:a}`, `{tld}` and `{env:<path>}` (a fact of
+    the environment that is not a list, see `replace_fact`). None of them is a secret."""
     def replace(match):
         kind, slot, suffix = match.groups()
         registrar = env.registrars.get(slot)
@@ -148,15 +148,33 @@ def replace_values(value: str, env: TestEnvironment, random_id: str) -> str:
         return result
 
     def fact(match):
-        if match.group(1) not in env.facts:
-            raise EnvironmentError(f"{match.group(0)}: {env.name} has no such fact")
-        return str(env.facts[match.group(1)])
+        value = _fact(match, env)
+        if isinstance(value, list):
+            raise EnvironmentError(f"{match.group(0)}: a list fact is a whole value, not part of a string")
+        return str(value)
 
     value = VALUE_PLACEHOLDER.sub(replace, value).replace(TLD_PLACEHOLDER, str(env.facts.get("tld", "")))
     return FACT_PLACEHOLDER.sub(fact, value)
 
 
-AUTH_PLACEHOLDER = re.compile(r"\{auth:([a-z_]+)(?::([a-z_]+))?\}")
+def _fact(match, env: TestEnvironment):
+    try:
+        return env_fact(env.facts, match.group(1))
+    except KeyError:
+        raise EnvironmentError(f"{match.group(0)}: {env.name} has no such fact") from None
+
+
+def replace_fact(value: str, env: TestEnvironment):
+    """A value that is `{env:<path>}` alone and names a list fact is `OneOf` its entries, which the response
+    comparison takes any of; any other value is returned as it is, for `replace_values`."""
+    match = FACT_PLACEHOLDER.fullmatch(value)
+    if match is None:
+        return value
+    fact = _fact(match, env)
+    return OneOf(fact) if isinstance(fact, list) else value
+
+
+AUTH_PLACEHOLDER = re.compile(r"\{auth:([a-z_]+)\}")
 
 
 class Credentials:
@@ -176,24 +194,16 @@ class Credentials:
             if "{auth:" in value:
                 raise EnvironmentError("Malformed credential placeholder in a header")
             return value
-        who, form = match.groups()
-        if self.env.facts.get("failed_logins_lock") and (who == "unknown_user" or form == "wrong_password"):
-            raise EnvironmentError(f"{self.env.name} takes no wrong credentials: failed logins lock the login")
+        who = match.group(1)
         if who == "unknown_user":
             if self.env.unknown_user is None:
-                raise EnvironmentError(f"{self.env.name} has no unknown user form")
+                raise EnvironmentError(f"{self.env.name} has no unknown user")
             user, password = self.env.unknown_user
             return "Basic " + base64.b64encode(f"{user}:{password}".encode()).decode("ascii")
         registrar = self.env.registrars.get(who)
         if registrar is None:
             raise EnvironmentError(f"{{auth:{who}}}: no registrar {who!r} in {self.env.name}")
-        if form is None:
-            return registrar.basic()
-        if form == "wrong_password":
-            if self.env.wrong_password is None:
-                raise EnvironmentError(f"{self.env.name} has no wrong password form")
-            return registrar.basic(self.env.wrong_password)
-        raise EnvironmentError(f"{{auth:{who}:{form}}}: unknown form {form!r}")
+        return registrar.basic()
 
     def headers(self, headers: dict) -> dict:
         return {k: self.header(v) if isinstance(v, str) else v for k, v in headers.items()}

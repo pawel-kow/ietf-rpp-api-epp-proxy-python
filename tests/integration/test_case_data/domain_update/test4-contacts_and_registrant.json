@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.contact_labels": {
+    "profile.domainName.contacts.labels": {
       "contains": "admin"
     }
   },
@@ -63,7 +63,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -144,7 +144,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -188,7 +188,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -240,7 +240,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -275,24 +277,12 @@
         "body": {
           "@type": "domainName",
           "name": "up-test4-{random_name}.{tld}",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domain_active_at_create": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ],
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:uf1}"
@@ -301,7 +291,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -393,24 +383,12 @@
         "body": {
           "@type": "domainName",
           "name": "up-test4-{random_name}.{tld}",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domain_active_at_create": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ],
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:uf1}"
@@ -419,7 +397,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -497,24 +475,12 @@
         "body": {
           "@type": "domainName",
           "name": "up-test4-{random_name}.{tld}",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domain_active_at_create": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ],
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:uf2}"
@@ -523,7 +489,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },

@@ -5,9 +5,8 @@ from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.domain.domain_restore import DomainRestore
 from core.model.domain.domain_restore_process import DomainRestoreProcess
 from core.model.domain.restore_report import RestoreReport
-from dataclasses import replace
 
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.mapping.domain import domain_restore_patch, domain_restore_process, domain_restore_report
 from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable
 
@@ -42,6 +41,8 @@ def test_request_without_report():
     assert domain_restore_process.rpp_to_model("foo.example", {"@type": "restoreProcess"}) == DomainRestore(
         name="foo.example",
     )
+
+NO_REPORT = {"domainName": {"processes": {"restore": {"report_supported": False}}}}
 
 
 def test_inline_report_is_not_supported_by_epp():
@@ -166,10 +167,10 @@ def test_process_to_rpp(statuses, status):
 
 def test_report_is_refused_by_a_backend_without_restore_reports():
     with pytest.raises(NotSupportedByBackend, match="restore report"):
-        domain_restore_report.rpp_to_model("foo.example", UPDATE, profile=replace(EPP_PROFILE, restore_report=False))
+        domain_restore_report.rpp_to_model("foo.example", UPDATE, profile=EPP_PROFILE.with_changes(NO_REPORT))
 
 
 def test_patched_report_is_refused_by_a_backend_without_restore_reports():
     patch = [{"op": "add", "path": "/restoreReport", "value": REPORT}]
     with pytest.raises(NotSupportedByBackend, match="restore report"):
-        domain_restore_patch.rpp_to_model("foo.example", patch, profile=replace(EPP_PROFILE, restore_report=False))
+        domain_restore_patch.rpp_to_model("foo.example", patch, profile=EPP_PROFILE.with_changes(NO_REPORT))

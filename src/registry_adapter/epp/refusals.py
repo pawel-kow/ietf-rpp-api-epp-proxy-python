@@ -1,6 +1,5 @@
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
-from registry_adapter.epp.profile import EPP_PROFILE
 
 
 def _unimplemented(message: str) -> ErrorResponse:
@@ -12,4 +11,4 @@ def _unimplemented(message: str) -> ErrorResponse:
 
 def not_supported_by_epp(feature: str) -> ErrorResponse:
     """What EPP has no place for, worded as the mappers' `NotSupportedByBackend` for EPP."""
-    return _unimplemented(f"{feature} cannot be expressed in {EPP_PROFILE.name}")
+    return _unimplemented(f"{feature} cannot be expressed in EPP")

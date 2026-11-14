@@ -22,6 +22,7 @@ from registry_adapter.rri.commands.shared.rri_command import ctid
 from registry_adapter.rri.gateways.rri_backend import RriBackend
 from registry_adapter.rri.result_codes import result_code
 from tests.helper.fake_rri_client import FakeRriClient, error, reply
+from tests.helper.profiles import RRI_PROFILE
 
 REPLIES = Path(__file__).parent / "rri_replies"
 
@@ -34,7 +35,7 @@ NAME = "rpp-exp-caa50f65.de"
 
 def backend(*replies):
     client = FakeRriClient(replies=list(replies))
-    return RriBackend(client), client
+    return RriBackend(client, RRI_PROFILE), client
 
 
 def test_the_sponsor_is_the_regacc_of_the_login():
@@ -89,6 +90,7 @@ def test_a_deleted_domain_reads_with_what_rri_shows():
     ("63200020603", ResultCode.AUTHORIZATION_ERROR),
     ("63310062004", ResultCode.OBJECT_EXISTS),
     ("53000000012", ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION),
+    ("66310082014", ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION),  # RESTORE of an active domain, like EPP's 2304
     ("63299999999", ResultCode.PARAMETER_VALUE_POLICY_ERROR),
     ("53999999999", ResultCode.COMMAND_FAILED),
     ("83000000004", ResultCode.COMMAND_FAILED),
@@ -229,7 +231,7 @@ def test_partial_update_is_derived_from_the_full_one():
 
 def test_partial_update_that_changes_nothing_is_refused_to_another_regacc():
     client = FakeRriClient(username="DENIC-99-RRI", replies=[DOMAIN_INFO])
-    gateway = RriBackend(client)
+    gateway = RriBackend(client, RRI_PROFILE)
 
     resp = gateway.domains.update(DomainUpdate(name=NAME), client_transaction_id="cl-1")
 

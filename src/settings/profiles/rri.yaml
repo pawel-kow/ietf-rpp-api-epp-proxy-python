@@ -1,0 +1,74 @@
+# The profile of DENIC RRI 5.0 (docs/rri/refactoring.md §3.7, docs/rri/gap-analysis.md §7). RRI is DENIC's protocol
+# only, so it is the profile of MTEST and of DENIC's production alike; a server's own profile could still extend it
+# (`rpp_backend_profile` with `extends: rri` in the config). The leaves are explained in
+# src/core/capabilities/backend_profile.py.
+name: RRI
+objects:                               # an RRI host is not an object: name servers are attributes of the domain
+  - domainName
+  - contact
+profiles: []                           # the EPP Compatibility Profile does not describe RRI (refactoring.md §3.10)
+lgrs: []                               # rpp_rri_lgr of the config, not set here
+
+domainName:
+  registrant:
+    min_count: 1                       # 1 to 5 holders
+    max_count: 5                       # gap Q1: further holders are contacts labelled `registrant`
+  contacts:
+    labels:                            # REQUEST contacts (gap Q2); there are no admin, tech or billing
+      - generalRequest
+      - abuse
+  status:
+    client_supported: false            # every status is the registry's
+  authInfo:
+    read_supported: false              # RRI holds the hash of an AuthInfo1 only
+  period:
+    supported: false                   # a domain runs until it is deleted
+  dns:
+    min_count: 1                       # 1 to 20 dnsentry
+    record_types:                      # Nserver, Nsentry and Dnskey; DENIC computes the DS
+      - ns
+      - a
+      - aaaa
+      - mx
+      - dnskey
+  metadata:                            # registrationDate, changed
+    - crDate
+    - upDate
+  processes:
+    renew:
+      supported: false                 # domains run until deleted
+    transfer:
+      operations: []                   # CHPROV is not exposed (gap Q3, option C)
+    restore:
+      report_supported: false          # RESTORE is one step (gap Q6)
+
+contact:
+  name:
+    changeable: false                  # the name is immutable (63220080801)
+    removable: true                    # an UPDATE states the whole contact, so it can leave the name out
+  email:
+    removable: true                    # likewise; the registry refuses a contact without one
+  phone:
+    min_count: 1                       # mandatory since 2026-01-28
+    max_count: 1
+  fax:
+    supported: false
+  region:
+    supported: false
+  localization:
+    supported: false
+  kind:
+    supported: true                    # PERSON or ORG, a PERSON may name its organisation
+  org:
+    person_name_supported: false       # an ORG is named by its organisation
+  authInfo:
+    supported: false                   # an RRI contact has no AuthInfo
+  status:
+    client_supported: false
+  metadata:                            # changed
+    - upDate
+  processes:
+    delete:
+      supported: false                 # the registry deletes contacts itself
+    transfer:
+      operations: []

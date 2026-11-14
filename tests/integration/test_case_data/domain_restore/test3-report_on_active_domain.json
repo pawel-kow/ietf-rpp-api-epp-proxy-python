@@ -1,4 +1,7 @@
 {
+  "when": {
+    "profile.domainName.processes.restore.report_supported": true
+  },
   "test_id": "test3-report_on_active_domain",
   "steps": [
     {

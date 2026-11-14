@@ -1,14 +1,17 @@
 {
   "when": {
-    "profile.domain_record_types": {
+    "profile.domainName.dns.record_types": {
       "contains": "ds"
-    }
+    },
+    "env.domainName.dns.dnskey_supported": false
   },
   "test_id": "test17-create_with_dnskey",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -103,7 +106,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -124,102 +129,16 @@
         }
       },
       "response": {
-        "any_of": [
-          {
-            "status": 422,
-            "content_type": "application/problem+json",
-            "body": {
-              "type": "urn:ietf:params:rpp:error"
-            },
-            "headers": {
-              "RPP-Code": "02306"
-            }
-          },
-          {
-            "status": 201,
-            "content_type": "application/rpp+json",
-            "body": {
-              "@type": "domainName",
-              "dns": {
-                "@type": "dnsData",
-                "records": [
-                  {
-                    "@type": "dnsRecord",
-                    "name": "@",
-                    "type": "dnskey",
-                    "rdata": {
-                      "flags": "257",
-                      "protocol": "3",
-                      "algorithm": "8",
-                      "publicKey": "AQPJ////4Q=="
-                    }
-                  }
-                ]
-              }
-            },
-            "headers": {
-              "RPP-Code": "01000"
-            }
-          },
-          {
-            "status": 201,
-            "content_type": "application/rpp+json",
-            "body": {
-              "@type": "domainName",
-              "dns": {
-                "@type": "dnsData",
-                "records": [
-                  {
-                    "@type": "dnsRecord",
-                    "name": "@",
-                    "type": "ds",
-                    "rdata": {
-                      "algorithm": "8"
-                    }
-                  }
-                ]
-              }
-            },
-            "headers": {
-              "RPP-Code": "01000"
-            }
-          },
-          {
-            "status": 201,
-            "content_type": "application/rpp+json",
-            "body": {
-              "@type": "domainName",
-              "dns": {
-                "@type": "dnsData",
-                "records": [
-                  {
-                    "@type": "dnsRecord",
-                    "name": "@",
-                    "type": "dnskey",
-                    "rdata": {
-                      "flags": "257",
-                      "protocol": "3",
-                      "algorithm": "8",
-                      "publicKey": "AQPJ////4Q=="
-                    }
-                  },
-                  {
-                    "@type": "dnsRecord",
-                    "name": "@",
-                    "type": "ds",
-                    "rdata": {
-                      "algorithm": "8"
-                    }
-                  }
-                ]
-              }
-            },
-            "headers": {
-              "RPP-Code": "01000"
-            }
-          }
-        ]
+        "status": 422,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02306"
+        }
       }
     }
-  ]
+  ],
+  "description": "A DNSKEY at create of a domain that takes DS records: a server supports one secDNS interface (RFC 5910 §4), and this one refuses the key data interface (env.secdns_key_data_interface)."
 }

@@ -36,7 +36,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -64,7 +64,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "features": {
@@ -89,7 +89,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -154,7 +154,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -182,7 +182,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "features": {
@@ -212,8 +212,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "contact.crClientId"
+                  "profile.contact.metadata": {
+                    "contains": "crClientId"
                   }
                 },
                 "then": {
@@ -229,8 +229,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "contact.crDate"
+                  "profile.contact.metadata": {
+                    "contains": "crDate"
                   }
                 },
                 "then": {

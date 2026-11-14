@@ -1,0 +1,95 @@
+# The generic profile of an EPP backend: what RFC 5730 to 5733, RFC 5910 (secDNS) and RFC 3915 (RGP) let a server
+# hold, as RPP's EPP Compatibility Profile (data-objects §2.8, core §12.4, json §8.7.1) takes them. A server's own
+# profile extends it (`rpp_backend_profile` with `extends: epp` in the config) and states only what it differs in.
+# The leaves are explained in src/core/capabilities/backend_profile.py.
+#
+# Gap: the drafts do not say which of these a server may narrow. Where an RFC leaves a member optional, this profile
+# leaves it to the server (min_count 0); a server that requires it says so in its own profile.
+name: EPP
+objects:                               # data-objects §2.8: the objects of EPP
+  - domainName
+  - host
+  - contact
+profiles:                              # core §12.4, json §8.7.1
+  - urn:ietf:params:rpp:profile:epp-compatibility
+lgrs: []                               # from rpp_idn_lgr_tables of the config, not set here
+
+domainName:
+  registrant:
+    min_count: 0                       # RFC 5731 §3.2.1: the registrant is optional
+    max_count: 1                       # one <domain:registrant>
+  contacts:
+    labels:                            # RFC 5731 §2.2: the contact types
+      - admin
+      - billing
+      - tech
+  status:
+    client_supported: true             # RFC 5731 §2.3: the client* statuses
+  authInfo:
+    read_supported: true               # RFC 5731 §3.1.2: info shows it to the sponsor
+  period:
+    supported: true                    # RFC 5731 §2.6
+  dns:
+    min_count: 0                       # RFC 5731 §3.2.1: <domain:ns> is optional
+    record_types:                      # host attributes and objects (RFC 5731), secDNS (RFC 5910)
+      - ns
+      - ds
+      - dnskey
+  metadata:                            # RFC 5731 §3.1.2, besides the sponsor (clID)
+    - crClientId
+    - crDate
+    - upClientId
+    - upDate
+    - trDate
+  processes:
+    renew:
+      supported: true                  # RFC 5731 §3.2.3
+    transfer:
+      operations:                      # RFC 5730 §2.9.3.4
+        - request
+        - query
+        - cancel
+        - approve
+        - reject
+    restore:
+      report_supported: true           # RFC 3915 §4.2.5
+
+contact:
+  name:
+    changeable: true                   # RFC 5733 §3.2.5: <contact:chg> takes a name
+    removable: false                   # RFC 5733: <contact:name> is mandatory, <contact:chg> cannot clear it
+  email:
+    removable: false                   # RFC 5733: <contact:email> is mandatory
+  phone:
+    min_count: 0                       # RFC 5733 §3.2.1: <contact:voice> is optional
+    max_count: 1                       # one <contact:voice>
+  fax:
+    supported: true                    # RFC 5733 §2.5
+  region:
+    supported: true                    # RFC 5733 §2.4.2: <contact:sp>
+  localization:
+    supported: true                    # RFC 5733 §2.4: postalInfo type "loc"
+  kind:
+    supported: false                   # RFC 5733 has no kind: a read derives it from the organisation
+  org:
+    person_name_supported: true        # RFC 5733 §2.4: postalInfo has a name and an org
+  authInfo:
+    supported: true                    # RFC 5733 §2.8
+  status:
+    client_supported: true             # RFC 5733 §2.2
+  metadata:                            # RFC 5733 §3.1.2, besides the sponsor (clID)
+    - crClientId
+    - crDate
+    - upClientId
+    - upDate
+    - trDate
+  processes:
+    delete:
+      supported: true                  # RFC 5733 §3.2.2
+    transfer:
+      operations:                      # RFC 5730 §2.9.3.4
+        - request
+        - query
+        - cancel
+        - approve
+        - reject

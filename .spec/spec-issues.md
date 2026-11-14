@@ -412,3 +412,42 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - **Proxy:** `Content-Language` is the `lang` of the EPP `msg`, `en` when the attribute is absent (the EPP default), and omitted when there is no `msg` or the value is no language tag. A message id that XML 1.0 cannot hold (a control character other than tab, line feed and carriage return, a lone surrogate, U+FFFE or U+FFFF) is 400 (`02005`) on GET and DELETE, before anything reaches EPP. A line feed in the path id (`%0A`, also `/hosts/a%0Ab`) is a framework-level 500 before the handler (#98), so a message whose id has a line feed can be read but not acknowledged. An id sent by the server is logged with `%r`, so it cannot add a log line. Comments in an EPP reply are removed before typed parsing, and a reply that is not well-formed (`<msg>a & b</msg>`, trailing junk) fails typed parsing on every operation, where lxml's `recover` repaired it before. For messages that is the notice path.
 - Only the server creates messages (data-objects §15.3.1), and EPP has no command for it.
 - **Proxy:** `POST /messages` is 501 (`02101`), after the body is validated, so the json §8.6.1 example answers 501 (`draft_message/test1`).
+
+## Identifier length and syntax
+
+- Data-objects §7.1 says identifiers have "a specified minimum length, a specified maximum length" but gives neither. Json §6.1.1 prescribes RFC 5730 `roidType`, `^(\w|_){1,8}-\w{1,}$`, at most 89 characters. A contact id is a `clIDType` in EPP (RFC 5730 §2.8, 3 to 16 characters), and a DENIC handle (`DENIC-1000022-EXAMPLE`, up to 32) has a second hyphen, which `roidType` does not allow. Neither fits the json rule.
+- Should the EPP Compatibility Profile say that a contact `id` is a `clIDType`, and leave other ids to server policy?
+- **Proxy:** puts no constraint on `id` and passes it on, so the registry refuses an id it does not take (`limits_contact/test1` to `test4`).
+
+## Limits of associations and status lists
+
+- Data-objects gives no minimum or maximum for `nameservers`, `contacts` per label ("MAY be restricted by server policy"), holders, `dns.records` per type, or `status`, and does not say whether a status label given twice is one status or an error. EPP itself has none: servers set them (13 nameservers and 13 addresses a host on the EPP test server, 5 contacts a role; 2 to 13 name servers, 1 to 5 address records, 0 to 20 DNSKEY, 1 to 5 holders on DENIC).
+- Which result code does a count over the limit get? It is a parameter value policy error (`2306`, 422) in EPP terms, but nothing says so.
+- **Proxy:** passes counts on, except holders beyond `max_registrants`, which are 501 (`02102`) before anything is sent. `limits_domain/test15` expects 4xx for that, as for a limit of the registry.
+
+## DNS record values
+
+- Data-objects §9.9.1 names the `rdata` members of `ns`, `a`, `aaaa`, `ds` and `dnskey`, but not their ranges: `keyTag` 0 to 65535, `algorithm` and `digestType` 0 to 255, the digest length a digest type implies, `flags`, `protocol`. A server may take `mx` as a parent-side record (DENIC does), and the drafts have no `rdata` structure for it.
+- `dnsControls` `ttl` and `maxSigLifetime` have a minimum of 1 and no maximum (RFC 5910 `maxSigLife` is an int).
+- **Proxy:** `mx` is `preference` and `exchange`. Other values are passed on, so the registry decides (`limits_domain/test33` to `test38`).
+
+## `authdata` length and characters
+
+- Data-objects §9.12 gives `authdata` no length or character set for `method: authinfo`, and the registry of methods the constraint of `method` refers to does not exist yet. The EPP test server takes 6 to 16 characters with an upper case letter and a digit, DENIC 8 to 16 characters without `I O l o 0 1`.
+- **Proxy:** checks the DENIC character set for RRI (422 `02306`, gap Q4) and passes anything else on (`limits_domain/test39` to `test45`).
+
+## Restore report statements
+
+- Json §8 allows one or two statements in a restore report. RFC 3915 needs exactly two, which the EPP Compatibility Profile does not say.
+- **Proxy:** one statement is 400 (`02001`) (`domain_restore/test9`).
+
+## Size of a request
+
+- No draft limits the size of a request or names the result code for one that is too large. DENIC refuses an RRI message over 64 KiB.
+- **Proxy:** no limit of its own.
+
+## Result code of a value over a limit
+
+- Data-objects §2.1 says type violations "MUST be treated as errors", without a code. EPP answers 2004 (range), 2005 (syntax) or 2306 (policy) for the same kind of value, depending on the server. Core Table 9 lists `02306` (422) but not `02004` or `02005`, which fall to 400 by class (Table 10). So a name one character too long is 400 on one server and 422 on another.
+- A server that cannot announce its limits (discovery has no member for them) leaves the client to learn each by failing.
+- **Proxy:** passes the registry's code on. An RRI refusal by its XSD (`83000000004`) or with a class-5 code (e.g. `53300102920`, name servers out of range) is 500 (`02400`), which is wrong for a value the client sent.

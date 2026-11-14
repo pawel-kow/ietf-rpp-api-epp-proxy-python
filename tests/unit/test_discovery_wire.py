@@ -1,13 +1,12 @@
 import logging
 import re
 import time
-from dataclasses import replace
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
 
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.http.app import create_app
 from tests.helper.fake_epp_client import FakeEppClient
 
@@ -221,7 +220,7 @@ def test_an_unexpected_failure_is_still_a_problem_detail_with_an_rpp_code():
 
 
 def test_the_objects_and_profiles_are_the_backends():
-    profile = replace(EPP_PROFILE, objects=("domainName", "contact"), profiles=("urn:example:profile",))
+    profile = EPP_PROFILE.with_changes({"objects": ["domainName", "contact"], "profiles": ["urn:example:profile"]})
     http = create_app(NoSessions(), profile, discovery_settings=SETTINGS).test_client()
 
     body = http.get("/.well-known/rpp", headers=HEADERS).json()

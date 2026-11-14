@@ -9,7 +9,7 @@ from core.model.domain.dns_sec import DnsSec
 from core.model.domain.domains import ContactReference, Domain, HostAttr, HostObj, NS
 from core.model.domain.ds_data import DsData
 from core.model.shared.common import AuthInfo
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.http.operation import map_request
 from rpp.mapping.domain import domain_patch, domains
 from rpp.mapping.shared.patch_not_applicable import PatchNotApplicable

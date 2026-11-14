@@ -2,7 +2,7 @@
 import pytest
 
 from core.model.shared.common import AuthInfo
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.mapping.contact import contact_replacement
 from rpp.mapping.domain import domain_replacement
 from rpp.mapping.shared import include_elements

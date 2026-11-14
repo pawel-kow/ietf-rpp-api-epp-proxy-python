@@ -1,0 +1,90 @@
+{
+  "when": {
+    "wait.domainName.processes.transfer.pending_period": true
+  },
+  "test_id": "test13-pending_transfer_approved_by_the_server",
+  "description": "A transfer nobody approves or rejects is approved by the server when its pending period ends, and the domain is the gaining registrar's.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "body_json": {
+          "@type": "domainName",
+          "name": "t13-{random_name}.{tld}",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Password1!@"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/rpp+json",
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/t13-{random_name}.{tld}/processes/transferProcesses",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json",
+          "RPP-Authorization": "authinfo value=UGFzc3dvcmQxIUA="
+        },
+        "body_json": {
+          "@type": "domainTransferProcess",
+          "transferDir": "pull"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainTransferProcess",
+          "trStatus": "pending",
+          "transferDir": "pull",
+          "reqClientId": "{regacc:b}",
+          "actClientId": "{regacc:a}"
+        },
+        "headers": {
+          "RPP-Code": "01001"
+        }
+      }
+    },
+    {
+      "wait": "domainName.processes.transfer.pending_period",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/t13-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "provMetadata": {
+            "spClientId": "{regacc:b}"
+          }
+        }
+      }
+    }
+  ]
+}

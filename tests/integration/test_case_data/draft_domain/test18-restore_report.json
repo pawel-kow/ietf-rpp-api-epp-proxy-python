@@ -1,13 +1,15 @@
 {
   "when": {
-    "env.restore_within_run": true,
-    "profile.restore_report": true
+    "wait.domainName.processes.create.add_grace_period": true,
+    "profile.domainName.processes.restore.report_supported": true
   },
   "test_id": "test18-restore_report",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -92,7 +94,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -108,7 +112,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -140,7 +146,7 @@
       }
     },
     {
-      "delay_seconds": 125,
+      "wait": "domainName.processes.create.add_grace_period",
       "request": {
         "method": "DELETE",
         "url": "/domainNames/ex18-{random_name}.{tld}",

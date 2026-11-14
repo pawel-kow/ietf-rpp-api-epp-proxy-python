@@ -2,15 +2,14 @@
 backend the settings name (`rpp_backend`)."""
 import logging
 
+from core.capabilities.backend_profile import BackendProfile
 from core.session.session_pool import SessionPool
 from registry_adapter.common.transport.tcp_client import LENGTH_OF_PAYLOAD, TCPClient
 from registry_adapter.common.transport.tls import new_tls_context
 from registry_adapter.epp.gateways.epp_backend import EppBackend
 from registry_adapter.epp.idn_tables import IdnTables
-from registry_adapter.epp.profile import epp_profile
 from registry_adapter.epp.session.epp_client import EPPClient
 from registry_adapter.rri.gateways.rri_backend import RriBackend
-from registry_adapter.rri.profile import rri_profile
 from registry_adapter.rri.session.rri_client import RriClient
 from rpp.http.app import create_app
 from settings.load_settings import load_settings
@@ -37,6 +36,8 @@ def rri_tls_context(rri_settings):
 settings = load_settings()
 tls_context = tls_context_from_config(settings.epp)
 idn_tables = IdnTables(settings.epp.rpp_idn_lgr_tables)
+# The generic profile of the protocol, the server's own over it, and the LGRs of the config.
+profile = BackendProfile.from_layers(*settings.profile_layers, {"lgrs": list(settings.lgrs)})
 
 
 def new_epp_client(username, password):
@@ -44,7 +45,7 @@ def new_epp_client(username, password):
 
 
 def new_epp_backend(username, password):
-    return EppBackend(new_epp_client(username, password), settings.epp.rpp_epp_ns_map, idn_tables)
+    return EppBackend(new_epp_client(username, password), settings.epp.rpp_epp_ns_map, profile, idn_tables)
 
 
 rri_tls = rri_tls_context(settings.rri) if settings.backend == "rri" else None
@@ -57,15 +58,15 @@ def new_rri_client(username, password):
 
 
 def new_rri_backend(username, password):
-    return RriBackend(new_rri_client(username, password), settings.rri.rpp_rri_lgr)
+    return RriBackend(new_rri_client(username, password), profile, settings.rri.rpp_rri_lgr)
 
 
-# The backend factory and the profile of each protocol `rpp_backend` can name.
+# The backend factory of each protocol `rpp_backend` can name.
 BACKENDS = {
-    "epp": (new_epp_backend, lambda: epp_profile(idn_tables)),
-    "rri": (new_rri_backend, lambda: rri_profile(settings.rri.rpp_rri_lgr)),
+    "epp": new_epp_backend,
+    "rri": new_rri_backend,
 }
 
-new_backend, _profile_of = BACKENDS[settings.backend]
+new_backend = BACKENDS[settings.backend]
 
-app = create_app(SessionPool(new_backend), _profile_of(), discovery_settings=settings.discovery)
+app = create_app(SessionPool(new_backend), profile, discovery_settings=settings.discovery)

@@ -8,7 +8,7 @@
           "select": [
             {
               "when": {
-                "profile.contact_auth_info": true
+                "profile.contact.authInfo.supported": true
               },
               "then": "/contacts?includeElements=authInfo"
             },
@@ -28,7 +28,7 @@
               "select": [
                 {
                   "when": {
-                    "profile.contact_org_person_name": true
+                    "profile.contact.org.person_name_supported": true
                   },
                   "then": {
                     "full": "John Doe"
@@ -69,7 +69,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -97,7 +97,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.123123123;ext=123",
@@ -122,7 +122,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -163,7 +163,7 @@
               "select": [
                 {
                   "when": {
-                    "profile.contact_org_person_name": true
+                    "profile.contact.org.person_name_supported": true
                   },
                   "then": {
                     "full": "John Doe"
@@ -204,7 +204,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -232,7 +232,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.123123123;ext=123",
@@ -257,7 +257,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -279,8 +279,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "contact.crDate"
+                  "profile.contact.metadata": {
+                    "contains": "crDate"
                   }
                 },
                 "then": {
@@ -299,8 +299,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "contact.crClientId"
+                  "profile.contact.metadata": {
+                    "contains": "crClientId"
                   }
                 },
                 "then": {

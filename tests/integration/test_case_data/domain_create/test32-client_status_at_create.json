@@ -1,0 +1,73 @@
+{
+  "test_id": "test32-client_status_at_create",
+  "when": {
+    "profile.domainName.status.client_supported": true
+  },
+  "description": "The data objects allow a status at create, which an EPP domain create has no element for (RFC 5731).",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "gc32-{random_name}.{tld}",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc2345678"
+          },
+          "dns": {
+            "select": [
+              {
+                "when": {
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
+                },
+                "then": {
+                  "@type": "dnsData",
+                  "records": [
+                    {
+                      "@type": "dnsRecord",
+                      "name": "@",
+                      "type": "a",
+                      "rdata": {
+                        "address": "192.0.2.10"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "clientHold"
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02102"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

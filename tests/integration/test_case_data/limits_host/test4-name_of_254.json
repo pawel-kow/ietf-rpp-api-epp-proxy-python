@@ -1,0 +1,59 @@
+{
+  "test_id": "test4-name_of_254",
+  "description": "A name of 254 characters is over the 255 octets of DNS.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "{pad:63:h4-{random_name}}.{pad:63:a}.{pad:63:b}.{pad:58:c}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "{pad:63:h4-{random_name}}.{pad:63:a}.{pad:63:b}.{pad:58:c}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "any_of": [
+          {
+            "status": 400,
+            "content_type": "application/problem+json",
+            "headers": {
+              "RPP-Code": "02001"
+            },
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          },
+          {
+            "status": 400,
+            "content_type": "application/problem+json",
+            "headers": {
+              "RPP-Code": "02005"
+            },
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

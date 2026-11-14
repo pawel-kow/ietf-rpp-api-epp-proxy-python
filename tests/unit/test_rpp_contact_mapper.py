@@ -9,8 +9,8 @@ from core.model.contact.contacts import Contact, ContactType
 from core.model.contact.localized_postal_info import LocalizedPostalInfo
 from core.model.shared.common import AuthInfo
 from rpp.http.operation import map_request
-from registry_adapter.epp.profile import EPP_PROFILE
-from registry_adapter.rri.profile import RRI_PROFILE
+from tests.helper.profiles import EPP_PROFILE
+from tests.helper.profiles import RRI_PROFILE
 from rpp.mapping.contact import contacts
 from rpp.mapping.contact.contact_capabilities import check_contact
 from rpp.schema.validator import validate_schema

@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.contact_localization": true
+    "profile.contact.localization.supported": true
   },
   "test_id": "test34-patch_adding_a_localization_the_registry_ignores",
   "steps": [
@@ -68,7 +68,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",

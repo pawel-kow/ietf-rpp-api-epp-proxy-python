@@ -4,7 +4,7 @@ from connexion import ProblemException
 from core.model.contact.address import Address
 from core.model.contact.contacts import Contact, ContactType
 from rpp.http.operation import map_request
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.mapping.contact import contact_patch, contact_replacement
 from rpp.mapping.contact.contact_capabilities import check_contact
 from tests.helper.contact_fixtures import ADDRESS, card, current_contact, derived_update, localized, put_body

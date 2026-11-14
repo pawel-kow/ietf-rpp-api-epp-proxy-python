@@ -1,8 +1,8 @@
 {
   "when": {
-    "profile.contact_fax": true,
-    "profile.contact_phone_required": false,
-    "profile.contact_org_person_name": true
+    "profile.contact.fax.supported": true,
+    "profile.contact.phone.min_count": 0,
+    "profile.contact.org.person_name_supported": true
   },
   "test_id": "test2-put_clears_organisation_and_numbers",
   "steps": [
@@ -27,7 +27,7 @@
               "select": [
                 {
                   "when": {
-                    "profile.contact_org_person_name": true
+                    "profile.contact.org.person_name_supported": true
                   },
                   "then": {
                     "full": "John Doe"
@@ -60,7 +60,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -88,7 +88,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.456456456",
@@ -113,7 +113,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -161,7 +161,7 @@
               "select": [
                 {
                   "when": {
-                    "profile.contact_org_person_name": true
+                    "profile.contact.org.person_name_supported": true
                   },
                   "then": {
                     "full": "John Doe"
@@ -194,7 +194,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -222,7 +222,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "number": "tel:+49.456456456",
@@ -247,7 +247,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -395,7 +395,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",

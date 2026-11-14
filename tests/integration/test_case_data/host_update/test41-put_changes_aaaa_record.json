@@ -1,0 +1,180 @@
+{
+  "test_id": "test41-put_changes_aaaa_record",
+  "description": "A PUT replaces the aaaa record by another.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "hu41.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "hu41.{random_name}.net."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "host"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/hosts/hu41.{random_name}.net",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "add",
+            "path": "/dns/records",
+            "value": {
+              "@type": "dnsRecord",
+              "name": "hu41.{random_name}.net.",
+              "type": "aaaa",
+              "rdata": {
+                "address": "2001:db8::1"
+              }
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "host"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "url": "/hosts/hu41.{random_name}.net",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "hu41.{random_name}.net",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "hu41.{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "hu41.{random_name}.net.",
+                "type": "aaaa",
+                "rdata": {
+                  "address": "2001:db8::2"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "host",
+          "dns": {
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "hu41.{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "hu41.{random_name}.net.",
+                "type": "aaaa",
+                "rdata": {
+                  "address": "2001:db8::2"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PATCH",
+        "url": "/hosts/hu41.{random_name}.net",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/dns/records",
+            "match": {
+              "rdata": {
+                "address": "2001:db8::1"
+              }
+            },
+            "value": {
+              "@type": "dnsRecord",
+              "name": "hu41.{random_name}.net.",
+              "type": "a",
+              "rdata": {
+                "address": "192.0.2.99"
+              }
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "RPP-Code": "02308"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

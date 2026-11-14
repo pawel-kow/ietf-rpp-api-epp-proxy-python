@@ -19,36 +19,36 @@ REGISTRANT = "registrant"
 def check_contact_label(label: str, profile: BackendProfile) -> str:
     """The RPP label is open, the backend knows a fixed set of contact roles. A backend that holds several
     registrants takes the ones after `registrant` as contacts labelled `registrant`."""
-    if label == REGISTRANT and profile.max_registrants > 1:
+    if label == REGISTRANT and profile.domainName.registrant.max_count > 1:
         return label
-    if label not in profile.contact_labels:
+    if label not in profile.domainName.contacts.labels:
         raise NotSupportedByBackend(f"Contact label '{label}'")
     return label
 
 
 def check_host_objects(host_names: list, profile: BackendProfile):
-    """`nameservers` are host objects, which a backend without them (`profile.host_objects`) cannot hold: it takes
+    """`nameservers` are host objects, which a backend without them (`"host"` in `profile.objects`) cannot hold: it takes
     name servers as `ns` records in `dns` (gap Q12)."""
-    if host_names and not profile.host_objects:
+    if host_names and "host" not in profile.objects:
         raise NotSupportedByBackend("'nameservers' (host objects)")
 
 
 def check_client_statuses(labels, profile: BackendProfile):
-    """A backend whose statuses are all its own (`profile.client_statuses`) takes none from a client."""
-    if labels and not profile.client_statuses:
+    """A backend whose statuses are all its own (`profile.domainName.status.client_supported`) takes none from a client."""
+    if labels and not profile.domainName.status.client_supported:
         raise NotSupportedByBackend(f"Client status '{next(iter(labels))}'")
 
 
 def check_registrants(registrants: int, profile: BackendProfile):
-    if registrants > profile.max_registrants:
-        raise NotSupportedByBackend(f"More than {profile.max_registrants} registrants")
+    if registrants > profile.domainName.registrant.max_count:
+        raise NotSupportedByBackend(f"More than {profile.domainName.registrant.max_count} registrants")
 
 
 def check_requested(requested: frozenset[str], *, profile: BackendProfile) -> frozenset[str]:
     """The data elements a request asks to include, refused where the backend never shows one: a backend that cannot
-    read back a domain's authInfo (`profile.auth_info_readable`) refuses `includeElements=authInfo` rather than let a
+    read back a domain's authInfo (`profile.domainName.authInfo.read_supported`) refuses `includeElements=authInfo` rather than let a
     client take its absence for no authInfo."""
-    if "authInfo" in requested and not profile.auth_info_readable:
+    if "authInfo" in requested and not profile.domainName.authInfo.read_supported:
         raise NotSupportedByBackend("Reading the 'authInfo' of a domain")
     return requested
 
@@ -72,7 +72,7 @@ def _rpp_to_processes(domain_rpp: RPPDomain, profile: BackendProfile) -> dict | 
     period = create_processes[0].period
     if period is None:
         return None
-    if not profile.registration_periods:
+    if not profile.domainName.period.supported:
         raise NotSupportedByBackend("A registration period")
     return {"creation": CreationProcess(duration=period_duration(period))}
 

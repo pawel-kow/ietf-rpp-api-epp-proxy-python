@@ -1,0 +1,123 @@
+{
+  "test_id": "test16-email_without_at",
+  "description": "An email address without @ is no RFC 5322 address.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:Z16}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika.example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          },
+          "authInfo": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact.authInfo.supported": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "any_of": [
+          {
+            "status": 400,
+            "content_type": "application/problem+json",
+            "headers": {
+              "RPP-Code": "02001"
+            },
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          },
+          {
+            "status": 400,
+            "content_type": "application/problem+json",
+            "headers": {
+              "RPP-Code": "02004"
+            },
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          },
+          {
+            "status": 400,
+            "content_type": "application/problem+json",
+            "headers": {
+              "RPP-Code": "02005"
+            },
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          },
+          {
+            "status": 422,
+            "content_type": "application/problem+json",
+            "headers": {
+              "RPP-Code": "02306"
+            },
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

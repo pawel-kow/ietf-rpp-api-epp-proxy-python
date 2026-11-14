@@ -95,7 +95,7 @@ name = "Inside epp only session uses the transport"
 type = "forbidden"
 source_modules = [
     "registry_adapter.epp.commands", "registry_adapter.epp.gateways", "registry_adapter.epp.xml",
-    "registry_adapter.epp.contact_refusal", "registry_adapter.epp.profile", "registry_adapter.epp.refusals",
+    "registry_adapter.epp.contact_refusal", "registry_adapter.epp.refusals",
 ]
 forbidden_modules = ["registry_adapter.common.transport"]
 allow_indirect_imports = true
@@ -133,7 +133,7 @@ name = "Inside rri only session uses the transport"
 type = "forbidden"
 source_modules = [
     "registry_adapter.rri.commands", "registry_adapter.rri.gateways", "registry_adapter.rri.xml",
-    "registry_adapter.rri.profile", "registry_adapter.rri.result_codes", "registry_adapter.rri.statuses",
+    "registry_adapter.rri.result_codes", "registry_adapter.rri.statuses",
 ]
 forbidden_modules = ["registry_adapter.common.transport"]
 allow_indirect_imports = true

@@ -1,0 +1,109 @@
+{
+  "test_id": "test37-unknown_jscontact_property",
+  "description": "A JSContact property the RPP profile does not take (nicknames).",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:K37}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            },
+            "nicknames": {
+              "n1": {
+                "@type": "Nickname",
+                "name": "Riki"
+              }
+            }
+          },
+          "authInfo": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact.authInfo.supported": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "any_of": [
+          {
+            "status": 400,
+            "headers": {
+              "RPP-Code": "02001"
+            },
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          },
+          {
+            "status": 501,
+            "headers": {
+              "RPP-Code": "02102"
+            },
+            "content_type": "application/problem+json",
+            "body": {
+              "type": "urn:ietf:params:rpp:error"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

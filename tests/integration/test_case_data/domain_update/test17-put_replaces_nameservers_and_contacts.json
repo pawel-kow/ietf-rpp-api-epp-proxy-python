@@ -1,7 +1,9 @@
 {
   "when": {
-    "profile.host_objects": true,
-    "profile.contact_labels": {
+    "profile.objects": {
+      "contains": "host"
+    },
+    "profile.domainName.contacts.labels": {
       "contains": "admin"
     }
   },
@@ -64,7 +66,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -145,7 +147,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -269,7 +271,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -307,7 +309,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -361,7 +365,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -420,7 +424,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },

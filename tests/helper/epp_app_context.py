@@ -1,7 +1,7 @@
 import pytest
 from flask import Flask
 
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 
 
 @pytest.fixture

@@ -1,31 +1,80 @@
 """Selectors in the case files: which backends a case, a step or an expected value is for (docs/rri/refactoring.md
 §5.2).
 
-A selector is a JSON object whose keys name facts and which holds when every key holds. `profile.<fact>` is a fact of
-the `BackendProfile` the app under test was composed with, `env.<fact>` a fact of the test environment. A list of
-selectors holds when one of them holds.
+A selector is a JSON object whose keys name facts and which holds when every key holds. `profile.<path>` is a leaf of
+the `BackendProfile` the app under test was composed with, `env.<path>` one of the facts of the test environment; the
+path is dotted (`profile.contact.fax.supported`, `env.contact.postcode.min_count`). `wait.<path>` names a period of the
+environment's facts (an ISO 8601 duration) a case waits for: it holds when the server has that transition (null: it has
+none; a transition that is immediate is `PT0S`) and the period, with the buffer, is within the longest wait of the run. A list of selectors holds when one of them holds.
 """
-from dataclasses import fields, is_dataclass
+from core.capabilities.backend_profile import BackendProfile
+from tests.helper.durations import seconds
 
 
 class SelectorError(ValueError):
     """A selector that cannot be evaluated: a key that names no fact, or a value of the wrong form."""
 
 
+def env_fact(facts: dict, path: str):
+    """The leaf of the environment's facts at a dotted path. A path that names no leaf is a `KeyError`."""
+    node = facts
+    for key in path.split("."):
+        if not isinstance(node, dict) or key not in node:
+            raise KeyError(path)
+        node = node[key]
+    if isinstance(node, dict):
+        raise KeyError(path)
+    return node
+
+
 class Facts:
-    def __init__(self, profile, env_facts: dict):
-        if not is_dataclass(profile):
-            raise SelectorError("the profile is not a dataclass")
+    def __init__(self, profile: BackendProfile, env_facts: dict, max_wait: int | None = None,
+                 buffer_percent: float = 0):
+        """`max_wait` is the longest wait of the run in seconds, None for no limit (to find a case that runs
+        nowhere); `buffer_percent` the share of a period added to its wait."""
+        if not isinstance(profile, BackendProfile):
+            raise SelectorError("the profile is not a BackendProfile")
         self.profile = profile
-        self.profile_names = {f.name for f in fields(profile)}
         self.env_facts = env_facts
+        self.max_wait = max_wait
+        self.buffer_percent = buffer_percent
+
+    def period(self, path: str) -> int | None:
+        """The seconds of a period of the facts, None where the server has no such transition."""
+        try:
+            value = env_fact(self.env_facts, path)
+        except KeyError:
+            raise SelectorError(f"selector key 'wait.{path}' names no fact") from None
+        try:
+            return None if value is None else seconds(value)
+        except ValueError as e:
+            raise SelectorError(f"wait.{path}: {e}") from None
+
+    def wait_seconds(self, path: str) -> int:
+        """How long a step waits for a period: the period and the buffer."""
+        period = self.period(path)
+        if period is None:
+            raise SelectorError(f"wait.{path}: the server has no such transition")
+        return round(period * (1 + self.buffer_percent / 100))
+
+    def wait_unmet(self, path: str) -> str | None:
+        if self.period(path) is None:
+            return f"wait.{path}: the server has no such transition"
+        wait = self.wait_seconds(path)
+        if self.max_wait is not None and wait > self.max_wait:
+            return f"wait.{path} needs {wait} s, the run waits at most {self.max_wait} s (RPP_TEST_MAX_WAIT)"
+        return None
 
     def value(self, key: str):
-        scope, _, name = key.partition(".")
-        if scope == "profile" and name in self.profile_names:
-            return getattr(self.profile, name)
-        if scope == "env" and name in self.env_facts:
-            return self.env_facts[name]
+        """The leaf a key names. A key that names no leaf, or a node with leaves under it, names no fact."""
+        scope, _, path = key.partition(".")
+        try:
+            if scope == "profile":
+                return self.profile.fact(path)
+            if scope == "env":
+                return env_fact(self.env_facts, path)
+        except KeyError:
+            pass
         raise SelectorError(f"selector key {key!r} names no fact")
 
 
@@ -61,6 +110,13 @@ def unmet(selector, facts: Facts) -> list[str]:
         raise SelectorError(f"a selector is a non-empty object or a list of them: {selector!r}")
     failed = []
     for key, expected in selector.items():
+        if key.startswith("wait."):
+            if expected is not True:
+                raise SelectorError(f"{key}: a wait selector is true, not {expected!r}")
+            reason = facts.wait_unmet(key[len("wait."):])
+            if reason:
+                failed.append(reason)
+            continue
         actual = facts.value(key)
         if not _value_holds(actual, expected):
             failed.append(f"{key} is {actual!r}, not {expected!r}")
@@ -132,9 +188,25 @@ def check(case: dict, facts: Facts) -> None:
 
     if "when" in case:
         unmet(case["when"], facts)
+    waits = {key[len("wait."):] for key in (case.get("when") if isinstance(case.get("when"), dict) else {})
+             if key.startswith("wait.")}
     for i, step in enumerate(case.get("steps", [])):
+        if "delay_seconds" in step:
+            raise SelectorError(f"step {i}: a case waits for a period of the facts (wait), not for seconds")
+        for path in wait_paths(step):
+            if path not in waits:
+                raise SelectorError(f"step {i} waits for {path}, which the case's when does not select (wait.{path})")
         if "when" in step:
             unmet(step["when"], facts)
             if step.get("capture"):
                 raise SelectorError(f"step {i} has a when and a capture, which a later step may need")
         walk({k: v for k, v in step.items() if k != "when"}, f"steps[{i}]")
+
+
+def wait_paths(step: dict) -> list[str]:
+    """The periods a step waits for before its request: `"wait": "<path>"`, or a list of them, which add up."""
+    wait = step.get("wait", [])
+    paths = [wait] if isinstance(wait, str) else wait
+    if not isinstance(paths, list) or not all(isinstance(p, str) for p in paths):
+        raise SelectorError(f"a step's wait is a fact path or a list of them: {wait!r}")
+    return paths

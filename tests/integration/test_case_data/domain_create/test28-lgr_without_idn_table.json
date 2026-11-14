@@ -8,7 +8,9 @@
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -89,7 +91,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -105,7 +109,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",

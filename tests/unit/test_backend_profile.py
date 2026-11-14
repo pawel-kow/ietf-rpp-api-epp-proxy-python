@@ -1,4 +1,3 @@
-from dataclasses import replace
 
 import pytest
 from connexion import ProblemException
@@ -8,8 +7,7 @@ from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from core.model.domain.domains import ContactReference
 from core.model.message.queue_message import QueueMessage
 from registry_adapter.epp.gateways.epp_backend import EppBackend
-from registry_adapter.epp.idn_tables import IdnTables
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE
 from rpp.http.operation import map_request
 from rpp.mapping.domain import domain_patch, domain_replacement, domain_restore_report, domains
 from rpp.mapping.message import messages
@@ -19,9 +17,8 @@ from tests.helper.epp_app_context import epp_app_context  # noqa: F401, a fixtur
 
 NAME = "foo.example"
 
-OTHER = replace(
-    EPP_PROFILE, name="Other", contact_labels=("generalRequest", "abuse"), domain_record_types=("ns", "dnskey", "mx"),
-)
+OTHER = EPP_PROFILE.with_changes({"name": "Other", "domainName": {
+    "contacts": {"labels": ["generalRequest", "abuse"]}, "dns": {"record_types": ["ns", "dnskey", "mx"]}}})
 
 
 def create(profile, **members):
@@ -42,17 +39,13 @@ DS = {"@type": "dnsRecord", "name": "@", "type": "ds", "rdata": {
 
 
 def test_epp_holds_the_contact_roles_of_rfc_5731():
-    assert EPP_PROFILE.contact_labels == ("admin", "billing", "tech")
+    assert EPP_PROFILE.domainName.contacts.labels == ("admin", "billing", "tech")
 
 
 def test_the_epp_backend_has_the_epp_profile():
-    assert EppBackend(None, EPP_NS_MAP).profile == EPP_PROFILE
+    assert EppBackend(None, EPP_NS_MAP, EPP_PROFILE).profile == EPP_PROFILE
 
 
-def test_the_epp_backend_offers_the_lgrs_of_its_idn_tables():
-    backend = EppBackend(None, EPP_NS_MAP, IdnTables({"latn-1.0": "de"}))
-
-    assert backend.profile == replace(EPP_PROFILE, lgrs=frozenset({"latn-1.0"}))
 
 
 def test_a_contact_label_of_the_backend_is_accepted():
@@ -124,3 +117,46 @@ def test_a_message_the_proxy_cannot_translate_names_the_backend():
     message = QueueMessage(id="1", creationDate="2026-11-11T00:00:00Z", lang=None, text="Hi", unmapped="urn:example:x")
 
     assert "The Other message carried data" in messages.model_to_rpp(message, backend_name="Other")["data"]["message"]
+
+
+def test_a_profile_reads_as_a_tree():
+    assert EPP_PROFILE.contact.fax.supported is True
+    assert EPP_PROFILE.fact("domainName.processes.transfer.operations") == (
+        "request", "query", "cancel", "approve", "reject")
+
+
+@pytest.mark.parametrize("path", ["contact.fax", "contact.nope", "nope", "contact.fax.supported.x"])
+def test_a_path_that_names_no_leaf_is_a_key_error(path):
+    with pytest.raises(KeyError):
+        EPP_PROFILE.fact(path)
+
+
+def test_an_attribute_the_profile_lacks_is_named():
+    with pytest.raises(AttributeError, match="contact.nope"):
+        EPP_PROFILE.contact.nope
+
+
+def test_a_later_layer_merges_maps_and_replaces_lists():
+    changed = EPP_PROFILE.with_changes({"contact": {"fax": {"supported": False}}, "objects": ["domainName"]})
+
+    assert changed.contact.fax.supported is False
+    assert changed.contact.region.supported is True
+    assert changed.objects == ("domainName",)
+    assert EPP_PROFILE.contact.fax.supported is True
+
+
+@pytest.mark.parametrize("changes, error", [
+    ({"contact": {"fax": {"suported": True}}}, "unknown contact.fax.suported"),
+    ({"contact": {"fax": "yes"}}, "unknown contact.fax; missing contact.fax.supported"),
+    ({"contact": {"fax": {"supported": "yes"}}}, "contact.fax.supported must be of type bool"),
+    ({"contact": {"phone": {"max_count": True}}}, "contact.phone.max_count must be of type int"),
+    ({"objects": "domainName"}, "objects must be a list of strings"),
+])
+def test_a_wrong_profile_is_refused_with_the_leaf(changes, error):
+    with pytest.raises(ValueError, match=error):
+        EPP_PROFILE.with_changes(changes)
+
+
+def test_the_generic_profiles_have_every_leaf():
+    assert RRI_PROFILE.name == "RRI"
+    assert "host" not in RRI_PROFILE.objects

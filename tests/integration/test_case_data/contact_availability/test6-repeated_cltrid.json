@@ -37,7 +37,7 @@
         "select": [
           {
             "when": {
-              "env.cltrid_reuse_refused": true
+              "env.session.cltrid_reuse_supported": false
             },
             "then": {
               "status": 500,

@@ -1,12 +1,14 @@
 {
   "when": {
-    "profile.registration_periods": true
+    "profile.domainName.period.supported": true
   },
   "test_id": "test2-simple_create_2year",
   "steps": [
     {
       "when": {
-        "profile.registrant_required": true
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
       },
       "request": {
         "method": "POST",
@@ -76,7 +78,7 @@
           "select": [
             {
               "when": {
-                "profile.auth_info_readable": true
+                "profile.domainName.authInfo.read_supported": true
               },
               "then": "/domainNames?includeElements=authInfo"
             },
@@ -110,7 +112,9 @@
             "select": [
               {
                 "when": {
-                  "profile.registrant_required": true
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "contact",
@@ -126,7 +130,9 @@
             "select": [
               {
                 "when": {
-                  "profile.domain_dns_required": true
+                  "profile.domainName.dns.min_count": {
+                    "min": 1
+                  }
                 },
                 "then": {
                   "@type": "dnsData",
@@ -161,29 +167,17 @@
         "body": {
           "@type": "domainName",
           "name": "TEST2-{random_name}.{tld}",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domain_active_at_create": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ],
           "authInfo": {
             "select": [
               {
                 "when": {
-                  "profile.auth_info_readable": true
+                  "profile.domainName.authInfo.read_supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -205,8 +199,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "domainName.crDate"
+                  "profile.domainName.metadata": {
+                    "contains": "crDate"
                   }
                 },
                 "then": {
@@ -225,8 +219,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "domainName.crClientId"
+                  "profile.domainName.metadata": {
+                    "contains": "crClientId"
                   }
                 },
                 "then": {
@@ -242,7 +236,7 @@
             "select": [
               {
                 "when": {
-                  "profile.registration_periods": true
+                  "profile.domainName.period.supported": true
                 },
                 "then": {
                   "type": "datetime_format_utc_and_delta",

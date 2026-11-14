@@ -1,6 +1,6 @@
 {
   "when": {
-    "profile.client_statuses": true
+    "profile.contact.status.client_supported": true
   },
   "test_id": "test28-patch_missing",
   "steps": [

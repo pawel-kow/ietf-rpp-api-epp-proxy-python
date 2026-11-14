@@ -1,7 +1,11 @@
 {
   "test_id": "test6-nameservers_need_host_objects",
   "when": {
-    "profile.host_objects": false
+    "profile.objects": {
+      "not": {
+        "contains": "host"
+      }
+    }
   },
   "description": "A backend without host objects refuses nameservers before any command.",
   "steps": [

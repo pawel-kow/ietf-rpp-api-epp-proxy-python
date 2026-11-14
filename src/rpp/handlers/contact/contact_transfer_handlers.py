@@ -5,7 +5,7 @@ from rpp.mapping.contact import contact_transfer_approve, contact_transfer_proce
 
 _handlers = TransferHandlers(
     gateway_of=lambda backend: backend.contacts,
-    operations_of=lambda profile: profile.contact_transfer_operations,
+    operations_of=lambda profile: profile.contact.processes.transfer.operations,
     create_mapper=contact_transfer_process.rpp_to_model,
     approve_mapper=contact_transfer_approve.rpp_to_model,
     reject_mapper=contact_transfer_reject.rpp_to_model,

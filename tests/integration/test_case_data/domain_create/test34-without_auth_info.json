@@ -1,0 +1,35 @@
+{
+  "test_id": "test34-without_auth_info",
+  "when": {
+    "profile.domainName.registrant.min_count": 0
+  },
+  "description": "The data objects allow a domain without authInfo (0-1); RFC 5731 requires one at create, which the registry refuses as a missing parameter.",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "gc34-{random_name}.{tld}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02003"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

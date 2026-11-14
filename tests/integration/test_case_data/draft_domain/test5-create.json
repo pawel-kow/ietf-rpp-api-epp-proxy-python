@@ -1,7 +1,9 @@
 {
   "when": {
-    "profile.host_objects": true,
-    "profile.registration_periods": true
+    "profile.objects": {
+      "contains": "host"
+    },
+    "profile.domainName.period.supported": true
   },
   "test_id": "test5-create",
   "steps": [
@@ -114,7 +116,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -142,7 +144,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "features": {
@@ -167,7 +169,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -223,7 +225,7 @@
                     "select": [
                       {
                         "when": {
-                          "profile.contact_region": true
+                          "profile.contact.region.supported": true
                         },
                         "then": {
                           "kind": "region",
@@ -251,7 +253,7 @@
                 "select": [
                   {
                     "when": {
-                      "profile.contact_fax": true
+                      "profile.contact.fax.supported": true
                     },
                     "then": {
                       "features": {
@@ -276,7 +278,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_auth_info": true
+                  "profile.contact.authInfo.supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -304,7 +306,7 @@
           "select": [
             {
               "when": {
-                "profile.auth_info_readable": true
+                "profile.domainName.authInfo.read_supported": true
               },
               "then": "/domainNames?includeElements=authInfo"
             },
@@ -340,7 +342,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -407,24 +409,12 @@
         "body": {
           "@type": "domainName",
           "name": "ex5-{random_name}.{tld}",
-          "status": {
-            "select": [
-              {
-                "when": {
-                  "env.domain_active_at_create": true
-                },
-                "then": [
-                  {
-                    "@type": "domainStatus",
-                    "label": "ok"
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
+          "status": [
+            {
+              "@type": "domainStatus",
+              "label": "{env:domainName.processes.create.success_status}"
+            }
+          ],
           "registrant": {
             "@type": "contact",
             "id": "{handle:a:J5}"
@@ -433,7 +423,7 @@
             "select": [
               {
                 "when": {
-                  "profile.contact_labels": {
+                  "profile.domainName.contacts.labels": {
                     "contains": "admin"
                   }
                 },
@@ -488,7 +478,7 @@
             "select": [
               {
                 "when": {
-                  "profile.auth_info_readable": true
+                  "profile.domainName.authInfo.read_supported": true
                 },
                 "then": {
                   "@type": "authInfo",
@@ -510,8 +500,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "domainName.crClientId"
+                  "profile.domainName.metadata": {
+                    "contains": "crClientId"
                   }
                 },
                 "then": {
@@ -527,8 +517,8 @@
             "select": [
               {
                 "when": {
-                  "profile.metadata": {
-                    "contains": "domainName.crDate"
+                  "profile.domainName.metadata": {
+                    "contains": "crDate"
                   }
                 },
                 "then": {
@@ -547,7 +537,7 @@
             "select": [
               {
                 "when": {
-                  "profile.registration_periods": true
+                  "profile.domainName.period.supported": true
                 },
                 "then": {
                   "type": "datetime_format_utc_and_delta",

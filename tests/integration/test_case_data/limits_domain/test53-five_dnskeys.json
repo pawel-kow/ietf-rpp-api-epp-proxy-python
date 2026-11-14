@@ -1,0 +1,237 @@
+{
+  "test_id": "test53-five_dnskeys",
+  "when": {
+    "profile.domainName.dns.record_types": {
+      "contains": "dnskey"
+    },
+    "profile.objects": {
+      "not": {
+        "contains": "host"
+      }
+    }
+  },
+  "description": "Five DNSKEY records next to two ns records, the most MTEST takes.",
+  "steps": [
+    {
+      "when": {
+        "profile.domainName.registrant.min_count": {
+          "min": 1
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{handle:a:V53}",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678",
+                "features": {
+                  "voice": true
+                }
+              }
+            }
+          },
+          "authInfo": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact.authInfo.supported": true
+                },
+                "then": {
+                  "@type": "authInfo",
+                  "method": "authinfo",
+                  "authdata": "Abc2345678"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "application/rpp+json"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "t53-{random_name}.{tld}",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc2345678"
+          },
+          "registrant": {
+            "select": [
+              {
+                "when": {
+                  "profile.domainName.registrant.min_count": {
+                    "min": 1
+                  }
+                },
+                "then": {
+                  "@type": "contact",
+                  "id": "{handle:a:V53}"
+                }
+              },
+              {
+                "omit": true
+              }
+            ]
+          },
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns1.n53-{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "ns",
+                "rdata": {
+                  "nsdname": "ns2.n53-{random_name}.net."
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "dnskey",
+                "rdata": {
+                  "flags": "257",
+                  "protocol": "3",
+                  "algorithm": "8",
+                  "publicKey": "AwEAAZkCumJlJCXt90jGhxcov/33Oe4SnTVHZFvyis0uzEUvDk0h1vyusN8d3QymfNqBxdndf/IAS/SCUuCmX6VzvKXQMeSk5L+insuXvbtZSQ1PHdfooS7aI+g5CjvPT00EHUHmxNDbYA+wttWHBzc6xuLACUt33dpEvlQ9FaNWohHrdoncMTgakToHJ8zS3xqxnV0HfhevOwSrljDsMIso9KQt6s3N+eNyi+mcgbQ7dp6+e4FXb/IISjxL4DhRRb0g0LajQ989w60JJUxALAcqwgX4Comv1Wnmlx6Rt+yW2pUHRSOpi7bBsNd5+1pzK5eY2j6FEQusUY7ifGIRQgvvdyk="
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "dnskey",
+                "rdata": {
+                  "flags": "257",
+                  "protocol": "3",
+                  "algorithm": "8",
+                  "publicKey": "AwEAAb44LGjm3cDcSJlDfh798G/Y1hx0tLMutOIn4XZr23ZL+9cr9sBpde0oxQnXm6ReYVDfPU+95gKREqYKYgMhRpC4/e6oxa5SaE2WJXw3CpAnCiScQJxMiHgekk0cByzDHuszm3yyf1c94/oTwNBSDb7hv1U0H3U9XWpFvjXvqZ83NkgjJu2yn4R5faTIApUQeLU8r5mBYEQ/2caLLVBNCMlkkWQkIbgW3dXeDh9O9ijGGN3rP4y3r2T3qH/1RRrSR4bgIlIkcTUW7cKFmiTurB9VkmOizw3I/LMg/Wsvb63UJ3clwXMAmS1FsijJQ4gnPKXQl85HVYU3FTlw8o7uL5k="
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "dnskey",
+                "rdata": {
+                  "flags": "257",
+                  "protocol": "3",
+                  "algorithm": "8",
+                  "publicKey": "AwEAAcCx2U0Lv9VZeb07qVPc8yNMzyoubwRIpsBQh8xS3Qm1vpjkE7p0PFebRcEgVijf5L6iXDY0H2/Ah7NnMwH2zPHXTK677m8+/u/XVgK6lpNPcjGDkiACLxabv9FmyEUDwmPzkMXEQL6nWnh69cIXMdb+5bwqxZ4ixQIrsAjvSCh0bi7HAITpXES6ohE5wdnnl7WtQCaRbpYtQcZ80bHAMBK1eukbFhN/vdQjfLSKzQb+MCmQQZqT4occIn1o+zgztUas1lvO22hAh6fkcGHT96xIAZDegbs4+qj8WOGe8h5LFgN7tEc6YKSFMmguhtwPl6wnljKsA7mXVf7Ixh6J6q8="
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "dnskey",
+                "rdata": {
+                  "flags": "257",
+                  "protocol": "3",
+                  "algorithm": "8",
+                  "publicKey": "AwEAAfhX7qKRTizaBmbePoRU/sLJXMNPcPVzbn3ofP8T+kpwSA/zmKkYbgOTAPyMQHBPqoIUG3YJqy0sxrbtF+B5qA/MTg7ownS3wkQW1i1fZCFgtGGL5XU6+cYSImjagy/u9AzuQFoybnnJtEAzjKv7iIVLFLHZ+FcTPCmc40JXPCHIzAW0gkQKJwlRaMEUTDijVeQfXMlDeYZf+RwjAMnPfI1iYT6e0SmoSrF8lO5PCfShMHJEiuZ73cOUfX8n4XCNxpFtqGJRFhhBOF+2G3byhpQT6fwAdIubJ9ofUvtB3rM1ldDpAZWbgiMM7wdAcJMhjnaw3jikzcanADmnJ4V8WV8="
+                }
+              },
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "dnskey",
+                "rdata": {
+                  "flags": "257",
+                  "protocol": "3",
+                  "algorithm": "8",
+                  "publicKey": "AwEAAe8tx0hJJowznaffIg31j6lSt42L1AdzVD9Sd0yF4e063zKo/qIB4w0aPF/QxYapdZmu3EQ5SFPu2X+aSPRpzz8gLchD7oUxFzUehxjhzEIrff/aAuIXSQgsS5JTk5VkqEMVoBhfWiBTpWIbg4mbZ4jWbmX3taAH4A0Hftzleio72wNTjp05JGI//WOA/XdpwdlO+yQmzCejYhpPxSu5AVF6UaYoiFWi59wcT2XzJk/5xCXwZru/3kof21Lj4v2uy89c1gqXJCx8sNcsOElBTlPDQh6q2LDiaPtolDUVrlASDrsDVq97cIjEW9ji3QsLHeG6vT2yPpJDWsZiHwXv85U="
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/t53-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "application/rpp+json",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    }
+  ]
+}

@@ -4,7 +4,7 @@ from core.model.domain.domains import (
 )
 from core.model.domain.ds_data import DsData
 from registry_adapter.epp.commands.domain.update import create_domain_update_xml
-from registry_adapter.epp.profile import EPP_PROFILE
+from tests.helper.profiles import EPP_PROFILE
 from rpp.mapping.domain import domain_patch
 from tests.helper.epp_ns_map import EPP_NS_MAP
 

@@ -1,4 +1,8 @@
 {
+  "when": {
+    "wait.domainName.processes.create.add_grace_period": true,
+    "profile.domainName.processes.restore.report_supported": true
+  },
   "test_id": "test12-restore_cycle_with_patch",
   "steps": [
     {
@@ -30,7 +34,7 @@
       }
     },
     {
-      "delay_seconds": 125,
+      "wait": "domainName.processes.create.add_grace_period",
       "request": {
         "method": "DELETE",
         "url": "/domainNames/rs12-{random_name}.{tld}",
