@@ -135,7 +135,9 @@ registrant, created in a first step of its own (`profile.domainName.registrant.m
 `generalRequest` and `abuse` where the backend has no `admin`; `expiryDate`, the provisioning metadata RRI does not
 show (`profile.domainName.metadata`) and a domain's authInfo are left out where they do not apply; the status a domain
 reads with right after its create is one of `env.domainName.processes.create.success_status` (`ok` on the EPP test
-server; on MTEST `pendingCreate` while the predelegation check runs, `ok` once it passed, `inactive` when it failed). Passwords
+server; on MTEST `pendingCreate` while the predelegation check runs, `ok` once it passed). A case gives DNS data that
+passes the check (an `a` record DENIC serves itself), unless the check is its subject: name servers that do not serve
+the domain make it `inactive` (`env.domainName.processes.create.failed_dns_status`, `domain_create/test43`). Passwords
 are of the characters an RRI AuthInfo takes. Where a function exists on one backend only, a counterpart case covers
 the other (`domain_update/test35` to `test37`, `domain_lifecycle/`).
 

@@ -41,6 +41,7 @@ facts:
       create:
         success_status:                # what a domain reads with right after its create: one of these
           - ok
+        failed_dns_status: null        # the name servers are not checked
       delete:
         readable_after: false          # a domain deleted right after its create is purged, not read in redemption
       restore:

@@ -4,7 +4,7 @@ Status: 2026-11-14, branch `feature/136-limit-probes` (#136). §2 to §4 show th
 the cases added for the gaps this review found on `main` at 414a86e (§6.3). §6 has the outcomes on both backends,
 the EPP test server and DENIC RRI MTEST. Companion file: [backend-limits.yaml](backend-limits.yaml).
 
-This review checks the data-driven integration suite (`tests/integration/test_case_data/`, 515 cases) against
+This review checks the data-driven integration suite (`tests/integration/test_case_data/`, 516 cases) against
 three criteria, for every writable field of the Domain Name, Contact and Host data objects and of the component
 objects they carry:
 
@@ -43,7 +43,7 @@ Case references are `<group><number>`:
 | LH | `limits_host` | | |
 
 A case runs on both backends unless marked **(E)**, the EPP test server only, or **(R)**, RRI MTEST only. Of the
-515 cases, 170 run on both, 284 on EPP only, 36 on RRI only and 25 are skipped for a known
+516 cases, 170 run on both, 284 on EPP only, 37 on RRI only and 25 are skipped for a known
 defect or a limit of the test environment (§6). All host cases are (E), because RRI has no host objects; the host
 tables do not repeat the mark. A case skipped for a defect still counts as covering its point: it asserts what the
 drafts require and names the issue.
@@ -99,7 +99,7 @@ C+ create with the value, C− create without it, U+ absent → present, U~ chan
 | `name` | create-only | ✅ every create | ◐ `DC9` (wrong member name, generic 400) | ➖ | PUT ✅ `DU20` 400 · PATCH ✅ `DU38` 400 | ➖ |
 | `uName` | create-only | ✅ `DC24`, read `XD7` | ✅ `DC25` | PATCH ✅ `DU39` 400 | PATCH ✅ `DU65` 400 | ✅ PUT keeps it `DU33`, PATCH keeps it `DU34`(E) |
 | `lgr` | create-only | ✅ `DC24`, `DC25` | ✅ `DC26` (IDN without lgr, by env) | PATCH ✅ `DU40` 400 | ➖ (the path is refused whatever the value, `DU40`) | ✅ `DU33` |
-| `status` (client labels) | read-write | 501 `DC32`(E) (RFC 5731 create has no status) | ✅ every create | PATCH ✅ `DU12`(E) `DU13`(E) · PUT ✅ `DU22`(E) | PATCH ✅ `DU12`(E) `XP2`(E) `DU34`(E) · PUT ✅ `DU41`(E) | PATCH ✅ `DU14`(E), `replace []` `DU13`(E) · PUT ✅ `DU22`(E) |
+| `status` (client labels) | read-write | 501 `DC32`(E) (RFC 5731 create has no status) | ✅ every create; server status after a failed name server check `DC43`(R) | PATCH ✅ `DU12`(E) `DU13`(E) · PUT ✅ `DU22`(E) | PATCH ✅ `DU12`(E) `XP2`(E) `DU34`(E) · PUT ✅ `DU41`(E) | PATCH ✅ `DU14`(E), `replace []` `DU13`(E) · PUT ✅ `DU22`(E) |
 | `status[].reason` | create-only in the status | ➖ (`DC32`) | ✅ | PUT ◐ `DU22`(E), not read back (#54) | PATCH ◐ `DU22`(E) | ◐ `DU22`(E) |
 | `status[].due` | read-write | 501 `DC33`(E) | ✅ | 501 `DU42`(E) | ➖ (no due can be set) | ➖ |
 | `registrant` | read-write | ✅ `DC3`, `DC4`, `DL1` | ✅ `DC1`(E) | PATCH ✅ `DU43`(E) | PATCH ✅ `DU1`(E) `DU4`(E) `XP1`(E) · PUT ✅ `XD8`(E) | PUT ✅ `DU32`(E) · PATCH ◐ (only as the 422 proof in `DU32`) |

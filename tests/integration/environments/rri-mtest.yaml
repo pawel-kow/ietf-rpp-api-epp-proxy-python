@@ -48,7 +48,8 @@ facts:
         success_status:                # what a domain reads with right after its create: one of these
           - pendingCreate              # the predelegation check is still running
           - ok                         # it passed (RRI `connect`): which of the two depends on timing
-          - inactive                   # it failed (RRI `failed`, with a `due`)
+        failed_dns_status:             # what it reads with when its name servers do not serve it (null: not checked)
+          - inactive                   # RRI `failed`, with a `due`: deleted after a day unless fixed
       delete:
         readable_after: true           # a domain deleted right after its create is read in its redemption period
       restore:

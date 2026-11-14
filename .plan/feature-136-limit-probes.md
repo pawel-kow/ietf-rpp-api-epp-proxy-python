@@ -132,6 +132,11 @@ Branch `feature/136-limit-probes` from `main` at 414a86e.
   (`OneOf`). EPP: `ok`. MTEST, observed: `pendingCreate` right after the create, `ok` a step later, by timing; and
   `inactive` (documented `failed`). The 19 changed cases: epp-docker 19 passed; MTEST 7 passed, 12 skipped.
 
+- T23 (maintainer, 2026-11-14): no case ran into `inactive`: the 19 cases give an `a` record, which passes the
+  check (seen: `pendingCreate`, `ok`); the `ns` cases on MTEST (limits_domain 26, 27, 37, 38, 53, 54, 57) assert no
+  status. `inactive` left `success_status`; new fact `failed_dns_status` (MTEST `[inactive]`, EPP null) and
+  `domain_create/test43` (RRI only), passed on MTEST; the 19 cases passed again on both.
+
 ## Open questions
 
 - None.
