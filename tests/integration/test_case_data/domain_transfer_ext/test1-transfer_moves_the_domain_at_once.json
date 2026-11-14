@@ -1,4 +1,5 @@
 {
+  "markers": ["smoke"],
   "test_id": "test1-transfer_moves_the_domain_at_once",
   "description": "The gainer states its holder, REQUEST contacts and DNS data with the AuthInfo: the domain is its own at once, with no process to query (.spec/spec-rri-extension.md).",
   "steps": [

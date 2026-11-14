@@ -1,7 +1,7 @@
 # Plan: domain transfer over RRI (CHPROV) — #133
 
-Branch `feature/133-rri-transfer`, from `chores/remove-old-tests` @ ea02f82 (the maintainer's choice: that branch waits
-for its integration run), in the worktree `.claude/worktrees/133-rri-transfer`.
+Branch `feature/133-rri-transfer`, started from `chores/remove-old-tests` @ ea02f82 and rebased on `main` @ af5ff91
+once that was merged, in the worktree `.claude/worktrees/133-rri-transfer`.
 
 ## Decisions (maintainer, 2026-11-14)
 
@@ -49,8 +49,8 @@ for its integration run), in the worktree `.claude/worktrees/133-rri-transfer`.
 - [x] T6 Discovery `extensions` (unit tests first)
 - [x] T7 Integration cases: gate the EPP transfer group, new RRI transfer cases (`domain_transfer_ext/`)
 - [x] T8 Docs: gap-analysis Q3/§4.3, architecture.project.md, testing.project.md, security.project.md
-- [~] T9 Checks: lint-imports, `pytest -n 8` (EPP), MTEST run
-- [ ] T10 Draft PR
+- [x] T9 Checks: lint-imports, unit tests, smoke suite on both backends, transfer groups on both
+- [~] T10 Draft PR
 
 ## Findings
 
@@ -59,15 +59,15 @@ for its integration run), in the worktree `.claude/worktrees/133-rri-transfer`.
 - A domain label longer than the XSD allows (66 characters with the TLD) is an RRI schema failure, 500 (`02400`):
   the group name is part of `{random_name}`, so a group name over about 20 characters breaks RRI cases.
 
-## Checks (2026-11-14)
+## Checks (2026-11-14, rebased on main @ af5ff91)
 
-- `lint-imports`: 15 kept, 0 broken. Unit tests: 2072 passed.
-- EPP test server, `-k domain_transfer`: 14 passed (with `test14`), the `rri` group skipped.
-- MTEST, `-k domain_transfer`: `domain_transfer_ext/` test1–4 passed; test5 and test6 had wrong expectations
-  (409 and 403, now fixed) and were not rerun.
-- **Pending:** the full `pytest -n 8` on the EPP test server and the full MTEST run. Another session was running
-  integration suites against both backends from the main checkout, and MTEST allows 4 sessions per RegAcc.
+- `lint-imports`: 15 kept, 0 broken. Unit tests: 2074 passed.
+- Smoke suite, both backends (`pytest -n 4 -m smoke tests/integration`): 58 passed, 10 skipped.
+  `domain_transfer_ext/test1` is marked `smoke`.
+- `pytest -n 4 tests/integration -k domain_transfer`, both backends: 20 passed (14 on the EPP test server, all 6 of
+  `domain_transfer_ext/` on MTEST), 20 skipped.
+- The full run was not asked for.
 
 ## Open questions
 
-- Draft PR base: `chores/remove-old-tests` (not merged yet, no PR) or `main` once it is merged.
+None.
