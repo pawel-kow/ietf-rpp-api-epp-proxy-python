@@ -1,9 +1,11 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from dataclasses_json import dataclass_json, Undefined
 
 from rpp.dto.rpp_discovery_environment import RPPDiscoveryEnvironment
 from rpp.dto.rpp_discovery_version import RPPDiscoveryVersion
+from rpp.dto.rpp_extension import RPPExtension
 from rpp.dto.rpp_object import RPPObject, type_field
 
 
@@ -14,6 +16,7 @@ class RPPDiscovery(RPPObject):
     versions: list[RPPDiscoveryVersion]
     environment: RPPDiscoveryEnvironment
     tlds: list[str]
+    extensions: Optional[list[RPPExtension]] = None
     profiles: list[str]
     objects: list[str]
     datetime: str

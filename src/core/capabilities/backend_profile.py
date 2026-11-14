@@ -12,6 +12,7 @@ LEAVES: dict[str, type] = {
     "name": str,                                         # names the backend in a refusal (`… cannot be expressed in`)
     "objects": tuple,                                    # the data objects discovery states; hosts are objects if there
     "profiles": tuple,                                   # the RPP profiles discovery states
+    "extensions": tuple,                                 # the RPP extensions (ids) offered, which discovery states
     "lgrs": tuple,                                       # the LGRs offered for IDNs, from the config, none without IDN
     "domainName.registrant.min_count": int,              # left to the registry to refuse; the test selectors read it
     "domainName.registrant.max_count": int,              # further registrants are contacts labelled `registrant`

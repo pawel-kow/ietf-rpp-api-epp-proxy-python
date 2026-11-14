@@ -154,3 +154,71 @@ def test_a_create_applied_in_part_is_accepted_without_a_read_back():
     assert response.status_code == 202, response.text
     assert response.headers["RPP-Svtrid"] == "sv-create"
     assert len(clients[0].sent) == 2
+
+
+TRANSFER_URL = f"/domainNames/{NAME}/processes/transferProcesses"
+
+TRANSFER = {
+    "@type": "domainTransferProcess",
+    "registrant": {"@type": "contact", "id": "DENIC-1000022-HOLDER"},
+    "dns": {"@type": "dnsData", "records": [
+        {"@type": "dnsRecord", "name": "@", "type": "a", "rdata": {"address": "192.0.2.10"}}]},
+}
+
+AUTHORIZATION = {"RPP-Authorization": "authinfo value=" + base64.b64encode(b"Abc2345678").decode()}
+
+
+def test_a_transfer_with_the_rri_extension_completes_at_once():
+    client, clients = setup(reply(stid="sv-chprov"))
+
+    response = client.post(TRANSFER_URL, json=TRANSFER, headers={**BODY_HEADERS, **AUTHORIZATION})
+
+    assert response.status_code == 200, response.text
+    assert "Location" not in response.headers
+    assert response.headers["RPP-Svtrid"] == "sv-chprov"
+    body = response.json()
+    assert body["@type"] == "domainTransferProcess" and body["transferDir"] == "pull"
+    assert body["trStatus"] == "serverApproved"
+    assert body["reqClientId"] == body["actClientId"] == "DENIC-1000022"
+    assert "<domain:chprov>" in clients[0].sent[0]
+
+
+def test_a_transfer_without_the_domain_data_is_a_bad_request():
+    client, clients = setup()
+
+    response = client.post(TRANSFER_URL, json={"@type": "domainTransferProcess"},
+                           headers={**BODY_HEADERS, **AUTHORIZATION})
+
+    assert response.status_code == 400, response.text
+    assert all(not c.sent for c in clients)
+
+
+def test_a_transfer_without_the_auth_info_sends_nothing():
+    client, clients = setup()
+
+    response = client.post(TRANSFER_URL, json=TRANSFER, headers=BODY_HEADERS)
+
+    assert response.status_code == 400, response.text
+    assert response.headers["RPP-Code"] == "02003"
+    assert all(not c.sent for c in clients)
+
+
+@pytest.mark.parametrize("method, url", [
+    ("GET", f"{TRANSFER_URL}/latest"),
+    ("DELETE", f"{TRANSFER_URL}/latest"),
+    ("POST", f"{TRANSFER_URL}/latest/transferApprove"),
+    ("POST", f"{TRANSFER_URL}/latest/transferReject"),
+])
+def test_transfer_operations_rri_lacks_answer_501(method, url):
+    client, clients = setup()
+
+    assert_refused(client.request(method, url, headers=HEADERS), clients, "02101")
+
+
+def test_discovery_states_the_rri_extension():
+    client, _ = setup()
+
+    body = client.get("/.well-known/rpp", headers={"Accept": MEDIA_TYPE, "RPP-Cltrid": "cl-1"}).json()
+
+    assert [(e["@type"], e["id"], e["name"]) for e in body["extensions"]] == [("extension", "rri", "DENIC RRI")]
+    assert body["extensions"][0]["url"].startswith("https://")

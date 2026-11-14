@@ -18,6 +18,7 @@ from rpp.http.problem import handle_rpp_error
 from rpp.http.security.session_security_handler import SessionSecurityHandler
 from rpp.http.validators.rpp_request_body_validator import RppRequestBodyValidator
 from rpp.http.validators.rpp_response_body_validator import RppResponseBodyValidator
+from rpp.schema.extensions import check_known
 
 OPENAPI_SPEC = Path(__file__).parent.parent / "openapi.yaml"
 
@@ -43,6 +44,7 @@ def create_app(sessions, profile: BackendProfile, discovery_settings=None):
         discovery_settings: Has rpp_base_url, rpp_tlds, rpp_environment_name and
             rpp_environment_status, which the discovery document states.
     """
+    check_known(profile.extensions)
     app = FlaskApp(
         __name__,
         security_map={"basic": lambda: SessionSecurityHandler(sessions)},

@@ -8,6 +8,8 @@ objects:                               # an RRI host is not an object: name serv
   - contact
 profiles: []                           # the EPP Compatibility Profile does not describe RRI (refactoring.md §3.10)
 lgrs: []                               # rpp_rri_lgr of the config, not set here
+extensions:                            # .spec/spec-rri-extension.md: CHPROV takes the gainer's data with the transfer
+  - rri
 
 domainName:
   registrant:
@@ -38,7 +40,8 @@ domainName:
     renew:
       supported: false                 # domains run until deleted
     transfer:
-      operations: []                   # CHPROV is not exposed (gap Q3, option C)
+      operations:                      # CHPROV, with the data of the rri extension (gap Q3, option B); RRI
+        - request                      # has no query, cancel, approve or reject
     restore:
       report_supported: false          # RESTORE is one step (gap Q6)
 

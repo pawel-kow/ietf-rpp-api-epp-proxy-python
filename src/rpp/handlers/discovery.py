@@ -37,6 +37,7 @@ def discovery_read():
         environment_status=settings.rpp_environment_status,
         objects=list(backend_profile().objects),
         profiles=list(backend_profile().profiles),
+        extensions=list(backend_profile().extensions),
         datetime=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
     headers = {

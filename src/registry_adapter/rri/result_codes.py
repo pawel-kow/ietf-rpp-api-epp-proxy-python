@@ -22,6 +22,7 @@ CODES = {
     "63370088701": ResultCode.INVALID_AUTHORIZATION_INFORMATION,  # AuthInfo does not match
     "56000088709": ResultCode.INVALID_AUTHORIZATION_INFORMATION,  # AuthInfo2 does not exist
     "63380063209": ResultCode.COMMAND_USE_ERROR,  # CHPROV of an own domain
+    "53370080005": ResultCode.REQUIRED_PARAMETER_MISSING,  # required CHPROV data missing
     "63391068704": ResultCode.OBJECT_EXISTS,  # AuthInfo1 exists
     "63393068704": ResultCode.OBJECT_EXISTS,  # AuthInfo2 exists
     "63392068709": ResultCode.OBJECT_DOES_NOT_EXIST,  # AuthInfo1 does not exist
