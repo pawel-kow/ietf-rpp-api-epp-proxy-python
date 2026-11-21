@@ -1,46 +1,15 @@
 {
   "test_id": "test18-patch_status_with_reason",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates host t18.….net with dns records ns; expects 201 01000. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "t18.{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "t18.{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+      "comment": "Creates host t18.….net with dns records ns; expects 201 01000. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "t18.{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches host t18.….net: add /status clientDeleteProhibited; expects 200 01000. The operation this case checks.",
       "request": {

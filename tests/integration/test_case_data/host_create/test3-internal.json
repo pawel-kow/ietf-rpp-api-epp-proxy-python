@@ -1,39 +1,18 @@
 {
-  "markers": ["smoke"],
+  "markers": [
+    "smoke"
+  ],
   "test_id": "test3-internal",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain t3 with authInfo; expects 201 01000. Setup: the domain the steps below name.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "t3-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain t3 with authInfo; expects 201 01000. The domain the steps below name.",
+      "include": "create_domain",
+      "with": {
+        "name": "t3-{random_name}.{tld}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates host ns1.t3 with dns records ns, a; expects 201 01000. The create this case checks.",
       "request": {

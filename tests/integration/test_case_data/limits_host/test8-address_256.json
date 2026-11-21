@@ -1,167 +1,29 @@
 {
   "test_id": "test8-address_256",
   "description": "256 is no IPv4 octet (RFC 791).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact Y8 with authInfo (by backend); expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact Y8 with authInfo (by backend); expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:Y8}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:Y8}"
       }
     },
     {
-      "comment": "Creates domain h8 with authInfo, registrant Y8 (by backend), dns records a (by backend); expects 201. Setup: the domain the steps below name.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "h8-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "registrant": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.registrant.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "contact",
-                  "id": "{handle:a:Y8}"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain h8 with authInfo, registrant Y8 (by backend), dns records a (by backend); expects 201. The domain the steps below name.",
+      "include": "create_domain",
+      "with": {
+        "name": "h8-{random_name}.{tld}",
+        "registrant_id": "{handle:a:Y8}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates host ns1.h8 with dns records ns, a; expects one of 400 02001 or 400 02005. The error answer this case checks.",
       "request": {

@@ -1,67 +1,15 @@
 {
   "test_id": "test4-request_with_body",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact D04 with authInfo; expects 201. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:D04}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            }
-          },
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:D04}",
-          "status": [
-            {
-              "@type": "contactStatus",
-              "label": "ok"
-            }
-          ]
-        }
+      "comment": "Creates contact D04 with authInfo; expects 201. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:D04}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Deletes contact D04, with a fixed RPP-Cltrid, a raw body that is no valid JSON; expects 400. The error answer this case checks.",
       "request": {

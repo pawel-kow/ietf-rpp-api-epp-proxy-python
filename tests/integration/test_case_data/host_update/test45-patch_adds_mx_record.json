@@ -1,45 +1,16 @@
 {
   "test_id": "test45-patch_adds_mx_record",
   "description": "A host holds addresses only: an MX record is refused before any command.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates host hu45.….net with dns records ns; expects 201. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "hu45.{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "hu45.{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host hu45.….net with dns records ns; expects 201. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "hu45.{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches host hu45.….net: add /dns/records; expects 501 02102. The error answer this case checks.",
       "request": {

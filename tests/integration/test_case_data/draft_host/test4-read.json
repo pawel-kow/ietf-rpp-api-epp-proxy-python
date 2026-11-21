@@ -1,38 +1,15 @@
 {
   "test_id": "test4-read",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain d4 with authInfo; expects 201 01000. Setup: the domain the steps below name.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "d4-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain d4 with authInfo; expects 201 01000. The domain the steps below name.",
+      "include": "create_domain",
+      "with": {
+        "name": "d4-{random_name}.{tld}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates host ns1.d4 with dns records ns, a; expects 201 01000. The create this case checks.",
       "request": {

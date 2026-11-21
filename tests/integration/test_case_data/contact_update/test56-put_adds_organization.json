@@ -5,90 +5,16 @@
   },
   "comment": "Skipped on rri-mtest: RRI holds no person name on an organisation contact.",
   "description": "A PUT adds an organization.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact P56 with authInfo (by backend); expects 201. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:P56}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:P56}"
-        }
+      "comment": "Creates contact P56 with authInfo (by backend); expects 201. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:P56}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Replaces contact P56 by a full update; expects 200. The operation this case checks.",
       "request": {

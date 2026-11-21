@@ -6,173 +6,29 @@
   },
   "comment": "Skipped on rri-mtest: RRI has no host objects (a name server is an ns record of the domain).",
   "test_id": "test23-subordinate_host_on_read",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact HC23; expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact HC23; expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:HC23}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:HC23}"
       }
     },
     {
-      "comment": "Creates domain t23 with authInfo, registrant HC23 (by backend), dns records a (by backend); expects 201 01000. Setup: the domain the steps below name.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "t23-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "registrant": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.registrant.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "contact",
-                  "id": "{handle:a:HC23}"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        },
-        "fields": {
-          "provMetadata.repositoryId": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.metadata": {
-                    "contains": "repositoryId"
-                  }
-                },
-                "then": {
-                  "type": "not_null"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+      "comment": "Creates domain t23 with authInfo, registrant HC23 (by backend), dns records a (by backend); expects 201 01000. The domain the steps below name.",
+      "include": "create_domain",
+      "with": {
+        "name": "t23-{random_name}.{tld}",
+        "registrant_id": "{handle:a:HC23}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates host ns1.t23 with dns records ns; expects 201 01000. The create this case checks.",
       "request": {

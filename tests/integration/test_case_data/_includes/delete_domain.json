@@ -1,0 +1,31 @@
+{
+  "comment": "Deletes a domain name; expects 200. The cleanup of a case whose domain stays otherwise (MTEST keeps what a case creates).",
+  "parameters": {
+    "registrar": {
+      "comment": "The slot of the registrar that sends the request, a or b.",
+      "default": "a"
+    },
+    "name": {
+      "comment": "The domain name."
+    }
+  },
+  "steps": [
+    {
+      "comment": "Deletes the domain; expects 200.",
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/{param:name}",
+        "headers": {
+          "Authorization": "{auth:{param:registrar}}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    }
+  ]
+}

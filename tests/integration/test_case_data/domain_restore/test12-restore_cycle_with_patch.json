@@ -5,37 +5,16 @@
   },
   "comment": "Skipped on rri-mtest: RRI's RESTORE is one step, without a restore report.",
   "test_id": "test12-restore_cycle_with_patch",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain rs12 with authInfo; expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "rs12-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain rs12 with authInfo; expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "rs12-{random_name}.{tld}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Deletes domain rs12; expects 200. The operation this case checks. Waits first for domainName.processes.create.add_grace_period.",
       "wait": "domainName.processes.create.add_grace_period",

@@ -7,151 +7,29 @@
   "comment": "Skipped on rri-mtest: it waits for domainName.processes.restore.pending_period, and the server has no such transition; RRI's RESTORE is one step, without a restore report.",
   "test_id": "test13-pending_restore_without_report_ends",
   "description": "A restore request without a report holds the domain in pendingRestore; while it lasts a second request is refused, after it the domain is back in its redemption period and can be requested again (RFC 3915 §3.2).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact RS13; expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact RS13; expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:RS13}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:RS13}"
       }
     },
     {
-      "comment": "Creates domain rs13 with authInfo, registrant RS13 (by backend), dns records a (by backend); expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "rs13-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "registrant": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.registrant.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "contact",
-                  "id": "{handle:a:RS13}"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain rs13 with authInfo, registrant RS13 (by backend), dns records a (by backend); expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "rs13-{random_name}.{tld}",
+        "registrant_id": "{handle:a:RS13}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Deletes domain rs13; expects 200. The operation this case checks. Waits first for domainName.processes.create.add_grace_period.",
       "wait": "domainName.processes.create.add_grace_period",

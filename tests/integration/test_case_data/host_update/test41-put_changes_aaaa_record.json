@@ -1,45 +1,16 @@
 {
   "test_id": "test41-put_changes_aaaa_record",
   "description": "A PUT replaces the aaaa record by another.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates host hu41.….net with dns records ns; expects 201. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "hu41.{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "hu41.{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host hu41.….net with dns records ns; expects 201. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "hu41.{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches host hu41.….net: add /dns/records; expects 200. The operation this case checks.",
       "request": {

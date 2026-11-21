@@ -1,91 +1,57 @@
 {
   "test_id": "test37-put_changes_language",
   "description": "The proxy takes language and stores none (spec-issues, Localization language).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact P37 with authInfo (by backend); expects 201. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:P37}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            },
-            "language": "de"
+      "comment": "Creates contact P37 with authInfo (by backend); expects 201. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:P37}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "individual",
+          "name": {
+            "full": "Erika Mustermann"
           },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "Musterweg 12"
                 },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
+                {
+                  "kind": "locality",
+                  "value": "Frankfurt am Main"
+                },
+                {
+                  "kind": "postcode",
+                  "value": "60596"
                 }
-              },
-              {
-                "omit": true
+              ],
+              "countryCode": "DE"
+            }
+          },
+          "emails": {
+            "email": {
+              "address": "erika@example.com"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+49.6912345678",
+              "features": {
+                "voice": true
               }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:P37}"
+            }
+          },
+          "language": "de"
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Replaces contact P37 by a full update; expects 200. The operation this case checks.",
       "request": {

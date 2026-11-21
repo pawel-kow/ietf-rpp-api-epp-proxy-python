@@ -45,6 +45,25 @@ def test_a_parameter_with_a_default_may_be_left_out(includes):
     assert case["steps"][0]["block"][0]["request"]["url"] == "/x/d"
 
 
+def test_a_default_may_use_the_other_parameters_also_their_defaults(includes):
+    includes("post", [{"request": {"body_json": "{param:body}"}}],
+             {"name": {}, "id": {"default": "{param:name}-1"}, "body": {"default": {"id": "{param:id}", "n": "{param:name}"}}})
+
+    default = expand({"steps": [{"include": "post", "with": {"name": "n"}}]}, includes.dir)
+    given = expand({"steps": [{"include": "post", "with": {"name": "n", "id": "x"}}]}, includes.dir)
+
+    assert default["steps"][0]["block"][0]["request"]["body_json"] == {"id": "n-1", "n": "n"}
+    assert given["steps"][0]["block"][0]["request"]["body_json"] == {"id": "x", "n": "n"}
+
+
+def test_a_default_that_uses_itself_fails(includes):
+    includes("post", [{"request": {"body_json": "{param:a}"}}], {"a": {"default": {"x": "{param:b}"}},
+                                                                    "b": {"default": {"y": "{param:a}"}}})
+
+    with pytest.raises(IncludeError, match="uses itself"):
+        expand({"steps": [{"include": "post"}]}, includes.dir)
+
+
 def test_other_placeholders_are_kept_for_the_run(includes):
     includes("get", [STEP], {"name": {}})
 

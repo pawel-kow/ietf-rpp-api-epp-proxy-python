@@ -5,88 +5,16 @@
   },
   "comment": "Skipped on rri-mtest: RRI has no client statuses of a contact.",
   "description": "A contact holds every client status at once (data-objects §9.5).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact Z5 with authInfo (by backend); expects 201. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:Z5}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "comment": "Creates contact Z5 with authInfo (by backend); expects 201. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:Z5}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches contact Z5: add /status clientDeleteProhibited; add /status clientTransferProhibited; add /status clientUpdateProhibited; expects 200. The operation this case checks.",
       "request": {

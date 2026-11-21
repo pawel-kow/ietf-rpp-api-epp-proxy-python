@@ -1,0 +1,54 @@
+{
+  "comment": "Creates a request contact; expects 201 01000 with it and its id. The preparation of a case that needs a General Request or Abuse contact.",
+  "parameters": {
+    "registrar": {
+      "comment": "The slot of the registrar that sends the request, a or b.",
+      "default": "a"
+    },
+    "id": {
+      "comment": "The id, a {handle:<registrar>:<suffix>}."
+    },
+    "uriTemplate": {
+      "comment": "The URI template.",
+      "default": "https://example.com/contact?domain={Alabel}"
+    }
+  },
+  "steps": [
+    {
+      "comment": "Creates the request contact; expects 201 01000.",
+      "request": {
+        "method": "POST",
+        "url": "/requestContacts",
+        "headers": {
+          "Authorization": "{auth:{param:registrar}}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "@type": "requestContact",
+          "id": "{param:id}",
+          "uriTemplate": "{param:uriTemplate}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "requestContact",
+          "id": "{param:id}",
+          "uriTemplate": "{param:uriTemplate}"
+        },
+        "fields": {
+          "provMetadata.spClientId": {
+            "type": "not_null"
+          }
+        },
+        "content_type": "application/rpp+json"
+      }
+    }
+  ]
+}

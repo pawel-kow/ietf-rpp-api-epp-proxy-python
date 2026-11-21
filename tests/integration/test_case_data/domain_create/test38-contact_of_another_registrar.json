@@ -8,90 +8,17 @@
   "comment": "Skipped on rri-mtest: RRI has no admin, tech or billing contacts.",
   "test_id": "test38-contact_of_another_registrar",
   "description": "A contact of another registrar: the drafts leave it to server policy, the server refuses it (env.foreign_contacts_refused).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact B38 of registrar b with authInfo (by backend) as registrar b; expects 201. Setup: a contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:b:B38}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:b:B38}"
-        }
+      "comment": "Creates contact B38 of registrar b with authInfo (by backend) as registrar b; expects 201. A contact of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "registrar": "b",
+        "id": "{handle:b:B38}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain gc38 with authInfo, dns records a (by backend), contacts tech; expects 403 02201. The error answer this case checks.",
       "request": {

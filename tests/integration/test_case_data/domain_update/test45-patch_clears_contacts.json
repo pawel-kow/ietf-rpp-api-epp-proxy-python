@@ -8,163 +8,39 @@
   },
   "comment": "Skipped on rri-mtest: RRI has no admin, tech or billing contacts; RRI requires a holder, so a domain cannot be without a registrant.",
   "description": "replace /contacts [] removes every contact.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact T45 with authInfo (by backend); expects 201. Setup: a contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:T45}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
+      "comment": "Creates contact T45 with authInfo (by backend); expects 201. A contact of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:T45}"
+      }
+    },
+    {
+      "comment": "Creates domain gu45 with authInfo, dns records a (by backend), contacts tech, admin; expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "gu45-{random_name}.{tld}",
+        "contacts": [
+          {
+            "label": "tech",
+            "object": {
+              "@type": "contact",
+              "id": "{handle:a:T45}"
             }
           },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
+          {
+            "label": "admin",
+            "object": {
+              "@type": "contact",
+              "id": "{handle:a:T45}"
+            }
           }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:T45}"
-        }
+        ]
       }
-    },
-    {
-      "comment": "Creates domain gu45 with authInfo, dns records a (by backend), contacts tech, admin; expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "gu45-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "contacts": [
-            {
-              "label": "tech",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:T45}"
-              }
-            },
-            {
-              "label": "admin",
-              "object": {
-                "@type": "contact",
-                "id": "{handle:a:T45}"
-              }
-            }
-          ]
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
-      }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches domain gu45: remove /contacts with a match; add /contacts tech; expects 200. The operation this case checks.",
       "request": {
@@ -299,22 +175,14 @@
           "type": "urn:ietf:params:rpp:error"
         }
       }
-    },
+    }
+  ],
+  "teardown": [
     {
-      "comment": "Deletes domain gu45; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it.",
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/gu45-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "comment": "Deletes domain gu45; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "gu45-{random_name}.{tld}"
       }
     }
   ]

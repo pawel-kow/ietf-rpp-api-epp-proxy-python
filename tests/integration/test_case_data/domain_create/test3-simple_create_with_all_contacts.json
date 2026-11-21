@@ -1,90 +1,18 @@
 {
-  "markers": ["smoke"],
+  "markers": [
+    "smoke"
+  ],
   "test_id": "test3-simple_create_with_all_contacts",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact ca1 with authInfo (by backend); expects 201. Setup: the registrant of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:ca1}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:ca1}"
-        }
+      "comment": "Creates contact ca1 with authInfo (by backend); expects 201. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:ca1}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain test3 with authInfo, registrant ca1, contacts admin, tech, billing (by backend), dns records a (by backend) (includeElements=authInfo); expects 201. The create this case checks.",
       "request": {

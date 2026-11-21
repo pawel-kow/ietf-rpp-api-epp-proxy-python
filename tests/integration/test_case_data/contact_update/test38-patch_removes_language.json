@@ -1,91 +1,57 @@
 {
   "test_id": "test38-patch_removes_language",
   "description": "language is not stored, so a read has none and its removal finds nothing (RFC 6902 §4.2).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact P38 with authInfo (by backend); expects 201. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:P38}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            },
-            "language": "de"
+      "comment": "Creates contact P38 with authInfo (by backend); expects 201. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:P38}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "individual",
+          "name": {
+            "full": "Erika Mustermann"
           },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "Musterweg 12"
                 },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
+                {
+                  "kind": "locality",
+                  "value": "Frankfurt am Main"
+                },
+                {
+                  "kind": "postcode",
+                  "value": "60596"
                 }
-              },
-              {
-                "omit": true
+              ],
+              "countryCode": "DE"
+            }
+          },
+          "emails": {
+            "email": {
+              "address": "erika@example.com"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+49.6912345678",
+              "features": {
+                "voice": true
               }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:P38}"
+            }
+          },
+          "language": "de"
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches contact P38: remove /contactInfo/language; expects 422 02308. The error answer this case checks.",
       "request": {

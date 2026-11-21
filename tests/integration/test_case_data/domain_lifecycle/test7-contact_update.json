@@ -1,135 +1,16 @@
 {
   "test_id": "test7-contact_update",
   "description": "A contact with a phone is created, changed by PATCH and read back.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact L7 with authInfo (the request differs by backend); expects 201 01000. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "select": [
-            {
-              "when": {
-                "profile.contact.authInfo.supported": true
-              },
-              "then": {
-                "@type": "contact",
-                "id": "{handle:a:L7}",
-                "contactInfo": {
-                  "@type": "Card",
-                  "version": "2.0",
-                  "kind": "individual",
-                  "name": {
-                    "full": "Erika Mustermann"
-                  },
-                  "addresses": {
-                    "addr": {
-                      "components": [
-                        {
-                          "kind": "name",
-                          "value": "Musterweg 12"
-                        },
-                        {
-                          "kind": "locality",
-                          "value": "Frankfurt am Main"
-                        },
-                        {
-                          "kind": "postcode",
-                          "value": "60596"
-                        }
-                      ],
-                      "countryCode": "DE"
-                    }
-                  },
-                  "emails": {
-                    "email": {
-                      "address": "erika@example.com"
-                    }
-                  },
-                  "phones": {
-                    "voice": {
-                      "number": "tel:+49.6912345678",
-                      "features": {
-                        "voice": true
-                      }
-                    }
-                  }
-                },
-                "authInfo": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              }
-            },
-            {
-              "then": {
-                "@type": "contact",
-                "id": "{handle:a:L7}",
-                "contactInfo": {
-                  "@type": "Card",
-                  "version": "2.0",
-                  "kind": "individual",
-                  "name": {
-                    "full": "Erika Mustermann"
-                  },
-                  "addresses": {
-                    "addr": {
-                      "components": [
-                        {
-                          "kind": "name",
-                          "value": "Musterweg 12"
-                        },
-                        {
-                          "kind": "locality",
-                          "value": "Frankfurt am Main"
-                        },
-                        {
-                          "kind": "postcode",
-                          "value": "60596"
-                        }
-                      ],
-                      "countryCode": "DE"
-                    }
-                  },
-                  "emails": {
-                    "email": {
-                      "address": "erika@example.com"
-                    }
-                  },
-                  "phones": {
-                    "voice": {
-                      "number": "tel:+49.6912345678",
-                      "features": {
-                        "voice": true
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:L7}"
-        }
+      "comment": "Creates contact L7 with authInfo (the request differs by backend); expects 201 01000. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:L7}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches contact L7: replace /contactInfo/emails/email/address; expects 200 01000. The operation this case checks.",
       "request": {

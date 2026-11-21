@@ -1,87 +1,44 @@
 {
   "test_id": "test5-update",
   "skip": "#49",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain d5 with authInfo; expects 201 01000. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "d5-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain d5 with authInfo; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "d5-{random_name}.{tld}"
       }
     },
     {
-      "comment": "Creates host ns1.d5 with dns records ns, a; expects 201 01000. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns1.d5-{random_name}.{tld}",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns1.d5-{random_name}.{tld}."
-                }
-              },
-              {
-                "@type": "dnsRecord",
-                "name": "ns1.d5-{random_name}.{tld}.",
-                "type": "a",
-                "rdata": {
-                  "address": "192.0.2.1"
-                }
+      "comment": "Creates host ns1.d5 with dns records ns, a; expects 201 01000. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "ns1.d5-{random_name}.{tld}",
+        "dns": {
+          "@type": "dnsData",
+          "records": [
+            {
+              "@type": "dnsRecord",
+              "name": "@",
+              "type": "ns",
+              "rdata": {
+                "nsdname": "ns1.d5-{random_name}.{tld}."
               }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "host"
+            },
+            {
+              "@type": "dnsRecord",
+              "name": "ns1.d5-{random_name}.{tld}.",
+              "type": "a",
+              "rdata": {
+                "address": "192.0.2.1"
+              }
+            }
+          ]
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Replaces host ns1.d5 by a full update with dns records ns, a; expects 200 01000. The operation this case checks.",
       "request": {

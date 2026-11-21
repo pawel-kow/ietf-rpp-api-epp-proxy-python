@@ -8,150 +8,40 @@
   },
   "comment": "Skipped on rri-mtest: RRI has no host objects (a name server is an ns record of the domain); RRI requires a holder, so a domain cannot be without a registrant.",
   "description": "replace /nameservers [] removes every nameserver.",
+  "setup": [
+    {
+      "comment": "Creates host ns1.gu46 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns1.gu46-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns2.gu46 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns2.gu46-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates domain gu46 with authInfo, dns records a (by backend), 2 nameservers; expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "gu46-{random_name}.{tld}",
+        "nameservers": [
+          {
+            "@type": "host",
+            "hostName": "ns1.gu46-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns2.gu46-{random_name}.net"
+          }
+        ]
+      }
+    }
+  ],
   "steps": [
-    {
-      "comment": "Creates host ns1.gu46 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns1.gu46-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns1.gu46-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns2.gu46 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns2.gu46-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns2.gu46-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates domain gu46 with authInfo, dns records a (by backend), 2 nameservers; expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "gu46-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "nameservers": [
-            {
-              "@type": "host",
-              "hostName": "ns1.gu46-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns2.gu46-{random_name}.net"
-            }
-          ]
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
-      }
-    },
     {
       "comment": "Patches domain gu46: replace /nameservers with a match; expects 200. The operation this case checks.",
       "request": {
@@ -250,22 +140,14 @@
           "type": "urn:ietf:params:rpp:error"
         }
       }
-    },
+    }
+  ],
+  "teardown": [
     {
-      "comment": "Deletes domain gu46; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it.",
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/gu46-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "comment": "Deletes domain gu46; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "gu46-{random_name}.{tld}"
       }
     }
   ]

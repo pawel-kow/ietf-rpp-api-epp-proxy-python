@@ -1,67 +1,20 @@
 {
   "test_id": "test2-delete-linked",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact D02 with authInfo; expects 201. Setup: the registrant of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:D02}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            }
-          },
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:D02}",
-          "status": [
-            {
-              "@type": "contactStatus",
-              "label": "ok"
-            }
-          ]
+      "comment": "Creates contact D02 with authInfo; expects 201. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:D02}",
+        "authInfo": {
+          "@type": "authInfo",
+          "method": "authinfo",
+          "authdata": "Password1!@"
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain test2 with authInfo, registrant D02; expects 201. The create this case checks.",
       "request": {

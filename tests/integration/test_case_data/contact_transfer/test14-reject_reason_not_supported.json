@@ -3,62 +3,21 @@
   "exclusive": [
     "message_queue"
   ],
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact C14 with authInfo; expects 201. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:C14}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            }
-          },
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:C14}"
+      "comment": "Creates contact C14 with authInfo; expects 201. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:C14}",
+        "authInfo": {
+          "@type": "authInfo",
+          "method": "authinfo",
+          "authdata": "Password1!@"
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Requests a transfer of contact C14 with transferDir as registrar b; expects 201 01001. The operation this case checks.",
       "request": {
@@ -123,26 +82,11 @@
   ],
   "teardown": [
     {
-      "comment": "Cancels the transfer requested above as registrar b, the requester; expects 200 01000. Cleanup: a transfer left pending is approved by the server minutes later, which queues messages after the case released the queue mutex.",
-      "request": {
-        "method": "DELETE",
-        "url": "/contacts/{handle:a:C14}/processes/transferProcesses/latest",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": {
-          "trStatus": "clientCancelled"
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+      "comment": "Cancels the transfer requested above as registrar b, the requester; expects 200 01000. A transfer left pending is approved by the server minutes later, which queues messages after the case released the queue mutex.",
+      "include": "cancel_transfer",
+      "with": {
+        "collection": "contacts",
+        "id": "{handle:a:C14}"
       }
     }
   ]

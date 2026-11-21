@@ -7,93 +7,21 @@
   },
   "comment": "Skipped on rri-mtest: RRI takes no DS records (DENIC computes the DS from the DNSKEY).",
   "description": "keyTag 65535, the largest 16-bit value (RFC 4034 §5.1).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact X33 with authInfo (by backend); expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact X33 with authInfo (by backend); expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:X33}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:X33}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain t33 with authInfo, registrant X33 (by backend), dns records ds; expects 201. The create this case checks.",
       "request": {
@@ -156,22 +84,14 @@
           "@type": "domainName"
         }
       }
-    },
+    }
+  ],
+  "teardown": [
     {
-      "comment": "Deletes domain t33; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it.",
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/t33-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "comment": "Deletes domain t33; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "t33-{random_name}.{tld}"
       }
     }
   ]

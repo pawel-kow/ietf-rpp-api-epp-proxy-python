@@ -1,36 +1,15 @@
 {
   "test_id": "test4-nothing_pending",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain t4 with authInfo; expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "t4-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain t4 with authInfo; expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "t4-{random_name}.{tld}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Queries the transfer of domain t4; expects 409 02301. An error answer this case checks.",
       "request": {

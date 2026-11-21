@@ -7,347 +7,34 @@
   },
   "comment": "Skipped on epp-docker: EPP holds one registrant; several holders are RRI's.",
   "description": "Registrants after the first are contacts labelled registrant.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact L3 with authInfo (the request differs by backend); expects 201 01000. Setup: the registrant of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "select": [
-            {
-              "when": {
-                "profile.contact.authInfo.supported": true
-              },
-              "then": {
-                "@type": "contact",
-                "id": "{handle:a:L3}",
-                "contactInfo": {
-                  "@type": "Card",
-                  "version": "2.0",
-                  "kind": "individual",
-                  "name": {
-                    "full": "Erika Mustermann"
-                  },
-                  "addresses": {
-                    "addr": {
-                      "components": [
-                        {
-                          "kind": "name",
-                          "value": "Musterweg 12"
-                        },
-                        {
-                          "kind": "locality",
-                          "value": "Frankfurt am Main"
-                        },
-                        {
-                          "kind": "postcode",
-                          "value": "60596"
-                        }
-                      ],
-                      "countryCode": "DE"
-                    }
-                  },
-                  "emails": {
-                    "email": {
-                      "address": "erika@example.com"
-                    }
-                  },
-                  "phones": {
-                    "voice": {
-                      "number": "tel:+49.6912345678",
-                      "features": {
-                        "voice": true
-                      }
-                    }
-                  }
-                },
-                "authInfo": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              }
-            },
-            {
-              "then": {
-                "@type": "contact",
-                "id": "{handle:a:L3}",
-                "contactInfo": {
-                  "@type": "Card",
-                  "version": "2.0",
-                  "kind": "individual",
-                  "name": {
-                    "full": "Erika Mustermann"
-                  },
-                  "addresses": {
-                    "addr": {
-                      "components": [
-                        {
-                          "kind": "name",
-                          "value": "Musterweg 12"
-                        },
-                        {
-                          "kind": "locality",
-                          "value": "Frankfurt am Main"
-                        },
-                        {
-                          "kind": "postcode",
-                          "value": "60596"
-                        }
-                      ],
-                      "countryCode": "DE"
-                    }
-                  },
-                  "emails": {
-                    "email": {
-                      "address": "erika@example.com"
-                    }
-                  },
-                  "phones": {
-                    "voice": {
-                      "number": "tel:+49.6912345678",
-                      "features": {
-                        "voice": true
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
+      "comment": "Creates contact L3 with authInfo (the request differs by backend); expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:L3}"
+      }
+    },
+    {
+      "comment": "Creates contact L3B with authInfo (the request differs by backend); expects 201 01000. A contact of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:L3B}"
+      }
+    },
+    {
+      "comment": "Creates domain t3 with registrant L3, dns records a, authInfo (the request differs by backend); expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "t3-{random_name}.{tld}",
+        "registrant": {
           "@type": "contact",
           "id": "{handle:a:L3}"
         }
       }
-    },
-    {
-      "comment": "Creates contact L3B with authInfo (the request differs by backend); expects 201 01000. Setup: a contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "select": [
-            {
-              "when": {
-                "profile.contact.authInfo.supported": true
-              },
-              "then": {
-                "@type": "contact",
-                "id": "{handle:a:L3B}",
-                "contactInfo": {
-                  "@type": "Card",
-                  "version": "2.0",
-                  "kind": "individual",
-                  "name": {
-                    "full": "Erika Mustermann"
-                  },
-                  "addresses": {
-                    "addr": {
-                      "components": [
-                        {
-                          "kind": "name",
-                          "value": "Musterweg 12"
-                        },
-                        {
-                          "kind": "locality",
-                          "value": "Frankfurt am Main"
-                        },
-                        {
-                          "kind": "postcode",
-                          "value": "60596"
-                        }
-                      ],
-                      "countryCode": "DE"
-                    }
-                  },
-                  "emails": {
-                    "email": {
-                      "address": "erika@example.com"
-                    }
-                  },
-                  "phones": {
-                    "voice": {
-                      "number": "tel:+49.6912345678",
-                      "features": {
-                        "voice": true
-                      }
-                    }
-                  }
-                },
-                "authInfo": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              }
-            },
-            {
-              "then": {
-                "@type": "contact",
-                "id": "{handle:a:L3B}",
-                "contactInfo": {
-                  "@type": "Card",
-                  "version": "2.0",
-                  "kind": "individual",
-                  "name": {
-                    "full": "Erika Mustermann"
-                  },
-                  "addresses": {
-                    "addr": {
-                      "components": [
-                        {
-                          "kind": "name",
-                          "value": "Musterweg 12"
-                        },
-                        {
-                          "kind": "locality",
-                          "value": "Frankfurt am Main"
-                        },
-                        {
-                          "kind": "postcode",
-                          "value": "60596"
-                        }
-                      ],
-                      "countryCode": "DE"
-                    }
-                  },
-                  "emails": {
-                    "email": {
-                      "address": "erika@example.com"
-                    }
-                  },
-                  "phones": {
-                    "voice": {
-                      "number": "tel:+49.6912345678",
-                      "features": {
-                        "voice": true
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:L3B}"
-        }
-      }
-    },
-    {
-      "comment": "Creates domain t3 with registrant L3, dns records a, authInfo (the request differs by backend); expects 201 01000. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "select": [
-            {
-              "when": {
-                "profile.domainName.dns.min_count": {
-                  "min": 1
-                }
-              },
-              "then": {
-                "@type": "domainName",
-                "name": "t3-{random_name}.{tld}",
-                "registrant": {
-                  "@type": "contact",
-                  "id": "{handle:a:L3}"
-                },
-                "dns": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                },
-                "authInfo": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              }
-            },
-            {
-              "then": {
-                "@type": "domainName",
-                "name": "t3-{random_name}.{tld}",
-                "registrant": {
-                  "@type": "contact",
-                  "id": "{handle:a:L3}"
-                },
-                "authInfo": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              }
-            }
-          ]
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "domainName",
-          "name": "t3-{random_name}.{tld}",
-          "registrant": {
-            "id": "{handle:a:L3}"
-          }
-        },
-        "fields": {
-          "provMetadata.spClientId": {
-            "type": "not_null"
-          }
-        }
-      }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches domain t3: add /contacts registrant; expects 200 01000. The operation this case checks.",
       "request": {
@@ -394,22 +81,14 @@
           ]
         }
       }
-    },
+    }
+  ],
+  "teardown": [
     {
-      "comment": "Deletes domain t3; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it.",
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/t3-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "comment": "Deletes domain t3; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "t3-{random_name}.{tld}"
       }
     }
   ]

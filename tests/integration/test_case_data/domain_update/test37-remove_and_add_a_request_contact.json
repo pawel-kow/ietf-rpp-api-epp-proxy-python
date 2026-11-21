@@ -10,206 +10,38 @@
   "comment": "Skipped on epp-docker: EPP has no General Request or Abuse contact of a domain.",
   "test_id": "test37-remove_and_add_a_request_contact",
   "description": "A request contact of a domain is removed and added again: the counterpart of the admin and tech cases (test4, test9) for the members of RRI. A second removal answers 422, which proves the first.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates request contact RG19 with uriTemplate; expects 201 01000. Setup: the General Request contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:a:RG19}",
-          "uriTemplate": "https://example.com/contact?domain={Alabel}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:a:RG19}"
-        }
+      "comment": "Creates request contact RG19 with uriTemplate; expects 201 01000. The General Request contact of the domain below.",
+      "include": "create_request_contact",
+      "with": {
+        "id": "{handle:a:RG19}"
       }
     },
     {
-      "comment": "Creates request contact RA19 with uriTemplate; expects 201 01000. Setup: the Abuse contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:a:RA19}",
-          "uriTemplate": "mailto:abuse@example.com"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:a:RA19}"
-        }
+      "comment": "Creates request contact RA19 with uriTemplate; expects 201 01000. The Abuse contact of the domain below.",
+      "include": "create_request_contact",
+      "with": {
+        "id": "{handle:a:RA19}"
       }
     },
     {
-      "comment": "Creates contact U37 with authInfo (the request differs by backend); expects 201 01000. Setup: the registrant of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "select": [
-            {
-              "when": {
-                "profile.contact.authInfo.supported": true
-              },
-              "then": {
-                "@type": "contact",
-                "id": "{handle:a:U37}",
-                "contactInfo": {
-                  "@type": "Card",
-                  "version": "2.0",
-                  "kind": "individual",
-                  "name": {
-                    "full": "Erika Mustermann"
-                  },
-                  "addresses": {
-                    "addr": {
-                      "components": [
-                        {
-                          "kind": "name",
-                          "value": "Musterweg 12"
-                        },
-                        {
-                          "kind": "locality",
-                          "value": "Frankfurt am Main"
-                        },
-                        {
-                          "kind": "postcode",
-                          "value": "60596"
-                        }
-                      ],
-                      "countryCode": "DE"
-                    }
-                  },
-                  "emails": {
-                    "email": {
-                      "address": "erika@example.com"
-                    }
-                  },
-                  "phones": {
-                    "voice": {
-                      "number": "tel:+49.6912345678",
-                      "features": {
-                        "voice": true
-                      }
-                    }
-                  }
-                },
-                "authInfo": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              }
-            },
-            {
-              "then": {
-                "@type": "contact",
-                "id": "{handle:a:U37}",
-                "contactInfo": {
-                  "@type": "Card",
-                  "version": "2.0",
-                  "kind": "individual",
-                  "name": {
-                    "full": "Erika Mustermann"
-                  },
-                  "addresses": {
-                    "addr": {
-                      "components": [
-                        {
-                          "kind": "name",
-                          "value": "Musterweg 12"
-                        },
-                        {
-                          "kind": "locality",
-                          "value": "Frankfurt am Main"
-                        },
-                        {
-                          "kind": "postcode",
-                          "value": "60596"
-                        }
-                      ],
-                      "countryCode": "DE"
-                    }
-                  },
-                  "emails": {
-                    "email": {
-                      "address": "erika@example.com"
-                    }
-                  },
-                  "phones": {
-                    "voice": {
-                      "number": "tel:+49.6912345678",
-                      "features": {
-                        "voice": true
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
+      "comment": "Creates contact U37 with authInfo (the request differs by backend); expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:U37}"
+      }
+    },
+    {
+      "comment": "Creates domain t37 with registrant U37, generalRequest, abuse, dns records a, authInfo (the request differs by backend); expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "t37-{random_name}.{tld}",
+        "registrant": {
           "@type": "contact",
           "id": "{handle:a:U37}"
-        }
-      }
-    },
-    {
-      "comment": "Creates domain t37 with registrant U37, generalRequest, abuse, dns records a, authInfo (the request differs by backend); expects 201 01000. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
         },
-        "body_json": {
+        "abuse": {
           "select": [
             {
               "when": {
@@ -218,77 +50,37 @@
                 }
               },
               "then": {
-                "@type": "domainName",
-                "name": "t37-{random_name}.{tld}",
-                "registrant": {
-                  "@type": "contact",
-                  "id": "{handle:a:U37}"
-                },
-                "generalRequest": {
-                  "@type": "requestContact",
-                  "id": "{handle:a:RG19}"
-                },
-                "abuse": {
-                  "@type": "requestContact",
-                  "id": "{handle:a:RA19}"
-                },
-                "dns": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                },
-                "authInfo": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
+                "@type": "requestContact",
+                "id": "{handle:a:RA19}"
               }
             },
             {
-              "then": {
-                "@type": "domainName",
-                "name": "t37-{random_name}.{tld}",
-                "registrant": {
-                  "@type": "contact",
-                  "id": "{handle:a:U37}"
-                },
-                "authInfo": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
+              "omit": true
+            }
+          ]
+        },
+        "generalRequest": {
+          "select": [
+            {
+              "when": {
+                "profile.domainName.dns.min_count": {
+                  "min": 1
                 }
+              },
+              "then": {
+                "@type": "requestContact",
+                "id": "{handle:a:RG19}"
               }
+            },
+            {
+              "omit": true
             }
           ]
         }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "domainName",
-          "name": "t37-{random_name}.{tld}",
-          "registrant": {
-            "id": "{handle:a:U37}"
-          }
-        },
-        "fields": {
-          "provMetadata.spClientId": {
-            "type": "not_null"
-          }
-        }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches domain t37: remove /abuse; expects 200. The operation this case checks.",
       "request": {
@@ -384,22 +176,14 @@
           }
         }
       }
-    },
+    }
+  ],
+  "teardown": [
     {
-      "comment": "Deletes domain t37; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it.",
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/t37-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "comment": "Deletes domain t37; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "t37-{random_name}.{tld}"
       }
     }
   ]

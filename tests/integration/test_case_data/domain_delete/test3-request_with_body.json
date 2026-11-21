@@ -1,157 +1,28 @@
 {
   "test_id": "test3-request_with_body",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact HD3; expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact HD3; expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:HD3}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:HD3}"
       }
     },
     {
-      "comment": "Creates domain test3 with authInfo, registrant HD3 (by backend), dns records a (by backend); expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "test3-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "registrant": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.registrant.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "contact",
-                  "id": "{handle:a:HD3}"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName",
-          "name": "TEST3-{random_name}.{tld}",
-          "status": [
-            {
-              "@type": "domainStatus",
-              "label": "{env:domainName.processes.create.success_status}"
-            }
-          ]
-        }
+      "comment": "Creates domain test3 with authInfo, registrant HD3 (by backend), dns records a (by backend); expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "test3-{random_name}.{tld}",
+        "registrant_id": "{handle:a:HD3}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Deletes domain test3, with a fixed RPP-Cltrid, a raw body that is no valid JSON; expects 400. The error answer this case checks.",
       "request": {

@@ -1,45 +1,16 @@
 {
   "test_id": "test42-put_removes_aaaa_record",
   "description": "A PUT without the aaaa record removes it.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates host hu42.….net with dns records ns; expects 201. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "hu42.{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "hu42.{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host hu42.….net with dns records ns; expects 201. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "hu42.{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches host hu42.….net: add /dns/records; add /dns/records; expects 200. The operation this case checks.",
       "request": {

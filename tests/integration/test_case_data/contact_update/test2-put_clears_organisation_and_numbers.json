@@ -6,279 +6,203 @@
   },
   "comment": "Skipped on rri-mtest: RRI has no fax number; RRI requires a phone number; RRI holds no person name on an organisation contact.",
   "test_id": "test2-put_clears_organisation_and_numbers",
+  "setup": [
+    {
+      "comment": "Creates contact 02A with authInfo (by backend); expects 201 01000. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:02A}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "org",
+          "name": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact.org.person_name_supported": true
+                },
+                "then": {
+                  "full": "John Doe"
+                }
+              },
+              {
+                "then": {
+                  "full": "ACME Inc."
+                }
+              }
+            ]
+          },
+          "organizations": {
+            "org": {
+              "name": "ACME Inc."
+            }
+          },
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "123 Main St"
+                },
+                {
+                  "kind": "locality",
+                  "value": "Anytown"
+                },
+                {
+                  "select": [
+                    {
+                      "when": {
+                        "profile.contact.region.supported": true
+                      },
+                      "then": {
+                        "kind": "region",
+                        "value": "PA"
+                      }
+                    },
+                    {
+                      "omit": true
+                    }
+                  ]
+                },
+                {
+                  "kind": "postcode",
+                  "value": "12345"
+                }
+              ],
+              "countryCode": "US"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+49.123123123"
+            },
+            "fax": {
+              "select": [
+                {
+                  "when": {
+                    "profile.contact.fax.supported": true
+                  },
+                  "then": {
+                    "number": "tel:+49.456456456",
+                    "features": {
+                      "fax": true
+                    }
+                  }
+                },
+                {
+                  "omit": true
+                }
+              ]
+            }
+          },
+          "emails": {
+            "email": {
+              "address": "foo@example.com"
+            }
+          }
+        }
+      }
+    },
+    {
+      "comment": "Creates contact 02B with authInfo (by backend); expects 201 01000. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:02B}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "org",
+          "name": {
+            "select": [
+              {
+                "when": {
+                  "profile.contact.org.person_name_supported": true
+                },
+                "then": {
+                  "full": "John Doe"
+                }
+              },
+              {
+                "then": {
+                  "full": "ACME Inc."
+                }
+              }
+            ]
+          },
+          "organizations": {
+            "org": {
+              "name": "ACME Inc."
+            }
+          },
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "123 Main St"
+                },
+                {
+                  "kind": "locality",
+                  "value": "Anytown"
+                },
+                {
+                  "select": [
+                    {
+                      "when": {
+                        "profile.contact.region.supported": true
+                      },
+                      "then": {
+                        "kind": "region",
+                        "value": "PA"
+                      }
+                    },
+                    {
+                      "omit": true
+                    }
+                  ]
+                },
+                {
+                  "kind": "postcode",
+                  "value": "12345"
+                }
+              ],
+              "countryCode": "US"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+49.123123123"
+            },
+            "fax": {
+              "select": [
+                {
+                  "when": {
+                    "profile.contact.fax.supported": true
+                  },
+                  "then": {
+                    "number": "tel:+49.456456456",
+                    "features": {
+                      "fax": true
+                    }
+                  }
+                },
+                {
+                  "omit": true
+                }
+              ]
+            }
+          },
+          "emails": {
+            "email": {
+              "address": "foo@example.com"
+            }
+          }
+        }
+      }
+    }
+  ],
   "steps": [
-    {
-      "comment": "Creates contact 02A with authInfo (by backend); expects 201 01000. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:02A}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "org",
-            "name": {
-              "select": [
-                {
-                  "when": {
-                    "profile.contact.org.person_name_supported": true
-                  },
-                  "then": {
-                    "full": "John Doe"
-                  }
-                },
-                {
-                  "then": {
-                    "full": "ACME Inc."
-                  }
-                }
-              ]
-            },
-            "organizations": {
-              "org": {
-                "name": "ACME Inc."
-              }
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "select": [
-                      {
-                        "when": {
-                          "profile.contact.region.supported": true
-                        },
-                        "then": {
-                          "kind": "region",
-                          "value": "PA"
-                        }
-                      },
-                      {
-                        "omit": true
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.123123123"
-              },
-              "fax": {
-                "select": [
-                  {
-                    "when": {
-                      "profile.contact.fax.supported": true
-                    },
-                    "then": {
-                      "number": "tel:+49.456456456",
-                      "features": {
-                        "fax": true
-                      }
-                    }
-                  },
-                  {
-                    "omit": true
-                  }
-                ]
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:02A}"
-        }
-      }
-    },
-    {
-      "comment": "Creates contact 02B with authInfo (by backend); expects 201 01000. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:02B}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "org",
-            "name": {
-              "select": [
-                {
-                  "when": {
-                    "profile.contact.org.person_name_supported": true
-                  },
-                  "then": {
-                    "full": "John Doe"
-                  }
-                },
-                {
-                  "then": {
-                    "full": "ACME Inc."
-                  }
-                }
-              ]
-            },
-            "organizations": {
-              "org": {
-                "name": "ACME Inc."
-              }
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "select": [
-                      {
-                        "when": {
-                          "profile.contact.region.supported": true
-                        },
-                        "then": {
-                          "kind": "region",
-                          "value": "PA"
-                        }
-                      },
-                      {
-                        "omit": true
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.123123123"
-              },
-              "fax": {
-                "select": [
-                  {
-                    "when": {
-                      "profile.contact.fax.supported": true
-                    },
-                    "then": {
-                      "number": "tel:+49.456456456",
-                      "features": {
-                        "fax": true
-                      }
-                    }
-                  },
-                  {
-                    "omit": true
-                  }
-                ]
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:02B}"
-        }
-      }
-    },
     {
       "comment": "Patches contact 02B: remove /contactInfo/phones/voice; expects 200 01000. The operation this case checks.",
       "request": {

@@ -1,78 +1,22 @@
 {
   "test_id": "test13-put_rename",
+  "setup": [
+    {
+      "comment": "Creates domain t13 with authInfo; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "t13-{random_name}.{tld}"
+      }
+    },
+    {
+      "comment": "Creates host ns1.t13 with dns records ns; expects 201 01000. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "ns1.t13-{random_name}.{tld}"
+      }
+    }
+  ],
   "steps": [
-    {
-      "comment": "Creates domain t13 with authInfo; expects 201 01000. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "t13-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "domainName"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns1.t13 with dns records ns; expects 201 01000. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns1.t13-{random_name}.{tld}",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns1.t13-{random_name}.{tld}."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
     {
       "comment": "Replaces host ns1.t13 by a full update with dns records ns; expects 200 01000. The operation this case checks.",
       "request": {

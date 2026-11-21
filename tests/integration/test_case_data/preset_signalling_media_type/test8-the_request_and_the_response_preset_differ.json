@@ -8,9 +8,9 @@
     "env.preset_signalling": "media-type"
   },
   "comment": "Skipped on epp-docker: the EPP config signals the preset by the RPP-Preset header; preset_signalling_header/ covers the header method.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact PB8 with authInfo, with Content-Type application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\", Accept application/rpp+json; preset=\"de.denic.rpp.preset.rri\"; preset-version=\"1.0\", application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\"; q=0.5 (the request differs by backend); expects 201 01000. Setup: the contact the steps below name. Only where the default preset is rri (rri-mtest).",
+      "comment": "Creates contact PB8 with authInfo, with Content-Type application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\", Accept application/rpp+json; preset=\"de.denic.rpp.preset.rri\"; preset-version=\"1.0\", application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\"; q=0.5 (the request differs by backend); expects 201 01000. The contact the steps below name. Only where the default preset is rri (rri-mtest).",
       "request": {
         "method": "POST",
         "url": "/contacts",
@@ -141,7 +141,9 @@
       "when": {
         "profile.default_preset": "rri"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates contact PB8 with authInfo, with Content-Type application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\", Accept application/rpp+json; preset=\"urn:ietf:params:rpp:preset:epp-compatible\"; preset-version=\"1.0\", application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\"; q=0.5 (the request differs by backend); expects 201 01000. The create this case checks. Only where the default preset is epp-compatible (epp-docker).",
       "request": {

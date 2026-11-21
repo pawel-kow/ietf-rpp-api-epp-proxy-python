@@ -7,151 +7,29 @@
   "comment": "Skipped on rri-mtest: it waits for domainName.processes.delete.redemption_period, which needs 150480 s, the run waits at most 600 s (RPP_TEST_MAX_WAIT); it waits for domainName.processes.delete.pending_delete_period, which needs 63360 s, the run waits at most 600 s (RPP_TEST_MAX_WAIT).",
   "test_id": "test8-purged_after_the_redemption_period",
   "description": "A deleted domain can no longer be restored once its redemption period ends (pendingDelete), and is purged after its pending delete period (RFC 3915 §3.1).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact L8; expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact L8; expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:L8}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:L8}"
       }
     },
     {
-      "comment": "Creates domain t8 with authInfo, registrant L8 (by backend), dns records a (by backend); expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "t8-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "registrant": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.registrant.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "contact",
-                  "id": "{handle:a:L8}"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain t8 with authInfo, registrant L8 (by backend), dns records a (by backend); expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "t8-{random_name}.{tld}",
+        "registrant_id": "{handle:a:L8}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Deletes domain t8; expects 200. The operation this case checks. Waits first for domainName.processes.create.add_grace_period.",
       "wait": "domainName.processes.create.add_grace_period",

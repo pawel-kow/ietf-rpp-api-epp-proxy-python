@@ -3,37 +3,21 @@
   "exclusive": [
     "message_queue"
   ],
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain t12 with authInfo; expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "t12-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
+      "comment": "Creates domain t12 with authInfo; expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "t12-{random_name}.{tld}",
+        "authInfo": {
+          "@type": "authInfo",
+          "method": "authinfo",
+          "authdata": "Password1!@"
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Requests a transfer of domain t12 with transferDir as registrar b; expects 201 01001. The operation this case checks.",
       "request": {
@@ -180,26 +164,11 @@
   ],
   "teardown": [
     {
-      "comment": "Cancels the transfer requested above as registrar b, the requester; expects 200 01000. Cleanup: a transfer left pending is approved by the server minutes later, which queues messages after the case released the queue mutex.",
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/t12-{random_name}.{tld}/processes/transferProcesses/latest",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": {
-          "trStatus": "clientCancelled"
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+      "comment": "Cancels the transfer requested above as registrar b, the requester; expects 200 01000. A transfer left pending is approved by the server minutes later, which queues messages after the case released the queue mutex.",
+      "include": "cancel_transfer",
+      "with": {
+        "collection": "domainNames",
+        "id": "t12-{random_name}.{tld}"
       }
     }
   ]

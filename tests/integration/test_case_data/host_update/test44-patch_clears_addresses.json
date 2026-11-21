@@ -1,45 +1,16 @@
 {
   "test_id": "test44-patch_clears_addresses",
   "description": "A PATCH that keeps only the own ns record removes every address.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates host hu44.….net with dns records ns; expects 201. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "hu44.{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "hu44.{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host hu44.….net with dns records ns; expects 201. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "hu44.{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches host hu44.….net: add /dns/records; add /dns/records; expects 200. The operation this case checks.",
       "request": {

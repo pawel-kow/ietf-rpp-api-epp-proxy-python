@@ -1,0 +1,114 @@
+{
+  "comment": "Creates a contact with a full card: John Doe in Anytown, with a region and a fax where the profile has them; expects 201 01000. The preparation of a case that changes or removes a member of the contact, so the contact needs to have it.",
+  "parameters": {
+    "registrar": {
+      "comment": "The slot of the registrar that sends the request, a or b.",
+      "default": "a"
+    },
+    "id": {
+      "comment": "The contact id, a {handle:<registrar>:<suffix>}."
+    },
+    "authInfo": {
+      "comment": "The authInfo. By default the password Abc2345678 where the profile has a contact authInfo (profile.contact.authInfo.supported), none elsewhere; a case passes another only where its steps use the password.",
+      "default": {
+        "select": [
+          {
+            "when": {
+              "profile.contact.authInfo.supported": true
+            },
+            "then": {
+              "@type": "authInfo",
+              "method": "authinfo",
+              "authdata": "Abc2345678"
+            }
+          },
+          {
+            "omit": true
+          }
+        ]
+      }
+    }
+  },
+  "steps": [
+    {
+      "comment": "Creates the contact with the full card.",
+      "include": "create_contact",
+      "with": {
+        "registrar": "{param:registrar}",
+        "id": "{param:id}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "individual",
+          "name": {
+            "full": "John Doe"
+          },
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "123 Main St"
+                },
+                {
+                  "kind": "locality",
+                  "value": "Anytown"
+                },
+                {
+                  "select": [
+                    {
+                      "when": {
+                        "profile.contact.region.supported": true
+                      },
+                      "then": {
+                        "kind": "region",
+                        "value": "PA"
+                      }
+                    },
+                    {
+                      "omit": true
+                    }
+                  ]
+                },
+                {
+                  "kind": "postcode",
+                  "value": "12345"
+                }
+              ],
+              "countryCode": "US"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+49.123123123"
+            },
+            "fax": {
+              "select": [
+                {
+                  "when": {
+                    "profile.contact.fax.supported": true
+                  },
+                  "then": {
+                    "number": "tel:+49.456456456",
+                    "features": {
+                      "fax": true
+                    }
+                  }
+                },
+                {
+                  "omit": true
+                }
+              ]
+            }
+          },
+          "emails": {
+            "email": {
+              "address": "foo@example.com"
+            }
+          }
+        },
+        "authInfo": "{param:authInfo}"
+      }
+    }
+  ]
+}

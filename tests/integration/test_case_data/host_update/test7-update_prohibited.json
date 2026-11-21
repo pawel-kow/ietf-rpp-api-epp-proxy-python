@@ -1,46 +1,15 @@
 {
   "test_id": "test7-update_prohibited",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates host t7.….net with dns records ns; expects 201 01000. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "t7.{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "t7.{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host t7.….net with dns records ns; expects 201 01000. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "t7.{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches host t7.….net: add /status clientUpdateProhibited; expects 200 01000. The operation this case checks.",
       "request": {

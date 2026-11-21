@@ -1,36 +1,15 @@
 {
   "test_id": "test6-other_client_renews",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain rn6 with authInfo; expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "rn6-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        },
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain rn6 with authInfo; expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "rn6-{random_name}.{tld}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Reads domain rn6; expects 200. Reads what the steps above created. Keeps expiry for later steps.",
       "request": {

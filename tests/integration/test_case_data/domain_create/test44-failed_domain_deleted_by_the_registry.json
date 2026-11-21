@@ -8,93 +8,21 @@
   "comment": "Skipped on epp-docker: it waits for domainName.processes.create.failed_dns_period, and the server has no such transition; the EPP test server does not check the name servers of a new domain. Skipped on rri-mtest: it waits for domainName.processes.create.failed_dns_period, which needs 95040 s, the run waits at most 600 s (RPP_TEST_MAX_WAIT).",
   "test_id": "test44-failed_domain_deleted_by_the_registry",
   "description": "A domain whose name servers fail the registry's check, and that nobody fixes, is deleted by the registry when its failed period ends, into its redemption period (rri-5.0-reference §5.2: a failed domain must be fixed or is deleted). Not run yet: it needs RPP_TEST_MAX_WAIT of a day or more.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact G44 with authInfo (by backend); expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact G44 with authInfo (by backend); expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:G44}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:G44}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain dc44 with authInfo, registrant G44 (by backend), dns records 2 ns; expects 201. The create this case checks.",
       "request": {

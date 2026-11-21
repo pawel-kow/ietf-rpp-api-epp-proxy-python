@@ -1,44 +1,16 @@
 {
   "test_id": "test12-status_twice",
   "description": "The same client status added twice in one PATCH: the proxy sends both, and the server refuses the second as one that exists.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates host h12.….net with dns records ns; expects 201. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "h12.{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "h12.{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host h12.….net with dns records ns; expects 201. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "h12.{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches host h12.….net: add /status clientDeleteProhibited; add /status clientDeleteProhibited; expects 422 02306. The error answer this case checks.",
       "request": {

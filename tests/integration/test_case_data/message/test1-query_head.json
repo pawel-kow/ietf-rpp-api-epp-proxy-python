@@ -8,14 +8,14 @@
   ],
   "setup": [
     {
-      "comment": "Drains the message queue of registrar a. Setup: the queue the first step reads starts empty.",
+      "comment": "Drains the message queue of registrar a. The queue the first step reads starts empty.",
       "include": "drain_queue",
       "with": {
         "registrar": "a"
       }
     },
     {
-      "comment": "Drains the message queue of registrar b. Setup: the queue the second step reads starts empty.",
+      "comment": "Drains the message queue of registrar b. The queue the second step reads starts empty.",
       "include": "drain_queue",
       "with": {
         "registrar": "b"

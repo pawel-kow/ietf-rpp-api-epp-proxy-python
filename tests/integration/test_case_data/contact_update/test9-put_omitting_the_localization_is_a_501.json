@@ -5,107 +5,70 @@
   "comment": "Skipped on rri-mtest: RRI holds no localized form of a contact.",
   "test_id": "test9-put_keeps_the_localization",
   "description": "A full update without the localization the contact has asks to remove it, which EPP cannot do: 501, see spec-issues.md (Full update of a contact).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact 09A with authInfo (by backend); expects 201 01000. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:09A}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "region",
-                    "value": "PA"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.123123123"
-              },
-              "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
+      "comment": "Creates contact 09A with authInfo (by backend); expects 201 01000. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:09A}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "individual",
+          "name": {
+            "full": "John Doe"
+          },
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "123 Main St"
+                },
+                {
+                  "kind": "locality",
+                  "value": "Anytown"
+                },
+                {
+                  "kind": "region",
+                  "value": "PA"
+                },
+                {
+                  "kind": "postcode",
+                  "value": "12345"
                 }
-              }
+              ],
+              "countryCode": "US"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+49.123123123"
             },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            },
-            "localizations": {
-              "und": {
-                "name": {
-                  "full": "Jörg Müller"
-                }
+            "fax": {
+              "number": "tel:+49.456456456",
+              "features": {
+                "fax": true
               }
             }
           },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
+          "emails": {
+            "email": {
+              "address": "foo@example.com"
+            }
+          },
+          "localizations": {
+            "und": {
+              "name": {
+                "full": "Jörg Müller"
               }
-            ]
+            }
           }
         }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:09A}"
-        }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Replaces contact 09A by a full update; expects 501 02102. The error answer this case checks.",
       "request": {

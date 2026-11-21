@@ -4,78 +4,58 @@
   },
   "comment": "Skipped on epp-docker: an EPP contact has no kind (individual or organisation).",
   "test_id": "test35-individual_with_organisation_put_and_patch",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact 35A; expects 201 01000. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:35A}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "organizations": {
-              "org": {
-                "name": "Example Inc."
-              }
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Example Dr., Suite 100"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Dulles"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "20166-6503"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+1.7035555555"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "jdoe@example.example"
-              }
+      "comment": "Creates contact 35A; expects 201 01000. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:35A}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "individual",
+          "name": {
+            "full": "John Doe"
+          },
+          "organizations": {
+            "org": {
+              "name": "Example Inc."
+            }
+          },
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "123 Example Dr., Suite 100"
+                },
+                {
+                  "kind": "locality",
+                  "value": "Dulles"
+                },
+                {
+                  "kind": "postcode",
+                  "value": "20166-6503"
+                }
+              ],
+              "countryCode": "US"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+1.7035555555"
+            }
+          },
+          "emails": {
+            "email": {
+              "address": "jdoe@example.example"
             }
           }
         }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:35A}"
-        }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Replaces contact 35A by a full update; expects 200 01000. The operation this case checks.",
       "request": {

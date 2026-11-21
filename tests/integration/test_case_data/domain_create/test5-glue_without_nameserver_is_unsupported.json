@@ -1,75 +1,20 @@
 {
   "test_id": "test5-glue_without_nameserver_is_unsupported",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact HC5; expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact HC5; expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:HC5}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:HC5}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain test5 with authInfo, dns records A, registrant HC5 (by backend); expects 201. The create this case checks.",
       "request": {
@@ -152,29 +97,21 @@
           }
         ]
       }
-    },
+    }
+  ],
+  "description": "An address record for a name below the domain that is no nameserver: a record the registry serves itself where it holds those, otherwise unsupported.",
+  "teardown": [
     {
-      "comment": "Deletes domain test5; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it. Only where a domain holds a records (rri-mtest).",
+      "comment": "Deletes domain test5; expects 200. MTEST keeps what a case creates, so the case deletes it. Only where a domain holds a records (rri-mtest).",
       "when": {
         "profile.domainName.dns.record_types": {
           "contains": "a"
         }
       },
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/test5-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "include": "delete_domain",
+      "with": {
+        "name": "test5-{random_name}.{tld}"
       }
     }
-  ],
-  "description": "An address record for a name below the domain that is no nameserver: a record the registry serves itself where it holds those, otherwise unsupported."
+  ]
 }

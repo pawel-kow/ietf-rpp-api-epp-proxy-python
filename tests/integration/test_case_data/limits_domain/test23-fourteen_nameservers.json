@@ -7,611 +7,119 @@
   },
   "comment": "Skipped on rri-mtest: RRI has no host objects (a name server is an ns record of the domain).",
   "description": "Fourteen nameservers at create.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact X23 with authInfo (by backend); expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact X23 with authInfo (by backend); expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:X23}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:X23}"
       }
     },
     {
-      "comment": "Creates host ns1.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns1.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns1.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns1.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns1.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns2.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns2.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns2.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns2.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns2.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns3.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns3.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns3.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns3.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns3.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns4.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns4.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns4.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns4.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns4.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns5.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns5.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns5.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns5.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns5.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns6.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns6.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns6.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns6.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns6.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns7.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns7.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns7.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns7.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns7.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns8.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns8.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns8.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns8.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns8.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns9.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns9.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns9.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns9.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns9.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns10.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns10.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns10.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns10.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns10.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns11.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns11.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns11.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns11.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns11.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns12.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns12.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns12.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns12.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns12.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns13.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns13.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns13.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns13.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns13.n23-{random_name}.net"
       }
     },
     {
-      "comment": "Creates host ns14.n23 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns14.n23-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns14.n23-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host ns14.n23 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns14.n23-{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain t23 with authInfo, registrant X23 (by backend), dns records a (by backend), 14 nameservers; expects one of 400 02001 or 400 02004 or 400 02005 or 422 02306. The error answer this case checks.",
       "request": {

@@ -6,319 +6,71 @@
   },
   "comment": "Skipped on rri-mtest: RRI has no admin, tech or billing contacts. Test37 is the counterpart for RRI's request contacts.",
   "test_id": "test4-contacts_and_registrant",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact uf1 with authInfo (by backend); expects 201. Setup: the registrant of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:uf1}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
+      "comment": "Creates contact uf1 with authInfo (by backend); expects 201. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:uf1}"
+      }
+    },
+    {
+      "comment": "Creates contact uf2 with authInfo (by backend); expects 201. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:uf2}"
+      }
+    },
+    {
+      "comment": "Creates domain up-test4 with authInfo, registrant uf1, contacts admin, tech, billing (by backend), dns records a (by backend); expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "up-test4-{random_name}.{tld}",
+        "registrant": {
           "@type": "contact",
           "id": "{handle:a:uf1}"
-        }
-      }
-    },
-    {
-      "comment": "Creates contact uf2 with authInfo (by backend); expects 201. Setup: the registrant of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
         },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:uf2}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:uf2}"
-        }
-      }
-    },
-    {
-      "comment": "Creates domain up-test4 with authInfo, registrant uf1, contacts admin, tech, billing (by backend), dns records a (by backend); expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "up-test4-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "registrant": {
-            "@type": "contact",
-            "id": "{handle:a:uf1}"
-          },
-          "contacts": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.contacts.labels": {
-                    "contains": "admin"
-                  }
-                },
-                "then": [
-                  {
-                    "label": "admin",
-                    "object": {
-                      "@type": "contact",
-                      "id": "{handle:a:uf1}"
-                    }
-                  },
-                  {
-                    "label": "tech",
-                    "object": {
-                      "@type": "contact",
-                      "id": "{handle:a:uf1}"
-                    }
-                  },
-                  {
-                    "label": "billing",
-                    "object": {
-                      "@type": "contact",
-                      "id": "{handle:a:uf1}"
-                    }
-                  }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName",
-          "name": "up-test4-{random_name}.{tld}",
-          "status": [
+        "contacts": {
+          "select": [
             {
-              "@type": "domainStatus",
-              "label": "{env:domainName.processes.create.success_status}"
-            }
-          ],
-          "registrant": {
-            "@type": "contact",
-            "id": "{handle:a:uf1}"
-          },
-          "contacts": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.contacts.labels": {
-                    "contains": "admin"
+              "when": {
+                "profile.domainName.contacts.labels": {
+                  "contains": "admin"
+                }
+              },
+              "then": [
+                {
+                  "label": "admin",
+                  "object": {
+                    "@type": "contact",
+                    "id": "{handle:a:uf1}"
                   }
                 },
-                "then": [
-                  {
-                    "label": "admin",
-                    "object": {
-                      "@type": "contact",
-                      "id": "{handle:a:uf1}"
-                    }
-                  },
-                  {
-                    "label": "tech",
-                    "object": {
-                      "@type": "contact",
-                      "id": "{handle:a:uf1}"
-                    }
-                  },
-                  {
-                    "label": "billing",
-                    "object": {
-                      "@type": "contact",
-                      "id": "{handle:a:uf1}"
-                    }
+                {
+                  "label": "tech",
+                  "object": {
+                    "@type": "contact",
+                    "id": "{handle:a:uf1}"
                   }
-                ]
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
+                },
+                {
+                  "label": "billing",
+                  "object": {
+                    "@type": "contact",
+                    "id": "{handle:a:uf1}"
+                  }
+                }
+              ]
+            },
+            {
+              "omit": true
+            }
+          ]
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches domain up-test4: remove /contacts with a match; add /contacts tech; expects 200. The operation this case checks.",
       "request": {

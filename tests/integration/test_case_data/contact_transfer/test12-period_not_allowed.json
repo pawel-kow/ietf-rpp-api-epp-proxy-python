@@ -1,61 +1,20 @@
 {
   "test_id": "test12-period_not_allowed",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact C12 with authInfo; expects 201. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:C12}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            }
-          },
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:C12}"
+      "comment": "Creates contact C12 with authInfo; expects 201. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:C12}",
+        "authInfo": {
+          "@type": "authInfo",
+          "method": "authinfo",
+          "authdata": "Password1!@"
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Requests a transfer of contact C12 with transferDir, transferPeriod as registrar b; expects 400 02001. The error answer this case checks.",
       "request": {

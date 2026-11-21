@@ -11,403 +11,133 @@
   ],
   "setup": [
     {
-      "comment": "Drains the message queue of registrar a. Setup: the queue the steps below read holds only what the case and the server cause.",
+      "comment": "Drains the message queue of registrar a. The queue the steps below read holds only what the case and the server cause.",
       "include": "drain_queue",
       "with": {
         "registrar": "a"
       }
     },
     {
-      "comment": "Creates contact HM6; expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant.",
+      "comment": "Creates contact HM6; expects 201. The registrant of the domain below. Only where a domain needs a registrant.",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:HM6}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:HM6}"
+      }
+    },
+    {
+      "comment": "Creates request contact GM6 with uriTemplate; expects 201 01000. The General Request contact of the domain below. Only on RRI.",
+      "when": {
+        "profile.extensions": {
+          "contains": "de.denic.rpp.rri"
+        }
+      },
+      "include": "create_request_contact",
+      "with": {
+        "id": "{handle:a:GM6}"
+      }
+    },
+    {
+      "comment": "Creates request contact AM6 with uriTemplate; expects 201 01000. The Abuse contact of the domain below. Only on RRI.",
+      "when": {
+        "profile.extensions": {
+          "contains": "de.denic.rpp.rri"
+        }
+      },
+      "include": "create_request_contact",
+      "with": {
+        "id": "{handle:a:AM6}"
+      }
+    },
+    {
+      "comment": "Creates domain ms6 with authInfo, registrant HM6, dns records a, and on RRI its request contacts GM6 and AM6 (all by backend); expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "ms6-{random_name}.{tld}",
+        "abuse": {
+          "select": [
+            {
+              "when": {
+                "profile.extensions": {
+                  "contains": "de.denic.rpp.rri"
                 }
+              },
+              "then": {
+                "@type": "requestContact",
+                "id": "{handle:a:AM6}"
               }
+            },
+            {
+              "omit": true
             }
-          }
+          ]
         },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
-      }
-    },
-    {
-      "comment": "Creates request contact GM6 with uriTemplate; expects 201 01000. Setup: the General Request contact of the domain below. Only on RRI.",
-      "when": {
-        "profile.extensions": {
-          "contains": "de.denic.rpp.rri"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:a:GM6}",
-          "uriTemplate": "https://example.com/contact?domain={Alabel}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:a:GM6}"
-        }
-      }
-    },
-    {
-      "comment": "Creates request contact AM6 with uriTemplate; expects 201 01000. Setup: the Abuse contact of the domain below. Only on RRI.",
-      "when": {
-        "profile.extensions": {
-          "contains": "de.denic.rpp.rri"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:a:AM6}",
-          "uriTemplate": "mailto:abuse@example.com"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:a:AM6}"
-        }
-      }
-    },
-    {
-      "comment": "Creates domain ms6 with authInfo, registrant HM6, dns records a, and on RRI its request contacts GM6 and AM6 (all by backend); expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "ms6-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          },
-          "registrant": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.registrant.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "contact",
-                  "id": "{handle:a:HM6}"
+        "generalRequest": {
+          "select": [
+            {
+              "when": {
+                "profile.extensions": {
+                  "contains": "de.denic.rpp.rri"
                 }
               },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "generalRequest": {
-            "select": [
-              {
-                "when": {
-                  "profile.extensions": {
-                    "contains": "de.denic.rpp.rri"
-                  }
-                },
-                "then": {
-                  "@type": "requestContact",
-                  "id": "{handle:a:GM6}"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          },
-          "abuse": {
-            "select": [
-              {
-                "when": {
-                  "profile.extensions": {
-                    "contains": "de.denic.rpp.rri"
-                  }
-                },
-                "then": {
-                  "@type": "requestContact",
-                  "id": "{handle:a:AM6}"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
-      }
-    },
-    {
-      "comment": "Creates contact HM6 of registrar b as registrar b; expects 201 01000. Setup: the registrant the transfer below gives the domain. Only on RRI.",
-      "when": {
-        "profile.extensions": {
-          "contains": "de.denic.rpp.rri"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:b:HM6}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
+              "then": {
+                "@type": "requestContact",
+                "id": "{handle:a:GM6}"
               }
             },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
+            {
+              "omit": true
             }
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
+          ]
         },
-        "body": {
-          "@type": "contact",
-          "id": "{handle:b:HM6}"
-        }
+        "registrant_id": "{handle:a:HM6}"
       }
     },
     {
-      "comment": "Creates request contact GM6 of registrar b as registrar b; expects 201 01000. Setup: the General Request contact the transfer below gives the domain. Only on RRI, whose transfer carries the domain data.",
+      "comment": "Creates contact HM6 of registrar b as registrar b; expects 201 01000. The registrant the transfer below gives the domain. Only on RRI.",
       "when": {
         "profile.extensions": {
           "contains": "de.denic.rpp.rri"
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:b:GM6}",
-          "uriTemplate": "https://example.com/contact?domain={Alabel}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:b:GM6}"
-        }
+      "include": "create_contact",
+      "with": {
+        "registrar": "b",
+        "id": "{handle:b:HM6}"
       }
     },
     {
-      "comment": "Creates request contact AM6 of registrar b as registrar b; expects 201 01000. Setup: the Abuse contact the transfer below gives the domain. Only on RRI.",
+      "comment": "Creates request contact GM6 of registrar b as registrar b; expects 201 01000. The General Request contact the transfer below gives the domain. Only on RRI, whose transfer carries the domain data.",
       "when": {
         "profile.extensions": {
           "contains": "de.denic.rpp.rri"
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:b:AM6}",
-          "uriTemplate": "mailto:abuse@example.com"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:b:AM6}"
-        }
+      "include": "create_request_contact",
+      "with": {
+        "registrar": "b",
+        "id": "{handle:b:GM6}"
       }
     },
     {
-      "comment": "Requests a transfer of domain ms6 as registrar b; expects 201 01001, a pending transfer, which queues a message for registrar a. Setup: the message the steps below read and acknowledge. Only where the transfer is EPP's.",
+      "comment": "Creates request contact AM6 of registrar b as registrar b; expects 201 01000. The Abuse contact the transfer below gives the domain. Only on RRI.",
+      "when": {
+        "profile.extensions": {
+          "contains": "de.denic.rpp.rri"
+        }
+      },
+      "include": "create_request_contact",
+      "with": {
+        "registrar": "b",
+        "id": "{handle:b:AM6}"
+      }
+    },
+    {
+      "comment": "Requests a transfer of domain ms6 as registrar b; expects 201 01001, a pending transfer, which queues a message for registrar a. The message the steps below read and acknowledge. Only where the transfer is EPP's.",
       "when": {
         "profile.extensions": {
           "not": {
@@ -441,10 +171,11 @@
         "headers": {
           "RPP-Code": "01001"
         }
-      }
+      },
+      "with": {}
     },
     {
-      "comment": "Transfers domain ms6 by CHPROV with registrant, generalRequest, abuse, dns as registrar b; expects 200 01000, serverApproved at once. Setup: a message for registrar a, the losing registrar, for the steps below; the shared MTEST queue holds older ones too. Only on RRI.",
+      "comment": "Transfers domain ms6 by CHPROV with registrant, generalRequest, abuse, dns as registrar b; expects 200 01000, serverApproved at once. A message for registrar a, the losing registrar, for the steps below; the shared MTEST queue holds older ones too. Only on RRI.",
       "when": {
         "profile.extensions": {
           "contains": "de.denic.rpp.rri"
@@ -512,7 +243,8 @@
             "type": "not_null"
           }
         }
-      }
+      },
+      "with": {}
     }
   ],
   "steps": [
@@ -752,7 +484,7 @@
   ],
   "teardown": [
     {
-      "comment": "Cancels the transfer of domain ms6 as registrar b, the requester; expects 200 01000. Cleanup: a transfer left pending is approved by the server minutes later, which queues messages after the case released the queue mutex. Only where the transfer is EPP's.",
+      "comment": "Cancels the transfer of domain ms6 as registrar b, the requester; expects 200 01000. A transfer left pending is approved by the server minutes later, which queues messages after the case released the queue mutex. Only where the transfer is EPP's.",
       "when": {
         "profile.extensions": {
           "not": {
@@ -760,47 +492,23 @@
           }
         }
       },
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/ms6-{random_name}.{tld}/processes/transferProcesses/latest",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": {
-          "trStatus": "clientCancelled"
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+      "include": "cancel_transfer",
+      "with": {
+        "collection": "domainNames",
+        "id": "ms6-{random_name}.{tld}"
       }
     },
     {
-      "comment": "Deletes domain ms6 as registrar b, its sponsor after the transfer; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it. Only on RRI.",
+      "comment": "Deletes domain ms6 as registrar b, its sponsor after the transfer; expects 200. MTEST keeps what a case creates, so the case deletes it. Only on RRI.",
       "when": {
         "profile.extensions": {
           "contains": "de.denic.rpp.rri"
         }
       },
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/ms6-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "include": "delete_domain",
+      "with": {
+        "name": "ms6-{random_name}.{tld}",
+        "registrar": "b"
       }
     }
   ]

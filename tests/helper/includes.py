@@ -7,7 +7,8 @@ parameter without `default` is required. An item of a case uses it as
 `expand` replaces each such item, when the case is loaded, by a block of the include's items:
 `{"block": [items], "origin": "<name>", "when": …, "comment": …}`. In the include, `{param:<name>}` stands for the
 value of the parameter: a string that is `{param:<name>}` alone takes the value as it is (any JSON value), one that
-holds it within takes the value as text. The other placeholders in a value are resolved later, as in any step. An
+holds it within takes the value as text. A default may use the other parameters the same way, so a member can
+default to one built from another parameter. The other placeholders in a value are resolved later, as in any step. An
 include may use includes; their `with` may use the parameters of the outer one.
 """
 import copy
@@ -82,14 +83,24 @@ def _arguments(name: str, parameters: dict, given) -> dict:
     unknown = sorted(set(given) - set(parameters))
     if unknown:
         raise IncludeError(f"include {name!r}: unknown parameter {', '.join(unknown)}")
-    values = {}
+    values, defaulted = {}, []
     for parameter, spec in parameters.items():
         if parameter in given:
             values[parameter] = given[parameter]
         elif isinstance(spec, dict) and "default" in spec:
             values[parameter] = spec["default"]
+            defaulted.append(parameter)
         else:
             raise IncludeError(f"include {name!r}: parameter {parameter} is missing")
+    # A default may use the other parameters, `{param:name}`, also defaults that use parameters in turn.
+    for _ in range(len(defaulted)):
+        resolved = {p: substitute(values[p], values, name) for p in defaulted}
+        if resolved == {p: values[p] for p in defaulted}:
+            break
+        values.update(resolved)
+    for parameter in defaulted:
+        if PARAM_ANY.search(json.dumps(values[parameter])):
+            raise IncludeError(f"include {name!r}: the default of {parameter} uses itself")
     return values
 
 

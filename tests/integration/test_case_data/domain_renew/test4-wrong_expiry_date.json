@@ -1,36 +1,15 @@
 {
   "test_id": "test4-wrong_expiry_date",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain rn4 with authInfo; expects 201. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "rn4-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        },
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        }
+      "comment": "Creates domain rn4 with authInfo; expects 201. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "rn4-{random_name}.{tld}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Renews domain rn4 with expiryDate, renewalPeriod; expects 422 02306. The error answer this case checks.",
       "request": {

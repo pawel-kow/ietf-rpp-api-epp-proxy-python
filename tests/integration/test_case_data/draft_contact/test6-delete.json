@@ -115,9 +115,11 @@
         "content_type": "application/rpp+json",
         "body": {}
       }
-    },
+    }
+  ],
+  "teardown": [
     {
-      "comment": "Deletes contact J06; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it.",
+      "comment": "Deletes contact J06; expects 200. MTEST keeps what a case creates, so the case deletes it.",
       "request": {
         "method": "DELETE",
         "url": "/contacts/{handle:a:J06}",

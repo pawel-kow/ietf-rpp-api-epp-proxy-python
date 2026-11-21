@@ -1,249 +1,62 @@
 {
   "test_id": "test6-foreign_contacts",
   "description": "The contacts must belong to the gainer: the loser's holder is refused (63200020603).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates request contact RG13 with uriTemplate; expects 201 01000. Setup: the General Request contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:a:RG13}",
-          "uriTemplate": "https://example.com/contact?domain={Alabel}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:a:RG13}"
-        }
+      "comment": "Creates request contact RG13 with uriTemplate; expects 201 01000. The General Request contact of the domain below.",
+      "include": "create_request_contact",
+      "with": {
+        "id": "{handle:a:RG13}"
       }
     },
     {
-      "comment": "Creates request contact RA13 with uriTemplate; expects 201 01000. Setup: the Abuse contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:a:RA13}",
-          "uriTemplate": "mailto:abuse@example.com"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
+      "comment": "Creates request contact RA13 with uriTemplate; expects 201 01000. The Abuse contact of the domain below.",
+      "include": "create_request_contact",
+      "with": {
+        "id": "{handle:a:RA13}"
+      }
+    },
+    {
+      "comment": "Creates request contact RG13 of registrar b with uriTemplate as registrar b; expects 201 01000. The General Request contact of the domain below.",
+      "include": "create_request_contact",
+      "with": {
+        "registrar": "b",
+        "id": "{handle:b:RG13}"
+      }
+    },
+    {
+      "comment": "Creates request contact RA13 of registrar b with uriTemplate as registrar b; expects 201 01000. The Abuse contact of the domain below.",
+      "include": "create_request_contact",
+      "with": {
+        "registrar": "b",
+        "id": "{handle:b:RA13}"
+      }
+    },
+    {
+      "comment": "Creates contact XT6; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:XT6}"
+      }
+    },
+    {
+      "comment": "Creates domain x6 with registrant XT6, generalRequest, abuse, dns records a, authInfo; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "x6-{random_name}.{tld}",
+        "abuse": {
           "@type": "requestContact",
           "id": "{handle:a:RA13}"
-        }
-      }
-    },
-    {
-      "comment": "Creates request contact RG13 of registrar b with uriTemplate as registrar b; expects 201 01000. Setup: the General Request contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
         },
-        "body_json": {
+        "generalRequest": {
           "@type": "requestContact",
-          "id": "{handle:b:RG13}",
-          "uriTemplate": "https://example.com/contact?domain={Alabel}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
+          "id": "{handle:a:RG13}"
         },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:b:RG13}"
-        }
+        "registrant_id": "{handle:a:XT6}"
       }
-    },
-    {
-      "comment": "Creates request contact RA13 of registrar b with uriTemplate as registrar b; expects 201 01000. Setup: the Abuse contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:b}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:b:RA13}",
-          "uriTemplate": "mailto:abuse@example.com"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:b:RA13}"
-        }
-      }
-    },
-    {
-      "comment": "Creates contact XT6; expects 201 01000. Setup: the registrant of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:XT6}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:XT6}"
-        }
-      }
-    },
-    {
-      "comment": "Creates domain x6 with registrant XT6, generalRequest, abuse, dns records a, authInfo; expects 201 01000. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "x6-{random_name}.{tld}",
-          "registrant": {
-            "@type": "contact",
-            "id": "{handle:a:XT6}"
-          },
-          "generalRequest": {
-            "@type": "requestContact",
-            "id": "{handle:a:RG13}"
-          },
-          "abuse": {
-            "@type": "requestContact",
-            "id": "{handle:a:RA13}"
-          },
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "a",
-                "rdata": {
-                  "address": "192.0.2.10"
-                }
-              }
-            ]
-          },
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "domainName",
-          "name": "x6-{random_name}.{tld}"
-        }
-      }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Requests a transfer of domain x6 with registrant, generalRequest, abuse, dns as registrar b; expects 403 02201. The error answer this case checks.",
       "request": {
@@ -296,22 +109,14 @@
           "RPP-Code": "02201"
         }
       }
-    },
+    }
+  ],
+  "teardown": [
     {
-      "comment": "Deletes domain x6; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it.",
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/x6-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "comment": "Deletes domain x6; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "x6-{random_name}.{tld}"
       }
     }
   ]

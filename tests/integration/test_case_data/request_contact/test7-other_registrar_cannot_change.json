@@ -1,41 +1,15 @@
 {
   "description": "A request contact is the RegAcc's own: another one cannot read or change it.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates request contact RQ7 with uriTemplate; expects 201 01000. Setup: the request contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/requestContacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "requestContact",
-          "id": "{handle:a:RQ7}",
-          "uriTemplate": "https://example.com/contact?domain={Alabel}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "requestContact",
-          "id": "{handle:a:RQ7}",
-          "uriTemplate": "https://example.com/contact?domain={Alabel}"
-        },
-        "fields": {
-          "provMetadata.spClientId": {
-            "type": "not_null"
-          }
-        }
+      "comment": "Creates request contact RQ7 with uriTemplate; expects 201 01000. The request contact the steps below work on.",
+      "include": "create_request_contact",
+      "with": {
+        "id": "{handle:a:RQ7}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Replaces request contact RQ7 by a full update with uriTemplate as registrar b; expects 403 02201. The error answer this case checks.",
       "request": {

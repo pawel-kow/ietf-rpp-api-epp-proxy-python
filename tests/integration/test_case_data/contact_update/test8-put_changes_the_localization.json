@@ -4,230 +4,154 @@
   },
   "comment": "Skipped on rri-mtest: RRI holds no localized form of a contact.",
   "test_id": "test8-put_changes_the_localization",
+  "setup": [
+    {
+      "comment": "Creates contact 08A with authInfo (by backend); expects 201 01000. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:08A}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "individual",
+          "name": {
+            "full": "John Doe"
+          },
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "123 Main St"
+                },
+                {
+                  "kind": "locality",
+                  "value": "Anytown"
+                },
+                {
+                  "kind": "region",
+                  "value": "PA"
+                },
+                {
+                  "kind": "postcode",
+                  "value": "12345"
+                }
+              ],
+              "countryCode": "US"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+49.123123123"
+            },
+            "fax": {
+              "number": "tel:+49.456456456",
+              "features": {
+                "fax": true
+              }
+            }
+          },
+          "emails": {
+            "email": {
+              "address": "foo@example.com"
+            }
+          },
+          "localizations": {
+            "und": {
+              "name": {
+                "full": "Jörg Müller"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "comment": "Creates contact 08B with authInfo (by backend); expects 201 01000. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:08B}",
+        "contactInfo": {
+          "@type": "Card",
+          "version": "2.0",
+          "kind": "individual",
+          "name": {
+            "full": "John Doe"
+          },
+          "addresses": {
+            "addr": {
+              "components": [
+                {
+                  "kind": "name",
+                  "value": "123 Main St"
+                },
+                {
+                  "kind": "locality",
+                  "value": "Anytown"
+                },
+                {
+                  "kind": "region",
+                  "value": "PA"
+                },
+                {
+                  "kind": "postcode",
+                  "value": "12345"
+                }
+              ],
+              "countryCode": "US"
+            }
+          },
+          "phones": {
+            "voice": {
+              "number": "tel:+49.123123123"
+            },
+            "fax": {
+              "number": "tel:+49.456456456",
+              "features": {
+                "fax": true
+              }
+            }
+          },
+          "emails": {
+            "email": {
+              "address": "foo@example.com"
+            }
+          },
+          "localizations": {
+            "und": {
+              "name": {
+                "full": "Jörg Müller"
+              },
+              "addresses": {
+                "addr": {
+                  "components": [
+                    {
+                      "kind": "name",
+                      "value": "123 Main St"
+                    },
+                    {
+                      "kind": "locality",
+                      "value": "Munich"
+                    },
+                    {
+                      "kind": "region",
+                      "value": "PA"
+                    },
+                    {
+                      "kind": "postcode",
+                      "value": "12345"
+                    }
+                  ],
+                  "countryCode": "US"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "steps": [
-    {
-      "comment": "Creates contact 08A with authInfo (by backend); expects 201 01000. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:08A}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "region",
-                    "value": "PA"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.123123123"
-              },
-              "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            },
-            "localizations": {
-              "und": {
-                "name": {
-                  "full": "Jörg Müller"
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:08A}"
-        }
-      }
-    },
-    {
-      "comment": "Creates contact 08B with authInfo (by backend); expects 201 01000. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:08B}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Main St"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "region",
-                    "value": "PA"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "12345"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.123123123"
-              },
-              "fax": {
-                "number": "tel:+49.456456456",
-                "features": {
-                  "fax": true
-                }
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            },
-            "localizations": {
-              "und": {
-                "name": {
-                  "full": "Jörg Müller"
-                },
-                "addresses": {
-                  "addr": {
-                    "components": [
-                      {
-                        "kind": "name",
-                        "value": "123 Main St"
-                      },
-                      {
-                        "kind": "locality",
-                        "value": "Munich"
-                      },
-                      {
-                        "kind": "region",
-                        "value": "PA"
-                      },
-                      {
-                        "kind": "postcode",
-                        "value": "12345"
-                      }
-                    ],
-                    "countryCode": "US"
-                  }
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:08B}"
-        }
-      }
-    },
     {
       "comment": "Patches contact 08B: remove /contactInfo/localizations/und/addresses; expects 200 01000. The operation this case checks.",
       "request": {

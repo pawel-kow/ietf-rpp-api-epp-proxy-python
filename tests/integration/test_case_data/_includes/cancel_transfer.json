@@ -1,0 +1,40 @@
+{
+  "comment": "Cancels the latest transfer of an object as its requester; expects 200 01000, clientCancelled. The cleanup of a case that leaves a transfer pending, which the server approves minutes later and queues messages then.",
+  "parameters": {
+    "registrar": {
+      "comment": "The slot of the registrar that requested the transfer, a or b.",
+      "default": "b"
+    },
+    "collection": {
+      "comment": "The collection of the object: contacts, domainNames or planets."
+    },
+    "id": {
+      "comment": "The id or name of the object."
+    }
+  },
+  "steps": [
+    {
+      "comment": "Cancels the transfer; expects 200 01000.",
+      "request": {
+        "method": "DELETE",
+        "url": "/{param:collection}/{param:id}/processes/transferProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:{param:registrar}}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "trStatus": "clientCancelled"
+        }
+      }
+    }
+  ]
+}

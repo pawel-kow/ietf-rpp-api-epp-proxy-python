@@ -7,307 +7,71 @@
   },
   "comment": "Skipped on rri-mtest: RRI has no host objects (a name server is an ns record of the domain); RRI has no registration period (a domain runs until it is deleted).",
   "test_id": "test5-create",
+  "setup": [
+    {
+      "comment": "Creates host ns1.d5 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns1.d5-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns2.d5 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns2.d5-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates contact J5 with authInfo (by backend); expects 201. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:J5}",
+        "authInfo": {
+          "select": [
+            {
+              "when": {
+                "profile.contact.authInfo.supported": true
+              },
+              "then": {
+                "@type": "authInfo",
+                "method": "authinfo",
+                "authdata": "2feeBAR9"
+              }
+            },
+            {
+              "omit": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Creates contact S5 with authInfo (by backend); expects 201. A contact of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:S5}",
+        "authInfo": {
+          "select": [
+            {
+              "when": {
+                "profile.contact.authInfo.supported": true
+              },
+              "then": {
+                "@type": "authInfo",
+                "method": "authinfo",
+                "authdata": "2feeBAR9"
+              }
+            },
+            {
+              "omit": true
+            }
+          ]
+        }
+      }
+    }
+  ],
   "steps": [
-    {
-      "comment": "Creates host ns1.d5 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns1.d5-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns1.d5-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host",
-          "hostName": "ns1.d5-{random_name}.net"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns2.d5 with dns records ns; expects 201. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns2.d5-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns2.d5-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host",
-          "hostName": "ns2.d5-{random_name}.net"
-        }
-      }
-    },
-    {
-      "comment": "Creates contact J5 with authInfo (by backend); expects 201. Setup: the registrant of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:J5}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Example Dr., Suite 100"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Dulles"
-                  },
-                  {
-                    "select": [
-                      {
-                        "when": {
-                          "profile.contact.region.supported": true
-                        },
-                        "then": {
-                          "kind": "region",
-                          "value": "VA"
-                        }
-                      },
-                      {
-                        "omit": true
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "20166-6503"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+1.7035555555"
-              },
-              "fax": {
-                "select": [
-                  {
-                    "when": {
-                      "profile.contact.fax.supported": true
-                    },
-                    "then": {
-                      "features": {
-                        "fax": true
-                      },
-                      "number": "tel:+1.7035555556"
-                    }
-                  },
-                  {
-                    "omit": true
-                  }
-                ]
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "jdoe@example.example"
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "2feeBAR9"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {}
-      }
-    },
-    {
-      "comment": "Creates contact S5 with authInfo (by backend); expects 201. Setup: a contact of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:S5}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "123 Example Dr., Suite 100"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Dulles"
-                  },
-                  {
-                    "select": [
-                      {
-                        "when": {
-                          "profile.contact.region.supported": true
-                        },
-                        "then": {
-                          "kind": "region",
-                          "value": "VA"
-                        }
-                      },
-                      {
-                        "omit": true
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "20166-6503"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+1.7035555555"
-              },
-              "fax": {
-                "select": [
-                  {
-                    "when": {
-                      "profile.contact.fax.supported": true
-                    },
-                    "then": {
-                      "features": {
-                        "fax": true
-                      },
-                      "number": "tel:+1.7035555556"
-                    }
-                  },
-                  {
-                    "omit": true
-                  }
-                ]
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "jdoe@example.example"
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "2feeBAR9"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {}
-      }
-    },
     {
       "comment": "Creates domain ex5 with 2 nameservers, registrant J5, contacts admin, tech (by backend), authInfo, processes (includeElements=authInfo); expects 201. The create this case checks.",
       "request": {

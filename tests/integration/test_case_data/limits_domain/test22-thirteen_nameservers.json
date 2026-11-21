@@ -1,772 +1,244 @@
 {
   "test_id": "test22-thirteen_nameservers",
   "description": "Thirteen name servers, the most both servers take: host objects where the backend has them (the EPP test server), ns records where it has none (RRI).",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact X22 with authInfo (by backend); expects 201. Setup: the registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
+      "comment": "Creates contact X22 with authInfo (by backend); expects 201. The registrant of the domain below. Only where a domain needs a registrant (rri-mtest).",
       "when": {
         "profile.domainName.registrant.min_count": {
           "min": 1
         }
       },
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:X22}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "Erika Mustermann"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "locality",
-                    "value": "Frankfurt am Main"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "DE"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "erika@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:X22}"
+      }
+    },
+    {
+      "comment": "Creates host ns1.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns1.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns2.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns2.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns3.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns3.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns4.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns4.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns5.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns5.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns6.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns6.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns7.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns7.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns8.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns8.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns9.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns9.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns10.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns10.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns11.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns11.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns12.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns12.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates host ns13.n22 with dns records ns; expects 201. A nameserver of the domain below. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_host",
+      "with": {
+        "name": "ns13.n22-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates domain t22 with authInfo, registrant X22 (by backend), dns records a (by backend), 13 nameservers; expects 201. The domain the steps below name. Only where the backend has host objects (epp-docker).",
+      "when": {
+        "profile.objects": {
+          "contains": "host"
+        }
+      },
+      "include": "create_domain",
+      "with": {
+        "name": "t22-{random_name}.{tld}",
+        "nameservers": [
+          {
+            "@type": "host",
+            "hostName": "ns1.n22-{random_name}.net"
           },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "Abc2345678"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "contact"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns1.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns1.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns1.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns2.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns2.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns2.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns3.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns3.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns3.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns4.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns4.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns4.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns5.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns5.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns5.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns6.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns6.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns6.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns7.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns7.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns7.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns8.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns8.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns8.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns9.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns9.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns9.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns10.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns10.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns10.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns11.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns11.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns11.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns12.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns12.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns12.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates host ns13.n22 with dns records ns; expects 201. Setup: a nameserver of the domain below. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns13.n22-{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns13.n22-{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "host"
-        }
-      }
-    },
-    {
-      "comment": "Creates domain t22 with authInfo, registrant X22 (by backend), dns records a (by backend), 13 nameservers; expects 201. Setup: the domain the steps below name. Only where the backend has host objects (epp-docker).",
-      "when": {
-        "profile.objects": {
-          "contains": "host"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "domainName",
-          "name": "t22-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Abc2345678"
+          {
+            "@type": "host",
+            "hostName": "ns2.n22-{random_name}.net"
           },
-          "registrant": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.registrant.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "contact",
-                  "id": "{handle:a:X22}"
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
+          {
+            "@type": "host",
+            "hostName": "ns3.n22-{random_name}.net"
           },
-          "dns": {
-            "select": [
-              {
-                "when": {
-                  "profile.domainName.dns.min_count": {
-                    "min": 1
-                  }
-                },
-                "then": {
-                  "@type": "dnsData",
-                  "records": [
-                    {
-                      "@type": "dnsRecord",
-                      "name": "@",
-                      "type": "a",
-                      "rdata": {
-                        "address": "192.0.2.10"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "omit": true
-              }
-            ]
+          {
+            "@type": "host",
+            "hostName": "ns4.n22-{random_name}.net"
           },
-          "nameservers": [
-            {
-              "@type": "host",
-              "hostName": "ns1.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns2.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns3.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns4.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns5.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns6.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns7.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns8.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns9.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns10.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns11.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns12.n22-{random_name}.net"
-            },
-            {
-              "@type": "host",
-              "hostName": "ns13.n22-{random_name}.net"
-            }
-          ]
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": {
-          "@type": "domainName"
-        }
+          {
+            "@type": "host",
+            "hostName": "ns5.n22-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns6.n22-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns7.n22-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns8.n22-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns9.n22-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns10.n22-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns11.n22-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns12.n22-{random_name}.net"
+          },
+          {
+            "@type": "host",
+            "hostName": "ns13.n22-{random_name}.net"
+          }
+        ],
+        "registrant_id": "{handle:a:X22}"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain t22 with authInfo, registrant X22 (by backend), dns records 13 ns; expects 201. The create this case checks. Only where the backend has no host objects (rri-mtest).",
       "when": {
@@ -929,9 +401,11 @@
           "@type": "domainName"
         }
       }
-    },
+    }
+  ],
+  "teardown": [
     {
-      "comment": "Deletes domain t22; expects 200. Cleanup: MTEST keeps what a case creates, so the case deletes it. Only where the backend has no host objects (rri-mtest).",
+      "comment": "Deletes domain t22; expects 200. MTEST keeps what a case creates, so the case deletes it. Only where the backend has no host objects (rri-mtest).",
       "when": {
         "profile.objects": {
           "not": {
@@ -939,19 +413,9 @@
           }
         }
       },
-      "request": {
-        "method": "DELETE",
-        "url": "/domainNames/t22-{random_name}.{tld}",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "Content-Type": "{rpp:content-type}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 200
+      "include": "delete_domain",
+      "with": {
+        "name": "t22-{random_name}.{tld}"
       }
     }
   ]

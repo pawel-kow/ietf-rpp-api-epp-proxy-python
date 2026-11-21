@@ -8,9 +8,9 @@
     "env.preset_signalling": "media-type"
   },
   "comment": "Skipped on epp-docker: the EPP config signals the preset by the RPP-Preset header; preset_signalling_header/ covers the header method.",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact PB1 with authInfo, with Content-Type application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\", Accept application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\" (the request differs by backend); expects 201 01000. Setup: the registrant of the domain below.",
+      "comment": "Creates contact PB1 with authInfo, with Content-Type application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\", Accept application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\" (the request differs by backend); expects 201 01000. The registrant of the domain below.",
       "request": {
         "method": "POST",
         "url": "/contacts",
@@ -139,7 +139,7 @@
       }
     },
     {
-      "comment": "Creates domain b1 with registrant PB1, dns records a, authInfo, with Content-Type application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\", Accept application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\" (the request differs by backend); expects 201 01000. Setup: the domain the steps below work on.",
+      "comment": "Creates domain b1 with registrant PB1, dns records a, authInfo, with Content-Type application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\", Accept application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\" (the request differs by backend); expects 201 01000. The domain the steps below work on.",
       "request": {
         "method": "POST",
         "url": "/domainNames",
@@ -222,7 +222,9 @@
           }
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Reads domain b1, with Content-Type application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\", Accept application/rpp+json; preset=\"urn:ietf:params:rpp:preset:base\"; preset-version=\"1.0\"; expects 200. Reads what the steps above created.",
       "request": {

@@ -1,88 +1,43 @@
 {
   "test_id": "test32-patch_add_existing_address",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates domain t32 with authInfo; expects 201 01000. Setup: the domain the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/domainNames",
-        "body_json": {
-          "@type": "domainName",
-          "name": "t32-{random_name}.{tld}",
-          "authInfo": {
-            "@type": "authInfo",
-            "method": "authinfo",
-            "authdata": "Password1!@"
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "domainName"
-        },
-        "headers": {
-          "RPP-Code": "01000"
-        }
+      "comment": "Creates domain t32 with authInfo; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "t32-{random_name}.{tld}"
       }
     },
     {
-      "comment": "Creates host ns1.t32 with dns records ns, a; expects 201 01000. Setup: the host the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "body_json": {
-          "@type": "host",
-          "hostName": "ns1.t32-{random_name}.{tld}",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "ns1.t32-{random_name}.{tld}."
-                }
-              },
-              {
-                "@type": "dnsRecord",
-                "name": "ns1.t32-{random_name}.{tld}.",
-                "type": "a",
-                "rdata": {
-                  "address": "192.0.2.1"
-                }
+      "comment": "Creates host ns1.t32 with dns records ns, a; expects 201 01000. The host the steps below work on.",
+      "include": "create_host",
+      "with": {
+        "name": "ns1.t32-{random_name}.{tld}",
+        "dns": {
+          "@type": "dnsData",
+          "records": [
+            {
+              "@type": "dnsRecord",
+              "name": "@",
+              "type": "ns",
+              "rdata": {
+                "nsdname": "ns1.t32-{random_name}.{tld}."
               }
-            ]
-          }
-        },
-        "headers": {
-          "Content-Type": "{rpp:content-type}",
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}"
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "host"
-        },
-        "headers": {
-          "RPP-Code": "01000"
+            },
+            {
+              "@type": "dnsRecord",
+              "name": "ns1.t32-{random_name}.{tld}.",
+              "type": "a",
+              "rdata": {
+                "address": "192.0.2.1"
+              }
+            }
+          ]
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Patches host ns1.t32: add /dns/records; expects 422 02306. The error answer this case checks.",
       "request": {

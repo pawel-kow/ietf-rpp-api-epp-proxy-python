@@ -12,90 +12,33 @@
   "exclusive": [
     "message_queue"
   ],
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates contact D10 with authInfo (by backend); expects 201. Setup: the contact the steps below work on.",
-      "request": {
-        "method": "POST",
-        "url": "/contacts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "contact",
-          "id": "{handle:a:D10}",
-          "contactInfo": {
-            "@type": "Card",
-            "version": "2.0",
-            "kind": "individual",
-            "name": {
-              "full": "John Doe"
-            },
-            "addresses": {
-              "addr": {
-                "components": [
-                  {
-                    "kind": "locality",
-                    "value": "Anytown"
-                  },
-                  {
-                    "kind": "name",
-                    "value": "Musterweg 12"
-                  },
-                  {
-                    "kind": "postcode",
-                    "value": "60596"
-                  }
-                ],
-                "countryCode": "US"
-              }
-            },
-            "emails": {
-              "email": {
-                "address": "foo@example.com"
-              }
-            },
-            "phones": {
-              "voice": {
-                "number": "tel:+49.6912345678",
-                "features": {
-                  "voice": true
-                }
-              }
-            }
-          },
-          "authInfo": {
-            "select": [
-              {
-                "when": {
-                  "profile.contact.authInfo.supported": true
-                },
-                "then": {
-                  "@type": "authInfo",
-                  "method": "authinfo",
-                  "authdata": "2feeBAR9"
-                }
+      "comment": "Creates contact D10 with authInfo (by backend); expects 201. The contact the steps below work on.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:D10}",
+        "authInfo": {
+          "select": [
+            {
+              "when": {
+                "profile.contact.authInfo.supported": true
               },
-              {
-                "omit": true
+              "then": {
+                "@type": "authInfo",
+                "method": "authinfo",
+                "authdata": "2feeBAR9"
               }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "content_type": "application/rpp+json",
-        "body": {
-          "@type": "contact",
-          "id": "{handle:a:D10}"
+            },
+            {
+              "omit": true
+            }
+          ]
         }
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Requests a transfer of contact D10 with transferDir as registrar b; expects 201 01001. The operation this case checks.",
       "request": {

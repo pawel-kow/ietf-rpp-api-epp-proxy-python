@@ -1,0 +1,60 @@
+{
+  "comment": "Creates a host; expects 201 01000 with the host and its name. The preparation of a case that needs a host.",
+  "parameters": {
+    "registrar": {
+      "comment": "The slot of the registrar that sends the request, a or b.",
+      "default": "a"
+    },
+    "name": {
+      "comment": "The host name, e.g. ns1.u1-{random_name}.net."
+    },
+    "dns": {
+      "comment": "The dns data of the host. By default its own ns record, which an external host needs; a case passes it to add addresses.",
+      "default": {
+        "@type": "dnsData",
+        "records": [
+          {
+            "@type": "dnsRecord",
+            "name": "@",
+            "type": "ns",
+            "rdata": {
+              "nsdname": "{param:name}."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "steps": [
+    {
+      "comment": "Creates the host; expects 201 01000.",
+      "request": {
+        "method": "POST",
+        "url": "/hosts",
+        "headers": {
+          "Authorization": "{auth:{param:registrar}}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "@type": "host",
+          "hostName": "{param:name}",
+          "dns": "{param:dns}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "host",
+          "hostName": "{param:name}"
+        }
+      }
+    }
+  ]
+}

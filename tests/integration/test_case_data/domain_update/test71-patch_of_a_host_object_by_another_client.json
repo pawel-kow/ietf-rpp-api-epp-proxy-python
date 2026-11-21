@@ -1,0 +1,71 @@
+{
+  "when": {
+    "profile.objects": {
+      "contains": "host"
+    }
+  },
+  "comment": "Skipped on rri-mtest: RRI has no host objects (a name server is an ns record of the domain).",
+  "test_id": "test71-patch_of_a_host_object_by_another_client",
+  "description": "A replace of a host object nameserver by itself, by a client that is not the sponsor, is refused (core §16.8), where the backend has host objects.",
+  "setup": [
+    {
+      "comment": "Creates host ns1.u31 with dns records ns; expects 201. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "ns1.u31-{random_name}.net"
+      }
+    },
+    {
+      "comment": "Creates domain put31 with authInfo, 1 nameserver; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "put31-{random_name}.{tld}",
+        "nameservers": [
+          {
+            "@type": "host",
+            "hostName": "ns1.u31-{random_name}.net"
+          }
+        ]
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Patches domain put31: replace /nameservers with a match as registrar b; expects 403 02201. The error answer this case checks.",
+      "request": {
+        "method": "PATCH",
+        "url": "/domainNames/put31-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": [
+          {
+            "op": "replace",
+            "path": "/nameservers",
+            "match": {
+              "hostName": "{upper:ns1.u31-{random_name}.net}"
+            },
+            "value": {
+              "@type": "host",
+              "hostName": "ns1.u31-{random_name}.net"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 403,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02201"
+        }
+      }
+    }
+  ]
+}

@@ -1,46 +1,15 @@
 {
   "test_id": "test3-linked",
-  "steps": [
+  "setup": [
     {
-      "comment": "Creates host t3.….net with dns records ns; expects 201 01000. Setup: a nameserver of the domain below.",
-      "request": {
-        "method": "POST",
-        "url": "/hosts",
-        "headers": {
-          "Authorization": "{auth:a}",
-          "Accept": "{rpp:accept}",
-          "RPP-Preset": "{rpp:preset}",
-          "RPP-Cltrid": "{unique_cltrid}",
-          "Content-Type": "{rpp:content-type}"
-        },
-        "body_json": {
-          "@type": "host",
-          "hostName": "t3.{random_name}.net",
-          "dns": {
-            "@type": "dnsData",
-            "records": [
-              {
-                "@type": "dnsRecord",
-                "name": "@",
-                "type": "ns",
-                "rdata": {
-                  "nsdname": "t3.{random_name}.net."
-                }
-              }
-            ]
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "headers": {
-          "RPP-Code": "01000"
-        },
-        "body": {
-          "@type": "host"
-        }
+      "comment": "Creates host t3.….net with dns records ns; expects 201 01000. A nameserver of the domain below.",
+      "include": "create_host",
+      "with": {
+        "name": "t3.{random_name}.net"
       }
-    },
+    }
+  ],
+  "steps": [
     {
       "comment": "Creates domain t3 with authInfo, 1 nameserver; expects 201 01000. The create this case checks.",
       "request": {

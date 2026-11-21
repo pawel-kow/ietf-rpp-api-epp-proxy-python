@@ -1,0 +1,114 @@
+{
+  "comment": "Creates a contact; expects 201 01000 with the contact and its id. The preparation of a case that needs a contact.",
+  "parameters": {
+    "registrar": {
+      "comment": "The slot of the registrar that sends the request, a or b.",
+      "default": "a"
+    },
+    "id": {
+      "comment": "The contact id, a {handle:<registrar>:<suffix>}."
+    },
+    "contactInfo": {
+      "comment": "The contactInfo card. Erika Mustermann in Frankfurt by default.",
+      "default": {
+        "@type": "Card",
+        "version": "2.0",
+        "kind": "individual",
+        "name": {
+          "full": "Erika Mustermann"
+        },
+        "addresses": {
+          "addr": {
+            "components": [
+              {
+                "kind": "name",
+                "value": "Musterweg 12"
+              },
+              {
+                "kind": "locality",
+                "value": "Frankfurt am Main"
+              },
+              {
+                "kind": "postcode",
+                "value": "60596"
+              }
+            ],
+            "countryCode": "DE"
+          }
+        },
+        "emails": {
+          "email": {
+            "address": "erika@example.com"
+          }
+        },
+        "phones": {
+          "voice": {
+            "number": "tel:+49.6912345678",
+            "features": {
+              "voice": true
+            }
+          }
+        }
+      }
+    },
+    "authInfo": {
+      "comment": "The authInfo. By default the password Abc2345678 where the profile has a contact authInfo (profile.contact.authInfo.supported), none elsewhere; a case passes another only where its steps use the password.",
+      "default": {
+        "select": [
+          {
+            "when": {
+              "profile.contact.authInfo.supported": true
+            },
+            "then": {
+              "@type": "authInfo",
+              "method": "authinfo",
+              "authdata": "Abc2345678"
+            }
+          },
+          {
+            "omit": true
+          }
+        ]
+      }
+    }
+  },
+  "steps": [
+    {
+      "comment": "Creates the contact; expects 201 01000.",
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:{param:registrar}}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "id": "{param:id}",
+          "contactInfo": "{param:contactInfo}",
+          "authInfo": "{param:authInfo}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "contact",
+          "id": "{param:id}",
+          "status": [
+            {
+              "@type": "contactStatus",
+              "label": "ok"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
