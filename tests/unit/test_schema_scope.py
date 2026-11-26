@@ -230,3 +230,21 @@ def test_only_an_unconditional_requirement_refuses_a_removal():
         scope_of(REQUIRES_RADIUS).refuse_removal("domainName.update", "registrant")
     with pytest.raises(ProfileConstraintViolation):
         scope_of(nested).refuse_removal("domainName.update", "authInfo")
+
+
+NO_AUTH_INFO = profile("no-auth-info", constraints={"domainName.create": "profile.noAuthInfo"}, defs={
+    "profile.noAuthInfo": {"properties": {"authInfo": False}}})
+
+
+def test_a_member_a_profile_does_not_allow_is_named_as_not_allowed():
+    """A `false` schema has no keyword, so the reason is not "breaks the constraint 'None'". jsonschema gives its error
+    no path (it skips the member), so the path is not asserted."""
+    scope = scope_of(NO_AUTH_INFO)
+    body = {"@type": "domainName", "name": "a.example",
+            "authInfo": {"@type": "authInfo", "method": "password", "authdata": "secret"}}
+
+    with pytest.raises(ProfileConstraintViolation) as error:
+        scope.validate_request("domainName.create", body)
+
+    assert error.value.profile == NO_AUTH_INFO[0]
+    assert error.value.reason == f"A constraint of the profile {NO_AUTH_INFO[0]} does not allow the member"

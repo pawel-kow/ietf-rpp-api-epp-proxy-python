@@ -38,6 +38,9 @@ from rpp.schema.preset_schemas import PresetSchemas
 
 OPENAPI_SPEC = Path(__file__).parent.parent / "openapi.yaml"
 
+# The response headers of the proxy that are not CORS-safelisted, which a browser client of another origin reads
+EXPOSED_HEADERS = ["RPP-Cltrid", "RPP-Svtrid", "RPP-Code", "RPP-Queue-Size", "RPP-Preset", "Location"]
+
 
 @cache
 def parsed_spec() -> dict:
@@ -162,6 +165,7 @@ def create_app(sessions, profile: BackendProfile, discovery_settings=None, signa
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=EXPOSED_HEADERS,
     )
     app.add_api(spec, resolver=resolver, resolver_error=501,
                 validate_responses=True,
