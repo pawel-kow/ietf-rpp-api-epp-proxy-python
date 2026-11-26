@@ -6,8 +6,8 @@ The CORS and the profile error message fixes of #238, without its SIDN preset, w
 
 - [x] CORS: `expose_headers` in `src/rpp/http/app.py`, with a unit test
 - [x] Profile error message for a `false` schema in `src/rpp/schema/schema_scope.py`, with a unit test
-- [~] Checks (lint-imports, unit tests, smoke)
-- [ ] Draft PR, close #238 with a pointer to it
+- [x] Checks (lint-imports, unit tests, smoke)
+- [~] Draft PR, close #238 with a pointer to it
 
 ## Findings
 
@@ -28,9 +28,9 @@ The CORS and the profile error message fixes of #238, without its SIDN preset, w
 ## Corrections
 
 - A `false` sub-schema loses its path: jsonschema 4.26 `descend` returns the error of a `false` schema before it adds the
-  path, so the violation names `$`, not `$.authInfo`. Not fixed here; to become an issue.
+  path, so the violation names `$`, not `$.authInfo`. Not fixed here: #244.
 
 ## Checks
 
 - lint-imports: 29 kept. Unit tests: 3007 passed. MTEST reachable (domain_availability test3 passed), so the smoke run
-  covers it.
+  covers it. Smoke (`pytest -n 4 -m smoke tests/integration`): 232 passed, 488 skipped.
