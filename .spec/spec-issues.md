@@ -625,6 +625,9 @@ they were. The proxy follows the proposals, with the following.
   rejected as defined for it, and not with 02308. **Proxy:** under `rri-strict` the labels `generalRequest` and `abuse` stay 501
   `02102` (the extension's check runs after step 1 and before step 2, as the checks of RPP do), any other label but `registrant` is 422 `02308`. Guidelines C10 says an extension does not constrain, so the extension's
   sentences on `contacts` belong in the profile, which a later revision of the extension could do (it changes the preset `rri`).
+  A partial update that adds a host reference or a label other than `registrant` is 501 `02102` under `rri-strict` too, because the
+  refusal that needs no read comes first (as for every profile); a create or a full update with them is 422 `02308`, and so is the
+  removal of the registrant by a partial update. The drafts do not say which of the two wins for a partial update.
 - **A required extension that a profile relies on without constraining it.** The guidelines require an extension of a profile that
   constrains a definition of it. The DENIC RRI profile constrains base definitions only, but relies on the meaning of the label
   `registrant` that the extension defines. **Proxy:** the profile lists `de.denic.rpp.rri` as a required extension.

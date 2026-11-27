@@ -89,12 +89,12 @@ domain, no `/hosts` objects), contact labels other than `registrant` on the doma
 
 ## Review round 1 of PR #253 (orchestrator, for the maintainer)
 
-1. **Open, stopped for the orchestrator.** Checking a partial update against the profile before what the backend cannot hold needs a read
-   first for every patch under a preset with profiles, which breaks the invariant of tests/unit/test_patch_alike_under_profiles_wire.py
-   (an invalid patch gets the same answer under epp-compatible and base and sends nothing; 3 rows fail), and a step 2 on the
-   read-only-bearing patched object of a contact fails the EPP case test_patch_of_the_name_reads_and_updates (422 unevaluatedProperties
-   on the members of the read that the update definition does not declare). Nothing of it is implemented; the tests state today's 501.
-   Doc fix done: the example path is `/contacts`.
+1. **Decided (orchestrator, option B): the documented invariant stays** (a refusal that needs no read comes first and sends nothing,
+   tests/unit/test_patch_alike_under_profiles_wire.py). A partial update that adds a host reference or a label other than
+   `registrant` is 501 02102 under rri-strict as under rri; a create or full update with them is 422 02308; the removal of the registrant
+   by a partial update is 422 02308. The spec text follows: rri-profile.md (Operations, Examples) and a sentence in spec-issues.md.
+   (An implementation of the spec's earlier wording changed EPP cases: 3 rows of test_patch_alike_under_profiles_wire.py and
+   test_patch_of_the_name_reads_and_updates; not done.)
 2. `x-openapi-router-controller` is removed from every served document (`served_document`).
 3. `MemberMappers.split` hands the mapper every member the request has (`name in rest`); `to_rpp` takes the `Domain` and the rri mapper
    derives the roles. The shape of what `to_model` gives (`(role, id)` pairs) stays: the first extension with a member that is not a

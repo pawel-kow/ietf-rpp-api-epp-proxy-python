@@ -127,9 +127,9 @@ ABUSE = {"op": "add", "path": "/contacts", "value": {"label": "abuse", "object":
 
 @pytest.mark.parametrize("operation", [NAMESERVER, TECH], ids=["a nameserver", "a tech contact"])
 @pytest.mark.parametrize("preset", [RRI, STRICT])
-def test_a_patch_the_backend_cannot_hold_is_unsupported_before_the_profile_is_checked(preset, operation):
-    """Open (review round 1, item 1): the spec says 422 02308 under rri-strict; the conversion that needs no read runs first
-    (test_patch_alike_under_profiles_wire.py), so the answer is the same as under rri and nothing is sent."""
+def test_a_patch_rri_cannot_hold_at_all_is_unsupported_under_every_preset_and_sends_nothing(preset, operation):
+    """The refusal that needs no read comes first (test_patch_alike_under_profiles_wire.py, docs/rri/rri-profile.md, Operations):
+    the answer under rri-strict is that under rri, whereas a create or a full update with the same is 422 02308."""
     client, clients = setup(DOMAIN_INFO)
 
     response = client.patch(f"/domainNames/{NAME}", json=[operation], headers=named(preset))

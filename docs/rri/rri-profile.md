@@ -93,7 +93,7 @@ The preset that applies the profile MUST contain every extension the profile req
 
 ### Operations
 
-None. The constraints apply to the input of the Create and Update operations, and so to a full and a partial update.
+None. The constraints apply to the input of the Create and Update operations, and so to a full and a partial update. A server that cannot hold an operation of a partial update at all, such as the addition of a reference to a Host Data Object or of a contact with a label other than `registrant`, refuses it as it does without the profile, before it checks the profile. The removal of the registrant by a partial update is refused with 02308.
 
 ## Host Data Object {#host}
 
@@ -273,7 +273,7 @@ Example domain full update request without a registrant:
 }
 ```
 
-A partial update is refused alike when the domain name it results in breaks a constraint, for example with the operation `remove` at `/registrant`, or with the operation `add` at `/contacts` and an entry labelled `tech`.
+A partial update that removes the registrant, with the operation `remove` at `/registrant`, is refused with 02308.
 
 # IANA Considerations {#iana}
 
