@@ -1,0 +1,1 @@
+<msg:message xmlns:msg="http://registry.denic.de/msg/5.0" xmlns:tr="http://registry.denic.de/transaction/5.0" msgid="0a000000-000d-4000-8000-00000000000d" msgcnt="3" msgtime="2026-11-12T03:00:00+01:00"><msg:contactDelete><msg:handles><msg:handle>DENIC-1000022-OLD1</msg:handle><msg:handle>DENIC-1000022-OLD2</msg:handle></msg:handles></msg:contactDelete></msg:message>

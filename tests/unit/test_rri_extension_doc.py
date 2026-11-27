@@ -58,6 +58,7 @@ def test_the_mapping_and_the_overview_are_those_of_the_schema():
 
     assert {"rpp:extends": SCHEMA["rpp:extends"]} in blocks
     assert {"rpp:extension": SCHEMA["rpp:extension"]} in blocks
+    assert {"rpp:messages": SCHEMA["rpp:messages"]} in blocks
 
 
 def test_the_document_is_ascii():

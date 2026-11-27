@@ -34,6 +34,7 @@ def _from_schema(schema: dict) -> RppExtension:
         owners={name: uri for name, uri in targets.values() if uri},
         defs=schema["$defs"],
         objects=tuple(about.get("objects", ())),
+        messages={identifier: _name(ref) for identifier, ref in schema.get("rpp:messages", {}).items()},
     )
 
 

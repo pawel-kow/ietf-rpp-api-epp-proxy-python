@@ -18,7 +18,7 @@ class RriBackend:
         self.domains = RriDomainGateway(rri_client, lgr)
         self.contacts = RriContactGateway(rri_client)
         self.hosts = RriHostGateway()
-        self.messages = RriMessageGateway(rri_client)
+        self.messages = RriMessageGateway(rri_client, extension_parts)
         self._extensions = {part.extension_id: part.gateways(rri_client) for part in extension_parts}
 
     @property

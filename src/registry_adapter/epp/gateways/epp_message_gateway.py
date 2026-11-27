@@ -10,8 +10,12 @@ class EppMessageGateway:
         self._epp_client = epp_client
         self._ns_map = ns_map
 
-    def poll(self, client_transaction_id=None):
+    def poll(self, client_transaction_id=None, message_types=None):
+        """`message_types` are ignored: EPP `<poll>` reads the head only (EPP Compatibility Profile, core §16.10.1)."""
         return epp_messages_Poll(self._epp_client, client_transaction_id=client_transaction_id, ns_map=self._ns_map)
+
+    def find(self, message_id, client_transaction_id=None):
+        return None
 
     def ack(self, message_id, client_transaction_id=None):
         return epp_messages_Ack(self._epp_client, message_id, client_transaction_id=client_transaction_id, ns_map=self._ns_map)

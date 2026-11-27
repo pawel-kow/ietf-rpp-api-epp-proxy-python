@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from core.model.message.extension_event import ExtensionEvent
 from core.model.message.pending_action_event import PendingActionEvent
 from core.model.message.transfer_event import TransferEvent
 
@@ -17,6 +18,6 @@ class QueueMessage:
     creationDate: Optional[str]
     lang: Optional[str]
     text: str
-    event: Optional[TransferEvent | PendingActionEvent] = None
+    event: Optional[TransferEvent | PendingActionEvent | ExtensionEvent] = None
     unmapped: Optional[str] = None
     data_name: Optional[str] = None

@@ -110,16 +110,26 @@ Stacked on `feature/183-rri-extension-tree` (PR #253, ready, unmerged). Merge or
 
 ## Tasks
 
-- [~] Plan, approval
-- [ ] 1. `rpp:messages`: RppExtension, compose, registration checks, copy_models.sh, doc test
-- [ ] 2. Core model, port, flows, handlers (`type`, `find`, `extensions`), EPP/SQLite signature
-- [ ] 3. RRI adapter: typed read/delete/find, chprovAuthInfo, extension part, extension core and mapper
-- [ ] 4. Versions 0.3.0 in code, presets, profile, tests
-- [ ] 5. Unit tests, replies, wire tests
-- [ ] 6. Integration cases (test6) and docs (architecture, testing, spec-issues, gap analysis)
-- [ ] 7. Checks: lint-imports, unit tests, smoke (MTEST probe), PR draft (stacked on #253, Closes #132, Closes #248)
+- [x] Plan, approval
+- [x] 1. `rpp:messages`: RppExtension, compose, registration checks, copy_models.sh, doc test
+- [x] 2. Core model, port, flows, handlers (`type`, `find`, `extensions`), EPP/SQLite signature
+- [x] 3. RRI adapter: typed read/delete/find, chprovAuthInfo, extension part, extension core and mapper
+- [x] 4. Versions 0.3.0 in code, presets, profile, tests
+- [x] 5. Unit tests, replies, wire tests
+- [x] 6. Integration cases (test6) and docs (architecture, testing, spec-issues, gap analysis)
+- [~] 7. Checks: lint-imports, unit tests, smoke (MTEST probe), PR draft (stacked on #253, Closes #132, Closes #248)
 
-## Open questions (with recommendation)
+## Decisions of the orchestrator (answers to the open questions)
+
+1. `type`: core §16.1.7 (Rule 7) and §16.10.1 make a repeated parameter normative: accept the repeated form, and also comma-separated
+   values (split, empty parts dropped) for clients that follow the generated OpenAPI's `explode: false`. Add a spec-issues entry for that
+   contradiction. Test both forms on the wire (Connexion must neither refuse nor mangle the repeated form).
+2. `find(id)` on the gateway, `None` where only the head is readable: yes.
+3. A message of an extension type under a preset without the extension is a service notice: yes, stated in architecture.project.md.
+4. 63650063607 stays 404 outside the ack/find retry: yes.
+5. The `model_to_rpp` validation bug (no extensions) is in scope; named in the PR body.
+
+## Open questions (answered above)
 
 1. `type` syntax: OpenAPI has `explode: false` (comma-separated), core §16.10.1 says "MAY be repeated". Recommend: accept both (every
    repeated value split on commas, empty parts dropped), so `type=a,b` and `type=a&type=b` are the same.

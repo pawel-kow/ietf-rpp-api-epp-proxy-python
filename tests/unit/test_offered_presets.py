@@ -43,8 +43,8 @@ def test_a_preset_is_the_union_of_its_bases_and_what_two_bases_share_counts_once
 
 
 def test_the_extensions_of_the_bases_are_in_the_preset_once():
-    left = preset("left", base_presets=[BASE["id"]], extensions=[(RRI, "0.2.0")])
-    right = preset("right", base_presets=[BASE["id"]], extensions=[(RRI, "0.2.0")])
+    left = preset("left", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
+    right = preset("right", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
     both = preset("both", base_presets=[left[0], right[0]])
 
     offered = build(definitions_with([left, right, both]), ["both"], held=(RRI,)).offered[0]
@@ -76,28 +76,28 @@ def test_a_cycle_of_presets_or_of_profiles_stops_the_server_and_names_the_cycle(
 
 
 def test_two_bases_with_different_versions_of_one_extension_stop_the_server():
-    left = preset("left", base_presets=[BASE["id"]], extensions=[(RRI, "0.2.0")])
-    right = preset("right", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
+    left = preset("left", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
+    right = preset("right", base_presets=[BASE["id"]], extensions=[(RRI, "0.4.0")])
     both = preset("both", base_presets=[left[0], right[0]])
 
-    with pytest.raises(ValueError, match=f"{RRI} in the versions 0.2.0 and 0.3.0"):
+    with pytest.raises(ValueError, match=f"{RRI} in the versions 0.3.0 and 0.4.0"):
         build(definitions_with([left, right, both]), ["both"], held=(RRI,))
 
 
 def test_a_preset_that_pins_another_version_than_the_proxy_implements_stops_the_server():
     pinned = preset("pinned", extensions=[(RRI, "9.9")])
 
-    with pytest.raises(ValueError, match=f"{RRI} in version 9.9, the proxy implements version 0.2.0"):
+    with pytest.raises(ValueError, match=f"{RRI} in version 9.9, the proxy implements version 0.3.0"):
         build(definitions_with([pinned]), ["pinned"], held=(RRI,))
 
 
 def test_an_extension_the_backend_does_not_hold_stops_the_server():
     with pytest.raises(ValueError, match="which the backend does not hold"):
-        build(definitions_with([preset("x", extensions=[(RRI, "0.2.0")])]), ["x"])
+        build(definitions_with([preset("x", extensions=[(RRI, "0.3.0")])]), ["x"])
 
 
 def test_a_bound_profile_the_preset_lacks_an_extension_of_stops_the_server_and_names_both():
-    needing = profile("needing", required=[(RRI, "0.2.0")])
+    needing = profile("needing", required=[(RRI, "0.3.0")])
     plain = preset("plain", base_presets=[BASE["id"]])
 
     with pytest.raises(ValueError, match=f"{needing[0]} requires the extension {RRI}, which the preset {plain[0]} does not contain"):
@@ -105,7 +105,7 @@ def test_a_bound_profile_the_preset_lacks_an_extension_of_stops_the_server_and_n
 
 
 def test_a_requirement_through_a_base_profile_counts():
-    needing = profile("needing", required=[(RRI, "0.2.0")])
+    needing = profile("needing", required=[(RRI, "0.3.0")])
     building = profile("building", base_profiles=[needing[0]])
     plain = preset("plain", base_presets=[BASE["id"]], profiles=[building[0]])
 
@@ -114,8 +114,8 @@ def test_a_requirement_through_a_base_profile_counts():
 
 
 def test_a_preset_that_has_the_extension_may_bind_the_profile():
-    needing = profile("needing", required=[(RRI, "0.2.0")])
-    having = preset("having", base_presets=[BASE["id"]], extensions=[(RRI, "0.2.0")])
+    needing = profile("needing", required=[(RRI, "0.3.0")])
+    having = preset("having", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
 
     offered = build(definitions_with([having], [needing]), ["having"], bound={"having": ["needing"]}, held=(RRI,))
 
@@ -208,7 +208,7 @@ def test_a_profile_that_constrains_an_extension_it_does_not_require_stops_the_se
     url = EXTENSIONS[RRI].url
     sneaky = profile("sneaky", constraints={}, defs={"profile.s": {"properties": {}}})
     sneaky[1]["schema"]["rpp:constraints"] = {f"{url}#/$defs/ext.rri.domainName.create": "#/$defs/profile.s"}
-    having = preset("r", base_presets=[BASE["id"]], extensions=[(RRI, "0.2.0")], profiles=[sneaky[0]])
+    having = preset("r", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")], profiles=[sneaky[0]])
 
     with pytest.raises(ValueError, match=f"{sneaky[0]} constrains ext.rri.domainName.create of the extension {RRI}, "
                                          "which the profile does not require"):
@@ -217,9 +217,9 @@ def test_a_profile_that_constrains_an_extension_it_does_not_require_stops_the_se
 
 def test_a_profile_that_requires_the_extension_may_constrain_it_and_the_composition_holds_it():
     url = EXTENSIONS[RRI].url
-    ok = profile("ok", required=[(RRI, "0.2.0")], constraints={}, defs={"profile.s": {"properties": {}}})
+    ok = profile("ok", required=[(RRI, "0.3.0")], constraints={}, defs={"profile.s": {"properties": {}}})
     ok[1]["schema"]["rpp:constraints"] = {f"{url}#/$defs/ext.rri.domainName.create": "#/$defs/profile.s"}
-    having = preset("r", base_presets=[BASE["id"]], extensions=[(RRI, "0.2.0")], profiles=[ok[0]])
+    having = preset("r", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")], profiles=[ok[0]])
 
     offered = build(definitions_with([having], [ok]), ["r"], held=(RRI,)).offered[0]
 
@@ -230,7 +230,7 @@ def test_a_profile_that_requires_the_extension_may_constrain_it_and_the_composit
 
 def test_a_base_uri_that_names_a_definition_of_an_extension_stops_the_server():
     mislabel = profile("mislabel", constraints={"ext.rri.domainName.create": "profile.q"}, defs={"profile.q": {}})
-    having = preset("r2", base_presets=[BASE["id"]], extensions=[(RRI, "0.2.0")], profiles=[mislabel[0]])
+    having = preset("r2", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")], profiles=[mislabel[0]])
 
     with pytest.raises(ValueError, match="constrains ext.rri.domainName.create, which does not exist in RPP"):
         build(definitions_with([having], [mislabel]), ["r2"], held=(RRI,))
@@ -238,9 +238,9 @@ def test_a_base_uri_that_names_a_definition_of_an_extension_stops_the_server():
 
 def test_an_extension_uri_that_names_a_definition_of_the_base_stops_the_server():
     url = EXTENSIONS[RRI].url
-    wrong = profile("wrong", required=[(RRI, "0.2.0")], constraints={}, defs={"profile.w": {}})
+    wrong = profile("wrong", required=[(RRI, "0.3.0")], constraints={}, defs={"profile.w": {}})
     wrong[1]["schema"]["rpp:constraints"] = {f"{url}#/$defs/domainName.create": "#/$defs/profile.w"}
-    having = preset("r3", base_presets=[BASE["id"]], extensions=[(RRI, "0.2.0")], profiles=[wrong[0]])
+    having = preset("r3", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")], profiles=[wrong[0]])
 
     with pytest.raises(ValueError, match=f"constrains domainName.create, which the extension {RRI} does not define"):
         build(definitions_with([having], [wrong]), ["r3"], held=(RRI,))

@@ -164,7 +164,7 @@ def test_a_patched_object_names_the_profile_of_the_failure_the_client_caused_not
 
 def test_the_server_managed_members_are_those_of_the_composed_definition_including_an_extension_object():
     url = EXTENSIONS["de.denic.rpp.rri"].url
-    managed = profile("managed", required=[("de.denic.rpp.rri", "0.2.0")], constraints={}, defs={
+    managed = profile("managed", required=[("de.denic.rpp.rri", "0.3.0")], constraints={}, defs={
         "profile.m": {"properties": {"provMetadata": {"required": ["repositoryId"]}, "uriTemplate": {"minLength": 40}}}})
     managed[1]["schema"]["rpp:constraints"] = {f"{url}#/$defs/ext.rri.requestContact.read": "#/$defs/profile.m"}
     scope = scope_of(managed, extensions=("de.denic.rpp.rri",))

@@ -61,7 +61,7 @@ def test_the_rri_preset_has_the_rri_extension():
     body = read(rri_client(), RRI).json()
 
     assert body["defaultPreset"] is True
-    assert [(e["id"], e["version"]) for e in body["extensions"]] == [("de.denic.rpp.rri", "0.2.0")]
+    assert [(e["id"], e["version"]) for e in body["extensions"]] == [("de.denic.rpp.rri", "0.3.0")]
     assert body["url"] == "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-preset.md"
 
 

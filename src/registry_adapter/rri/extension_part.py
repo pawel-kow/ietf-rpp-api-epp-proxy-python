@@ -2,15 +2,17 @@ import importlib
 from dataclasses import dataclass
 from typing import Callable
 
+from registry_adapter.rri.message_type import RriMessageType
 from registry_adapter.rri.session.rri_client import RriClient
 
 
 @dataclass(frozen=True)
 class RriExtensionPart:
-    """The RRI part of an extension: the gateways it gives a session. The module of an extension
-    (`registry_adapter.rri.extensions.<name>`) has `gateways(client)`."""
+    """The RRI part of an extension: the gateways it gives a session, and the notifications of the registry it has message types
+    for. The module of an extension (`registry_adapter.rri.extensions.<name>`) has `gateways(client)` and may have `MESSAGE_TYPES`."""
     extension_id: str
     gateways: Callable[[RriClient], object]
+    message_types: tuple[RriMessageType, ...] = ()
 
 
 def load_extension_parts(modules: dict[str, str]) -> list[RriExtensionPart]:
@@ -18,7 +20,9 @@ def load_extension_parts(modules: dict[str, str]) -> list[RriExtensionPart]:
     parts = []
     for extension_id, path in modules.items():
         try:
-            parts.append(RriExtensionPart(extension_id=extension_id, gateways=importlib.import_module(path).gateways))
+            module = importlib.import_module(path)
+            parts.append(RriExtensionPart(extension_id=extension_id, gateways=module.gateways,
+                                          message_types=tuple(getattr(module, "MESSAGE_TYPES", ()))))
         except (ImportError, AttributeError) as e:
             raise ValueError(f"The RRI part {path!r} of the extension {extension_id} cannot be loaded: {e}") from e
     return parts

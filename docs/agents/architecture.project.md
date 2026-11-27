@@ -266,9 +266,9 @@ flow, the port and the EPP commands of one object.
     ([rri-extension.md](../rri/rri-extension.md)). A contact of type REQUEST is a request contact
     (`RriRequestContactGateway`, `extensions/rri/`, the RRI part of the rri extension, which `RriBackend` gives by `extension("de.denic.rpp.rri")`), not a contact: each INFO answers 404 for a handle of the
     other kind, and a check is the contact CHECK, as both share the handles. Hosts, the other transfer operations, renew and
-    contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
-    message is a service notice naming its RRI type and the domains and handles it is about, with 1301 or 1300 as a
-    poll has.
+    contact delete answer `UNIMPLEMENTED_COMMAND`. A queue message is
+    read as the message type of its `msgType` (`RriMessageGateway`, see Messages below), with 1301 or 1300 as a poll has; any other is a
+    service notice naming its RRI type and the domains and handles it is about.
 
 `domainNames_create`, `domainNames_updatePartial`, `domainNames_update`, `contacts_create`, the contact updates and
 the host mutations do not build
@@ -416,10 +416,26 @@ idempotent like the planets' ones): the rri extension's (`extensions/rri/rpp/map
 request contacts `generalRequest` and `abuse` to and from contact references whose role is the member's name, so the core and the
 RRI adapter hold them as roles; `contacts` does not show them, and a PATCH of one reads the domain first. A mapper may also have a `check`, which runs after step 1 of the validation and before step 2 (the rri extension's refusal of the labels `generalRequest` and `abuse` of `contacts`, 501, under every preset). A patch applied to the object read for it refuses the removal of a whole member that an applicable profile requires (`rpp/mapping/shared/profile_removals.py`).
 
+**Message types of an extension** (#248). The schema of an extension maps the identifier of each message type to its definition in
+`rpp:messages` (`RppExtension.messages`, checked in `extension_registration.check_messages`), and `compose()` adds a branch for each to
+the `data` union of `message.read` and `message.create`, so the Effective Schema of a preset has the branches of its extensions only. The core
+model holds such a message as an `ExtensionEvent` (the extension id and the typed event of the extension's own core); the extension's `MessageMapper`
+(`MESSAGE_MAPPERS`, registered in its `register`) renders it, and `messages.model_to_rpp` validates with the extensions of the response
+preset: under a preset without the extension (or where the data fails its definition) the message is a `serviceNoticeMessage` that
+names the message, as any other that cannot be translated. The RRI backend reads each `msgType` it has a type for
+(`registry_adapter/rri/message_type.py`: the transfer outcome of `chprovAuthInfo`, and the `MESSAGE_TYPES` of an extension's part, which `extension_part.py`
+loads by name). A Query with `type` is one QUEUE-READ per value that has a `msgType`, the oldest by `msgtime` wins and the queue size is the
+sum of their counts; no such value sends nothing and answers an empty queue. QUEUE-DELETE deletes the oldest message of the queue or of a
+`msgType`, so an acknowledgement that the registry refuses with `63650063607` reads the head of each `msgType` (`RriMessageGateway._heading`)
+and deletes with the type whose head has the id, and `find` reads by id the same way; an id that heads no type is 404 `02303`. These
+commands cost no quota.
+
 Messages are in `rpp/handlers/message/message_handlers.py`. `GET /messages` is EPP `poll req`,
 `DELETE /messages/{id}` is `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in
 `core/flows/message/message_flows.py`,
-because EPP cannot read past the head. `str_to_epp` and `decode_xml` read EPP replies without entities or a DTD, and
+because EPP cannot read past the head (a backend that can, gives `MessageGateway.find(id)`, which the flow calls when the id
+is not the head's). `type` is a repeated parameter (core §16.1.7, §16.10.1), also read comma-separated as the generated OpenAPI states it; `poll`
+passes the identifiers to the backend, which EPP and SQLite ignore (EPP Compatibility Profile). `str_to_epp` and `decode_xml` read EPP replies without entities or a DTD, and
 a DOCTYPE is refused. `commands/message/poll.py` turns the reply into a `QueueMessage`
 whose `event` is a `TransferEvent` (domain and contact `trnData`) or a `PendingActionEvent` (`panData`), and
 `rpp/mapping/message/messages.py` renders it. Anything the proxy cannot translate, or that fails the `.read`

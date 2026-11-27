@@ -8,5 +8,5 @@ url: https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/r
 basePresets:
   - {id: "urn:ietf:params:rpp:preset:base", version: "1.0"}
 extensions:
-  - {id: "de.denic.rpp.rri", version: "0.2.0"}
+  - {id: "de.denic.rpp.rri", version: "0.3.0"}
 profiles: []
