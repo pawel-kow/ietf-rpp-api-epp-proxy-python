@@ -104,6 +104,13 @@ domain, no `/hosts` objects), contact labels other than `registrant` on the doma
    a registrant 201 with the create sent).
 6. Contract `rri-common-not-extensions`. 7. Stale bits fixed (test_planets_wire, test_extension_additivity glob, RRI wording in generic code).
 
+## Review round 2 of PR #253
+
+- The removal check of a profile (`refuse_removals_by_profile`) runs after step 1 of the patched object (and after the extension's own
+  checks) and before step 2, on the domain, contact and host patch: a removal that the preset schema refuses is 400 02001 (json
+  §Profiles and Validation, step 1 wins). The check needs the read anyway, so the invariant "a refusal that needs no read comes first"
+  is unaffected. Tests: tests/unit/test_profile_removals_wire.py.
+
 ## Open questions
 
 - Q1. Package name `extensions/rri` (the issue's) or `extensions/denic_rri`? Proposal: `extensions/rri`.

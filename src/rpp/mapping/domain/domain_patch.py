@@ -188,7 +188,6 @@ def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict, *, pro
     without the current domain, and one that no operation names is left as it is.
     """
     operations = _operations(rpp)
-    refuse_removals_by_profile("domainName.update", operations, profile.extensions)
     patched = json_patch.apply(
         patch_statuses.without_server_statuses(current), operations, READ_ARRAY_PATHS,
         ignored_paths=include_elements.on_demand_paths(OBJECT), absent_parents=DNS_PARENTS, caseless=CASELESS_MATCH,
@@ -196,6 +195,7 @@ def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict, *, pro
     patched = patch_statuses.with_server_statuses(patched, current, "domainStatus")
     validate_schema("domainName.read", patched, extensions=profile.extensions)
     DOMAIN_MEMBERS.check(patched, profile.extensions)    # before step 2: an extension's refusal is not a broken profile constraint
+    refuse_removals_by_profile("domainName.update", operations, profile.extensions)    # after step 1, before step 2
     validate_request_schema("domainName.read", patched, extensions=profile.extensions, patched=True)
     domain_wanted.reject_other_changes(current, patched, profile)
     auth_info_update = _PatchedUpdate(profile)

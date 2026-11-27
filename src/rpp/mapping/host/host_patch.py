@@ -133,11 +133,12 @@ def rpp_to_model_with_current(host_name: str, rpp: list, current: dict) -> HostR
     operations = _operations(rpp)
     for operation in operations:
         _check(operation)
-    refuse_removals_by_profile("host.update", operations)
     patched = json_patch.apply(
         patch_statuses.without_server_statuses(current), operations, ARRAY_PATHS, absent_parents=DNS_PARENTS,
     )
     patched = patch_statuses.with_server_statuses(patched, current, "hostStatus")
+    validate_schema("host.read", patched)
+    refuse_removals_by_profile("host.update", operations)    # after step 1, before step 2
     validate_request_schema("host.read", patched, patched=True)
     requested = {member: value for member, value in patched.items() if member != READ_ONLY_MEMBER}
     host_rpp = parse_rpp(RPPHost, {**requested, "hostName": current["hostName"]})
