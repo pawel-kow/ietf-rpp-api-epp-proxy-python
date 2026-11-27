@@ -318,6 +318,17 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - A PATCH of `status` and `authInfo`, and an `add` or `replace` of the voice or fax phone or of the email (an entry, or its `number` or `address`), is sent without a read: EPP holds one value each, which `chg` sets. Such an operation is checked as the same entry in a full update. A `replace` of a phone or email the contact does not have therefore sets it, where RFC 6902 asks for an error. Removing one, and every other operation on `contactInfo`, reads the contact first, applies the patch to it, and sends the difference in one update, so that removing what is not there stays a 422. The read and the update are not atomic. No element matches is 422 (`02308`) only on the read path, see the entry "JSON Patch operations that need a read before the write": a direct operation, such as the removal of a status the contact does not have, is sent, and the test backend accepts it. Two operations on one status label are not sent together, as their order would be lost, so they take the read path.
 - A PUT that changes nothing is a 200 with the current contact and no EPP update, and 403 (`02201`) for a client that is not the sponsor, as for domains.
 
+## Full update of a member an extension adds
+
+- Core §16.8 clears what a PUT omits. A member an extension adds is declared only under a preset that contains the
+  extension. Under another preset a client cannot send it, so an omission there says nothing about it. The drafts do not
+  say whether a full update under such a preset removes the member.
+- **Proxy:** a full update replaces the members the request's preset declares and keeps those of the extensions it does
+  not contain (`scope`, see the planets extensions). This is the chosen behaviour. On RRI (planned) the contact
+  verification information of `de.denic.rpp.rri` follows it: under the `rri` preset a PUT without `verifications`
+  removes the verification blocks, as DENIC's contact UPDATE does, and under `base` the proxy carries the stored blocks
+  over.
+
 ## Host transfer
 
 - Data-objects §13.4 gives the host a Transfer Process and the OpenAPI has the operations. RFC 5732 defines no host transfer: subordinate hosts move with their domain, and data-objects §11.4.2 disallows anything that breaks that relationship.
@@ -419,6 +430,28 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - **Proxy:** `Content-Language` is the `lang` of the EPP `msg`, `en` when the attribute is absent (the EPP default), and omitted when there is no `msg` or the value is no language tag. A message id that XML 1.0 cannot hold (a control character other than tab, line feed and carriage return, a lone surrogate, U+FFFE or U+FFFF) is 400 (`02005`) on GET and DELETE, before anything reaches EPP. A line feed in the path id (`%0A`, also `/hosts/a%0Ab`) is a framework-level 500 before the handler (#98), so a message whose id has a line feed can be read but not acknowledged. An id sent by the server is logged with `%r`, so it cannot add a log line. Comments in an EPP reply are removed before typed parsing, and a reply that is not well-formed (`<msg>a & b</msg>`, trailing junk) fails typed parsing on every operation, where lxml's `recover` repaired it before. For messages that is the notice path.
 - Only the server creates messages (data-objects §15.3.1), and EPP has no command for it.
 - **Proxy:** `POST /messages` is 501 (`02101`), after the body is validated, so the json §8.6.1 example answers 501 (`draft_message/test1`).
+
+### Acknowledging a message that is the oldest of its type only
+
+- Core §16.10.1 lets a client retrieve with `type`, so it can receive a message that is not the oldest of the queue. Core
+  §16.10.2 acknowledges by id alone (`DELETE /messages/{id}`), and `GET /messages/{id}` has no `type` either. A registry
+  that, like DENIC RRI (QUEUE-DELETE, [rri-5.0-reference.md §6.21](../docs/rri/rri-5.0-reference.md#621-queue-delete)), deletes only the oldest message overall or the oldest of a given type
+  (`63650063607 This message is not the oldest`) needs the type to acknowledge such a message, and the request does not
+  carry it. The drafts do not say whether a client may acknowledge (or read by id) a message other than the oldest.
+- **Proxy (RRI, planned):** a QUEUE-DELETE without a type that DENIC refuses with `63650063607` is followed by a
+  QUEUE-READ per message type to find the type whose oldest message has the id, and a QUEUE-DELETE with that type.
+  `GET /messages/{id}` reads the same way. These reads cost no quota. An id that heads no type is 404 (`02303`).
+
+### Messages about several objects
+
+- The Base Message Object (data-objects §9.19.1) refers to one object (`objectType`, `objectId`), and every message type
+  extends it. A registry message can name several objects: DENIC RRI `expire` and `expireWarning` list 1 to n domains,
+  `contactDelete` up to 100 handles ([rri-5.0-reference.md §9](../docs/rri/rri-5.0-reference.md#9-message-queue-message-types)). Such a message cannot be expressed without dropping objects.
+- **Proxy (RRI, planned):** the `de.denic.rpp.rri` extension defines an abstract Bulk Base Message Object with a list of
+  object references, and its message types about several objects extend it instead of the Base Message Object. The
+  single reference of the Base Message Object then stays unused in those types. This suggests that the Base Message
+  Object carry no object reference, and that an intermediate base object carry the single reference for the message
+  types that have one.
 
 ## Identifier length and syntax
 
