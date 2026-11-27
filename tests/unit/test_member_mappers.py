@@ -1,7 +1,11 @@
 """The registry of the mappers of the members extensions add to a base object (rpp/mapping/shared/member_mappers.py), with the
 domain's one and the rri extension's mapper."""
+import pytest
+
+from core.model.domain.domains import ContactReference, Domain
 from extensions.rri.core.ports.rri_gateways import EXTENSION_ID
 from rpp.mapping.domain.domain_members import DOMAIN_MEMBERS
+from rpp.mapping.shared.member_mappers import MemberMappers
 from tests.helper.profiles import RRI_REGISTRY  # registers the rri extension, and so its mapper
 
 REQUEST = {"@type": "requestContact", "id": "DENIC-1000022-GR"}
@@ -31,7 +35,9 @@ def test_split_without_the_extension_leaves_the_members_undeclared():
 
 
 def test_a_member_is_shown_as_the_read_definition_has_it():
-    assert DOMAIN_MEMBERS.to_rpp({"abuse": "X", "admin": "Y"}, "domainName.read", (EXTENSION_ID,)) == {
+    domain = Domain(name="a.de", contacts=[ContactReference(id="X", types=["abuse"]), ContactReference(id="Y", types=["admin"])])
+
+    assert DOMAIN_MEMBERS.to_rpp(domain, "domainName.read", (EXTENSION_ID,)) == {
         "abuse": {"@type": "requestContact", "id": "X"}}
 
 
@@ -41,3 +47,23 @@ def test_registering_a_mapper_twice_is_no_change():
     DOMAIN_MEMBERS.add(before[0])
 
     assert DOMAIN_MEMBERS.of((EXTENSION_ID,)) == before
+
+
+@pytest.mark.parametrize("value", [False, 0, "", [], None])
+def test_a_member_the_request_has_reaches_the_mapper_whatever_its_value(value):
+    seen = []
+
+    class Recording:
+        extension_id = EXTENSION_ID
+        members = ("abuse",)
+
+        def to_model(self, present):
+            seen.append(present)
+            return []
+
+    mappers = MemberMappers(merge=lambda results: results)
+    mappers.add(Recording())
+
+    rest, _ = mappers.split({"name": "a.de", "abuse": value}, "domainName.create", (EXTENSION_ID,))
+
+    assert seen == [{"abuse": value}] and rest == {"name": "a.de"}

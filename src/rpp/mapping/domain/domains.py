@@ -56,7 +56,7 @@ def check_requested(requested: frozenset[str], *, profile: BackendProfile) -> fr
 
 def _rpp_to_contacts(domain_rpp: RPPDomain, requests: list[tuple[str, str]], profile: BackendProfile,
                      ) -> list[ContactReference] | None:
-    """The registrant, the labelled contacts, and the request contacts by their roles."""
+    """The registrant, the labelled contacts, and the contacts the members of the extensions stand for, by their roles."""
     contacts = []
     if domain_rpp.registrant is not None:
         contacts.append(ContactReference(id=domain_rpp.registrant.id, types=[REGISTRANT]))
@@ -163,10 +163,6 @@ def _idn_to_rpp(domain: Domain) -> tuple[str | None, str | None]:
     return domain.idn.uname, domain.idn.lgr
 
 
-def _roles(domain: Domain) -> dict[str, str]:
-    return {label: contact.id for contact in domain.contacts or [] for label in contact.types}
-
-
 def model_to_rpp(domain: Domain, extensions: tuple[str, ...] = ()) -> dict:
     """Converts a Domain to its read representation, with the members the offered `extensions` add."""
     u_name, lgr = _idn_to_rpp(domain)
@@ -185,6 +181,6 @@ def model_to_rpp(domain: Domain, extensions: tuple[str, ...] = ()) -> dict:
         expiryDate=domain.exDate,
         authInfo=auth_info.model_to_rpp(domain.authInfo),
     ).to_rpp()
-    domain_dict.update(DOMAIN_MEMBERS.to_rpp(_roles(domain), "domainName.read", extensions))
+    domain_dict.update(DOMAIN_MEMBERS.to_rpp(domain, "domainName.read", extensions))
     validate_schema("domainName.read", domain_dict, extensions=extensions)
     return domain_dict

@@ -273,7 +273,7 @@ Example domain full update request without a registrant:
 }
 ```
 
-A partial update is refused alike when the domain name it results in breaks a constraint, for example with the operation `remove` at `/registrant`, or with the operation `add` at `/contacts/-` and an entry labelled `tech`.
+A partial update is refused alike when the domain name it results in breaks a constraint, for example with the operation `remove` at `/registrant`, or with the operation `add` at `/contacts` and an entry labelled `tech`.
 
 # IANA Considerations {#iana}
 

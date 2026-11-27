@@ -20,6 +20,7 @@ from rpp.schema.extensions import own_definitions
 OPENAPI_VERSION = "3.1.0"
 SCHEMAS = "#/components/schemas/"
 _DEFS = '"#/$defs/'
+CONTROLLER = "x-openapi-router-controller"
 METHODS = ("get", "put", "post", "delete", "options", "head", "patch", "trace")
 
 
@@ -72,6 +73,14 @@ def _omit(document: dict, omit: Callable[[str, dict], bool]) -> bool:
     return omitted
 
 
+def _without_controllers(document: dict) -> None:
+    """The module of a handler (`x-openapi-router-controller`, which routes an operation) is internal: it is not served."""
+    for item in document["paths"].values():
+        for method in METHODS:
+            if isinstance(item.get(method), dict):
+                item[method].pop(CONTROLLER, None)
+
+
 def served_document(spec: dict, preset_document: dict, extension_ids,
                     omit: Callable[[str, dict], bool] | None = None) -> dict:
     """The document to serve, from the routing spec (with its bodies marked) and the default preset's Preset Schema; the
@@ -79,6 +88,7 @@ def served_document(spec: dict, preset_document: dict, extension_ids,
     is a defect of the app, not of a request: it stops the app."""
     document = copy.deepcopy(spec)
     omitted = _omit(document, omit) if omit is not None else False
+    _without_controllers(document)
     defs = preset_document["$defs"]
     own = own_definitions(extension_ids)
     for schema in body_schemas(document):

@@ -69,7 +69,7 @@ def check_known(extensions):
 
 def own_definitions(extensions=None) -> dict[str, str]:
     """The definitions of the objects and types the extensions define, by the name a mapper validates with
-    (`requestContact.create`), to the name of the extension's definition: with a prefix (`ext.rri.requestContact.create`),
+    (`planet.create`), to the name of the extension's definition: with a prefix (`ext.<name>.<definition>`),
     or the same name where an extension of new objects names them as the base definitions are (`planet.create`). The
     definitions an extension composes with a base one are not among them."""
     names = {}

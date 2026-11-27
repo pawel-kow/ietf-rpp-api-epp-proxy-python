@@ -87,6 +87,23 @@ domain, no `/hosts` objects), contact labels other than `registrant` on the doma
    (the lists of draft_discovery/test1-read are updated; one MTEST smoke case under rri-strict).
 4. The demo presets carry a `url`, so `rri` and `rri-strict` do too (test_presets_wire.py updated; additive).
 
+## Review round 1 of PR #253 (orchestrator, for the maintainer)
+
+1. **Open, stopped for the orchestrator.** Checking a partial update against the profile before what the backend cannot hold needs a read
+   first for every patch under a preset with profiles, which breaks the invariant of tests/unit/test_patch_alike_under_profiles_wire.py
+   (an invalid patch gets the same answer under epp-compatible and base and sends nothing; 3 rows fail), and a step 2 on the
+   read-only-bearing patched object of a contact fails the EPP case test_patch_of_the_name_reads_and_updates (422 unevaluatedProperties
+   on the members of the read that the update definition does not declare). Nothing of it is implemented; the tests state today's 501.
+   Doc fix done: the example path is `/contacts`.
+2. `x-openapi-router-controller` is removed from every served document (`served_document`).
+3. `MemberMappers.split` hands the mapper every member the request has (`name in rest`); `to_rpp` takes the `Domain` and the rri mapper
+   derives the roles. The shape of what `to_model` gives (`(role, id)` pairs) stays: the first extension with a member that is not a
+   role generalises it.
+4. Tests of the removal check on contact and host (test profiles that require a top-level member of `contact.update`/`host.update`).
+5. The tests under `rri` state the actual outcome (patch removing the registrant 202 with read, update, read; create without
+   a registrant 201 with the create sent).
+6. Contract `rri-common-not-extensions`. 7. Stale bits fixed (test_planets_wire, test_extension_additivity glob, RRI wording in generic code).
+
 ## Open questions
 
 - Q1. Package name `extensions/rri` (the issue's) or `extensions/denic_rri`? Proposal: `extensions/rri`.

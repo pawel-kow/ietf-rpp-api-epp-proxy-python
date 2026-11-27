@@ -15,8 +15,8 @@ class MemberMapper(Protocol):
     def to_model(self, present: dict) -> object:
         """What the members of a request (`present` holds those of `self.members` the request has) stand for in the model."""
 
-    def to_rpp(self, held) -> dict:
-        """The members of a read, from what the model of the object holds."""
+    def to_rpp(self, obj) -> dict:
+        """The members of a read, from the object of the core model (the `Domain`) that is read."""
 
     def check(self, rpp: dict) -> None:
         """Optional. What RPP or the extension states of the request in prose and the schema cannot express, refused as the
@@ -63,16 +63,16 @@ class MemberMappers:
         results = []
         for mapper in self.of(extensions):
             names = self._added(mapper, schema)
-            present = {name: rest[name] for name in names if rest.get(name)}
+            present = {name: rest[name] for name in names if name in rest}
             rest = {name: value for name, value in rest.items() if name not in names}
             if present:
                 results.append(mapper.to_model(present))
         return rest, self._merge(results)
 
-    def to_rpp(self, held, schema: str, extensions) -> dict:
+    def to_rpp(self, obj, schema: str, extensions) -> dict:
         """The members of a read of the extensions' mappers, as far as the definition has them."""
         rpp: dict = {}
         for mapper in self.of(extensions):
             names = self._added(mapper, schema)
-            rpp.update({name: value for name, value in mapper.to_rpp(held).items() if name in names})
+            rpp.update({name: value for name, value in mapper.to_rpp(obj).items() if name in names})
         return rpp

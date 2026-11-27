@@ -61,7 +61,7 @@ class _PatchedUpdate:
 
     def __init__(self, profile: BackendProfile):
         self.profile = profile
-        # A request contact is one value, which the patch applied to the read domain sets or clears.
+        # A member an extension adds that stands for one value (`DOMAIN_MEMBERS`) is set or cleared by the patch applied to the read domain.
         self.request_paths = tuple(
             f"/{member}" for member in DOMAIN_MEMBERS.members("domainName.update", profile.extensions))
         self.add_hosts: list[HostObj] = []

@@ -3,6 +3,7 @@
 reference whose role is the member's name, so a backend writes them as it writes a role."""
 
 from core.capabilities.not_supported_by_backend import NotSupportedByBackend
+from core.model.domain.domains import Domain
 from extensions.rri.core.ports.rri_gateways import EXTENSION_ID
 
 TYPE = "requestContact"
@@ -14,11 +15,12 @@ class RequestContactMembers:
     members = ("generalRequest", "abuse")
 
     def to_model(self, present: dict) -> list[tuple[str, str]]:
-        """The role and id of each request contact a request states."""
-        return [(role, present[role]["id"]) for role in self.members if present.get(role)]
+        """The role and id of each request contact a request states (a member that is null states none)."""
+        return [(role, present[role]["id"]) for role in self.members if present.get(role) is not None]
 
-    def to_rpp(self, roles: dict[str, str]) -> dict:
-        """The members of the request contacts a domain has, by role."""
+    def to_rpp(self, domain: Domain) -> dict:
+        """The members of the request contacts a domain has: its contact references of these roles."""
+        roles = {label: contact.id for contact in domain.contacts or [] for label in contact.types}
         return {role: {"@type": TYPE, "id": roles[role]} for role in self.members if role in roles}
 
     def check(self, rpp: dict) -> None:

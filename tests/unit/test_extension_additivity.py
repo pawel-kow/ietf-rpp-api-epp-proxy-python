@@ -76,7 +76,7 @@ def test_an_extension_schema_that_only_adds_is_accepted(sub):
 def test_the_extensions_of_the_proxy_are_additive():
     for known in EXTENSIONS.values():
         check_additive(known)
-    paths = [*Path("src/rpp/schema/schemas/extensions").glob("*.json"), *Path("src/extensions").rglob("*-extension.schema.json")]
+    paths = list(Path("src/extensions").rglob("*-extension.schema.json"))
     loaded = [_from_schema(json.loads(path.read_text(encoding="utf-8"))) for path in paths]
     definitions = {**bundle_definitions(), **{name: schema for item in loaded for name, schema in item.defs.items()}}
     for item in loaded:

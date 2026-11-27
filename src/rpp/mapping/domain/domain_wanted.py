@@ -19,7 +19,7 @@ NAMESERVER_RECORDS = ("ns", "a", "aaaa")
 
 
 def changeable(profile: BackendProfile) -> tuple[str, ...]:
-    """The members a client may replace, with the request contacts the offered extensions add."""
+    """The members a client may replace, with the members the offered extensions add."""
     return CHANGEABLE + DOMAIN_MEMBERS.members("domainName.update", profile.extensions)
 
 

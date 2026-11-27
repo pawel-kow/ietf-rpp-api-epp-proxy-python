@@ -5,6 +5,7 @@ import pytest
 
 from core.session.session_pool import SessionPool
 from rpp.http.app import create_app
+from tests.helper.api_docs import served_client
 from tests.helper.fake_rri_client import FakeRriClient, reply, rri_backends
 from tests.helper.profiles import RRI_PROFILE, RRI_REGISTRY
 from tests.unit.test_rri_adapter import DOMAIN_INFO, NAME
@@ -104,7 +105,8 @@ def test_a_patch_that_removes_the_registrant_is_unchanged_under_the_rri_preset()
 
     response = client.patch(f"/domainNames/{NAME}", json=[{"op": "remove", "path": "/registrant"}], headers=named(RRI))
 
-    assert response.status_code != 422 and response.headers["RPP-Code"] != "02308"
+    assert (response.status_code, response.headers["RPP-Code"]) == (202, "01000")
+    assert ["<domain:info" in command for command in clients[0].sent] == [True, False, True]   # the read, the update, the read back
 
 
 def test_a_full_update_without_a_registrant_is_a_422():
@@ -118,15 +120,32 @@ def test_a_full_update_without_a_registrant_is_a_422():
     assert nothing_sent(clients)
 
 
-def test_a_patch_that_adds_a_nameserver_is_unsupported_before_the_profile_is_checked():
-    """The operation is mapped without the current state, and a host object is one RRI cannot hold (as under rri)."""
-    client, _ = setup(DOMAIN_INFO)
+NAMESERVER = {"op": "add", "path": "/nameservers", "value": {"@type": "host", "hostName": "ns1.example.com"}}
+TECH = {"op": "add", "path": "/contacts", "value": {"label": "tech", "object": {"@type": "contact", "id": "DENIC-1000022-TECH"}}}
+ABUSE = {"op": "add", "path": "/contacts", "value": {"label": "abuse", "object": {"@type": "contact", "id": "DENIC-1000022-GR"}}}
 
-    response = client.patch(f"/domainNames/{NAME}", json=[
-        {"op": "add", "path": "/nameservers", "value": {"@type": "host", "hostName": "ns1.example.com"}}],
-        headers=named(STRICT))
+
+@pytest.mark.parametrize("operation", [NAMESERVER, TECH], ids=["a nameserver", "a tech contact"])
+@pytest.mark.parametrize("preset", [RRI, STRICT])
+def test_a_patch_the_backend_cannot_hold_is_unsupported_before_the_profile_is_checked(preset, operation):
+    """Open (review round 1, item 1): the spec says 422 02308 under rri-strict; the conversion that needs no read runs first
+    (test_patch_alike_under_profiles_wire.py), so the answer is the same as under rri and nothing is sent."""
+    client, clients = setup(DOMAIN_INFO)
+
+    response = client.patch(f"/domainNames/{NAME}", json=[operation], headers=named(preset))
 
     assert (response.status_code, response.headers["RPP-Code"]) == (501, "02102")
+    assert not clients[0].sent
+
+
+@pytest.mark.parametrize("preset", [RRI, STRICT])
+def test_a_patch_that_adds_a_request_contact_role_as_a_label_is_unsupported_under_every_preset(preset):
+    client, clients = setup(DOMAIN_INFO)
+
+    response = client.patch(f"/domainNames/{NAME}", json=[ABUSE], headers=named(preset))
+
+    assert (response.status_code, response.headers["RPP-Code"]) == (501, "02102")
+    assert len(clients[0].sent) <= 1
 
 
 def test_a_create_the_profile_accepts_is_sent():
@@ -163,12 +182,13 @@ def test_the_rri_preset_and_a_request_without_one_keep_their_answers(headers, ch
 
 
 @pytest.mark.parametrize("headers", [BODY_HEADERS, named(RRI)], ids=["no preset", "rri"])
-def test_a_create_without_a_registrant_is_no_422_under_the_rri_preset(headers):
-    client, _ = setup(reply(), DOMAIN_INFO)
+def test_a_create_without_a_registrant_is_sent_under_the_rri_preset(headers):
+    client, clients = setup(reply(), DOMAIN_INFO)
 
     response = client.post("/domainNames", json=body(registrant=None), headers=headers)
 
-    assert response.headers["RPP-Code"] != "02308"
+    assert (response.status_code, response.headers["RPP-Code"]) == (201, "01000")
+    assert "<domain:create>" in clients[0].sent[0] and "role=\"holder\"" not in clients[0].sent[0]
 
 
 def test_discovery_lists_the_strict_preset_with_its_profile_and_extension():
@@ -183,3 +203,17 @@ def test_discovery_lists_the_strict_preset_with_its_profile_and_extension():
     assert PROFILE in {profile["id"] for profile in found["profiles"]}
     assert client.get(f"/presets/{STRICT}", headers=HEADERS).status_code == 200
     assert client.get(f"/profiles/{PROFILE}", headers=HEADERS).status_code == 200
+
+
+def test_no_served_document_carries_the_module_of_a_handler():
+    """`x-openapi-router-controller` routes the operations of the request contact to their handlers; it is internal, so the
+    document of the default preset and that of each offered preset leave it out, while the operations stay."""
+    app = create_app(SessionPool(rri_backends(lambda u, p: FakeRriClient(u, p, replies=[]))), PROFILE_WITH_STRICT,
+                     discovery_settings=DISCOVERY, registry=RRI_REGISTRY)
+    client = served_client(app)
+
+    for url in ("/openapi.json", *(f"/openapi/{preset}.json" for preset in (RRI, STRICT))):
+        response = client.get(url)
+        assert response.status_code == 200, url
+        assert "x-openapi-router-controller" not in response.text, url
+        assert response.json()["paths"]["/requestContacts"]["post"]["operationId"] == "requestContacts_create", url

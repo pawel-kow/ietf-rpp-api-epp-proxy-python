@@ -112,7 +112,7 @@ def middleware_only_client():
 
     def backend_of(user, password):
         backend = SqliteBackend(database, clients, profile, parts, user, password)
-        backend.domains = backend.contacts = backend.hosts = backend.request_contacts = Forbidden()
+        backend.domains = backend.contacts = backend.hosts = Forbidden()
         return backend
 
     sessions = SessionPool(backend_of)

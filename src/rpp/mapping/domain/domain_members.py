@@ -3,7 +3,9 @@ An extension registers its mapper in its `register` function. The request of a d
 a create does, so its members are these too.
 
 The model of a domain holds a contact as a reference with a role, so a mapper's `to_model` gives the references
-(`(role, contact id)`) the members stand for, and `to_rpp` takes the contact ids by role."""
+(`(role, contact id)`) the members stand for, and `to_rpp` takes the `Domain` and derives what it shows. The shape of what
+`to_model` gives is that of the first extension, whose members are all roles: the first one with a member that is not a role
+generalises it."""
 from rpp.mapping.shared.member_mappers import MemberMappers
 
 ContactRoles = list[tuple[str, str]]
