@@ -121,7 +121,8 @@ Stacked on `feature/248-rri-typed-messages` (PR #255, ready, unmerged), which is
 ## Tasks
 
 - [x] Plan pushed, checkpoint 1 reported, approved.
-- [~] Implementation.
+- [x] Implementation.
+- [~] Draft PR open, checkpoint 2 reported.
 - [ ] Copy the schema (`copy_models.sh`); core model, port, backend attribute; import-linter contract.
 - [ ] RRI adapter: command, conversions, gateway, extension hook, result code; EPP and SQLite gateways.
 - [ ] RPP: DTOs, mapper, member registry, rri extension mapper, handler, `DRAFT_OBJECTS`.
@@ -155,3 +156,11 @@ Plan approved with the structural changes. Answers: 1 yes, `organisation` in `DR
 (deliberate wire change from `02101`, stated in the PR body, every pinning test updated); 2 yes, `objects: [message]` in `sqlite.yaml`;
 3 yes, optional entries failing their definition are left out and logged by field name, 500 only if the response still fails; 4 yes, the model
 carries status, roles and sponsor_id, filled by the RRI gateway; 5 yes, no handle precheck.
+
+## Implementation notes
+
+- `RecordLink` of the drafts' Card allows `url` and `contact-uri` only, so `url-1` of the spec text fails the schema: the read gives the first URL
+  and leaves further ones out (logged by field name), `spec-issues.md` states it. Needs the maintainer's decision (spec text said `url-n`).
+- Check results (commit after "RRI organisation read ..."): lint-imports 32 kept; unit 3183 passed with one test fixed afterwards (rerun below);
+  smoke `pytest -n 4 -m smoke tests/integration`: 240 passed, 504 skipped (MTEST, EPP docker and the SQLite demos); `organisation` cases on rri-mtest,
+  epp-docker, sqlite-demo: 17 passed.
