@@ -673,7 +673,7 @@ they were. The proxy follows the proposals, with the following.
 - Data-objects §5 says extensions should define new message types on the Base Message Object, but json gives them no extension
   point: the `data` of `message.read` and `message.create` (json §6.8) is a fixed `oneOf` of the base message types, and an
   Extension Mapper (json §7.1) only adds properties to a definition, so it cannot add a branch to that union.
-- **Proxy (RRI, planned, #248):** the schema document of an extension maps the identifier of each of its message types to its
+- **Proxy (RRI, #248):** the schema document of an extension maps the identifier of each of its message types to its
   definition in a new member `rpp:messages`, and the Effective Schema of `message.read` and `message.create` adds a reference to
   each mapped definition to the `oneOf` of `data`. Json should define such a member, or say that every definition that extends
   `baseMessage` joins the union.
@@ -685,7 +685,10 @@ they were. The proxy follows the proposals, with the following.
 - Message type identifiers of extensions share one namespace with those of the base, with no registry and no prefix rule
   (data-objects §15.3.3 only says the `type` value "MUST be a valid identifier for an RPP message component").
 - Core §16.10.1 does not say what a Query answers whose `type` values name only message types the server never sends.
-- **Proxy (RRI):** as an empty queue.
+- **Proxy (RRI):** as an empty queue. A value that names a message type of an extension the preset of the response lacks is such a type,
+  so under `base` a Query of `domainLockMessage` alone is an empty queue. Where the data of a message read for a requested type fails its
+  definition, the message is a `serviceNoticeMessage` and does not match the `type`: the Query answers it all the same, so that it can be
+  acknowledged (a deviation from core §16.10.1).
 - Core §16.1.7 (rule 7) and §16.10.1 say a parameter of 0 or more values is repeated, one value each. The OpenAPI (TypeSpec) states
   `explode: false` for `type`, which is the comma-separated form.
 - **Proxy:** takes both: every repeated value is split on commas, empty parts are dropped. The generated OpenAPI should state `explode: true`.

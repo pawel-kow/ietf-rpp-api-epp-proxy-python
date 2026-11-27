@@ -10,6 +10,7 @@ from core.model.domain.domain_idn import DomainIdn
 from core.model.domain.domains import ContactReference, Domain, HostAttr, NS
 from core.model.domain.key_data import KeyData
 from core.model.domain.zone_record import ZoneRecord
+from registry_adapter.rri.commands.shared.rri_time import utc_time
 from registry_adapter.rri.statuses import rgp_status, status_labels
 from registry_adapter.rri.xml.generated import dnsentry_5_0 as dns
 from registry_adapter.rri.xml.generated.contact_5_0 import RoleType
@@ -133,8 +134,9 @@ def _datetime(value) -> str | None:
     """A date of RRI (ISO 8601 with an offset) in the UTC form the EPP adapter gives too."""
     if value is None:
         return None
-    moment = value.to_datetime() if hasattr(value, "to_datetime") else datetime.fromisoformat(value)
-    return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    if hasattr(value, "to_datetime"):
+        return utc_time(value)
+    return datetime.fromisoformat(value).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def _ip(value: str) -> str:

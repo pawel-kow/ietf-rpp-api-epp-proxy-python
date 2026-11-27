@@ -145,3 +145,14 @@ Stacked on `feature/183-rri-extension-tree` (PR #253, ready, unmerged). Merge or
 - MTEST probe (domain_availability/test3): passed, so the smoke run covers MTEST.
 - First smoke run on 8cabbef: 231 passed, 2 failed (rri-mtest `preset_read/test1`, `draft_discovery/test1` state the extension version 0.2.0): fixed to 0.3.0.
 - `message/test6` (with the new `?type=transferOutcomeMessage` step) is not marked smoke: run on rri-mtest, passed.
+
+## Review round 1 (PR #255, head 9cc6eb4)
+
+Decisions of the orchestrator, all done:
+1. An ack whose search read fails answers that error (as `find`), not the original 404. Test added.
+2. The test of an event failing its definition is a wire test under the `rri` preset (domainDelete without notices: 200, service notice, the id); the adapter test shows the event with no notices.
+3. A `type` value naming a message type of an extension the response preset lacks is dropped before the backend is asked (`message_types_outside`): under `base` `type=domainLockMessage` is an empty queue, nothing sent. Under `rri` a message whose data fails its definition is the service notice and still answered for the requested type (documented deviation, architecture.project.md and spec-issues.md). Both tested.
+4. Different msgcnt in the head and found replies of the read-by-id test; the sum of `RPP-Queue-Size` asserted for several values.
+5. "planned" dropped from spec-issues.
+6. The oldest message is compared in UTC, a time without an offset as UTC (`utc_moment`); tested.
+7. `utc_time` used in commands/contact/common.py and commands/domain/common.py.

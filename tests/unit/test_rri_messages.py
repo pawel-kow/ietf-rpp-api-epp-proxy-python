@@ -177,15 +177,31 @@ def test_no_type_has_the_id():
     assert isinstance(response, MessageErrorResponse) and response.code == ResultCode.OBJECT_DOES_NOT_EXIST
 
 
-def test_an_incomplete_message_is_a_text_notice():
-    broken = reply(data=(REPLIES / "queue_domainDelete.xml").read_text().replace("<msg:message level", "<msg:ignored level", 1)
-                   .replace("</msg:message></msg:domainDelete>", "</msg:ignored></msg:domainDelete>"))
-    gateway, _ = backend(broken)
+def test_a_notice_message_without_notices_has_an_event_with_none():
+    gateway, _ = backend(reply(data=(REPLIES / "queue_domainDelete.xml").read_text().replace(
+        '<msg:message level="info" code="16350000031"><tr:text>Domain has been deleted</tr:text>'
+        '<tr:argument>request-reference DENIC#:4711</tr:argument></msg:message>', "")))
 
-    message = gateway.messages.poll().payload.message
+    event = gateway.messages.poll().payload.message.event
 
-    assert message.text == "RRI domainDelete: foo.de"
-    assert not isinstance(message.event, TransferEvent)
+    assert isinstance(event, ExtensionEvent) and event.event.notices == ()
+
+
+def test_a_message_older_by_a_time_without_offset_is_compared_in_utc():
+    naive = reply(data=(REPLIES / "queue_lockCreate.xml").read_text().replace("2026-11-12T15:51:08+01:00", "2026-11-12T14:00:00"))
+    gateway, _ = backend(queue("expire"), naive)   # 14:51:08 UTC against 14:00:00 UTC
+
+    response = gateway.messages.poll(message_types=("domainExpiryMessage", "domainLockMessage"))
+
+    assert response.payload.message.id == message_id("lockCreate")
+
+
+def test_the_read_that_fails_after_a_not_the_oldest_answers_its_error():
+    gateway, client = backend(error("63650063607", "This message is not the oldest"), error("76000000002", "Timeout while processing request"))
+
+    response = gateway.messages.ack("x-message-id")
+
+    assert isinstance(response, ErrorResponse) and response.registry_code == "76000000002" and len(client.sent) == 2
 
 
 # --- the app
@@ -254,6 +270,7 @@ def test_the_repeated_and_the_comma_separated_type_are_read_alike(query):
     assert response.status_code == 200, response.text
     assert data_of(response)["@type"] == "domainLockMessage"
     assert len(clients[0].sent) == types and all("msgType=" in sent for sent in clients[0].sent)
+    assert response.headers["RPP-Queue-Size"] == str(3 * types)   # the sum of the counts of the reads
 
 
 def test_a_type_without_a_msgtype_answers_an_empty_queue_and_sends_nothing():
@@ -267,7 +284,8 @@ def test_a_type_without_a_msgtype_answers_an_empty_queue_and_sends_nothing():
 
 
 def test_a_message_that_is_not_the_head_is_read_by_its_id():
-    client, _ = setup(queue("expire"), *[EMPTY] * 8, queue("lockDelete"))
+    own = reply(data=(REPLIES / "queue_lockDelete.xml").read_text().replace('msgcnt="3"', 'msgcnt="1"'))
+    client, _ = setup(queue("expire"), *[EMPTY] * 8, own)   # the head's queue holds 3, the type 1
 
     response = client.get(f"/messages/{message_id('lockDelete')}", headers=HEADERS)
 
@@ -291,3 +309,48 @@ def test_a_message_that_is_not_the_oldest_is_acknowledged():
 
     assert response.status_code == 200, response.text
     assert 'msgType="lockDelete"' in clients[0].sent[-1]
+
+
+def test_an_event_that_fails_its_definition_is_a_service_notice():
+    no_notices = (REPLIES / "queue_domainDelete.xml").read_text().replace(
+        '<msg:message level="info" code="16350000031"><tr:text>Domain has been deleted</tr:text>'
+        '<tr:argument>request-reference DENIC#:4711</tr:argument></msg:message>', "")
+    client, _ = setup(reply(data=no_notices))
+
+    response = client.get("/messages", headers=HEADERS)
+
+    assert response.status_code == 200, response.text
+    assert data_of(response)["@type"] == "serviceNoticeMessage" and "foo.de" in data_of(response)["message"]
+    assert response.json()[0]["id"] == message_id("domainDelete")
+
+
+def test_a_query_of_a_type_the_data_of_which_fails_its_definition_answers_the_notice():
+    """A documented deviation: the message is read as the type asked for, and is a service notice, as without a type."""
+    no_notices = (REPLIES / "queue_domainDelete.xml").read_text().replace(
+        '<msg:message level="info" code="16350000031"><tr:text>Domain has been deleted</tr:text>'
+        '<tr:argument>request-reference DENIC#:4711</tr:argument></msg:message>', "")
+    client, clients = setup(reply(data=no_notices))
+
+    response = client.get("/messages?type=domainDeletionMessage", headers=HEADERS)
+
+    assert response.status_code == 200 and data_of(response)["@type"] == "serviceNoticeMessage"
+    assert 'msgType="domainDelete"' in clients[0].sent[0]
+
+
+def test_a_type_of_the_extension_under_a_preset_without_it_answers_an_empty_queue_and_sends_nothing():
+    client, clients = setup()
+
+    response = client.get("/messages?type=domainLockMessage", headers={**HEADERS, "RPP-Preset": PRESET_BASE})
+
+    assert response.status_code == 200 and response.json() == []
+    assert response.headers["RPP-Code"] == "01300" and response.headers["RPP-Queue-Size"] == "0"
+    assert clients[0].sent == []
+
+
+def test_a_type_of_the_base_under_a_preset_without_the_extension_is_still_read():
+    client, clients = setup(queue("chprovAuthInfo"))
+
+    response = client.get("/messages?type=domainLockMessage,transferOutcomeMessage", headers={**HEADERS, "RPP-Preset": PRESET_BASE})
+
+    assert data_of(response)["@type"] == "transferOutcomeMessage"
+    assert len(clients[0].sent) == 1 and 'msgType="chprovAuthInfo"' in clients[0].sent[0]

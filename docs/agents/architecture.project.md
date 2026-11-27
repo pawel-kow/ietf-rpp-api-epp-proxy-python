@@ -428,7 +428,10 @@ loads by name). A Query with `type` is one QUEUE-READ per value that has a `msgT
 sum of their counts; no such value sends nothing and answers an empty queue. QUEUE-DELETE deletes the oldest message of the queue or of a
 `msgType`, so an acknowledgement that the registry refuses with `63650063607` reads the head of each `msgType` (`RriMessageGateway._heading`)
 and deletes with the type whose head has the id, and `find` reads by id the same way; an id that heads no type is 404 `02303`. These
-commands cost no quota.
+commands cost no quota. A value of `type` that names a message type of an extension the response preset lacks is dropped before the backend is
+asked (`message_types_outside`), so a Query of such values only is an empty queue. Where the data of a message read for a requested
+type fails its definition, the message is the service notice and does not match the `type`; it is answered all the same, so
+that a client can acknowledge it (a documented deviation, [spec-issues.md](../../.spec/spec-issues.md#message-types-of-an-extension)).
 
 Messages are in `rpp/handlers/message/message_handlers.py`. `GET /messages` is EPP `poll req`,
 `DELETE /messages/{id}` is `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in

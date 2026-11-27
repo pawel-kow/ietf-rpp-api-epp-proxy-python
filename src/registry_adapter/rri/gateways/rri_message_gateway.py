@@ -8,6 +8,7 @@ from core.result.operation_response import OperationResponse
 from core.result.result_code import ResultCode
 from registry_adapter.rri.commands.message.queue import NOT_THE_OLDEST, queue_of, rri_queue_delete, rri_queue_read
 from registry_adapter.rri.commands.message.transfer_outcome import TRANSFER_OUTCOME
+from registry_adapter.rri.commands.shared.rri_time import utc_moment
 from registry_adapter.rri.extension_part import RriExtensionPart
 from registry_adapter.rri.xml.generated.message_5_0 import MsgTypeType
 
@@ -44,7 +45,7 @@ class RriMessageGateway:
                 return resp
             replies.append(resp)
         messages = [r.payload for r in replies if r.payload is not None]
-        oldest = min(messages, key=lambda m: m.msgtime.to_datetime(), default=None)
+        oldest = min(messages, key=lambda m: utc_moment(m.msgtime), default=None)
         resp = replies[-1]
         size = sum(r.payload.msgcnt or 0 for r in replies if r.payload is not None)
         resp.payload = oldest
@@ -78,6 +79,8 @@ class RriMessageGateway:
         if not (isinstance(resp, ErrorResponse) and resp.registry_code == NOT_THE_OLDEST):
             return resp
         found = self._heading(message_id, client_transaction_id)
-        if found is None or isinstance(found, ErrorResponse):
+        if isinstance(found, ErrorResponse):
+            return found    # the failed read answers, as for `find`
+        if found is None:
             return resp
         return rri_queue_delete(self.client, message_id, client_transaction_id, found[1])

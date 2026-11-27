@@ -61,6 +61,13 @@ def added_members(schema_name: str, extensions) -> frozenset[str]:
     )
 
 
+def message_types_outside(extensions) -> frozenset[str]:
+    """The identifiers of the message types that registered extensions define and none of `extensions` does: the message types a
+    server under a preset of `extensions` never sends."""
+    inside = {identifier for extension in extensions for identifier in EXTENSIONS[extension].messages}
+    return frozenset(identifier for extension in EXTENSIONS.values() for identifier in extension.messages) - inside
+
+
 def check_known(extensions):
     """A backend profile that holds an extension the proxy does not implement is refused, so the app does not start."""
     unknown = sorted(set(extensions) - set(EXTENSIONS))

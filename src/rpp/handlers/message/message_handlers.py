@@ -13,6 +13,7 @@ from rpp.http.headers import client_transaction_id, generate_rpp_response_header
 from rpp.http.operation import require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
 from rpp.mapping.message import messages
+from rpp.schema.extensions import message_types_outside
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -71,9 +72,14 @@ def _require_valid_id(id: str):
 
 def _types() -> tuple[str, ...] | None:
     """The message types of the query (core §16.10.1, rule 7): a repeated parameter, with one value each. A value with commas is
-    taken as several, as the generated OpenAPI (`explode: false`) describes it. None without a value."""
+    taken as several, as the generated OpenAPI (`explode: false`) describes it. None without a value. The values that name a message type of an
+    extension the response preset lacks are dropped: the server never sends them under that preset, so a Query of only
+    those is an empty queue (an empty tuple)."""
     types = tuple(dict.fromkeys(part for value in flask_request.args.getlist("type") for part in value.split(",") if part))
-    return types or None
+    if not types:
+        return None
+    unsent = message_types_outside(response_profile().extensions)  # those of an extension the response preset lacks are never sent
+    return tuple(value for value in types if value not in unsent)
 
 
 @rpp_operation
