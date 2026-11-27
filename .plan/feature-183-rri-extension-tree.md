@@ -61,6 +61,20 @@ domain, no `/hosts` objects), contact labels other than `registrant` on the doma
   default, so the wire contract of `rri` does not change; only requests under the new preset get 422 `02308` for violations.
 - The move stops at a checkpoint before the full checks, so the spec writer can add the profile spec.
 
+## Decisions (orchestrator, for the maintainer), spec writer's commit 243770d
+
+- Profile `de.denic.rpp.profile.rri` 1.0 ("DENIC RRI profile", requires `de.denic.rpp.rri`), preset `de.denic.rpp.preset.rri-strict`
+  1.0 = base preset `rri` + this profile, no extension of its own. The `rri` preset is unchanged and stays the default.
+- Profile Schema: `required: [registrant]`, `contacts[].label` enum `[registrant]`, `nameservers: false`, on domainName.create and update.
+- Host operations keep 501 under every preset.
+- Implementation findings: the profile (step 2) runs before the mapper, so a `generalRequest`/`abuse` label under `rri-strict` is
+  422 02308, not 501 02102; the profile does not constrain `domainName.read`, so a patch that needs the current state is not
+  checked on the patched object (a `remove /registrant` is sent). `rri-strict` is registered, but offered by no configuration
+  (offering it adds it to the discovery lists that the integration cases state in full): a server lists it in `presets`.
+
+- The preset `rri` states no `url` (its spec document gives one, rri-preset.md): adding it changes the wire form, which
+  tests/unit/test_presets_wire.py pins; left out, to the orchestrator.
+
 ## Open questions
 
 - Q1. Package name `extensions/rri` (the issue's) or `extensions/denic_rri`? Proposal: `extensions/rri`.
@@ -91,13 +105,17 @@ domain, no `/hosts` objects), contact labels other than `registrant` on the doma
 - [x] Configuration and deploy template (6)
 - [ ] Tests moved and green: `lint-imports`, unit, smoke incl. MTEST
 - [ ] Docs (7)
-- [ ] The rri profile and preset `rri-strict` (maintainer addition, below), registered after the spec writer's text is on the branch
+- [x] The rri profile and preset `rri-strict` (maintainer addition, below), registered after the spec writer's text is on the branch
 - [ ] Draft PR
 
 ## Checks
 
-Run on the move alone, before the profile (to be run again at the end):
-- `PYTHONPATH=src lint-imports`: 31 kept, 0 broken.
-- `pytest -n 4 tests/unit`: 3007 passed (the new `test_member_mappers.py` added after: 6 passed).
-- MTEST probe (`rri-mtest domain_availability test3`): passed, so MTEST is reachable.
-- `pytest -n 4 -m smoke tests/integration` (covers MTEST): 232 passed, 488 skipped.
+On the final commit, in the order of process.project.md:
+1. `PYTHONPATH=src lint-imports`: 31 kept, 0 broken.
+2. `pytest -n 4 tests/unit`: 3039 passed.
+3. `pytest -n 4 -m smoke tests/integration`: 232 passed, 488 skipped, 0 failed.
+4. MTEST probe (`rri-mtest domain_availability test3-a_label`): passed, MTEST reachable, so the smoke run of step 3 covered MTEST.
+5. Not applicable (requirements and pyversions tests unchanged).
+Deploy template changed: `ansible-lint` in deploy/ansible: passed, 0 failures, 0 warnings (run from a scratch venv, ansible-lint
+was not installed); `ansible-playbook --syntax-check site.yml`: OK (warnings about no inventory only);
+`docker build -f deploy/docker/Dockerfile .`: built.

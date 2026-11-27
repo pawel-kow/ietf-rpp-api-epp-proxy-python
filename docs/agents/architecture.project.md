@@ -297,7 +297,7 @@ preset, a profile or a schema, and no JSON reaches `core`.
 **Definitions** (`rpp/schema/definitions.py`, `Definitions`, built once per app, so nothing is process-global): the files
 `rpp/schema/schemas/presets/<key>.yaml` (`base`, `epp-compatible`) and `profiles/<key>.yaml` (`epp-compatibility`,
 with its Profile Schema `epp-compatibility.schema.json`, copied from `.spec/` by `copy_models.sh`), and what the registered
-extensions bring (`RegisteredExtension.presets` and `.profiles`, as the same files state them; the rri extension brings the preset `rri`, the planets extension brings
+extensions bring (`RegisteredExtension.presets` and `.profiles`, as the same files state them; the rri extension brings the presets `rri` and `rri-strict` and the profile DENIC RRI that the second applies (docs/rri/rri-profile.md, rri-strict-preset.md; a server offers `rri-strict` by listing it in `presets`, `config/backends/rri.yaml` does not), the planets extension brings
 the preset `planets` and the demo profiles and presets that need it, and `planet_atmosphere` and `satellite_orbit` those that need them, each specified under [docs/demo/](../demo/), #179). A definition is the same on every server. A definition that refers to an extension that is not registered is read only where a configuration offers it: an app that registers `planets` and `planet_atmosphere` does not know the presets of `satellite_orbit`. A reference to a base preset, a base profile, an extension
 or a required extension is an identifier and an exact version; an identifier denotes one definition, whatever its kind.
 `GET /presets/{id}` and `GET /profiles/{id}` publish them (`handlers/presets.py`, `handlers/profiles.py`,

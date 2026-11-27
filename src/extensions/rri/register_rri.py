@@ -19,19 +19,29 @@ DATA_OBJECTS = {
 
 PRESET_KEY = "rri"
 
+STRICT_PRESET_KEY = "rri-strict"
+
+PROFILE_KEY = "rri"
+
 # The request contacts of a domain, 0 to 1 of each role (rri 5.0 reference §5.2): a domain needs none.
 REQUEST_CONTACT_LIMITS = {"min_count": 0, "max_count": 1}
 
 
-def _preset() -> dict:
-    """The preset of DENIC's RRI (docs/rri/rri-extension.md): the extension on top of the base preset."""
-    return yaml.safe_load((SCHEMAS / "rri-preset.yaml").read_text(encoding="utf-8"))
+def _definition(name: str) -> dict:
+    """A definition file of the extension (`rri-preset.yaml`, `rri-strict-preset.yaml`, `rri-profile.yaml`)."""
+    return yaml.safe_load((SCHEMAS / name).read_text(encoding="utf-8"))
+
+
+def _profile() -> dict:
+    """The DENIC RRI profile (docs/rri/rri-profile.md) with its Profile Schema."""
+    return {**_definition("rri-profile.yaml"),
+            "schema": json.loads((SCHEMAS / "rri-profile.schema.json").read_text(encoding="utf-8"))}
 
 
 def register(registry: ExtensionRegistry) -> None:
     """Registers every part of the extension in the pipeline: its schema, the data model, the OpenAPI fragment and the
     handlers of its request contact paths, the mapper of the request contacts of a domain, its part of the RRI backend, the
-    leaves it adds to the backend profile, and the RPP preset that offers it."""
+    leaves it adds to the backend profile, and the RPP presets that offer it (the preset `rri`, and `rri-strict` with the DENIC RRI profile applied) with the profile."""
     DOMAIN_MEMBERS.add(RequestContactMembers())
     registry.add(RegisteredExtension(
         id=EXTENSION_ID,
@@ -50,5 +60,6 @@ def register(registry: ExtensionRegistry) -> None:
         },
         profile_leaves={f"domainName.{role}.{limit}": int for role in ("generalRequest", "abuse")
                         for limit in ("min_count", "max_count")},
-        presets={PRESET_KEY: _preset()},
+        presets={PRESET_KEY: _definition("rri-preset.yaml"), STRICT_PRESET_KEY: _definition("rri-strict-preset.yaml")},
+        profiles={PROFILE_KEY: _profile()},
     ))

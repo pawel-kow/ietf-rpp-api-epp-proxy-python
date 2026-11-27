@@ -93,7 +93,7 @@ rpp_extensions:
   - extensions.rri                # the RRI extension (src/extensions/rri), which adds its preset `rri` and its leaves
 rpp_backend_profile:
   extends: rri                    # the generic RRI profile, src/settings/profiles/rri.yaml
-  presets: [base, rri]            # the RPP presets offered (src/rpp/schema/schemas/presets, and the extension's)
+  presets: [base, rri]            # the RPP presets offered (src/rpp/schema/schemas/presets, and the extension's: rri, rri-strict)
   default_preset: rri             # the one a request gets when it names none
   bound_profiles: {}              # per preset, the profiles this server binds to it: {rri: [my-policy]}
   informational_profiles: []      # the profiles the server checks itself: advertised, the proxy does not check them

@@ -1,4 +1,4 @@
-# The preset of DENIC's RRI (docs/rri/rri-extension.md): the extension de.denic.rpp.rri on top of the base preset.
+# The preset of DENIC's RRI (docs/rri/rri-preset.md): the extension de.denic.rpp.rri on top of the base preset.
 id: de.denic.rpp.preset.rri
 name: DENIC RRI preset
 description: RPP with the extension de.denic.rpp.rri for DENIC RRI behind RPP.
