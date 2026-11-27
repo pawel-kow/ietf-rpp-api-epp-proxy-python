@@ -3,21 +3,26 @@ from typing import Callable
 from core.flows.mutation_result import MutationResult
 from core.flows.read_back import read_back
 from core.flows.sponsor import require_sponsor
-from core.model.request_contact.request_contact import RequestContact
+from extensions.rri.core.model.request_contact import RequestContact
+from extensions.rri.core.ports.rri_gateways import EXTENSION_ID, RriGateways
 from core.ports.registry_backend import RegistryBackend
 from core.result.error_response import ErrorResponse
 
 OBJECT = "request contact"
 
 
+def _gateways(backend: RegistryBackend) -> RriGateways:
+    return backend.extension(EXTENSION_ID)
+
+
 def _read_back(backend: RegistryBackend, contact_id: str, mutation) -> MutationResult:
-    return read_back(backend.request_contacts.info, contact_id, mutation)
+    return read_back(_gateways(backend).request_contacts.info, contact_id, mutation)
 
 
 def create_request_contact(backend: RegistryBackend, contact: RequestContact,
                            client_transaction_id) -> MutationResult | ErrorResponse:
     """Creates a request contact and reads it back, as the create reply does not hold it."""
-    created = backend.request_contacts.create(contact, client_transaction_id=client_transaction_id)
+    created = _gateways(backend).request_contacts.create(contact, client_transaction_id=client_transaction_id)
     if isinstance(created, ErrorResponse):
         return created
     return _read_back(backend, contact.id, created)
@@ -37,7 +42,7 @@ def _replaced(backend: RegistryBackend, contact_id: str, outcome, client_transac
 def replace_request_contact(backend: RegistryBackend, wanted: RequestContact,
                             client_transaction_id) -> MutationResult | ErrorResponse:
     """A full update. A replacement that changes nothing sends no update (core §16.8 asks for a 200)."""
-    outcome = backend.request_contacts.replace(wanted, client_transaction_id=client_transaction_id)
+    outcome = _gateways(backend).request_contacts.replace(wanted, client_transaction_id=client_transaction_id)
     return _replaced(backend, wanted.id, outcome, client_transaction_id)
 
 
@@ -47,10 +52,10 @@ def patch_request_contact(
 ) -> MutationResult | ErrorResponse:
     """A partial update: the request contact is read, `wanted_from_current` applies the patch, and the request
     contact is replaced with the result."""
-    current = backend.request_contacts.info(contact_id)
+    current = _gateways(backend).request_contacts.info(contact_id)
     if isinstance(current, ErrorResponse):
         return current
-    outcome = backend.request_contacts.replace(
+    outcome = _gateways(backend).request_contacts.replace(
         wanted_from_current(current.payload), current=current, client_transaction_id=client_transaction_id,
     )
     return _replaced(backend, contact_id, outcome, client_transaction_id)

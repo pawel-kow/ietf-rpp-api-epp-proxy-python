@@ -7,7 +7,7 @@ from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.helper.fake_rri_client import FakeRriClient, rri_backends
 from tests.helper.integration_api_test import header_list
-from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE
+from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE, RRI_REGISTRY
 from tests.unit.test_presets_wire import BASE, EPP, RRI
 from tests.unit.test_rpp_wire import check_reply
 from tests.unit.test_rri_adapter import DOMAIN_INFO, NAME
@@ -25,7 +25,7 @@ def epp_client():
 
 def rri_client(*replies):
     sessions = SessionPool(rri_backends(lambda username, password: FakeRriClient(username, password, replies=list(replies))))
-    return create_app(sessions, RRI_PROFILE, discovery_settings=DISCOVERY, signalling="media-type").test_client()
+    return create_app(sessions, RRI_PROFILE, discovery_settings=DISCOVERY, signalling="media-type", registry=RRI_REGISTRY).test_client()
 
 
 def media(name, version="1.0", weight=None):
@@ -296,7 +296,7 @@ def test_the_response_is_rendered_with_the_extensions_of_the_response_profile():
             return FakeRriClient(username, password, replies=[DOMAIN_INFO])
 
         client = create_app(SessionPool(rri_backends(factory)), RRI_PROFILE, discovery_settings=DISCOVERY,
-                            signalling="media-type").test_client()
+                            signalling="media-type", registry=RRI_REGISTRY).test_client()
         return client.get(f"/domainNames/{NAME}", headers={
             **AUTH, "Accept": accept, "Content-Type": media(request_profile)})
 

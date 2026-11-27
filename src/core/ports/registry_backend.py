@@ -5,7 +5,6 @@ from core.ports.contact_gateway import ContactGateway
 from core.ports.domain_gateway import DomainGateway
 from core.ports.host_gateway import HostGateway
 from core.ports.message_gateway import MessageGateway
-from core.ports.request_contact_gateway import RequestContactGateway
 
 
 class RegistryBackend(Protocol):
@@ -19,7 +18,6 @@ class RegistryBackend(Protocol):
     contacts: ContactGateway
     hosts: HostGateway
     messages: MessageGateway
-    request_contacts: RequestContactGateway
 
     @property
     def sponsor_id(self) -> str: ...

@@ -18,26 +18,26 @@ src/
 ├── settings/                loads the configuration once into typed sections, which main.py passes on
 │   └── profiles/            epp.yaml, rri.yaml, sqlite.yaml: the generic backend profile of each protocol (not the RPP presets and profiles)
 ├── registration/            the registry of the extensions a configuration names: stdlib only, knows no other package
-├── extensions/<name>/       one extension (today `planets`, `planet_atmosphere`, `satellite_orbit`): register_<name>.py, core/{model,ports,flows}/ and
+├── extensions/<name>/       one extension (today `rri`, `planets`, `planet_atmosphere`, `satellite_orbit`): register_<name>.py, core/{model,ports,flows}/ and
 │                            rpp/{dto,mapping,handlers,schema}/, see Registered extensions below
 ├── core/                    pure Python: no I/O, no framework, no protocol
-│   ├── model/{shared,domain,contact,host,message,request_contact}/
+│   ├── model/{shared,domain,contact,host,message}/
 │   ├── result/              ResultCode, UnknownResultCode, OperationResponse, ErrorResponse
 │   ├── capabilities/        BackendProfile, NotSupportedByBackend, NotSupportedByProxy
 │   ├── ports/               RegistryBackend, *Gateway, ReplaceOutcome, ReplacementSteps, derived_update
 │   ├── session/             SessionPool
-│   └── flows/               read_back.py, mutation_result.py, sponsor.py, {domain,contact,host,message,request_contact}/
+│   └── flows/               read_back.py, mutation_result.py, sponsor.py, {domain,contact,host,message}/
 ├── rpp/                     receiving adapter: RPP over HTTP
-│   ├── http/                app (create_app), rpp_app (RppApp), extension_paths, body_definitions, served_document,
+│   ├── http/                app (create_app), rpp_app (RppApp), extension_paths (add_registered_paths), body_definitions, served_document,
 │   │                        document_signalling, middleware/, validators/, security/, problem, headers,
 │   │                        context, operation, preset_signalling, preset_middleware, request_presets,
 │   │                        preset_selection, header_preset_signalling, media_type_preset_signalling, preset_header,
 │   │                        media_range, native_accept
-│   ├── handlers/            {domain,contact,host,message,request_contact}/, shared/, discovery.py, presets.py, profiles.py
-│   ├── mapping/             shared/, {domain,contact,host,message,discovery,preset,profile,request_contact}/
+│   ├── handlers/            {domain,contact,host,message}/, shared/, discovery.py, presets.py, profiles.py
+│   ├── mapping/             shared/, {domain,contact,host,message,discovery,preset,profile}/
 │   ├── dto/                 the RPP dataclasses
 │   ├── schema/              validator, schema_scope, request_schemas, effective_schema, definitions, offered_presets,
-│   │                        preset_schemas, data_objects, extensions, schemas/ (generated; extensions/ and the
+│   │                        preset_schemas, data_objects, extensions, schemas/ (generated; the
 │   │                        Profile Schemas in profiles/ copied; presets/ and profiles/*.yaml written by hand)
 │   └── openapi.yaml         (generated)
 └── registry_adapter/
@@ -55,6 +55,7 @@ src/
     │   ├── xml/             codec, generated/ (xsdata, from docs/rri/xsd by generate_rri_models.sh)
     │   ├── commands/        {domain,contact,message}/<operation>.py, shared/rri_command.py (run, CTID)
     │   ├── gateways/        RriBackend, Rri*Gateway (hosts: every command UNIMPLEMENTED)
+    │   ├── extensions/<name>/  the RRI part of an extension: its commands and gateways, loaded by name (extension_part.py)
     │   ├── result_codes.py  DENIC code → ResultCode
     │   └── statuses.py      RRI domain status → RPP status
     └── common/
@@ -198,8 +199,8 @@ flow, the port and the EPP commands of one object.
    `MessageErrorResponse` (in `core/model/message`) one that knows the size of the queue. A code the proxy has no name
    for is an `UnknownResultCode`.
 7. **`core/ports/`:** the backend port. `RegistryBackend` is one user's session with
-   the registry: `domains`, `contacts`, `hosts`, `messages` and `request_contacts` are its gateways (`DomainGateway` …,
-   each a `typing.Protocol`; a backend without request contacts answers `UNIMPLEMENTED_COMMAND` to each), `sponsor_id` is the id the registry stores as sponsor, and `profile` the `BackendProfile`. A
+   the registry: `domains`, `contacts`, `hosts`, and `messages` are its gateways (`DomainGateway` …,
+   each a `typing.Protocol`), and `extension(id)` the gateways of a registered extension (`KeyError` where the backend lacks it), `sponsor_id` is the id the registry stores as sponsor, and `profile` the `BackendProfile`. A
    gateway method returns an `OperationResponse` or an `ErrorResponse`, and callers branch on `isinstance`.
    `update(delta)` is a partial update and
    `replace(wanted, current=None)` a full one, which answers a `ReplaceOutcome`. `derived_update.replace` derives a
@@ -263,7 +264,7 @@ flow, the port and the EPP commands of one object.
     from the `rri` extension and the AuthInfo in plaintext, so it is sent with `loggable=False`; its reply has no
     transfer state, so the gateway answers a process `serverApproved` by the gainer at the time of the reply
     ([rri-extension.md](../rri/rri-extension.md)). A contact of type REQUEST is a request contact
-    (`RriRequestContactGateway`, `commands/request_contact/`), not a contact: each INFO answers 404 for a handle of the
+    (`RriRequestContactGateway`, `extensions/rri/`, the RRI part of the rri extension, which `RriBackend` gives by `extension("de.denic.rpp.rri")`), not a contact: each INFO answers 404 for a handle of the
     other kind, and a check is the contact CHECK, as both share the handles. Hosts, the other transfer operations, renew and
     contact delete answer `UNIMPLEMENTED_COMMAND`. Every queue
     message is a service notice naming its RRI type and the domains and handles it is about, with 1301 or 1300 as a
@@ -294,9 +295,9 @@ preset it offers (data-objects, `.spec/proposals/174-presets/`). All of this is 
 preset, a profile or a schema, and no JSON reaches `core`.
 
 **Definitions** (`rpp/schema/definitions.py`, `Definitions`, built once per app, so nothing is process-global): the files
-`rpp/schema/schemas/presets/<key>.yaml` (`base`, `epp-compatible`, `rri`) and `profiles/<key>.yaml` (`epp-compatibility`,
+`rpp/schema/schemas/presets/<key>.yaml` (`base`, `epp-compatible`) and `profiles/<key>.yaml` (`epp-compatibility`,
 with its Profile Schema `epp-compatibility.schema.json`, copied from `.spec/` by `copy_models.sh`), and what the registered
-extensions bring (`RegisteredExtension.presets` and `.profiles`, as the same files state them; the planets extension brings
+extensions bring (`RegisteredExtension.presets` and `.profiles`, as the same files state them; the rri extension brings the preset `rri`, the planets extension brings
 the preset `planets` and the demo profiles and presets that need it, and `planet_atmosphere` and `satellite_orbit` those that need them, each specified under [docs/demo/](../demo/), #179). A definition is the same on every server. A definition that refers to an extension that is not registered is read only where a configuration offers it: an app that registers `planets` and `planet_atmosphere` does not know the presets of `satellite_orbit`. A reference to a base preset, a base profile, an extension
 or a required extension is an identifier and an exact version; an identifier denotes one definition, whatever its kind.
 `GET /presets/{id}` and `GET /profiles/{id}` publish them (`handlers/presets.py`, `handlers/profiles.py`,
@@ -392,9 +393,9 @@ The extension paths exist for the extensions of every offered preset, so those o
 ## RPP extensions
 
 An RPP extension (json §7) is a schema file in `.spec/`, copied by [copy_models.sh](../../copy_models.sh) to
-`src/rpp/schema/schemas/extensions/` (or, for an extension registered by configuration, to its own package, see
+the package of the extension that registers it (`src/extensions/<name>/rpp/schema/`, see
 [Registered extensions](#registered-extensions)), and specified under `docs/` as
-[specification.project.md](specification.project.md#kinds-of-specification) describes. `rpp/schema/extensions.py` loads them (`RppExtension`): the
+[specification.project.md](specification.project.md#kinds-of-specification) describes. `rpp/schema/extensions.py` holds those registered (`RppExtension`): the
 Extension Object discovery states, the definitions each adds to a base definition, and the data objects it defines
 (`objects` of `rpp:extension`). A deployment offers those of its offered presets; `create_app`
 refuses one the proxy does not know or the backend does not hold. `validate_schema(name, data, extensions=profile.extensions)` takes the validator the app built for the
@@ -403,14 +404,17 @@ no extension. Without the extension those members are undeclared, a 400 as befor
 validated by the names a base object's definitions would have (`requestContact.create` for
 `ext.rri.requestContact.create`).
 
-The objects an offered extension defines get their paths in `create_app`: `rpp/http/extension_paths.py` copies the
-paths of the base object whose uniform interface they share (`TEMPLATES`: `requestContact` → `contact`, without its
-processes) under the plural of the object's identifier (core §16.1), with their own operationIds
-(`requestContacts_read`) and plain object schemas, as the mappers validate with the extension's. Without the
-extension the paths do not exist (404). The request contacts of a domain are members the extension adds
-(`generalRequest`, `abuse`), which `rpp/mapping/domain/domain_request_contacts.py` maps to and from contact references
-whose role is the member's name, so the core and the RRI adapter hold them as roles; `contacts` does not show them,
-and a PATCH of one reads the domain first.
+The objects a registered extension defines get their paths in `create_app` (`add_registered_paths`): the `openapi` of the
+extension builds its fragment from the OpenAPI document of the drafts. The rri extension
+(`extensions/rri/rpp/schema/openapi_fragment.py`) copies the paths of the base object whose uniform interface its
+`requestContact` shares (`contact`, without its processes) under the plural of the object's identifier (core §16.1), with
+their own operationIds (`requestContacts_read`, the handler module named by `x-openapi-router-controller`) and plain object
+schemas, as the mappers validate with the extension's. Without the extension the paths do not exist (404). An extension that
+adds members to a domain name (or to the request of its transfer) registers a mapper in `DOMAIN_MEMBERS`
+(`rpp/mapping/domain/domain_members.py`, a `MemberMappers` of `rpp/mapping/shared/member_mappers.py`, process-global and
+idempotent like the planets' ones): the rri extension's (`extensions/rri/rpp/mapping/request_contact_members.py`) maps the
+request contacts `generalRequest` and `abuse` to and from contact references whose role is the member's name, so the core and the
+RRI adapter hold them as roles; `contacts` does not show them, and a PATCH of one reads the domain first.
 
 Messages are in `rpp/handlers/message/message_handlers.py`. `GET /messages` is EPP `poll req`,
 `DELETE /messages/{id}` is `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in
@@ -507,11 +511,11 @@ each and calls its `register(registry)` ([registration/](../../src/registration/
 | Element | Is read by |
 |---|---|
 | the RPP extension schema, the data model of its objects (Visibility) | `rpp.schema` (`register_all`), process-global, keyed by extension id, so registering twice is no change. Nothing registers by import; a process that composes no app with the extension never sees it |
-| the OpenAPI fragment of its paths, and the package of its handlers (every operationId is a fully qualified function name) | `create_app` (`add_registered_paths`, `ExtensionResolver`), per app |
+| the OpenAPI fragment of its paths (built from the OpenAPI document of the drafts), and the package of its handlers (every operationId is a fully qualified function name, or names the module of its handler) | `create_app` (`add_registered_paths`, `ExtensionResolver`), per app |
 | the presets and the profiles it brings | `Definitions.load(registry)` in `create_app`, per app: nothing of them is process-global, and an app without the extension does not know them |
 | its objects | `PresetMiddleware` and discovery, through the extension's schema |
-| its part of a backend (`backend_parts`) | the backend: the SQLite backend imports `registry_adapter.sqlite.extensions.<name>`, which has `PART` (its tables, in a metadata of their own, with a schema version) and `gateways(context)` |
-| the leaves it adds to the backend profile (`objects`, `extensions` are added to the generic profile's, other leaves are new) | `BackendProfile.from_layers(..., extra_leaves=...)`: the list of leaves stays closed, and without the extension a leaf of it is unknown |
+| its part of a backend (`backend_parts`) | the backend: the SQLite backend imports `registry_adapter.sqlite.extensions.<name>`, which has `PART` (its tables, in a metadata of their own, with a schema version) and `gateways(context)`; the RRI backend imports `registry_adapter.rri.extensions.<name>`, which has `gateways(client)` |
+| the leaves it adds to the backend profile (`objects`, `extensions` and `presets` are added to the generic profile's, other leaves are new) | `BackendProfile.from_layers(..., extra_leaves=...)`: the list of leaves stays closed, and without the extension a leaf of it is unknown |
 
 The demo configurations compose the three demo extensions differently (README, [testing.project.md](testing.project.md#the-demo-configurations)):
 `config/environments/sqlite-demo.yaml` (planets only), `sqlite-demo-extended.yaml`, `sqlite-demo-bound.yaml` (profiles bound to presets) and
@@ -628,7 +632,7 @@ the EPP Compatibility Profile takes them, with the gaps commented) or `rri.yaml`
 EPP server starts from `extends: epp` alone. `main.py` adds `lgrs` from the config (`Settings.lgrs`: the LGRs of
 `rpp_idn_lgr_tables`, or `rpp_rri_lgr`). A missing, unknown or mistyped leaf stops the app at start.
 `domainName.registrant.min_count`, `domainName.dns.min_count`, `domainName.generalRequest.*` and
-`domainName.abuse.*` (how many request contacts of the role a domain has: 0 to 1 on RRI, none on EPP),
+`domainName.abuse.*` (how many request contacts of the role a domain has: 0 to 1, leaves the rri extension adds, so a profile without it has none),
 `contact.phone.min_count`, `contact.name.changeable` and `contact.processes.delete.supported` are left to the registry
 to enforce and read by the test selectors only.
 

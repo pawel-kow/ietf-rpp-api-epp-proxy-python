@@ -1,5 +1,5 @@
 """The request contact model ↔ RRI XML: a contact of type REQUEST, which holds a handle and a URI template only."""
-from core.model.request_contact.request_contact import RequestContact
+from extensions.rri.core.model.request_contact import RequestContact
 from registry_adapter.rri.commands.contact.common import REQUEST, changed_of, regacc_of
 from registry_adapter.rri.xml.generated import contact_5_0 as rri
 

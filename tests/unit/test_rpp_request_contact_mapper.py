@@ -2,9 +2,9 @@
 import pytest
 from jsonschema import ValidationError
 
-from core.model.request_contact.request_contact import RequestContact
+from extensions.rri.core.model.request_contact import RequestContact
 from core.model.shared.availability import Availability
-from rpp.mapping.request_contact import (
+from extensions.rri.rpp.mapping import (
     request_contact_availability, request_contact_patch, request_contact_replacement, request_contacts,
 )
 

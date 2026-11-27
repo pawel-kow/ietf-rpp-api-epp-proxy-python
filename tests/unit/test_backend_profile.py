@@ -140,10 +140,12 @@ def test_rri_has_request_contacts_and_no_contact_labels():
 
 
 @pytest.mark.parametrize("role", ["generalRequest", "abuse"])
-def test_a_domain_may_have_one_request_contact_of_each_role_on_rri_only(role):
+def test_a_domain_may_have_one_request_contact_of_each_role_with_the_rri_extension_only(role):
     assert RRI_PROFILE.fact(f"domainName.{role}.min_count") == 0  # ref §5.2: 0-1, a domain needs none
     assert RRI_PROFILE.fact(f"domainName.{role}.max_count") == 1
-    assert EPP_PROFILE.fact(f"domainName.{role}.min_count") == EPP_PROFILE.fact(f"domainName.{role}.max_count") == 0
+    for leaf in ("min_count", "max_count"):  # the leaves are the extension's: a profile without it has none
+        with pytest.raises(KeyError):
+            EPP_PROFILE.fact(f"domainName.{role}.{leaf}")
 
 
 @pytest.mark.parametrize("path", ["contact.fax", "contact.nope", "nope", "contact.fax.supported.x"])

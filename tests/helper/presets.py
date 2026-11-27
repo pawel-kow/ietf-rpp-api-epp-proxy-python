@@ -3,7 +3,7 @@ from core.capabilities.backend_profile import BackendProfile
 from rpp.schema.definitions import Definitions
 from rpp.schema.extensions import EXTENSIONS
 from rpp.schema.offered_presets import OfferedPresets
-from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE
+from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE, RRI_REGISTRY
 
 
 def offered(profile: BackendProfile, registry=None) -> OfferedPresets:
@@ -12,7 +12,7 @@ def offered(profile: BackendProfile, registry=None) -> OfferedPresets:
 
 
 EPP_PRESETS = offered(EPP_PROFILE)
-RRI_PRESETS = offered(RRI_PROFILE)
+RRI_PRESETS = offered(RRI_PROFILE, RRI_REGISTRY)
 
 BASE = "urn:ietf:params:rpp:preset:base"
 EPP = "urn:ietf:params:rpp:preset:epp-compatible"

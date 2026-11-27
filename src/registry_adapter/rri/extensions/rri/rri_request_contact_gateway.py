@@ -1,12 +1,12 @@
-from core.model.request_contact.request_contact import RequestContact
+from extensions.rri.core.model.request_contact import RequestContact
 from core.ports.replace_outcome import ReplaceOutcome
 from core.result.error_response import ErrorResponse
 from core.result.operation_response import OperationResponse
 from core.result.result_code import ResultCode
 from registry_adapter.rri.commands.contact.check import rri_contact_check
-from registry_adapter.rri.commands.request_contact.create import rri_request_contact_create
-from registry_adapter.rri.commands.request_contact.info import rri_request_contact_info
-from registry_adapter.rri.commands.request_contact.update import rri_request_contact_update
+from registry_adapter.rri.extensions.rri.commands.request_contact.create import rri_request_contact_create
+from registry_adapter.rri.extensions.rri.commands.request_contact.info import rri_request_contact_info
+from registry_adapter.rri.extensions.rri.commands.request_contact.update import rri_request_contact_update
 from registry_adapter.rri.commands.shared.rri_command import refused
 
 

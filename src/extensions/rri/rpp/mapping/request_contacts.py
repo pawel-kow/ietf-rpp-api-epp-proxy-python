@@ -1,6 +1,6 @@
 """The request contact of the rri extension (docs/rri/rri-extension.md): a handle and a URI template."""
-from core.model.request_contact.request_contact import RequestContact
-from rpp.dto.rpp_request_contact import RPPRequestContact
+from extensions.rri.core.model.request_contact import RequestContact
+from extensions.rri.rpp.dto.rpp_request_contact import RPPRequestContact
 from rpp.mapping.shared import prov_metadata
 from rpp.mapping.shared.common import parse_rpp
 from rpp.schema.validator import validate_request_schema, validate_schema

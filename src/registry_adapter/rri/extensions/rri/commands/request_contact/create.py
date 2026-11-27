@@ -1,5 +1,5 @@
-from core.model.request_contact.request_contact import RequestContact
-from registry_adapter.rri.commands.request_contact.common import fields_of
+from extensions.rri.core.model.request_contact import RequestContact
+from registry_adapter.rri.extensions.rri.commands.request_contact.common import fields_of
 from registry_adapter.rri.commands.shared.rri_command import run
 from registry_adapter.rri.xml.generated.contact_5_0 import Create
 

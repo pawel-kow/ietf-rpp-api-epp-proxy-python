@@ -13,6 +13,7 @@ from registry_adapter.common.transport.tls import new_tls_context
 from registry_adapter.epp.gateways.epp_backend import EppBackend
 from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.session.epp_client import EPPClient
+from registry_adapter.rri.extension_part import load_extension_parts as load_rri_parts
 from registry_adapter.rri.gateways.rri_backend import RriBackend
 from registry_adapter.rri.session.rri_client import RriClient
 from registry_adapter.sqlite.client_directory import ClientDirectory
@@ -83,8 +84,13 @@ def compose(settings: Settings) -> Composition:
         transport = TCPClient(rri.rpp_rri_host, rri.rpp_rri_port, rri_tls, framing=LENGTH_OF_PAYLOAD)
         return RriClient(transport, username, password)
 
-    def new_rri_backend(username, password):
-        return RriBackend(new_rri_client(username, password), profile, settings.rri.rpp_rri_lgr)
+    def rri_backend_factory():
+        """The RRI parts of the registered extensions (loaded now), and the factory of a client's session."""
+        parts = load_rri_parts(registry.backend_parts("rri"))
+
+        def new_rri_backend(username, password):
+            return RriBackend(new_rri_client(username, password), profile, settings.rri.rpp_rri_lgr, parts)
+        return new_rri_backend
 
     def sqlite_backend_factory():
         """The database of the demo backend (its tables are created now), and the factory of a client's session."""
@@ -99,7 +105,7 @@ def compose(settings: Settings) -> Composition:
     # The backend factory of each protocol `rpp_backend` can name.
     backends = {
         "epp": lambda: new_epp_backend,
-        "rri": lambda: new_rri_backend,
+        "rri": rri_backend_factory,
         "sqlite": sqlite_backend_factory,
     }
     new_backend = backends[settings.backend]()

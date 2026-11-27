@@ -7,6 +7,7 @@ from rpp.schema.offered_presets import OfferedPresets
 from rpp.schema.profile_constraint_violation import ProfileConstraintViolation
 from rpp.schema.schema_scope import SchemaNotBuilt, SchemaScope
 from rpp.schema.extensions import EXTENSIONS
+from tests.helper.profiles import RRI_REGISTRY
 from tests.helper.preset_fixtures import ADMIN_ONLY, AUTH_REQUIRED, BASE, definitions_with, preset, profile
 
 PROV_REQUIRED = profile("prov-required", constraints={"domainName.read": "profile.prov"}, defs={
@@ -119,8 +120,8 @@ def test_a_definition_the_preset_does_not_have_is_not_built_not_a_refusal_of_the
 
 
 def test_the_extensions_of_a_preset_are_the_ones_it_validates_for():
-    rri = Definitions.load().presets["rri"]
-    offered = OfferedPresets.build(Definitions.load(), ["rri"], "rri", {}, ("de.denic.rpp.rri",)).offered[0]
+    rri = Definitions.load(RRI_REGISTRY).presets["rri"]
+    offered = OfferedPresets.build(Definitions.load(RRI_REGISTRY), ["rri"], "rri", {}, ("de.denic.rpp.rri",)).offered[0]
     scope = SchemaScope(offered.extensions, offered.applicable)
 
     assert scope.extensions == ("de.denic.rpp.rri",) and rri.id == "de.denic.rpp.preset.rri"

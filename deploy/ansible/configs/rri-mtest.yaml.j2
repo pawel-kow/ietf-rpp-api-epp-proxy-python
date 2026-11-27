@@ -13,10 +13,15 @@ rpp_rri_tls_insecure_skip_verify: false
 # request that names none gets default_preset below.
 rpp_preset_signalling: media-type
 
+# The RRI extension (docs/rri/rri-extension.md): request contacts, and the transfer with the gainer's data. It adds itself,
+# its leaves and its preset to the profile.
+rpp_extensions:
+  - extensions.rri
+
 # The profile of this server (see config/backends/epp.yaml): DENIC's, src/settings/profiles/rri.yaml.
 rpp_backend_profile:
   extends: rri
-  # The RPP presets offered (src/rpp/schema/schemas/presets), and the one a request gets when it names none.
+  # The RPP presets offered (src/rpp/schema/schemas/presets, and the extension's), and the one a request gets when it names none.
   presets:
     - base
     - rri

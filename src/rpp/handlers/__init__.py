@@ -23,10 +23,6 @@ from rpp.handlers.host.host_handlers import (
     hosts_availabilityHead, hosts_availability, hosts_create, hosts_read, hosts_update, hosts_updatePartial,
     hosts_delete
 )
-from rpp.handlers.request_contact.request_contact_handlers import (
-    requestContacts_create, requestContacts_read, requestContacts_update, requestContacts_updatePartial,
-    requestContacts_delete, requestContacts_availabilityHead, requestContacts_availability
-)
 from rpp.handlers.message.message_handlers import messages_query, messages_read, messages_delete, messages_create
 from rpp.handlers.discovery import discovery_read
 from rpp.handlers.presets import presets_read, presets_schemaRead

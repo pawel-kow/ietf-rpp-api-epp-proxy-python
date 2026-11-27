@@ -11,7 +11,7 @@ from tests.helper.profiles import generic_profile
 
 def extension(extension_id="x.ext", **parts):
     return RegisteredExtension(
-        id=extension_id, schema={}, data_objects={}, objects=(), openapi=lambda: {"paths": {}}, handlers="x.handlers",
+        id=extension_id, schema={}, data_objects={}, objects=(), openapi=lambda drafts: {"paths": {}}, handlers="x.handlers",
         **parts)
 
 
@@ -50,7 +50,7 @@ def test_a_module_registers_its_parts(tmp_path, monkeypatch):
 
         def register(registry):
             registry.add(RegisteredExtension(id="demo", schema={}, data_objects={}, objects=("thing",),
-                                             openapi=lambda: {"paths": {}}, handlers="demo.handlers"))
+                                             openapi=lambda drafts: {"paths": {}}, handlers="demo.handlers"))
     '''))
     monkeypatch.syspath_prepend(str(tmp_path))
     try:

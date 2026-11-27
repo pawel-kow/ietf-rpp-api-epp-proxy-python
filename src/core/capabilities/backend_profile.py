@@ -22,10 +22,6 @@ LEAVES: dict[str, type] = {
     "domainName.registrant.min_count": int,              # left to the registry to refuse; the test selectors read it
     "domainName.registrant.max_count": int,              # further registrants are contacts labelled `registrant`
     "domainName.contacts.labels": tuple,                 # the contact roles besides the registrant
-    "domainName.generalRequest.min_count": int,          # request contacts, members of their own (an extension);
-    "domainName.generalRequest.max_count": int,          # left to the registry to refuse, read by the test selectors
-    "domainName.abuse.min_count": int,
-    "domainName.abuse.max_count": int,
     "domainName.status.client_supported": bool,          # whether a client sets statuses
     "domainName.authInfo.read_supported": bool,          # whether a read can show the authInfo
     "domainName.period.supported": bool,                 # whether a domain is registered for a period, with expiry

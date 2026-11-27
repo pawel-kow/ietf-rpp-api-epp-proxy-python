@@ -9,7 +9,8 @@ from rpp.dto.rpp_contact_reference import RPPContactReference
 from rpp.dto.rpp_host_reference import RPPHostReference
 from rpp.dto.rpp_labelled_contact import RPPLabelledContact
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
-from rpp.mapping.domain import domain_request_contacts, domain_wanted
+from rpp.mapping.domain import domain_wanted
+from rpp.mapping.domain.domain_members import DOMAIN_MEMBERS
 from rpp.mapping.domain.domains import check_contact_label, check_host_objects, REGISTRANT
 from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
 from rpp.mapping.shared.common import parse_rpp
@@ -61,7 +62,7 @@ class _PatchedUpdate:
         self.profile = profile
         # A request contact is one value, which the patch applied to the read domain sets or clears.
         self.request_paths = tuple(
-            f"/{member}" for member in domain_request_contacts.members("domainName.update", profile.extensions))
+            f"/{member}" for member in DOMAIN_MEMBERS.members("domainName.update", profile.extensions))
         self.add_hosts: list[HostObj] = []
         self.remove_hosts: list[HostObj] = []
         self.add_contacts: list[ContactReferenceNew] = []

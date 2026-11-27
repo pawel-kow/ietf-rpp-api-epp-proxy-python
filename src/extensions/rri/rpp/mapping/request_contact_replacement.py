@@ -1,5 +1,5 @@
-from core.model.request_contact.request_contact import RequestContact
-from rpp.dto.rpp_request_contact_update import RPPRequestContactUpdate
+from extensions.rri.core.model.request_contact import RequestContact
+from extensions.rri.rpp.dto.rpp_request_contact_update import RPPRequestContactUpdate
 from rpp.mapping.shared.common import parse_rpp
 from rpp.schema.validator import validate_request_schema
 

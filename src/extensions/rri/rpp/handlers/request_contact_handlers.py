@@ -3,18 +3,19 @@ backend profile offers it."""
 from connexion import request
 from flask import request as flask_request
 
-from core.flows.request_contact.request_contact_flows import (
+from core.result.error_response import ErrorResponse
+from extensions.rri.core.flows.request_contact_flows import (
     create_request_contact, patch_request_contact, replace_request_contact,
 )
-from core.result.error_response import ErrorResponse
+from extensions.rri.rpp.handlers.rri_gateways import gateways
+from extensions.rri.rpp.mapping import (
+    request_contact_availability, request_contact_patch, request_contact_replacement, request_contacts,
+)
 from rpp.handlers.shared.requested_elements import INCLUDE_ELEMENTS
 from rpp.http.context import get_backend, request_profile
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers
 from rpp.http.operation import map_request, require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
-from rpp.mapping.request_contact import (
-    request_contact_availability, request_contact_patch, request_contact_replacement, request_contacts,
-)
 
 
 def _no_elements_requested():
@@ -42,7 +43,7 @@ def requestContacts_create(body):
 @rpp_operation
 def requestContacts_read(id):
     _no_elements_requested()
-    response = get_backend().request_contacts.info(id, client_transaction_id=client_transaction_id())
+    response = gateways().request_contacts.info(id, client_transaction_id=client_transaction_id())
     if isinstance(response, ErrorResponse):
         raise_registry_error(response)
     return (request_contacts.model_to_rpp(response.payload, request_profile().extensions), 200,
@@ -70,14 +71,14 @@ def requestContacts_updatePartial(id, body):
 @rpp_operation
 def requestContacts_delete(id):
     require_empty_body()
-    response = get_backend().request_contacts.delete(id, client_transaction_id=client_transaction_id())
+    response = gateways().request_contacts.delete(id, client_transaction_id=client_transaction_id())
     if isinstance(response, ErrorResponse):
         raise_registry_error(response)
     return None, 200, generate_rpp_response_headers(response)
 
 
 def _availability(id):
-    response = get_backend().request_contacts.check(id, client_transaction_id=client_transaction_id())
+    response = gateways().request_contacts.check(id, client_transaction_id=client_transaction_id())
     if isinstance(response, ErrorResponse):
         raise_registry_error(response)
     return response

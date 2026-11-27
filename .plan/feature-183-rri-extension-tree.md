@@ -49,22 +49,55 @@ No change of behaviour or wire contract. The integration cases do not change.
 7. **Docs.** architecture.project.md (RPP extensions, Registered extensions), copy_models.sh, overview, the issue's
    paths in docs/rri.
 
+## Maintainer addition (2026-11-27)
+
+The rri extension also brings an RPP Profile (registered via `profiles` of its `RegisteredExtension`, like the planets profiles
+`rocky-planets` and `catalogued-satellites`) that limits: the use of host objects (no host references in the `nameservers` of a
+domain, no `/hosts` objects), contact labels other than `registrant` on the domain name, and requires at least one registrant.
+- The spec writer writes `docs/rri/rri-profile.md`, `.spec/rri-profile.schema.json` and the preset text, and commits them on
+  this branch after the move; the coder does not write them. The coder then implements the registration.
+- **Decided (maintainer): the profile is NOT bound to the `rri` preset.** The extension brings a second preset, proposed name
+  `rri-strict` (final name comes with the spec text) = the `rri` preset with the profile bound. `rri` stays unchanged and the
+  default, so the wire contract of `rri` does not change; only requests under the new preset get 422 `02308` for violations.
+- The move stops at a checkpoint before the full checks, so the spec writer can add the profile spec.
+
 ## Open questions
 
 - Q1. Package name `extensions/rri` (the issue's) or `extensions/denic_rri`? Proposal: `extensions/rri`.
+  **Decided (maintainer): `src/extensions/rri/`.**
 - Q2. `rpp_extensions` in `config/backends/rri.yaml` or `config/protocols/rri.yaml`? Proposal: backends.
+  **Decided (maintainer): `rpp_extensions: [extensions.rri]` in `config/backends/rri.yaml`, and in the deploy template
+  `deploy/ansible/configs/rri-mtest.yaml.j2` (process rule 5).**
+
+## Decisions made while implementing
+
+- Orchestrator: the plan is approved, no plan checkpoint; paths, operationIds, status codes, schemas and the integration
+  cases stay as they are.
+- `RegisteredExtension.openapi` takes the OpenAPI document of the drafts (so the rri fragment can be built from the contact
+  paths); the planets fragments ignore it. The rri operationIds stay `requestContacts_read` ...: the operations carry
+  `x-openapi-router-controller` (the handler module), which the resolver reads, so the served documents keep the names.
+- The request contact commands and gateway move to `registry_adapter/rri/extensions/rri/` (as the SQLite parts are in
+  `registry_adapter/sqlite/extensions/<name>`), because a generic part of an adapter may not import an extension.
+- The leaves `domainName.generalRequest.*` and `domainName.abuse.*` leave `LEAVES`, `epp.yaml` and `sqlite.yaml`. A test selector
+  on a leaf an in-repository extension adds reads None on a profile without the extension (as a null fact), so the cases that
+  select on them still skip on EPP and SQLite.
 
 ## Tasks
 
-- [~] Plan approved by the maintainer
-- [ ] Move the extension into `src/extensions/rri/` and register it (1, 2, 5)
-- [ ] Domain and transfer member mapper registry (3)
-- [ ] RRI backend part, drop `request_contacts` from the generic backends (4)
-- [ ] Configuration and deploy template (6)
+- [x] Plan approved by the maintainer
+- [x] Move the extension into `src/extensions/rri/` and register it (1, 2, 5)
+- [x] Domain member mapper registry (3): one registry `DOMAIN_MEMBERS`; the transfer request converts its domain data as a create, so it uses the same mappers
+- [x] RRI backend part, drop `request_contacts` from the generic backends (4)
+- [x] Configuration and deploy template (6)
 - [ ] Tests moved and green: `lint-imports`, unit, smoke incl. MTEST
 - [ ] Docs (7)
+- [ ] The rri profile and preset `rri-strict` (maintainer addition, below), registered after the spec writer's text is on the branch
 - [ ] Draft PR
 
 ## Checks
 
-Not run yet.
+Run on the move alone, before the profile (to be run again at the end):
+- `PYTHONPATH=src lint-imports`: 31 kept, 0 broken.
+- `pytest -n 4 tests/unit`: 3007 passed (the new `test_member_mappers.py` added after: 6 passed).
+- MTEST probe (`rri-mtest domain_availability test3`): passed, so MTEST is reachable.
+- `pytest -n 4 -m smoke tests/integration` (covers MTEST): 232 passed, 488 skipped.

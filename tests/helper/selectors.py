@@ -6,9 +6,24 @@ the `BackendProfile` the app under test was composed with, `env.<path>` one of t
 path is dotted (`profile.contact.fax.supported`, `env.contact.postcode.min_count`). `wait.<path>` names a period of the
 environment's facts (an ISO 8601 duration) a case waits for: it holds when the server has that transition (null: it has
 none; a transition that is immediate is `PT0S`) and the period, with the buffer, is within the longest wait of the run. A list of selectors holds when one of them holds.
+
+A `profile.` key that names a leaf an extension of the repository adds (`domainName.abuse.max_count` of the rri extension) is
+null on the profile of a server that does not register the extension, which no bound is met by.
 """
+from functools import cache
+
 from core.capabilities.backend_profile import BackendProfile
+from registration import load_extensions
 from tests.helper.durations import seconds
+
+# The extensions of the repository, whose leaves a profile of a server that does not register them lacks.
+REPOSITORY_EXTENSIONS = ("extensions.planets", "extensions.planet_atmosphere", "extensions.satellite_orbit", "extensions.rri")
+
+
+@cache
+def extension_leaves() -> frozenset[str]:
+    """The leaves the extensions of the repository add to a profile (`RegisteredExtension.profile_leaves`)."""
+    return frozenset(load_extensions(REPOSITORY_EXTENSIONS).profile_leaves())
 
 
 class SelectorError(ValueError):
@@ -70,7 +85,12 @@ class Facts:
         scope, _, path = key.partition(".")
         try:
             if scope == "profile":
-                return self.profile.fact(path)
+                try:
+                    return self.profile.fact(path)
+                except KeyError:
+                    if path in extension_leaves():
+                        return None  # the server does not register the extension, so it holds no such fact (a null fact)
+                    raise
             if scope == "env":
                 return env_fact(self.env_facts, path)
         except KeyError:

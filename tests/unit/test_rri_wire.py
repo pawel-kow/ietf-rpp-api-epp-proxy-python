@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from core.session.session_pool import SessionPool
-from tests.helper.profiles import RRI_PROFILE
+from tests.helper.profiles import RRI_PROFILE, RRI_REGISTRY
 from rpp.http.app import create_app
 from tests.helper.fake_rri_client import FakeRriClient, reply, rri_backends
 from tests.unit.test_rri_adapter import DOMAIN_INFO, NAME
@@ -31,7 +31,7 @@ def setup(*replies):
         clients.append(FakeRriClient(username, password, replies=list(replies)))
         return clients[-1]
 
-    return create_app(SessionPool(rri_backends(factory)), RRI_PROFILE, discovery_settings=DISCOVERY).test_client(), clients
+    return create_app(SessionPool(rri_backends(factory)), RRI_PROFILE, discovery_settings=DISCOVERY, registry=RRI_REGISTRY).test_client(), clients
 
 
 def assert_refused(response, clients, code="02102"):

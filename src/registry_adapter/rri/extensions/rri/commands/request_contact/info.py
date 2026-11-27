@@ -1,5 +1,5 @@
 from registry_adapter.rri.commands.contact.info import is_request, not_found, rri_info
-from registry_adapter.rri.commands.request_contact.common import request_contact_from_rri
+from registry_adapter.rri.extensions.rri.commands.request_contact.common import request_contact_from_rri
 
 
 def rri_request_contact_info(client, handle: str, client_transaction_id=None):

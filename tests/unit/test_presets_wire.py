@@ -9,7 +9,7 @@ from tests.helper.epp_backends import epp_backends
 from tests.helper.fake_epp_client import FakeEppClient
 from tests.helper.fake_rri_client import FakeRriClient, rri_backends
 from tests.helper.presets import BASE, EPP, EPP_COMPATIBILITY, EPP_PRESETS, RRI, RRI_PRESETS
-from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE
+from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE, RRI_REGISTRY
 from tests.unit.test_rri_wire import DISCOVERY, HEADERS, MEDIA_TYPE
 
 
@@ -20,7 +20,7 @@ def epp_client(profile=EPP_PROFILE):
 
 def rri_client(profile=RRI_PROFILE):
     sessions = SessionPool(rri_backends(lambda username, password: FakeRriClient(username, password, replies=[])))
-    return create_app(sessions, profile, discovery_settings=DISCOVERY).test_client()
+    return create_app(sessions, profile, discovery_settings=DISCOVERY, registry=RRI_REGISTRY).test_client()
 
 
 def read(client, identifier, path="/presets"):

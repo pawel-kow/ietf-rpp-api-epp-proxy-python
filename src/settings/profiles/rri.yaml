@@ -5,17 +5,14 @@
 name: RRI
 objects:                               # an RRI host is not an object: name servers are attributes of the domain
   - domainName
-  - contact
-  - requestContact                     # a contact of type REQUEST, from the extension (docs/rri/rri-extension.md)
-presets:                               # the RPP presets offered (src/rpp/schema/schemas/presets): not the EPP one
-  - base
-  - rri
-default_preset: rri                    # applied when a request names none
+  - contact                            # the request contact of the rri extension is added by the extension
+presets:                               # the RPP presets offered (src/rpp/schema/schemas/presets): not the EPP one; the rri
+  - base                               # extension adds its own preset, and makes it the default
+default_preset: base                   # applied when a request names none
 bound_profiles: {}                     # per preset, the profiles this server binds to it (a server's own policy)
 informational_profiles: []             # the profiles the server checks itself: advertised, the proxy does not check them
 lgrs: []                               # rpp_rri_lgr of the config, not set here
-extensions:                            # docs/rri/rri-extension.md: request contacts, and CHPROV with the gainer's data
-  - de.denic.rpp.rri
+extensions: []                         # the rri extension (docs/rri/rri-extension.md) adds itself
 
 domainName:
   registrant:
@@ -23,12 +20,6 @@ domainName:
     max_count: 5                       # gap Q1: further holders are contacts labelled `registrant`
   contacts:
     labels: []                         # no admin, tech or billing; General Request and Abuse are members of their own
-  generalRequest:                      # a request contact of the extension, 0 to 1 (ref §5.2): a domain needs none
-    min_count: 0
-    max_count: 1
-  abuse:
-    min_count: 0
-    max_count: 1
   status:
     client_supported: false            # every status is the registry's
   authInfo:

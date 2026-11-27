@@ -28,12 +28,6 @@ domainName:
       - admin
       - billing
       - tech
-  generalRequest:                      # no request contacts: RFC 5733 knows contacts with postal data only
-    min_count: 0
-    max_count: 0
-  abuse:
-    min_count: 0
-    max_count: 0
   status:
     client_supported: true             # RFC 5731 §2.3: the client* statuses
   authInfo:

@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from core.model.request_contact.request_contact import RequestContact
+from extensions.rri.core.model.request_contact import RequestContact
 from core.model.shared.availability import Availability
 from core.ports.replace_outcome import ReplaceOutcome
 from core.result.error_response import ErrorResponse

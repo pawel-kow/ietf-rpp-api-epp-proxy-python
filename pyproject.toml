@@ -51,7 +51,7 @@ id = "core-model-objects"
 name = "The object packages of core.model are independent, except domain -> contact"
 type = "independence"
 modules = [
-    "core.model.contact", "core.model.domain", "core.model.host", "core.model.message", "core.model.request_contact",
+    "core.model.contact", "core.model.domain", "core.model.host", "core.model.message",
 ]
 ignore_imports = ["core.model.domain.** -> core.model.contact.**"]
 
@@ -61,7 +61,7 @@ name = "core.model.shared imports no object package of core.model"
 type = "forbidden"
 source_modules = ["core.model.shared"]
 forbidden_modules = [
-    "core.model.contact", "core.model.domain", "core.model.host", "core.model.message", "core.model.request_contact",
+    "core.model.contact", "core.model.domain", "core.model.host", "core.model.message",
 ]
 
 [[tool.importlinter.contracts]]
@@ -155,7 +155,7 @@ name = "Inside rri only session uses the transport"
 type = "forbidden"
 source_modules = [
     "registry_adapter.rri.commands", "registry_adapter.rri.gateways", "registry_adapter.rri.xml",
-    "registry_adapter.rri.result_codes", "registry_adapter.rri.statuses",
+    "registry_adapter.rri.result_codes", "registry_adapter.rri.statuses", "registry_adapter.rri.extensions",
 ]
 forbidden_modules = ["registry_adapter.common.transport"]
 allow_indirect_imports = true
@@ -173,7 +173,10 @@ id = "generic-not-extensions"
 name = "No generic package imports an extension"
 type = "forbidden"
 source_modules = [
-    "api_docs", "core", "registration", "rpp", "settings", "registry_adapter.common", "registry_adapter.epp", "registry_adapter.rri",
+    "api_docs", "core", "registration", "rpp", "settings", "registry_adapter.common", "registry_adapter.epp",
+    "registry_adapter.rri.commands", "registry_adapter.rri.extension_part", "registry_adapter.rri.gateways",
+    "registry_adapter.rri.result_codes", "registry_adapter.rri.session", "registry_adapter.rri.statuses",
+    "registry_adapter.rri.xml",
     "registry_adapter.sqlite.client_directory", "registry_adapter.sqlite.clock", "registry_adapter.sqlite.common_part",
     "registry_adapter.sqlite.extension_part", "registry_adapter.sqlite.gateways", "registry_adapter.sqlite.hash_password",
     "registry_adapter.sqlite.member_hook", "registry_adapter.sqlite.member_refused", "registry_adapter.sqlite.message_store",
@@ -190,6 +193,13 @@ name = "Inside an extension: the registration -> rpp -> core"
 type = "layers"
 containers = ["extensions.planets"]
 layers = ["register_planets", "rpp", "core"]
+
+[[tool.importlinter.contracts]]
+id = "extension-layers-rri"
+name = "Inside the rri extension: the registration -> rpp -> core"
+type = "layers"
+containers = ["extensions.rri"]
+layers = ["register_rri", "rpp", "core"]
 
 [[tool.importlinter.contracts]]
 id = "extension-layers-members"
@@ -216,24 +226,26 @@ layers = ["mapping", "dto | schema"]
 id = "extension-rpp-layers"
 name = "Inside the rpp of an extension: handlers -> mapping -> dto, schema"
 type = "layers"
-containers = ["extensions.planets.rpp"]
+containers = ["extensions.planets.rpp", "extensions.rri.rpp"]
 layers = ["handlers", "mapping", "dto | schema"]
 
 [[tool.importlinter.contracts]]
 id = "extension-core-layers"
 name = "Inside the core of an extension: flows -> ports -> model"
 type = "layers"
-containers = ["extensions.planets.core"]
+containers = ["extensions.planets.core", "extensions.rri.core"]
 layers = ["flows", "ports", "model"]
 
 [[tool.importlinter.contracts]]
 id = "extension-core-pure"
 name = "The core of an extension imports the core of the proxy and the standard library only"
 type = "forbidden"
-source_modules = ["extensions.planets.core", "extensions.planet_atmosphere.core", "extensions.satellite_orbit.core"]
+source_modules = [
+    "extensions.planets.core", "extensions.planet_atmosphere.core", "extensions.satellite_orbit.core", "extensions.rri.core",
+]
 forbidden_modules = [
     "api_docs", "main", "registration", "registry_adapter", "rpp", "settings", "extensions.planets.rpp",
-    "extensions.planet_atmosphere.rpp", "extensions.satellite_orbit.rpp", "sqlalchemy",
+    "extensions.planet_atmosphere.rpp", "extensions.satellite_orbit.rpp", "extensions.rri.rpp", "sqlalchemy",
     "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
 ]
 
@@ -250,9 +262,19 @@ name = "The SQLite part of an extension imports the core of an extension only, o
 type = "forbidden"
 source_modules = ["registry_adapter.sqlite.extensions"]
 forbidden_modules = [
-    "extensions.*.rpp", "extensions.*.core.flows", "extensions.planets.register_planets",
+    "extensions.*.rpp", "extensions.*.core.flows", "extensions.planets.register_planets", "extensions.rri.register_rri",
     "extensions.planet_atmosphere.register_planet_atmosphere", "extensions.satellite_orbit.register_satellite_orbit", "rpp", "core.flows",
     "core.session", "registration", "settings",
+]
+
+[[tool.importlinter.contracts]]
+id = "rri-extensions-core-only"
+name = "The RRI part of an extension imports the core of an extension only, of the extensions only what it needs"
+type = "forbidden"
+source_modules = ["registry_adapter.rri.extensions"]
+forbidden_modules = [
+    "extensions.*.rpp", "extensions.*.core.flows", "extensions.rri.register_rri", "rpp", "core.flows", "core.session",
+    "registration", "settings",
 ]
 
 [[tool.importlinter.contracts]]

@@ -1,5 +1,5 @@
 from core.model.shared.availability import Availability
-from rpp.dto.rpp_request_contact_availability import RPPRequestContactAvailability
+from extensions.rri.rpp.dto.rpp_request_contact_availability import RPPRequestContactAvailability
 from rpp.schema.validator import validate_schema
 
 

@@ -19,12 +19,6 @@ domainName:
     max_count: 0
   contacts:
     labels: []
-  generalRequest:
-    min_count: 0
-    max_count: 0
-  abuse:
-    min_count: 0
-    max_count: 0
   status:
     client_supported: false
   authInfo:
