@@ -50,7 +50,7 @@ The terms Profile, Preset, Applicable Profiles, and Profile Binding are used as 
 | Identifier | `de.denic.rpp.preset.rri` |
 | Version | 1.0 |
 | RPP version | 1.0 |
-| Extensions | `de.denic.rpp.rri` 0.2.0 |
+| Extensions | `de.denic.rpp.rri` 0.3.0 |
 | Profiles | None |
 | Base presets | `urn:ietf:params:rpp:preset:base` 1.0 |
 | Specification | <https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-preset.md> |
@@ -79,3 +79,4 @@ The preset adds no functionality and no constraints of its own. The security con
 ## 1.0
 
 * initial version #183
+* require the extension de.denic.rpp.rri 0.3.0 #248

@@ -6,7 +6,7 @@ workgroup = "Network Working Group"
 submissiontype = "IETF"
 keyword = ["RPP", "provisioning", "registry", "extension", "RRI"]
 TocDepth = 4
-date = 2026-11-14
+date = 2026-11-27
 
 [seriesInfo]
 name = "Internet-Draft"
@@ -24,7 +24,7 @@ organization = "DENIC"
 
 .# Abstract
 
-This document defines a private extension of the RESTful Provisioning Protocol (RPP) for a server whose registry operates the DENIC Registry Robot Interface (RRI) version 5.0. The extension defines the Request Contact Data Object, adds the General Request and Abuse contacts to the Domain Name Data Object, and adds the data of the domain to the Create operation of the Domain Transfer Process Object.
+This document defines a private extension of the RESTful Provisioning Protocol (RPP) for a server whose registry operates the DENIC Registry Robot Interface (RRI) version 5.0. The extension defines the Request Contact Data Object, adds the General Request and Abuse contacts to the Domain Name Data Object, adds the data of the domain to the Create operation of the Domain Transfer Process Object, and defines message types for the notifications of the registry.
 
 {mainmatter}
 
@@ -41,6 +41,9 @@ Request contacts
 
 Transfer data
 : The only transfer of the registry (CHPROV) is requested by the gaining client together with the complete data of the domain name: its holders, its request contacts, and its DNS data, all of which belong to the gaining client. The Domain Transfer Process Object has no data element for this data.
+
+Registry notifications
+: The registry queues notifications of fifteen kinds for a client, for example a warning that domain names expire, a change of a domain name by the registry, or a request to verify a contact. The base specifications define message types for a few of them only [@!I-D.ietf-rpp-data-objects, section 9.19], and a Service Notice Message Object carries no structured data. Some notifications name several objects, while the Base Message Object refers to one object.
 
 The registry also limits what a client provisions with the data elements of the base specifications: it holds no host objects, a domain name has at least one holder, and the contacts of a domain name are its holders and its request contacts. These limits only constrain, so they are not part of the extension. They are specified as the DENIC RRI profile (`de.denic.rpp.profile.rri`, [rri-profile](rri-profile.md)). The preset `de.denic.rpp.preset.rri` ([rri-preset](rri-preset.md)) contains the extension without the profile, and the preset `de.denic.rpp.preset.rri-strict` ([rri-strict-preset](rri-strict-preset.md)) applies the profile as well.
 
@@ -72,6 +75,10 @@ A request contact is defined as a new Data Object and not as an object that exte
 
 The General Request and Abuse contacts are defined as data elements of their own and not as labels of the `contacts` data element of the Domain Name Data Object, because they refer to Request Contact Data Objects and not to Contact Data Objects.
 
+The notifications of the registry are defined as message types that extend the Base Message Object [@!I-D.ietf-rpp-data-objects, section 9.19.1], as [@!I-D.ietf-rpp-data-objects, section 5] recommends for extensions. Where a message type of the base specifications fits a notification, it is used: the notification of a completed transfer to the losing client is a Transfer Outcome Message Object. A message type for a notification that names several objects extends the Bulk Base Message Object (#bulk-base-message), which holds a list of object references in place of the single Object Type and Object Identifier of the Base Message Object.
+
+The base specifications define no extension point for message types: the `data` property of the Message Data Object is a fixed union of the message types of the base specifications [@!I-D.ietf-rpp-json, section 6.8], and the Extension Mapper only adds properties to a definition. The schema document of the extension therefore names its message types in the member `rpp:messages` (#message-type-mapping).
+
 # Extension Overview {#overview}
 
 This section identifies the extension.
@@ -80,11 +87,11 @@ This section identifies the extension.
 | -------------------- | --------------------------------------------------------------------------------------------- |
 | Name                 | DENIC RRI                                                                                     |
 | Identifier           | `de.denic.rpp.rri`                                                                            |
-| Version              | 0.2.0                                                                                         |
+| Version              | 0.3.0                                                                                         |
 | RPP version          | [@!I-D.ietf-rpp-core], [@!I-D.ietf-rpp-data-objects], [@!I-D.ietf-rpp-json]                   |
 | Schema `$id`         | <https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json> |
-| Changed base objects | `domainName`, `domainTransferProcess`                                                         |
-| New objects          | `requestContact`, `requestContactAvailability`                                                |
+| Changed base objects | `domainName`, `domainTransferProcess`, `message`                                              |
+| New objects          | `requestContact`, `requestContactAvailability`, `objectReference`, `datedObjectReference`, `registryNotice`, `bulkBaseMessage`, and the message types of (#message-types) |
 Table: Extension Overview
 
 # External Data Types {#external-data-types}
@@ -149,6 +156,30 @@ The Create, Read, and Update operations [@!I-D.ietf-rpp-data-objects, section 11
 ### Operations {#domain-name-operations}
 
 None.
+
+## Message Data Object {#message}
+
+* Identifier: message
+
+### Data Elements {#message-data-elements}
+
+None. The Data (`data`) of a message is a message type of (#message-types) or of the base specifications [@!I-D.ietf-rpp-data-objects, section 9.19].
+
+A server that supports the extension sends a notification of the registry that a message type of this document or of the base specifications describes as a message of that type. A server sends a notification that it cannot represent in that type as a Service Notice Message Object [@!I-D.ietf-rpp-data-objects, section 9.19.7].
+
+### Operations {#message-operations}
+
+#### Query Operation
+
+* Identifier: query
+
+The extension adds the Identifiers of the message types of (#message-types) to the values of the Message Type parameter (`type`) of the Query operation [@!I-D.ietf-rpp-data-objects, section 15.3.3]. A message matches a value of `type` when the Identifier of the message type of its Data equals the value.
+
+A server that supports the extension responds to a Query whose `type` values name only message types that it does not send as to a Query on an empty queue.
+
+#### Read and Delete Operations
+
+The extension does not change the Read and Delete operations. A client reads and acknowledges a message of any type by its Message ID alone [@!I-D.ietf-rpp-core, section 16.10.2].
 
 # New Data Objects {#new-data-objects}
 
@@ -281,6 +312,405 @@ The Request Contact Data Object supports no Process Objects.
 * Description: The result of an Availability operation on a Request Contact Data Object.
 * Data Elements: (None)
 
+## Message Components {#message-components}
+
+This section defines the Component Objects that the message types of the extension use.
+
+### Object Reference Object {#object-reference}
+
+* Name: Object Reference Object
+* Identifier: objectReference
+* Description: A reference to an object that a message is about.
+* Data Elements:
+  * Object Type
+    * Identifier: objectType
+    * Cardinality: 1
+    * Mutability: read-only
+    * Data Type: String
+    * Description: The object identifier of the referenced object, for example `domainName` or `contact`.
+    * Constraints: (None)
+  * Object Identifier
+    * Identifier: objectId
+    * Cardinality: 1
+    * Mutability: read-only
+    * Data Type: String
+    * Description: The unique identifier of the referenced object.
+    * Constraints:
+      * The value MUST be the Unique Identifier of an object of the type that the Object Type names.
+
+### Dated Object Reference Object {#dated-object-reference}
+
+* Name: Dated Object Reference Object
+* Identifier: datedObjectReference
+* Extends: Object Reference Object
+* Description: A reference to an object, with a date that concerns the object. The data element that uses it states the meaning of the date.
+* Data Elements:
+  * Date
+    * Identifier: date
+    * Cardinality: 1
+    * Mutability: read-only
+    * Data Type: Timestamp
+    * Description: The date and time that concerns the referenced object.
+    * Constraints: (None)
+
+### Registry Notice Object {#registry-notice}
+
+* Name: Registry Notice Object
+* Identifier: registryNotice
+* Description: A notice of the registry about the event that a message reports.
+* Data Elements:
+  * Code
+    * Identifier: code
+    * Cardinality: 1
+    * Mutability: read-only
+    * Data Type: String
+    * Description: The code of the notice, which identifies its kind.
+    * Constraints:
+      * The value MUST consist of the digits `0` to `9` only.
+  * Text
+    * Identifier: text
+    * Cardinality: 1
+    * Mutability: read-only
+    * Data Type: String
+    * Description: Human-readable text of the notice.
+    * Constraints: (None)
+  * Arguments
+    * Identifier: arguments
+    * Cardinality: 0+
+    * Mutability: read-only
+    * Data Type: String
+    * Description: Values that complete the text, for example a reference of the registry to the request that caused the event, or a date.
+    * Constraints: (None)
+
+### Bulk Base Message Object {#bulk-base-message}
+
+* Name: Bulk Base Message Object
+* Identifier: bulkBaseMessage
+* Abstract: true
+* Extends: Base Message Object
+* Description: Base structure for a message about several objects.
+* Data Elements:
+  * Objects
+    * Identifier: objects
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Object Reference Object
+    * Description: The objects that the message is about.
+    * Constraints: (None)
+
+A message whose type extends the Bulk Base Message Object contains neither the Object Type (`objectType`) nor the Object Identifier (`objectId`) of the Base Message Object.
+
+## Message Types {#message-types}
+
+This section defines the message types of the extension. A server uses each of them as the Data (`data`) of a Message Data Object [@!I-D.ietf-rpp-data-objects, section 15]. In a message type that extends the Base Message Object, the Object Type (`objectType`) and the Object Identifier (`objectId`) are required.
+
+| Identifier | Extends | Objects |
+| ---------- | ------- | ------- |
+| `domainExpiryWarningMessage` | `bulkBaseMessage` | several domain names |
+| `domainExpiryMessage` | `bulkBaseMessage` | several domain names |
+| `contactDeletionMessage` | `bulkBaseMessage` | several contacts |
+| `authInfoExpiryMessage` | `baseMessage` | a domain name |
+| `authInfoIssueMessage` | `baseMessage` | a domain name |
+| `authInfoWithdrawalMessage` | `baseMessage` | a domain name |
+| `domainDeletionMessage` | `baseMessage` | a domain name |
+| `domainLockMessage` | `baseMessage` | a domain name |
+| `domainUnlockMessage` | `baseMessage` | a domain name |
+| `domainUpdateMessage` | `baseMessage` | a domain name |
+| `domainReleaseMessage` | `baseMessage` | a domain name |
+| `contactUpdateMessage` | `baseMessage` | a contact |
+| `domainStatusMessage` | `baseMessage` | a domain name |
+| `contactVerificationMessage` | `baseMessage` | a contact |
+Table: Message Types of the Extension
+
+
+### Domain Expiry Warning Message Object {#domain-expiry-warning-message}
+
+* Name: Domain Expiry Warning Message Object
+* Identifier: domainExpiryWarningMessage
+* Extends: Bulk Base Message Object
+* Description: Notification for the sponsoring client that domain names will expire and be deleted on the given dates.
+* Data Elements:
+  * Objects
+    * Identifier: objects
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Dated Object Reference Object
+    * Description: The domain names that will expire, each with the date and time of its expiry.
+    * Constraints:
+      * The Object Type of each entry MUST be `domainName`.
+
+### Domain Expiry Message Object {#domain-expiry-message}
+
+* Name: Domain Expiry Message Object
+* Identifier: domainExpiryMessage
+* Extends: Bulk Base Message Object
+* Description: Notification for the sponsoring client that domain names expired and were deleted.
+* Data Elements:
+  * Objects
+    * Identifier: objects
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Dated Object Reference Object
+    * Description: The domain names that expired, each with the date and time of its expiry.
+    * Constraints:
+      * The Object Type of each entry MUST be `domainName`.
+
+### Contact Deletion Message Object {#contact-deletion-message}
+
+* Name: Contact Deletion Message Object
+* Identifier: contactDeletionMessage
+* Extends: Bulk Base Message Object
+* Description: Notification for the sponsoring client that the server deleted contacts that no domain name referred to.
+* Data Elements:
+  * Objects
+    * Identifier: objects
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Object Reference Object
+    * Description: The deleted contacts.
+    * Constraints:
+      * The Object Type of each entry MUST be `contact`. A deleted request contact (#request-contact) is reported with the Object Type `contact` as well.
+
+### Authorisation Information Expiry Message Object {#auth-info-expiry-message}
+
+* Name: Authorisation Information Expiry Message Object
+* Identifier: authInfoExpiryMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client of the expiry of the authorisation information of a domain name.
+* Data Elements:
+  * Expiry Date
+    * Identifier: expiryDate
+    * Cardinality: 1
+    * Mutability: read-only
+    * Data Type: Timestamp
+    * Description: The date and time of the expiry of the authorisation information.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Authorisation Information Issue Message Object {#auth-info-issue-message}
+
+* Name: Authorisation Information Issue Message Object
+* Identifier: authInfoIssueMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that the server issued authorisation information for a domain name to its holders, at the request of a client.
+* Data Elements: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Authorisation Information Withdrawal Message Object {#auth-info-withdrawal-message}
+
+* Name: Authorisation Information Withdrawal Message Object
+* Identifier: authInfoWithdrawalMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that the server deleted the authorisation information that it had issued to the holders of a domain name, because it could not deliver it.
+* Data Elements:
+  * Notices
+    * Identifier: notices
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Domain Deletion Message Object {#domain-deletion-message}
+
+* Name: Domain Deletion Message Object
+* Identifier: domainDeletionMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that the server deleted a domain name, for example by a decision of the registry or because verification information was not provided in time.
+* Data Elements:
+  * Notices
+    * Identifier: notices
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Domain Lock Message Object {#domain-lock-message}
+
+* Name: Domain Lock Message Object
+* Identifier: domainLockMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that the server locked a domain name against changes through the protocol.
+* Data Elements:
+  * Notices
+    * Identifier: notices
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Domain Unlock Message Object {#domain-unlock-message}
+
+* Name: Domain Unlock Message Object
+* Identifier: domainUnlockMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that the server removed the lock of a domain name.
+* Data Elements:
+  * Notices
+    * Identifier: notices
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Domain Update Message Object {#domain-update-message}
+
+* Name: Domain Update Message Object
+* Identifier: domainUpdateMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that the server changed the data of a domain name. The client reads the domain name to learn its data.
+* Data Elements:
+  * Notices
+    * Identifier: notices
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Domain Release Message Object {#domain-release-message}
+
+* Name: Domain Release Message Object
+* Identifier: domainReleaseMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that a domain name was released to the registry, which administers it in place of a sponsoring client.
+* Data Elements:
+  * Notices
+    * Identifier: notices
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Contact Update Message Object {#contact-update-message}
+
+* Name: Contact Update Message Object
+* Identifier: contactUpdateMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that the server changed the data of a contact. The change concerns every domain name that refers to the contact. The client reads the contact to learn its data.
+* Data Elements:
+  * Notices
+    * Identifier: notices
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `contact`, and the Object Identifier (`objectId`) is the Handle ID of the contact.
+
+### Domain Status Message Object {#domain-status-message}
+
+* Name: Domain Status Message Object
+* Identifier: domainStatusMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client of the status of a domain name that the server decided after a request of the client, for example after a risk assessment, and of the deadlines to provide verification information.
+* Data Elements:
+  * Status
+    * Identifier: status
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Domain Name Status Object
+    * Description: The status of the domain name.
+    * Constraints: (None)
+  * Holders
+    * Identifier: holders
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Object Reference Object
+    * Description: The holders of the domain name that the notification concerns.
+    * Constraints:
+      * The Object Type of each entry MUST be `contact`.
+  * Hold Deadline
+    * Identifier: holdDeadline
+    * Cardinality: 0-1
+    * Mutability: read-only
+    * Data Type: Timestamp
+    * Description: The date and time by which verification information must be provided, after which the server places the domain name on hold.
+    * Constraints: (None)
+  * Deletion Deadline
+    * Identifier: deletionDeadline
+    * Cardinality: 0-1
+    * Mutability: read-only
+    * Data Type: Timestamp
+    * Description: The date and time by which verification information must be provided, after which the server deletes the domain name.
+    * Constraints: (None)
+  * Notices
+    * Identifier: notices
+    * Cardinality: 0+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `domainName`, and the Object Identifier (`objectId`) is the name of the domain name.
+
+### Contact Verification Message Object {#contact-verification-message}
+
+* Name: Contact Verification Message Object
+* Identifier: contactVerificationMessage
+* Extends: Base Message Object
+* Description: Notification for the sponsoring client that verification information must be provided for a contact, to avoid that the domain names that refer to it are placed on hold or deleted.
+* Data Elements:
+  * Claims
+    * Identifier: claims
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: String
+    * Description: The claims of the contact to verify, for example `name`, `address`, or `email`.
+    * Constraints: (None)
+  * Referenced Domain Names
+    * Identifier: referencedDomains
+    * Cardinality: 1
+    * Mutability: read-only
+    * Data Type: Integer
+    * Description: The number of domain names that refer to the contact.
+    * Constraints:
+      * The value MUST NOT be negative.
+  * Earliest Hold
+    * Identifier: earliestHold
+    * Cardinality: 0-1
+    * Mutability: read-only
+    * Data Type: Dated Object Reference Object
+    * Description: The domain name that refers to the contact and that the server places on hold first, with the deadline for it.
+    * Constraints:
+      * The Object Type MUST be `domainName`.
+  * Earliest Deletion
+    * Identifier: earliestDeletion
+    * Cardinality: 1
+    * Mutability: read-only
+    * Data Type: Dated Object Reference Object
+    * Description: The domain name that refers to the contact and that the server deletes first, with the deadline for it.
+    * Constraints:
+      * The Object Type MUST be `domainName`.
+  * Notices
+    * Identifier: notices
+    * Cardinality: 1+
+    * Mutability: read-only
+    * Data Type: Registry Notice Object
+    * Description: The notices of the registry about the event that the message reports.
+    * Constraints: (None)
+
+The Object Type (`objectType`) is `contact`, and the Object Identifier (`objectId`) is the Handle ID of the contact.
+
 # Updated Process Objects {#updated-process-objects}
 
 This section defines the additions of the extension to existing Process Objects.
@@ -346,7 +776,9 @@ The extension adds the following Input Data Elements to the Create operation [@!
 * Output:
   * Object: Domain Transfer Process Object
 
-The transfer is completed immediately. The server MUST respond with the Domain Transfer Process Object in the state `serverApproved`, with `reqClientId` and `actClientId` set to the identifier of the gaining client, and `requestDate` and `actionDate` set to the time of completion. The server informs the losing client with a message.
+The transfer is completed immediately. The server MUST respond with the Domain Transfer Process Object in the state `serverApproved`, with `reqClientId` and `actClientId` set to the identifier of the gaining client, and `requestDate` and `actionDate` set to the time of completion.
+
+The server informs the losing client with a message whose Data is a Transfer Outcome Message Object [@!I-D.ietf-rpp-data-objects, section 9.19.4]. Its Transfer Status (`trStatus`) is `serverApproved`, its Object Type (`objectType`) is `domainName`, its Object Identifier (`objectId`) is the name of the domain name, and its Request Date (`requestDate`) and Action Date (`actionDate`) are the time of completion. Its Process (`process`) is the Domain Transfer Process Object of the response to the gaining client, so that the losing client learns the identifier of the gaining client.
 
 The server MUST reject a transfer request without Object Authorisation, and a transfer request whose Input Data Elements refer to an object of another client.
 
@@ -369,7 +801,7 @@ This section lists the endpoints that result from the new Data Object, derived b
 | Request Contact: availability | HEAD or GET | /requestContacts/{id}/availability   |
 Table: Endpoints of the Request Contact Data Object
 
-The data elements that the extension adds to the Domain Name Data Object and the Domain Transfer Process Object do not have Direct Access and add no endpoints.
+The data elements that the extension adds to the Domain Name Data Object and the Domain Transfer Process Object do not have Direct Access and add no endpoints. The message types of the extension add no endpoints either: a client retrieves them at the messages endpoint [@!I-D.ietf-rpp-core, section 16.10] and selects them with the `type` query parameter (#message-operations).
 
 The endpoints behave as defined for the corresponding operations in [@!I-D.ietf-rpp-core, section 16]:
 
@@ -441,6 +873,16 @@ RPP-Cltrid: ABC-12346
 RPP-Code: 01000
 ```
 
+Example request for the oldest message about the status of a domain name or the verification of a contact:
+
+```http
+GET /messages?type=domainStatusMessage&type=contactVerificationMessage HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+RPP-Cltrid: ABC-12347
+```
+
 # JSON Schema {#json-schema}
 
 This section defines the JSON representation of the new and updated objects, following the rules of [@!I-D.ietf-rpp-json, section 4] and the Extension Framework of [@!I-D.ietf-rpp-json, section 7].
@@ -471,11 +913,40 @@ The schema document states the Name, Identifier, Version, and New objects of (#o
   "rpp:extension": {
     "name": "DENIC RRI",
     "id": "de.denic.rpp.rri",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "objects": ["requestContact"]
   }
 }
 ```
+
+## Message Type Mapping {#message-type-mapping}
+
+The `data` property of the definitions `message.read` and `message.create` [@!I-D.ietf-rpp-json, section 6.8] is a `oneOf` of the message types of the base specifications, and the Extension Mapper only adds properties to a definition. The schema document of the extension therefore maps the Identifier of each of its message types to its definition in the member `rpp:messages`:
+
+```json
+{
+  "rpp:messages": {
+    "domainExpiryWarningMessage": "#/$defs/ext.rri.domainExpiryWarningMessage.read",
+    "domainExpiryMessage": "#/$defs/ext.rri.domainExpiryMessage.read",
+    "authInfoExpiryMessage": "#/$defs/ext.rri.authInfoExpiryMessage.read",
+    "authInfoIssueMessage": "#/$defs/ext.rri.authInfoIssueMessage.read",
+    "authInfoWithdrawalMessage": "#/$defs/ext.rri.authInfoWithdrawalMessage.read",
+    "domainDeletionMessage": "#/$defs/ext.rri.domainDeletionMessage.read",
+    "domainLockMessage": "#/$defs/ext.rri.domainLockMessage.read",
+    "domainUnlockMessage": "#/$defs/ext.rri.domainUnlockMessage.read",
+    "domainUpdateMessage": "#/$defs/ext.rri.domainUpdateMessage.read",
+    "domainReleaseMessage": "#/$defs/ext.rri.domainReleaseMessage.read",
+    "contactUpdateMessage": "#/$defs/ext.rri.contactUpdateMessage.read",
+    "contactDeletionMessage": "#/$defs/ext.rri.contactDeletionMessage.read",
+    "domainStatusMessage": "#/$defs/ext.rri.domainStatusMessage.read",
+    "contactVerificationMessage": "#/$defs/ext.rri.contactVerificationMessage.read"
+  }
+}
+```
+
+The Effective Schema of `message.read` and `message.create` at a server whose preset contains the extension adds to the `oneOf` of the `data` property a reference to each definition that `rpp:messages` maps. The abstract Bulk Base Message Object and the components of (#message-components) are not mapped. A client that receives a message whose message type it does not know can acknowledge the message by its Message ID.
+
+A> The member `rpp:messages` is not defined by [@!I-D.ietf-rpp-json]. It is proposed for inclusion there as the extension point for message types.
 
 ## Domain Name Data Object {#json-domain-name}
 
@@ -642,6 +1113,372 @@ Reference schema (identifier only):
         "id": { "$ref": "#/$defs/identifier" }
       },
       "required": ["@type", "id"]
+    }
+  }
+}
+```
+
+## Message Objects {#json-messages}
+
+Each message type repeats the data elements that it inherits as top-level properties [@!I-D.ietf-rpp-json, section 6.2.16]. A message type that extends the Bulk Base Message Object does not declare `objectType` and `objectId`. The value of `objectType` of a referenced object is constrained with `allOf`.
+
+### Components
+
+Object Reference Object:
+
+<!-- definition ext.rri.objectReference.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.objectReference.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "objectReference", "readOnly": true },
+        "objectType": { "type": "string", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId"]
+    }
+  }
+}
+```
+
+Dated Object Reference Object:
+
+<!-- definition ext.rri.datedObjectReference.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.datedObjectReference.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "datedObjectReference", "readOnly": true },
+        "objectType": { "type": "string", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "date": { "type": "string", "format": "date-time", "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "date"]
+    }
+  }
+}
+```
+
+Registry Notice Object:
+
+<!-- definition ext.rri.registryNotice.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.registryNotice.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "registryNotice", "readOnly": true },
+        "code": { "type": "string", "pattern": "^[0-9]+$", "readOnly": true },
+        "text": { "type": "string", "readOnly": true },
+        "arguments": { "type": "array", "items": { "type": "string" }, "readOnly": true }
+      },
+      "required": ["@type", "code", "text"]
+    }
+  }
+}
+```
+
+Bulk Base Message Object:
+
+<!-- definition ext.rri.bulkBaseMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.bulkBaseMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "bulkBaseMessage", "readOnly": true },
+        "objects": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.objectReference.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objects"]
+    }
+  }
+}
+```
+
+### Message Types
+
+Domain Expiry Warning Message Object:
+
+<!-- definition ext.rri.domainExpiryWarningMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.domainExpiryWarningMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainExpiryWarningMessage", "readOnly": true },
+        "objects": { "type": "array", "minItems": 1, "items": { "allOf": [{ "$ref": "#/$defs/ext.rri.datedObjectReference.read" }, { "properties": { "objectType": { "const": "domainName" } } }] }, "readOnly": true }
+      },
+      "required": ["@type", "objects"]
+    }
+  }
+}
+```
+
+Domain Expiry Message Object:
+
+<!-- definition ext.rri.domainExpiryMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.domainExpiryMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainExpiryMessage", "readOnly": true },
+        "objects": { "type": "array", "minItems": 1, "items": { "allOf": [{ "$ref": "#/$defs/ext.rri.datedObjectReference.read" }, { "properties": { "objectType": { "const": "domainName" } } }] }, "readOnly": true }
+      },
+      "required": ["@type", "objects"]
+    }
+  }
+}
+```
+
+Contact Deletion Message Object:
+
+<!-- definition ext.rri.contactDeletionMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.contactDeletionMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "contactDeletionMessage", "readOnly": true },
+        "objects": { "type": "array", "minItems": 1, "items": { "allOf": [{ "$ref": "#/$defs/ext.rri.objectReference.read" }, { "properties": { "objectType": { "const": "contact" } } }] }, "readOnly": true }
+      },
+      "required": ["@type", "objects"]
+    }
+  }
+}
+```
+
+Authorisation Information Expiry Message Object:
+
+<!-- definition ext.rri.authInfoExpiryMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoExpiryMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoExpiryMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "expiryDate": { "type": "string", "format": "date-time", "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "expiryDate"]
+    }
+  }
+}
+```
+
+Authorisation Information Issue Message Object:
+
+<!-- definition ext.rri.authInfoIssueMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoIssueMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoIssueMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId"]
+    }
+  }
+}
+```
+
+Authorisation Information Withdrawal Message Object:
+
+<!-- definition ext.rri.authInfoWithdrawalMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoWithdrawalMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoWithdrawalMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    }
+  }
+}
+```
+
+Domain Deletion Message Object:
+
+<!-- definition ext.rri.domainDeletionMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.domainDeletionMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainDeletionMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    }
+  }
+}
+```
+
+Domain Lock Message Object:
+
+<!-- definition ext.rri.domainLockMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.domainLockMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainLockMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    }
+  }
+}
+```
+
+Domain Unlock Message Object:
+
+<!-- definition ext.rri.domainUnlockMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.domainUnlockMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainUnlockMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    }
+  }
+}
+```
+
+Domain Update Message Object:
+
+<!-- definition ext.rri.domainUpdateMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.domainUpdateMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainUpdateMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    }
+  }
+}
+```
+
+Domain Release Message Object:
+
+<!-- definition ext.rri.domainReleaseMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.domainReleaseMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainReleaseMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    }
+  }
+}
+```
+
+Contact Update Message Object:
+
+<!-- definition ext.rri.contactUpdateMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.contactUpdateMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "contactUpdateMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "contact", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    }
+  }
+}
+```
+
+Domain Status Message Object:
+
+<!-- definition ext.rri.domainStatusMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.domainStatusMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainStatusMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "status": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/domainStatus.read" }, "readOnly": true },
+        "holders": { "type": "array", "minItems": 1, "items": { "allOf": [{ "$ref": "#/$defs/ext.rri.objectReference.read" }, { "properties": { "objectType": { "const": "contact" } } }] }, "readOnly": true },
+        "holdDeadline": { "type": "string", "format": "date-time", "readOnly": true },
+        "deletionDeadline": { "type": "string", "format": "date-time", "readOnly": true },
+        "notices": { "type": "array", "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "status", "holders"]
+    }
+  }
+}
+```
+
+Contact Verification Message Object:
+
+<!-- definition ext.rri.contactVerificationMessage.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.contactVerificationMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "contactVerificationMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "contact", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "claims": { "type": "array", "minItems": 1, "items": { "type": "string" }, "readOnly": true },
+        "referencedDomains": { "type": "integer", "minimum": 0, "readOnly": true },
+        "earliestHold": { "allOf": [{ "$ref": "#/$defs/ext.rri.datedObjectReference.read" }, { "properties": { "objectType": { "const": "domainName" } } }], "readOnly": true },
+        "earliestDeletion": { "allOf": [{ "$ref": "#/$defs/ext.rri.datedObjectReference.read" }, { "properties": { "objectType": { "const": "domainName" } } }], "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "claims", "referencedDomains", "earliestDeletion", "notices"]
     }
   }
 }
@@ -839,6 +1676,136 @@ Example domain transfer request with the Input Data Elements of the extension:
 }
 ```
 
+## Messages {#examples-messages}
+
+Example message read response with a Domain Status Message Object:
+
+<!-- example valid message.read -->
+```json
+{
+    "@type": "message",
+    "id": "8960348c-2a2b-4c41-9d8e-1f7e2b6c0a11",
+    "creationDate": "2026-11-12T14:51:08Z",
+    "status": "queued",
+    "data": {
+        "@type": "domainStatusMessage",
+        "objectType": "domainName",
+        "objectId": "foo.example",
+        "status": [ { "@type": "domainStatus", "label": "serverHold" } ],
+        "holders": [
+            { "@type": "objectReference", "objectType": "contact", "objectId": "DENIC-1000022-HOLDER" }
+        ],
+        "deletionDeadline": "2026-11-24T14:51:08Z",
+        "notices": [
+            {
+                "@type": "registryNotice",
+                "code": "16350000041",
+                "text": "Verification information must be provided for the holder(s) to avoid deletion by",
+                "arguments": [ "Date: 2026-11-24T14:51:08Z", "VerificationClaims: address;name" ]
+            }
+        ]
+    }
+}
+```
+
+Example message read response with a Contact Verification Message Object:
+
+<!-- example valid message.read -->
+```json
+{
+    "@type": "message",
+    "id": "5d1c7a40-8b3e-4f0a-a6d2-3c9e8f1b2d44",
+    "creationDate": "2026-11-12T15:00:00Z",
+    "status": "queued",
+    "data": {
+        "@type": "contactVerificationMessage",
+        "objectType": "contact",
+        "objectId": "DENIC-1000022-HOLDER",
+        "claims": [ "name", "address" ],
+        "referencedDomains": 2,
+        "earliestDeletion": {
+            "@type": "datedObjectReference",
+            "objectType": "domainName",
+            "objectId": "foo.example",
+            "date": "2026-11-24T14:51:08Z"
+        },
+        "notices": [
+            {
+                "@type": "registryNotice",
+                "code": "16350000051",
+                "text": "Please provide the requested verification information by means of a Contact UPDATE"
+            }
+        ]
+    }
+}
+```
+
+Example message read response with a Domain Expiry Warning Message Object about two domain names:
+
+<!-- example valid message.read -->
+```json
+{
+    "@type": "message",
+    "id": "02699380-9c7a-11de-8188-9ff72af94906",
+    "creationDate": "2026-11-12T00:00:00Z",
+    "status": "queued",
+    "data": {
+        "@type": "domainExpiryWarningMessage",
+        "objects": [
+            { "@type": "datedObjectReference", "objectType": "domainName", "objectId": "foo.example", "date": "2026-11-19T00:00:00Z" },
+            { "@type": "datedObjectReference", "objectType": "domainName", "objectId": "bar.example", "date": "2026-11-19T00:00:00Z" }
+        ]
+    }
+}
+```
+
+Example message read response with a Contact Deletion Message Object:
+
+<!-- example valid message.read -->
+```json
+{
+    "@type": "message",
+    "id": "7f3e9b12-4c5d-4e6f-8a9b-0c1d2e3f4a55",
+    "creationDate": "2026-11-12T03:00:00Z",
+    "status": "queued",
+    "data": {
+        "@type": "contactDeletionMessage",
+        "objects": [
+            { "@type": "objectReference", "objectType": "contact", "objectId": "DENIC-1000022-OLD1" },
+            { "@type": "objectReference", "objectType": "contact", "objectId": "DENIC-1000022-OLD2" }
+        ]
+    }
+}
+```
+
+Example message read response for the losing client of a transfer:
+
+<!-- example valid message.read -->
+```json
+{
+    "@type": "message",
+    "id": "1b2c3d4e-5f60-4718-9a0b-c1d2e3f40516",
+    "creationDate": "2026-11-14T12:00:00Z",
+    "status": "queued",
+    "data": {
+        "@type": "transferOutcomeMessage",
+        "objectType": "domainName",
+        "objectId": "foo.example",
+        "trStatus": "serverApproved",
+        "requestDate": "2026-11-14T12:00:00Z",
+        "actionDate": "2026-11-14T12:00:00Z",
+        "process": {
+            "@type": "domainTransferProcess",
+            "trStatus": "serverApproved",
+            "reqClientId": "DENIC-1000002",
+            "requestDate": "2026-11-14T12:00:00Z",
+            "actClientId": "DENIC-1000002",
+            "actionDate": "2026-11-14T12:00:00Z"
+        }
+    }
+}
+```
+
 ## Invalid Examples {#examples-invalid}
 
 Example request contact create request without a URI Template:
@@ -890,6 +1857,44 @@ The following domain update request validates against the Effective Schema, but 
     "contacts": [
         { "label": "abuse", "object": { "@type": "contact", "id": "DENIC-1000022-AB" } }
     ]
+}
+```
+
+Example message read response with a Domain Status Message Object without a status:
+
+<!-- example invalid message.read -->
+```json
+{
+    "@type": "message",
+    "id": "8960348c-2a2b-4c41-9d8e-1f7e2b6c0a11",
+    "creationDate": "2026-11-12T14:51:08Z",
+    "status": "queued",
+    "data": {
+        "@type": "domainStatusMessage",
+        "objectType": "domainName",
+        "objectId": "foo.example",
+        "holders": [
+            { "@type": "objectReference", "objectType": "contact", "objectId": "DENIC-1000022-HOLDER" }
+        ]
+    }
+}
+```
+
+Example message read response with a Domain Expiry Message Object that refers to a contact:
+
+<!-- example invalid message.read -->
+```json
+{
+    "@type": "message",
+    "id": "02699380-9c7a-11de-8188-9ff72af94907",
+    "creationDate": "2026-11-12T00:00:00Z",
+    "status": "queued",
+    "data": {
+        "@type": "domainExpiryMessage",
+        "objects": [
+            { "@type": "datedObjectReference", "objectType": "contact", "objectId": "DENIC-1000022-HOLDER", "date": "2026-11-12T00:00:00Z" }
+        ]
+    }
 }
 ```
 
@@ -958,6 +1963,341 @@ Input Data Elements
 
 Parameters: (None)
 
+Object: objectReference
+
+Object Name: Object Reference Object
+
+Object Type: Component
+
+Description: A reference to an object that a message is about.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| objectType | Object Type | 1 | read-only | String | The object identifier of the referenced object. |
+| objectId | Object Identifier | 1 | read-only | String | The unique identifier of the referenced object. |
+
+Object: datedObjectReference
+
+Object Name: Dated Object Reference Object
+
+Object Type: Component
+
+Extends: objectReference
+
+Description: A reference to an object, with a date that concerns the object.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| date | Date | 1 | read-only | Timestamp | The date and time that concerns the referenced object. |
+
+Object: registryNotice
+
+Object Name: Registry Notice Object
+
+Object Type: Component
+
+Description: A notice of the registry about the event that a message reports.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| code | Code | 1 | read-only | String | The code of the notice. |
+| text | Text | 1 | read-only | String | Human-readable text of the notice. |
+| arguments | Arguments | 0+ | read-only | String | Values that complete the text. |
+
+Object: bulkBaseMessage
+
+Object Name: Bulk Base Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Abstract: true
+
+Description: Base structure for a message about several objects.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| objects | Objects | 1+ | read-only | Object Reference Object | The objects that the message is about. |
+
+Object: domainExpiryWarningMessage
+
+Object Name: Domain Expiry Warning Message Object
+
+Object Type: Component
+
+Extends: bulkBaseMessage
+
+Description: Notification for the sponsoring client that domain names will expire and be deleted on the given dates.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| objects | Objects | 1+ | read-only | Dated Object Reference Object | The domain names that will expire, each with the date and time of its expiry. |
+
+Object: domainExpiryMessage
+
+Object Name: Domain Expiry Message Object
+
+Object Type: Component
+
+Extends: bulkBaseMessage
+
+Description: Notification for the sponsoring client that domain names expired and were deleted.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| objects | Objects | 1+ | read-only | Dated Object Reference Object | The domain names that expired, each with the date and time of its expiry. |
+
+Object: contactDeletionMessage
+
+Object Name: Contact Deletion Message Object
+
+Object Type: Component
+
+Extends: bulkBaseMessage
+
+Description: Notification for the sponsoring client that the server deleted contacts that no domain name referred to.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| objects | Objects | 1+ | read-only | Object Reference Object | The deleted contacts. |
+
+Object: authInfoExpiryMessage
+
+Object Name: Authorisation Information Expiry Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client of the expiry of the authorisation information of a domain name.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| expiryDate | Expiry Date | 1 | read-only | Timestamp | The date and time of the expiry of the authorisation information. |
+
+Object: authInfoIssueMessage
+
+Object Name: Authorisation Information Issue Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that the server issued authorisation information for a domain name to its holders, at the request of a client.
+
+Reference: [This-ID]
+
+Data Elements: (None)
+
+Object: authInfoWithdrawalMessage
+
+Object Name: Authorisation Information Withdrawal Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that the server deleted the authorisation information that it had issued to the holders of a domain name, because it could not deliver it.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| notices | Notices | 1+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: domainDeletionMessage
+
+Object Name: Domain Deletion Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that the server deleted a domain name, for example by a decision of the registry or because verification information was not provided in time.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| notices | Notices | 1+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: domainLockMessage
+
+Object Name: Domain Lock Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that the server locked a domain name against changes through the protocol.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| notices | Notices | 1+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: domainUnlockMessage
+
+Object Name: Domain Unlock Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that the server removed the lock of a domain name.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| notices | Notices | 1+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: domainUpdateMessage
+
+Object Name: Domain Update Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that the server changed the data of a domain name.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| notices | Notices | 1+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: domainReleaseMessage
+
+Object Name: Domain Release Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that a domain name was released to the registry, which administers it in place of a sponsoring client.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| notices | Notices | 1+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: contactUpdateMessage
+
+Object Name: Contact Update Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that the server changed the data of a contact.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| notices | Notices | 1+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: domainStatusMessage
+
+Object Name: Domain Status Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client of the status of a domain name that the server decided after a request of the client, for example after a risk assessment, and of the deadlines to provide verification information.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| status | Status | 1+ | read-only | Domain Name Status Object | The status of the domain name. |
+| holders | Holders | 1+ | read-only | Object Reference Object | The holders of the domain name that the notification concerns. |
+| holdDeadline | Hold Deadline | 0-1 | read-only | Timestamp | The date and time by which verification information must be provided, after which the server places the domain name on hold. |
+| deletionDeadline | Deletion Deadline | 0-1 | read-only | Timestamp | The date and time by which verification information must be provided, after which the server deletes the domain name. |
+| notices | Notices | 0+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: contactVerificationMessage
+
+Object Name: Contact Verification Message Object
+
+Object Type: Component
+
+Extends: baseMessage
+
+Description: Notification for the sponsoring client that verification information must be provided for a contact, to avoid that the domain names that refer to it are placed on hold or deleted.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| claims | Claims | 1+ | read-only | String | The claims of the contact to verify, for example `name`, `address`, or `email`. |
+| referencedDomains | Referenced Domain Names | 1 | read-only | Integer | The number of domain names that refer to the contact. |
+| earliestHold | Earliest Hold | 0-1 | read-only | Dated Object Reference Object | The domain name that refers to the contact and that the server places on hold first, with the deadline for it. |
+| earliestDeletion | Earliest Deletion | 1 | read-only | Dated Object Reference Object | The domain name that refers to the contact and that the server deletes first, with the deadline for it. |
+| notices | Notices | 1+ | read-only | Registry Notice Object | The notices of the registry about the event that the message reports. |
+
+Object: message (additions)
+
+Operation: query
+
+Parameters: the values of `type` (Message Type) include the identifiers of the message types above.
+
 # Security Considerations {#security}
 
 The extension inherits the authentication and authorisation services of the objects it extends [@!I-D.wullink-rpp-extension-guidelines, section 12]. A request contact is accessible to its sponsoring client only. A server MUST reject the use of another client's request contact in any operation, including as a data element of a domain name.
@@ -970,6 +2310,8 @@ A server forwards the URI Template to the registry, which expands it with a samp
 
 The expanded URI Template of a domain name's request contacts is published in the registry's registration data directory service. A `mailto` template that names the mailbox of a natural person makes that address public. A client SHOULD use a role mailbox or a web form in a request contact, because the template is published for every domain name that refers to it. A request contact holds no other personal data, and the registry rejects verification data on it.
 
+The message types of the extension name contacts by their Handle ID and carry no contact information, such as the name or the postal address of a holder. The Claims of a Contact Verification Message Object name the kinds of contact information to verify, not their values.
+
 # Internationalisation Considerations {#i18n}
 
 The variable `{Ulabel}` expands to the U-label of the domain name. The encoding of a U-label in the expanded URI is defined by [@!RFC6570, section 3.2.1]. The URI Template itself consists of ASCII characters.
@@ -977,6 +2319,15 @@ The variable `{Ulabel}` expands to the U-label of the domain name. The encoding 
 {removeInRFC="true"}
 {toc="exclude"}
 # Changes History
+
+{toc="exclude"}
+{numbered="false"}
+## 0.2.0 - 0.3.0
+
+* add the message types of the registry notifications, the bulk base message object, the object reference, dated object reference and registry notice objects #248
+* add the member rpp:messages to the schema document as the extension point for message types #248
+* the type parameter of the message query takes the identifiers of the message types #248
+* inform the losing client of a transfer with a transfer outcome message #248
 
 {toc="exclude"}
 {numbered="false"}
@@ -1015,6 +2366,47 @@ Table: Mapping to RRI
 
 The registry holds 0 to 1 request contact of each role per domain name, so a domain name needs none. The backend profile of the implementation states this as `domainName.generalRequest` and `domainName.abuse` with `min_count` 0 and `max_count` 1.
 
+The implementation maps the notifications of the registry (QUEUE-READ) to the message types as follows:
+
+| RRI `msgType`                 | RPP message type             |
+| ----------------------------- | ---------------------------- |
+| `expireWarning`               | `domainExpiryWarningMessage` |
+| `expire`                      | `domainExpiryMessage`        |
+| `authInfoExpire`              | `authInfoExpiryMessage`      |
+| `authInfo2Notify`             | `authInfoIssueMessage`       |
+| `chprovAuthInfo`              | `transferOutcomeMessage`     |
+| `domainDelete`                | `domainDeletionMessage`      |
+| `authInfo2Delete`             | `authInfoWithdrawalMessage`  |
+| `lockCreate`                  | `domainLockMessage`          |
+| `lockDelete`                  | `domainUnlockMessage`        |
+| `domainUpdate`                | `domainUpdateMessage`        |
+| `domainTransit`               | `domainReleaseMessage`       |
+| `contactUpdate`               | `contactUpdateMessage`       |
+| `contactDelete`               | `contactDeletionMessage`     |
+| `domainStatusUpdate`          | `domainStatusMessage`        |
+| `contactVerificationRequired` | `contactVerificationMessage` |
+Table: Message Types of RRI
+
+The data of a notification maps as follows:
+
+* `msgid` is the Message ID (`id`), `msgtime` the Creation Date (`creationDate`), and `msgcnt` the `RPP-Queue-Size`.
+* A domain (`msg:domain`) is referred to by its A-label (`msg:ace`), a contact by its handle (`msg:handle`).
+* The entries of `expireWarning` and `expire` are Dated Object Reference Objects whose Date is `msg:expire`.
+* `chprovAuthInfo`: the Request Date and Action Date are `msgtime`, the `reqClientId` and `actClientId` of the Process are `msg:new`. `msg:old` is the receiving RegAcc and is not represented.
+* `authInfoExpire`: the Expiry Date is `msg:authinfoexpire`.
+* `msg:message` is a Registry Notice Object: its `code` attribute is the Code, `tr:text` the Text, and each `tr:argument` an Argument. The `level` attribute is not represented.
+* `domainStatusUpdate`: the Status is `msg:status`, mapped as for a domain INFO (`connect` to `ok`, `failed` to `inactive`, `pendingCreate`, `serverHold`, `redemptionPeriod` to `pendingDelete`). The Holders are `msg:holders/msg:handle`, the Hold Deadline is `msg:verificationDeadlineBeforeDedelegation`, and the Deletion Deadline is `msg:verificationDeadlineBeforeDeletion`.
+* `contactVerificationRequired`: the Claims are `msg:verificationClaims/msg:claim`, the Referenced Domain Names `msg:numberOfReferencedDomainsTotal`, the Earliest Hold `msg:earliestDomainForDedelegation` and the Earliest Deletion `msg:earliestDomainForDeletion`, each with its `msg:verificationDeadline` as Date.
+* `contactDelete`: each `msg:handles/msg:handle` is an entry of the Objects. The registry does not say whether a handle was a contact or a request contact.
+
+A> TBC: the registry describes the holders of `domainStatusUpdate` as those for which no verification is required, while its example lists every holder.
+
+The implementation serves the messages operations as follows:
+
+* A Query without `type` is a QUEUE-READ without `msgType`. A Query with `type` is a QUEUE-READ with the `msgType` of each value that has one, and the oldest of the messages read (by `msgtime`) is returned. A value without an RRI `msgType`, such as `autoRenewalMessage` or `serviceNoticeMessage`, reads nothing, so a Query with only such values answers as on an empty queue.
+* `RPP-Queue-Size` of a Query without `type` is the `msgcnt` of its QUEUE-READ, and of a Query with `type` the sum of the `msgcnt` values of the QUEUE-READs sent.
+* QUEUE-DELETE deletes only the oldest message overall or of a given `msgType`. A Delete is a QUEUE-DELETE without `msgType`. When the registry refuses it with `63650063607` (not the oldest), the implementation reads with QUEUE-READ per `msgType` to find the type whose oldest message has the Message ID, and repeats the QUEUE-DELETE with that `msgType`. A Read by Message ID finds the message in the same way. These reads cost no quota.
+
 The implementation maps the refusals of the registry to RPP result codes as follows:
 
 | Case                                                                 | HTTP status | RPP result code |
@@ -1030,6 +2422,7 @@ The implementation maps the refusals of the registry to RPP result codes as foll
 | `contacts` entry labelled `generalRequest` or `abuse`                | 501         | 02102           |
 | Delete of a request contact                                          | 501         | 02101           |
 | Transfer Query, Cancel, Approve, or Reject                           | 501         | 02101           |
+| Read or Delete of a Message ID that is the oldest message of no type | 404         | 02303           |
 Table: Refusals of the implementation
 
 The registry does not document how it encodes a U-label in an expanded template.
