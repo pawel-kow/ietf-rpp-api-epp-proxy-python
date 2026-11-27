@@ -12,6 +12,7 @@ from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
 from core.session.session_pool import SessionPool
 from rpp.http.app import create_app
+from registry_adapter.rri.commands.shared.rri_time import utc_time_of_text
 from tests.helper.fake_rri_client import FakeRriClient, error, reply, rri_backends
 from tests.helper.profiles import RRI_PROFILE, RRI_REGISTRY
 from tests.unit.test_rri_adapter import backend
@@ -354,3 +355,8 @@ def test_a_type_of_the_base_under_a_preset_without_the_extension_is_still_read()
 
     assert data_of(response)["@type"] == "transferOutcomeMessage"
     assert len(clients[0].sent) == 1 and 'msgType="chprovAuthInfo"' in clients[0].sent[0]
+
+
+def test_a_date_as_text_is_in_utc_and_one_without_offset_is_utc():
+    assert utc_time_of_text("2026-11-12T15:51:08+01:00") == "2026-11-12T14:51:08.000000Z"
+    assert utc_time_of_text("2026-11-12T15:51:08") == "2026-11-12T15:51:08.000000Z"

@@ -156,3 +156,5 @@ Decisions of the orchestrator, all done:
 5. "planned" dropped from spec-issues.
 6. The oldest message is compared in UTC, a time without an offset as UTC (`utc_moment`); tested.
 7. `utc_time` used in commands/contact/common.py and commands/domain/common.py.
+
+Review round 2: the text branch of `_datetime` (domain/common.py) uses `utc_time_of_text` (naive taken as UTC), tested.
