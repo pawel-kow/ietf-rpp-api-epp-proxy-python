@@ -616,6 +616,20 @@ they were. The proxy follows the proposals, with the following.
   schema `false`. A whitelist cannot let a schema that constrains the base slip through by a keyword the check did not think of.
 - **Responses.** The proposals do not say whether a response is validated against the profiles. **Proxy:** never; a response is validated
   against the preset schema without profiles.
+- **An operation a profile makes unavailable on an object the server does not offer.** Core RC6 refuses an operation that an
+  applicable profile makes unavailable with 02308, and does not say what wins over 501 when the server does not offer the object
+  at all. The DENIC RRI profile (`docs/rri/rri-profile.md`, #183) makes every operation of the Host Data Object unavailable.
+  **Proxy:** keeps 501 (`02307`, the host transfer `02101`) under every preset, also under `rri-strict`.
+- **A constraint stated by an extension and by a profile.** The DENIC RRI extension requires a server to reject the `contacts` labels
+  `generalRequest` and `abuse`, and the DENIC RRI profile allows only `registrant`. Core says a constraint an extension defines is
+  rejected as defined for it, and not with 02308. **Proxy:** under `rri-strict` the labels `generalRequest` and `abuse` stay 501
+  `02102`, any other label but `registrant` is 422 `02308`. Guidelines C10 says an extension does not constrain, so the extension's
+  sentences on `contacts` belong in the profile, which a later revision of the extension could do (it changes the preset `rri`).
+- **A required extension that a profile relies on without constraining it.** The guidelines require an extension of a profile that
+  constrains a definition of it. The DENIC RRI profile constrains base definitions only, but relies on the meaning of the label
+  `registrant` that the extension defines. **Proxy:** the profile lists `de.denic.rpp.rri` as a required extension.
+- **Cardinality `0` of a `0+` data element.** The guidelines show `0-1` constrained to `0` only, and no draft says whether an empty
+  array has cardinality 0. **Proxy:** the DENIC RRI profile refuses the member `nameservers` itself (`false`), also as an empty array.
 
 ## The body schemas of every preset in OpenAPI
 
