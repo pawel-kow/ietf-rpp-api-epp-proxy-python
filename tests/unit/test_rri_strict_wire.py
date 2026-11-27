@@ -60,29 +60,51 @@ def test_a_create_the_profile_refuses_is_a_422_before_any_command(changes):
     assert nothing_sent(clients)
 
 
+@pytest.mark.parametrize("preset", [RRI, STRICT])
 @pytest.mark.parametrize("role", ["generalRequest", "abuse"])
-def test_a_request_contact_role_as_a_label_is_refused_by_the_profile_first(role):
-    """Step 2 (the profiles of the preset) runs before the mapper, which would refuse the label as one RRI cannot hold
-    (501 02102, as under the rri preset): under the strict preset the answer is the profile's."""
+def test_a_request_contact_role_as_a_label_is_unsupported_under_every_preset(preset, role):
+    """The extension defines the roles as members of their own: its refusal (501 02102) runs before step 2 of the validation,
+    so it is not a broken constraint of the profile (core, Extensions and Profiles of a Request)."""
     client, clients = setup()
     contacts = [{"label": role, "object": {"@type": "contact", "id": "DENIC-1000022-GR"}}]
 
-    response = client.post("/domainNames", json=body(contacts=contacts), headers=named(STRICT))
-
-    assert response.status_code == 422, response.text
-    assert response.headers["RPP-Code"] == "02308"
-    assert nothing_sent(clients)
-
-
-@pytest.mark.parametrize("role", ["generalRequest", "abuse"])
-def test_a_request_contact_role_as_a_label_is_unsupported_under_the_rri_preset(role):
-    client, clients = setup()
-    contacts = [{"label": role, "object": {"@type": "contact", "id": "DENIC-1000022-GR"}}]
-
-    response = client.post("/domainNames", json=body(contacts=contacts), headers=named(RRI))
+    response = client.post("/domainNames", json=body(contacts=contacts), headers=named(preset))
 
     assert (response.status_code, response.headers["RPP-Code"]) == (501, "02102")
     assert nothing_sent(clients)
+
+
+@pytest.mark.parametrize("preset", [RRI, STRICT])
+def test_a_full_update_with_a_request_contact_role_as_a_label_is_unsupported_under_every_preset(preset):
+    client, clients = setup()
+    put = {"@type": "domainName", "registrant": HOLDER, "dns": DNS,
+           "contacts": [{"label": "abuse", "object": {"@type": "contact", "id": "DENIC-1000022-GR"}}]}
+
+    response = client.put(f"/domainNames/{NAME}", json=put, headers=named(preset))
+
+    assert (response.status_code, response.headers["RPP-Code"]) == (501, "02102")
+    assert nothing_sent(clients)
+
+
+def test_a_patch_that_removes_the_registrant_is_refused_by_the_profile():
+    """The profile requires the registrant of the update definition: its removal is a broken constraint, though the object read
+    for the patch is not constrained (a read of a foreign domain has no registrant)."""
+    client, clients = setup(DOMAIN_INFO)
+
+    response = client.patch(f"/domainNames/{NAME}", json=[{"op": "remove", "path": "/registrant"}], headers=named(STRICT))
+
+    assert response.status_code == 422, response.text
+    assert response.headers["RPP-Code"] == "02308"
+    assert response.json()["errors"][0]["profile"] == PROFILE
+    assert len(clients[0].sent) <= 1      # at most the read of the domain, no update
+
+
+def test_a_patch_that_removes_the_registrant_is_unchanged_under_the_rri_preset():
+    client, clients = setup(DOMAIN_INFO, DOMAIN_INFO, reply(), DOMAIN_INFO)
+
+    response = client.patch(f"/domainNames/{NAME}", json=[{"op": "remove", "path": "/registrant"}], headers=named(RRI))
+
+    assert response.status_code != 422 and response.headers["RPP-Code"] != "02308"
 
 
 def test_a_full_update_without_a_registrant_is_a_422():

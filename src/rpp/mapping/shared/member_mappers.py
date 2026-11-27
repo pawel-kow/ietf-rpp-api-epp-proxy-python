@@ -18,6 +18,11 @@ class MemberMapper(Protocol):
     def to_rpp(self, held) -> dict:
         """The members of a read, from what the model of the object holds."""
 
+    def check(self, rpp: dict) -> None:
+        """Optional. What RPP or the extension states of the request in prose and the schema cannot express, refused as the
+        extension defines it (not as a broken constraint of a profile, core §Extensions and Profiles of a Request): it runs
+        after step 1 of the validation and before step 2."""
+
 
 class MemberMappers:
     """The mappers of the extensions that add members to one kind of object (the domain name, and with it the request of its
@@ -44,6 +49,13 @@ class MemberMappers:
     def members(self, schema: str, extensions) -> tuple[str, ...]:
         """The members the mappers of these extensions handle on a definition."""
         return tuple(name for mapper in self.of(extensions) for name in self._added(mapper, schema))
+
+    def check(self, rpp: dict, extensions) -> None:
+        """The checks of the mappers of these extensions on a request (or the object a patch results in)."""
+        for mapper in self.of(extensions):
+            check = getattr(mapper, "check", None)
+            if check is not None:
+                check(rpp)
 
     def split(self, rpp: dict, schema: str, extensions):
         """The representation without the members the mappers handle on a definition, and what they make of those it has."""

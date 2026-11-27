@@ -75,6 +75,18 @@ domain, no `/hosts` objects), contact labels other than `registrant` on the doma
 - The preset `rri` states no `url` (its spec document gives one, rri-preset.md): adding it changes the wire form, which
   tests/unit/test_presets_wire.py pins; left out, to the orchestrator.
 
+## Decisions on the findings (orchestrator, for the maintainer)
+
+1. A `generalRequest`/`abuse` label is 501 02102 under every preset: the extension's mapper has a `check`, run after step 1 and before
+   step 2 (core: what an extension defines is refused as defined, not with 02308).
+2. `domainName.read` stays unconstrained; the removal of a whole member that an applicable profile lists in an unconditional
+   `required` of the update definition is refused with that profile, also for the read-based patch of a domain, contact and host
+   (`rpp/mapping/shared/profile_removals.py`). No existing EPP case changes: the EPP Compatibility Profile requires nothing at the
+   top level of `contact.update`.
+3. `rri-strict` is offered by config/backends/rri.yaml and the deploy template; `rri` stays the default. An additive wire change
+   (the lists of draft_discovery/test1-read are updated; one MTEST smoke case under rri-strict).
+4. The demo presets carry a `url`, so `rri` and `rri-strict` do too (test_presets_wire.py updated; additive).
+
 ## Open questions
 
 - Q1. Package name `extensions/rri` (the issue's) or `extensions/denic_rri`? Proposal: `extensions/rri`.
@@ -110,12 +122,12 @@ domain, no `/hosts` objects), contact labels other than `registrant` on the doma
 
 ## Checks
 
-On the final commit, in the order of process.project.md:
+On the final commit (after the maintainer's decisions on the findings), in the order of process.project.md:
 1. `PYTHONPATH=src lint-imports`: 31 kept, 0 broken.
-2. `pytest -n 4 tests/unit`: 3039 passed.
-3. `pytest -n 4 -m smoke tests/integration`: 232 passed, 488 skipped, 0 failed.
-4. MTEST probe (`rri-mtest domain_availability test3-a_label`): passed, MTEST reachable, so the smoke run of step 3 covered MTEST.
-5. Not applicable (requirements and pyversions tests unchanged).
-Deploy template changed: `ansible-lint` in deploy/ansible: passed, 0 failures, 0 warnings (run from a scratch venv, ansible-lint
-was not installed); `ansible-playbook --syntax-check site.yml`: OK (warnings about no inventory only);
-`docker build -f deploy/docker/Dockerfile .`: built.
+2. `pytest -n 4 tests/unit`: 3043 passed.
+3. `pytest -n 4 -m smoke tests/integration`: 232 passed, 1 failed (draft_discovery/test1-read on rri-mtest: the expected
+   `extensions` of the rri-strict entry was wrong), 495 skipped. The case was fixed and `-k draft_discovery` re-run on rri-mtest
+   (1 passed) and epp-docker (1 passed); the rest of the smoke run is unchanged since.
+4. MTEST probe: passed (MTEST reachable; the smoke run covered it, including the new case under rri-strict).
+Earlier on this branch, before the decisions: the ansible-lint (0 failures), `ansible-playbook --syntax-check site.yml` and
+`docker build -f deploy/docker/Dockerfile .` passed; the deploy template has since gained only the `rri-strict` line in `presets`.

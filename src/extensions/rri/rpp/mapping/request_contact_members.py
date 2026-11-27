@@ -2,6 +2,7 @@
 (`generalRequest` and `abuse`, docs/rri/rri-extension.md). They are not `contacts`: the model holds each as a contact
 reference whose role is the member's name, so a backend writes them as it writes a role."""
 
+from core.capabilities.not_supported_by_backend import NotSupportedByBackend
 from extensions.rri.core.ports.rri_gateways import EXTENSION_ID
 
 TYPE = "requestContact"
@@ -19,3 +20,11 @@ class RequestContactMembers:
     def to_rpp(self, roles: dict[str, str]) -> dict:
         """The members of the request contacts a domain has, by role."""
         return {role: {"@type": TYPE, "id": roles[role]} for role in self.members if role in roles}
+
+    def check(self, rpp: dict) -> None:
+        """The roles of the request contacts are members of their own, not labels of `contacts`: a label that names one is a
+        contact label RRI cannot hold, whichever profile applies (core §Extensions and Profiles of a Request: what an extension
+        defines is refused as it defines it, and not with 02308)."""
+        for contact in rpp.get("contacts") or ():
+            if isinstance(contact, dict) and contact.get("label") in self.members:
+                raise NotSupportedByBackend(f"Contact label '{contact['label']}'")

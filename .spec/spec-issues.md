@@ -623,7 +623,7 @@ they were. The proxy follows the proposals, with the following.
 - **A constraint stated by an extension and by a profile.** The DENIC RRI extension requires a server to reject the `contacts` labels
   `generalRequest` and `abuse`, and the DENIC RRI profile allows only `registrant`. Core says a constraint an extension defines is
   rejected as defined for it, and not with 02308. **Proxy:** under `rri-strict` the labels `generalRequest` and `abuse` stay 501
-  `02102`, any other label but `registrant` is 422 `02308`. Guidelines C10 says an extension does not constrain, so the extension's
+  `02102` (the extension's check runs after step 1 and before step 2, as the checks of RPP do), any other label but `registrant` is 422 `02308`. Guidelines C10 says an extension does not constrain, so the extension's
   sentences on `contacts` belong in the profile, which a later revision of the extension could do (it changes the preset `rri`).
 - **A required extension that a profile relies on without constraining it.** The guidelines require an extension of a profile that
   constrains a definition of it. The DENIC RRI profile constrains base definitions only, but relies on the meaning of the label
@@ -678,7 +678,7 @@ they were. The proxy follows the proposals, with the following.
   (the planets extension, D24) has no object: the value of each operation is checked against the profiles as the member it sets (a
   error reported at the member's own path or below it counts), and the removal of a member that an applicable profile lists in an
   unconditional `required` (its top level and its `allOf` branches, not `if`, `then`, `else`, `anyOf`, `oneOf` or `not`) is refused with that
-  profile. A constraint reported at the root of the object (`not` that forbids a member, `if` and `then`, `dependentRequired` and
+  profile, also for the patch of a domain, a contact and a host, whose removal of a whole member the object read for the patch (which a profile may not constrain, as a read of a foreign domain has no registrant) would not show. A constraint reported at the root of the object (`not` that forbids a member, `if` and `then`, `dependentRequired` and
   other constraints between members) is not enforced on a native patch.
 
 ## Telephone number in the contact examples of json

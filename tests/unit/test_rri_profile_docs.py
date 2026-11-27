@@ -89,8 +89,7 @@ def test_a_preset_specification_states_the_definition_the_extension_registers(ke
 
     assert (overview["Name"], overview["Version"], overview["RPP version"]) == (definition.name, definition.version, definition.rpp_version)
     assert overview["Identifier"] == f"`{definition.id}`"
-    if key != "rri":  # the preset rri states no url yet, so that its wire form does not change (#183)
-        assert overview["Specification"] == f"<{definition.url}>"
+    assert overview["Specification"] == f"<{definition.url}>"
     assert listed(overview["Extensions"]) == [(r.id, r.version) for r in definition.extensions]
     assert listed(overview["Profiles"]) == [(r.id, r.version) for r in definition.profiles]
     assert listed(overview["Base presets"]) == [(r.id, r.version) for r in definition.base_presets]

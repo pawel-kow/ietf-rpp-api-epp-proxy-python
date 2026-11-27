@@ -176,7 +176,49 @@
               ],
               "profiles": [],
               "boundProfiles": [],
-              "defaultPreset": true
+              "defaultPreset": true,
+              "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-preset.md"
+            },
+            {
+              "@type": "preset",
+              "id": "de.denic.rpp.preset.rri-strict",
+              "name": "DENIC RRI strict preset",
+              "description": "The DENIC RRI preset constrained by the DENIC RRI profile, which refuses what the registry cannot hold.",
+              "version": "1.0",
+              "rppVersion": "1.0",
+              "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-strict-preset.md",
+              "basePresets": [
+                {
+                  "@type": "preset",
+                  "id": "de.denic.rpp.preset.rri",
+                  "version": "1.0"
+                }
+              ],
+              "extensions": [
+                {
+                  "@type": "extension",
+                  "name": "DENIC RRI",
+                  "id": "de.denic.rpp.rri",
+                  "version": "0.2.0",
+                  "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json"
+                }
+              ],
+              "profiles": [
+                {
+                  "@type": "profile",
+                  "id": "de.denic.rpp.profile.rri",
+                  "version": "1.0"
+                }
+              ],
+              "boundProfiles": [],
+              "defaultPreset": false
+            }
+          ],
+          "profiles": [
+            {
+              "@type": "profile",
+              "id": "de.denic.rpp.profile.rri",
+              "version": "1.0"
             }
           ],
           "objects": [

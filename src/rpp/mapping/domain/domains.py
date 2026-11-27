@@ -109,6 +109,8 @@ def _rpp_to_idn(domain_rpp: RPPDomain, profile: BackendProfile) -> DomainIdn | N
 def rpp_to_model(rpp: dict, *, profile: BackendProfile) -> Domain:
     """Converts a create request to a Domain, with what the backend of `profile` can hold, and the members its
     extensions add."""
+    validate_schema("domainName.create", rpp, extensions=profile.extensions)
+    DOMAIN_MEMBERS.check(rpp, profile.extensions)    # before step 2: an extension's refusal is not a broken profile constraint
     validate_request_schema("domainName.create", rpp, extensions=profile.extensions)
     rpp, requests = DOMAIN_MEMBERS.split(rpp, "domainName.create", profile.extensions)
     domain_rpp = parse_rpp(RPPDomain, rpp)

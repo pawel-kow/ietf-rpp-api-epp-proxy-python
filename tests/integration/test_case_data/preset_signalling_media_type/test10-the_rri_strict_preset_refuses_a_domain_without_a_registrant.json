@@ -1,0 +1,56 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test10-the_rri_strict_preset_refuses_a_domain_without_a_registrant",
+  "description": "Under the rri-strict preset the DENIC RRI profile requires a registrant on a domain name: a create without one is a broken profile constraint (422 02308) before any command, where the rri preset leaves it to the registry.",
+  "when": {
+    "profile.presets": {
+      "contains": "rri-strict"
+    },
+    "env.preset_signalling": "media-type"
+  },
+  "comment": "Skipped on epp-docker: the EPP server offers no rri-strict preset; the EPP config signals the preset by the RPP-Preset header.",
+  "steps": [
+    {
+      "comment": "Creates domain s10 without a registrant, under the rri-strict preset; expects 422 02308. An error answer this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept:rri-strict}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type:rri-strict}"
+        },
+        "body_json": {
+          "@type": "domainName",
+          "name": "s10-{random_id_10}.{tld}",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.10"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02308"
+        }
+      }
+    }
+  ]
+}

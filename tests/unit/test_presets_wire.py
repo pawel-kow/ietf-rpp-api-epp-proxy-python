@@ -62,7 +62,7 @@ def test_the_rri_preset_has_the_rri_extension():
 
     assert body["defaultPreset"] is True
     assert [(e["id"], e["version"]) for e in body["extensions"]] == [("de.denic.rpp.rri", "0.2.0")]
-    assert "url" not in body
+    assert body["url"] == "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-preset.md"
 
 
 def test_a_preset_reads_the_same_on_every_server_but_for_the_default():
