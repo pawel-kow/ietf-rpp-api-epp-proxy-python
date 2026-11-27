@@ -1,0 +1,45 @@
+{
+  "test_id": "test2-read_the_organisation_of_another_registrar",
+  "description": "Any client reads the organisation of any RegAcc.",
+  "steps": [
+    {
+      "comment": "Reads the organisation of the RegAcc of the other registrar with the credentials of the first; expects 200 with its id. Any client may read it.",
+      "request": {
+        "method": "GET",
+        "url": "/organisations/{regacc:b}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "@type": "organisation",
+          "id": "{regacc:b}",
+          "provMetadata": {
+            "spClientId": "{regacc:b}"
+          },
+          "contactInfo": {
+            "@type": "Card",
+            "kind": "org"
+          }
+        },
+        "fields": {
+          "provMetadata.upDate": {
+            "type": "not_empty_string"
+          },
+          "contactInfo.name.full": {
+            "type": "not_empty_string"
+          },
+          "contactInfo.emails.email.address": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -89,7 +89,8 @@
           "objects": [
             "domainName",
             "host",
-            "contact"
+            "contact",
+            "message"
           ]
         },
         "fields": {
@@ -224,6 +225,8 @@
           "objects": [
             "domainName",
             "contact",
+            "organisation",
+            "message",
             "requestContact"
           ],
           "extensions": [

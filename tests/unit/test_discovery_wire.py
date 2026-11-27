@@ -69,7 +69,7 @@ def test_discovery_states_what_the_proxy_is_configured_and_built_for(client):
     assert body["versions"] == [{"@type": "discoveryVersion", "version": "1.0", "baseUrl": "https://rpp.example/rpp"}]
     assert body["environment"] == {"@type": "discoveryEnvironment", "name": "rpp.example", "status": "test"}
     assert body["tlds"] == ["example", "test"]
-    assert body["objects"] == ["domainName", "host", "contact"]
+    assert body["objects"] == ["domainName", "host", "contact", "message"]
     assert [p["id"] for p in body["presets"]] == ["urn:ietf:params:rpp:preset:base", "urn:ietf:params:rpp:preset:epp-compatible"]
     assert body["profiles"] == [{"@type": "profile", "id": "urn:ietf:params:rpp:profile:epp-compatibility", "version": "1.0"}]
 

@@ -129,7 +129,7 @@ def test_discovery_states_the_objects_of_rri():
     response = client.get("/.well-known/rpp", headers={"Accept": MEDIA_TYPE, "RPP-Cltrid": "cl-1"})
 
     assert response.status_code == 200, response.text
-    assert response.json()["objects"] == ["domainName", "contact", "requestContact"]
+    assert response.json()["objects"] == ["domainName", "contact", "organisation", "message", "requestContact"]
 
 
 def test_a_deleted_domain_reads_with_a_placeholder_sponsor():

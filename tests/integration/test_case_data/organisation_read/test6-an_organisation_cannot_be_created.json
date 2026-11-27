@@ -1,0 +1,42 @@
+{
+  "test_id": "test6-an_organisation_cannot_be_created",
+  "description": "What the registry maintains outside RRI is not implemented.",
+  "steps": [
+    {
+      "comment": "POST /organisations ; expects 501 02101.",
+      "request": {
+        "method": "POST",
+        "url": "/organisations",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        },
+        "body": {
+          "@type": "organisation",
+          "contactInfo": {
+            "@type": "Card",
+            "kind": "org"
+          }
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02101"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 501,
+          "errors": [
+            {
+              "result": "02101"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

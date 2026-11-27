@@ -14,6 +14,7 @@ CODES = {
     "63200020603": ResultCode.AUTHORIZATION_ERROR,  # contact of another provider
     "63300062009": ResultCode.OBJECT_DOES_NOT_EXIST,  # domain does not exist
     "63300062010": ResultCode.OBJECT_DOES_NOT_EXIST,  # RegAcc does not exist
+    "63310062008": ResultCode.PARAMETER_VALUE_SYNTAX_ERROR,  # a RegAccId the registry cannot take (regacc INFO)
     "63310062004": ResultCode.OBJECT_EXISTS,  # domain exists
     "56310082011": ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION,  # domain in redemption period
     "66310082014": ResultCode.OBJECT_STATUS_PROHIBITS_OPERATION,  # RESTORE of a domain not in redemption period

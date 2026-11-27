@@ -231,7 +231,7 @@ take up to two days, which a run waits for only with `RPP_TEST_MAX_WAIT` of `P2D
 one), which the random part of the handle keeps apart from other runs. The random part is the same for the whole run, so a handle's suffix is unique across all cases (#188). Every case runs on both backends unless it needs a function one of them lacks, which its `when`
 names: host objects, client statuses, `ds` records, registration periods, renew, a transfer process (`domain_transfer/`, which RRI's
 immediate CHPROV has not; `domain_transfer_ext/` is its counterpart with the `rri` extension, run on MTEST only), the
-request contact object (`request_contact/`, `profile.objects` contains `requestContact`) or a domain's request contacts
+request contact object (`request_contact/`, `profile.objects` contains `requestContact`), the organisation read (`organisation_read/`, `profile.objects` contains `organisation`; `organisation_not_held/` is its counterpart on a backend without it, 501 `02307`) or a domain's request contacts
 (`profile.domainName.abuse.max_count` at least 1: `domain_update/test37`, `limits_domain/test20`), contact transfers, a restore report, a period longer than the run waits,
 contact delete, a contact's authInfo, a localization, a fax, a region, a changeable contact name, a person's name
 on an organisation, a readable domain authInfo, or the admin, tech and billing roles. Where the

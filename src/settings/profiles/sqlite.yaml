@@ -4,7 +4,8 @@
 # `objects`, `extensions` and leaves to this profile. The leaves are explained in
 # src/core/capabilities/backend_profile.py.
 name: SQLite
-objects: []                            # an extension adds its own
+objects:                               # an extension adds its own
+  - message                            # the message queue (data-objects §17.2), which the demo backend serves
 presets:                               # the RPP presets offered (src/rpp/schema/schemas/presets); an extension may bring more
   - base
 default_preset: base                   # applied when a request names none

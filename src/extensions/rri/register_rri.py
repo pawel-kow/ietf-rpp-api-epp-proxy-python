@@ -6,10 +6,12 @@ import yaml
 from extensions.rri.core.ports.rri_gateways import EXTENSION_ID
 from extensions.rri.rpp.mapping.messages import RriMessageMapper
 from extensions.rri.rpp.mapping.request_contact_members import RequestContactMembers
+from extensions.rri.rpp.mapping.request_template_members import RequestTemplateMembers
 from extensions.rri.rpp.schema.openapi_fragment import HANDLERS, openapi_fragment
 from registration import ExtensionRegistry, RegisteredExtension
 from rpp.mapping.domain.domain_members import DOMAIN_MEMBERS
 from rpp.mapping.message.message_mappers import MESSAGE_MAPPERS
+from rpp.mapping.organisation.organisation_members import ORGANISATION_MEMBERS
 
 SCHEMAS = Path(__file__).parent / "rpp" / "schema"
 
@@ -42,9 +44,10 @@ def _profile() -> dict:
 
 def register(registry: ExtensionRegistry) -> None:
     """Registers every part of the extension in the pipeline: its schema, the data model, the OpenAPI fragment and the
-    handlers of its request contact paths, the mapper of the request contacts of a domain, the mapper of its message types, its part of the RRI backend, the
+    handlers of its request contact paths, the mapper of the request contacts of a domain, the one of the request templates of an organisation, the mapper of its message types, its part of the RRI backend, the
     leaves it adds to the backend profile, and the RPP presets that offer it (the preset `rri`, and `rri-strict` with the DENIC RRI profile applied) with the profile."""
     DOMAIN_MEMBERS.add(RequestContactMembers())
+    ORGANISATION_MEMBERS.add(RequestTemplateMembers())
     MESSAGE_MAPPERS.add(RriMessageMapper())
     registry.add(RegisteredExtension(
         id=EXTENSION_ID,

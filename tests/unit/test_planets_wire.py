@@ -89,7 +89,7 @@ def code(response) -> str:
 def test_discovery_lists_the_extension_and_the_objects(client):
     document = client.get("/.well-known/rpp", headers={"Accept": MEDIA_TYPE, "RPP-Cltrid": "d-1"}).json()
 
-    assert document["objects"] == ["planet", "satellite"]
+    assert document["objects"] == ["message", "planet", "satellite"]
     assert "org.example.rpp.extension.planets" in [extension["id"] for extension in document["extensions"]]
 
 

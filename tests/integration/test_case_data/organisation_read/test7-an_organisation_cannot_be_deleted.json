@@ -1,0 +1,35 @@
+{
+  "test_id": "test7-an_organisation_cannot_be_deleted",
+  "description": "What the registry maintains outside RRI is not implemented.",
+  "steps": [
+    {
+      "comment": "DELETE /organisations/the own RegAccId ; expects 501 02101.",
+      "request": {
+        "method": "DELETE",
+        "url": "/organisations/{regacc:a}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02101"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 501,
+          "errors": [
+            {
+              "result": "02101"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -21,7 +21,7 @@ src/
 ├── extensions/<name>/       one extension (today `rri`, `planets`, `planet_atmosphere`, `satellite_orbit`): register_<name>.py, core/{model,ports,flows}/ and
 │                            rpp/{dto,mapping,handlers,schema}/, see Registered extensions below
 ├── core/                    pure Python: no I/O, no framework, no protocol
-│   ├── model/{shared,domain,contact,host,message}/
+│   ├── model/{shared,domain,contact,host,message,organisation}/
 │   ├── result/              ResultCode, UnknownResultCode, OperationResponse, ErrorResponse
 │   ├── capabilities/        BackendProfile, NotSupportedByBackend, NotSupportedByProxy
 │   ├── ports/               RegistryBackend, *Gateway, ReplaceOutcome, ReplacementSteps, derived_update
@@ -33,8 +33,8 @@ src/
 │   │                        context, operation, preset_signalling, preset_middleware, request_presets,
 │   │                        preset_selection, header_preset_signalling, media_type_preset_signalling, preset_header,
 │   │                        media_range, native_accept
-│   ├── handlers/            {domain,contact,host,message}/, shared/, discovery.py, presets.py, profiles.py
-│   ├── mapping/             shared/, {domain,contact,host,message,discovery,preset,profile}/
+│   ├── handlers/            {domain,contact,host,message,organisation}/, shared/, discovery.py, presets.py, profiles.py
+│   ├── mapping/             shared/, {domain,contact,host,message,organisation,discovery,preset,profile}/
 │   ├── dto/                 the RPP dataclasses
 │   ├── schema/              validator, schema_scope, request_schemas, effective_schema, definitions, offered_presets,
 │   │                        preset_schemas, data_objects, extensions, schemas/ (generated; the
@@ -53,7 +53,7 @@ src/
     ├── rri/
     │   ├── session/         RriClient: LOGIN (no greeting), LOGOUT, lock, re-login, RegAccId of the login
     │   ├── xml/             codec, generated/ (xsdata, from docs/rri/xsd by generate_rri_models.sh)
-    │   ├── commands/        {domain,contact,message}/<operation>.py, shared/rri_command.py (run, CTID)
+    │   ├── commands/        {domain,contact,message,organisation}/<operation>.py, shared/rri_command.py (run, CTID)
     │   ├── gateways/        RriBackend, Rri*Gateway (hosts: every command UNIMPLEMENTED)
     │   ├── extensions/<name>/  the RRI part of an extension: its commands and gateways, loaded by name (extension_part.py)
     │   ├── result_codes.py  DENIC code → ResultCode
@@ -92,7 +92,7 @@ Package `__init__.py` files are empty, except `rpp/handlers/__init__.py`, which 
   `core: flows → ports → model`. The common part of `registry_adapter/sqlite` never imports the part of an extension
   (it loads it by name) and `registry_adapter/sqlite` stays independent of `epp` and `rri`.
 - Inside `core`: `flows → ports → model, result, capabilities`. The object sub-packages of `model` import only
-  `model/shared`, except `domain → contact` for contact references.
+  `model/shared`, except `domain → contact` for contact references and `organisation → contact` for the address.
 - Inside `rpp`: `handlers → mapping, http`; `mapping → dto, schema`. `mapping` never imports `http`, Flask or
   Connexion.
 - Inside `epp`: `gateways → commands → xml, session`; `session → common/transport`. Only `session` sends.
@@ -432,6 +432,20 @@ commands cost no quota. A value of `type` that names a message type of an extens
 asked (`message_types_outside`), so a Query of such values only is an empty queue. Where the data of a message read for a requested
 type fails its definition, the message is the service notice and does not match the `type`; it is answered all the same, so
 that a client can acknowledge it (a documented deviation, [spec-issues.md](../../.spec/spec-issues.md#message-types-of-an-extension)).
+
+**Organisations** (#249). An organisation is read only, from a registry that publishes its registrars. `core/model/organisation` holds
+an `Organisation` (the backend fills `status`, `roles` and `sponsor_id`, so the RPP mapper states no registry fact), and `RegistryBackend.organisations`
+(`OrganisationGateway`, `info` only) reads it. The RRI backend serves it with regacc INFO of any RegAcc (`registry_adapter/rri/commands/organisation/`):
+phone and fax numbers in E.123 become the dotted form, or are left out, and a URL without a scheme is left out, each logged by the name of its field.
+The EPP backend answers `UNIMPLEMENTED_COMMAND` and SQLite is `UnsupportedGateway`, but neither is what answers: `organisation` is in `DRAFT_OBJECTS`, so the profile
+decides, and a server whose profile lacks it answers 501 `02307` (it was 501 `02101` before #249, from the missing handler). On RRI, create, update, delete,
+`users` and `processes` have no handler: 501 `02101`. `rpp/mapping/organisation/organisations.py` renders the read: an optional entry of the Card that fails its
+definition (`Address`, `Phone`, `EmailAddress`, `Link`) is left out and its member named in the log, never its value. An extension adds read-only members to an
+organisation by registering a mapper in `ORGANISATION_MEMBERS` (`rpp/mapping/organisation/organisation_members.py`, as `DOMAIN_MEMBERS`, with `to_rpp` only): the rri
+extension's `RequestTemplateMembers` renders `generalRequestTemplate` and `abuseTemplate` from `Organisation.extensions[<extension id>]`, a
+`RegistrarRequestTemplates` that its RRI part (`ORGANISATION_MEMBERS` of `registry_adapter.rri.extensions.rri`, loaded by name into `RriExtensionPart.organisation_members`)
+builds from the `contact` entries of the regacc INFO by role. Discovery's `objects` are those of the backend profile: `message` on every backend that serves
+messages (EPP, RRI and SQLite) and `organisation` on RRI.
 
 Messages are in `rpp/handlers/message/message_handlers.py`. `GET /messages` is EPP `poll req`,
 `DELETE /messages/{id}` is `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in

@@ -109,11 +109,11 @@ def test_discovery_states_the_offered_presets_their_profiles_and_extensions():
     assert epp["presets"][1]["boundProfiles"] == [] and "schema" not in epp["presets"][1]
     assert epp["profiles"] == [{"@type": "profile", "id": EPP_COMPATIBILITY, "version": "1.0"}]
     assert "extensions" not in epp
-    assert epp["objects"] == ["domainName", "host", "contact"]
+    assert epp["objects"] == ["domainName", "host", "contact", "message"]
     assert [p["id"] for p in rri["presets"]] == [BASE, RRI]
     assert [e["id"] for e in rri["extensions"]] == ["de.denic.rpp.rri"]
     assert "profiles" not in rri
-    assert rri["objects"] == ["domainName", "contact", "requestContact"]
+    assert rri["objects"] == ["domainName", "contact", "organisation", "message", "requestContact"]
     assert "profileSchemas" not in epp
 
 

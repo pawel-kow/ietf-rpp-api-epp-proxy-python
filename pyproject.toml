@@ -48,12 +48,12 @@ layers = ["flows", "ports", "model | capabilities", "result"]
 
 [[tool.importlinter.contracts]]
 id = "core-model-objects"
-name = "The object packages of core.model are independent, except domain -> contact"
+name = "The object packages of core.model are independent, except domain -> contact and organisation -> contact"
 type = "independence"
 modules = [
-    "core.model.contact", "core.model.domain", "core.model.host", "core.model.message",
+    "core.model.contact", "core.model.domain", "core.model.host", "core.model.message", "core.model.organisation",
 ]
-ignore_imports = ["core.model.domain.** -> core.model.contact.**"]
+ignore_imports = ["core.model.domain.** -> core.model.contact.**", "core.model.organisation.** -> core.model.contact.**"]
 
 [[tool.importlinter.contracts]]
 id = "core-model-shared"
@@ -61,7 +61,7 @@ name = "core.model.shared imports no object package of core.model"
 type = "forbidden"
 source_modules = ["core.model.shared"]
 forbidden_modules = [
-    "core.model.contact", "core.model.domain", "core.model.host", "core.model.message",
+    "core.model.contact", "core.model.domain", "core.model.host", "core.model.message", "core.model.organisation",
 ]
 
 [[tool.importlinter.contracts]]

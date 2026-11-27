@@ -92,7 +92,15 @@ def test_the_operations_on_objects_the_backend_does_not_hold_are_left_out():
 
 
 def test_an_object_the_backend_holds_stays():
-    assert paths(app(EPP_PROFILE, unheld=True)).keys() == paths(app(EPP_PROFILE)).keys()
+    """EPP holds domain names, hosts and contacts, not organisations (they answer 501 02307, #249)."""
+    held, every = paths(app(EPP_PROFILE, unheld=True)), paths(app(EPP_PROFILE))
+
+    assert {path for path in every if not path.startswith("/organisations")} == held.keys()
+    assert [path for path in every if path.startswith("/organisations")]
+
+
+def test_the_organisation_paths_of_a_backend_that_holds_them_stay():
+    assert "/organisations/{id}" in paths(app(RRI_PROFILE, unheld=True, registry=RRI_REGISTRY))
 
 
 # --- the operations no handler serves
@@ -102,7 +110,8 @@ def test_the_operations_no_handler_serves_are_left_out():
 
     assert "domainNames_create" in ids and "domainNameTransferProcesses_transferCreate" in ids
     assert "domainNameCreateProcesses_list" not in ids
-    assert not [path for path in paths(app(EPP_PROFILE, unimplemented=True)) if path.startswith("/organisations")]
+    organisations = {path: item for path, item in paths(app(EPP_PROFILE, unimplemented=True)).items() if path.startswith("/organisations")}
+    assert list(organisations) == ["/organisations/{id}"] and list(organisations["/organisations/{id}"]) == ["get"]   # the read is served
 
 
 def test_a_path_keeps_the_operations_a_handler_serves():

@@ -120,7 +120,8 @@ Stacked on `feature/248-rri-typed-messages` (PR #255, ready, unmerged), which is
 
 ## Tasks
 
-- [~] Plan pushed, checkpoint 1 reported.
+- [x] Plan pushed, checkpoint 1 reported, approved.
+- [~] Implementation.
 - [ ] Copy the schema (`copy_models.sh`); core model, port, backend attribute; import-linter contract.
 - [ ] RRI adapter: command, conversions, gateway, extension hook, result code; EPP and SQLite gateways.
 - [ ] RPP: DTOs, mapper, member registry, rri extension mapper, handler, `DRAFT_OBJECTS`.
@@ -150,4 +151,7 @@ Stacked on `feature/248-rri-typed-messages` (PR #255, ready, unmerged), which is
 
 ## Decisions recorded from the orchestrator
 
-(none yet)
+Plan approved with the structural changes. Answers: 1 yes, `organisation` in `DRAFT_OBJECTS`: EPP and SQLite `/organisations...` become 501 `02307`
+(deliberate wire change from `02101`, stated in the PR body, every pinning test updated); 2 yes, `objects: [message]` in `sqlite.yaml`;
+3 yes, optional entries failing their definition are left out and logged by field name, 500 only if the response still fails; 4 yes, the model
+carries status, roles and sponsor_id, filled by the RRI gateway; 5 yes, no handle precheck.

@@ -8,7 +8,7 @@ Each entry says what the proxy does today.
 - The JSContact profile -02 requires `tel:+CC.number`, but the `contactInfo` examples (json §8.2) still use `tel:+1-703-555-5555`, which the profile rejects.
 - **Proxy:** follows the profile, anything else is a 400. `;ext=` maps to EPP `x`. The tests based on json §8.2 use the profile form.
 - A registry may hold numbers in another format: DENIC RRI gives the phone and fax numbers of a RegAcc in E.123 (`\+[/\-\.\s0-9x]{1,254}`, [rri-5.0-reference.md](../docs/rri/rri-5.0-reference.md) §3.6), without the `.` after the country code. The profile's format applies to what a server returns as well, and says nothing of a number that a server reads from such a registry.
-- **Proxy (RRI, planned):** an organisation read takes the digits before the first separator as the country code, and leaves out a number that does not give an rpp-telephone-uri.
+- **Proxy (RRI):** an organisation read takes the digits before the first separator as the country code, and leaves out a number that does not give an rpp-telephone-uri.
 
 ## Phone key and features
 
@@ -30,7 +30,7 @@ Each entry says what the proxy does today.
 - The profile allows a localized email, `email-1`, `voice-1` and `fax-1`. RFC 5733 has one email, one voice and one fax number, none of them per postalInfo.
 - **Proxy:** 501 (`02102`), as for `links` and more than 3 street lines. More than one localization is a 501 too. The profile only says to reject it, without a result code.
 - Profile §4.1.10 defines additional keys (`-1`, `-2`) for `emails` and `phones` only. A registry may hold several URLs, as DENIC RRI does for a RegAcc (`regacc:url`, 0 to n in the XSD, 0 to 1 in its documentation).
-- **Proxy (RRI, planned):** an organisation read gives the first URL as `url` and further ones as `url-1`, `url-2`, and so on, by analogy with `phones`.
+- **Proxy (RRI):** an organisation read gives the first URL as `url`. The Card of the drafts (`RecordLink`) has no `url-1`, so further URLs are left out, and logged by the name of the field.
 
 ## Card in the JSON draft
 
@@ -401,7 +401,7 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - An Organisation Data Object read from a registry that holds no organisation objects has data the drafts require and the registry does not hold. DENIC RRI regacc INFO ([rri-5.0-reference.md §6.19](../docs/rri/rri-5.0-reference.md#619-regacc-info)) gives a RegAcc's public contact data, but no status, no sponsor and no role.
 - Data-objects §9.2 requires `provMetadata.spClientId`. A RegAcc maintains its own profile, in the registry's web interface, so no client sponsors it in the sense of §9.2.
 - `parent` (data-objects §14.2) is an aggregation, but nothing says whether it must name an organisation the server can read. The member account of a RegAcc (`memberacc`) groups RegAccs and is not one, so regacc INFO may not find it.
-- **Proxy (RRI, planned):** `spClientId` is the RegAccId itself, `status` and the status of the role `registrar` are `ok`, and `parent` is the MemberAccId, unless it equals the RegAccId. Its read may be 404.
+- **Proxy (RRI):** `spClientId` is the RegAccId itself, `status` and the status of the role `registrar` are `ok`, and `parent` is the MemberAccId, unless it equals the RegAccId. Its read may be 404.
 
 ## Discovery
 
