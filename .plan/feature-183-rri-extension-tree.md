@@ -139,12 +139,11 @@ domain, no `/hosts` objects), contact labels other than `registrant` on the doma
 
 ## Checks
 
-On the final commit (after the maintainer's decisions on the findings), in the order of process.project.md:
-1. `PYTHONPATH=src lint-imports`: 31 kept, 0 broken.
-2. `pytest -n 4 tests/unit`: 3043 passed.
-3. `pytest -n 4 -m smoke tests/integration`: 232 passed, 1 failed (draft_discovery/test1-read on rri-mtest: the expected
-   `extensions` of the rri-strict entry was wrong), 495 skipped. The case was fixed and `-k draft_discovery` re-run on rri-mtest
-   (1 passed) and epp-docker (1 passed); the rest of the smoke run is unchanged since.
-4. MTEST probe: passed (MTEST reachable; the smoke run covered it, including the new case under rri-strict).
-Earlier on this branch, before the decisions: the ansible-lint (0 failures), `ansible-playbook --syntax-check site.yml` and
-`docker build -f deploy/docker/Dockerfile .` passed; the deploy template has since gained only the `rri-strict` line in `presets`.
+On the final commit (25e76bb plus this plan update), in the order of process.project.md:
+1. `PYTHONPATH=src lint-imports`: 32 kept, 0 broken.
+2. `pytest -n 4 tests/unit`: 3057 passed.
+3. `pytest -n 4 -m smoke tests/integration`: 233 passed, 495 skipped, 0 failed.
+4. MTEST probe (`rri-mtest domain_availability test3-a_label`): passed; the smoke run covered MTEST, including the case under rri-strict.
+5. Not applicable (requirements and pyversions tests unchanged).
+Deploy template changed: `ansible-lint` 0 failures, 0 warnings (from a scratch venv, not installed here); `ansible-playbook --syntax-check
+site.yml` OK; `docker build -f deploy/docker/Dockerfile .` built.
