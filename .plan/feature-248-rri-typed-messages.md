@@ -139,3 +139,9 @@ Stacked on `feature/183-rri-extension-tree` (PR #253, ready, unmerged). Merge or
 4. `63650063607` stays mapped to 404 for any other path; the retry swallows it only where the id heads a type.
 5. Domain status in `domainStatusMessage.status` is a Domain Name Status Object: `{"@type": "domainNameStatus", ...}` per the doc's example; I take
    the shape from the doc examples (messages section) and the schema, no decision needed unless they differ.
+
+## Results
+
+- MTEST probe (domain_availability/test3): passed, so the smoke run covers MTEST.
+- First smoke run on 8cabbef: 231 passed, 2 failed (rri-mtest `preset_read/test1`, `draft_discovery/test1` state the extension version 0.2.0): fixed to 0.3.0.
+- `message/test6` (with the new `?type=transferOutcomeMessage` step) is not marked smoke: run on rri-mtest, passed.
