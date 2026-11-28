@@ -30,7 +30,7 @@ Each entry says what the proxy does today.
 - The profile allows a localized email, `email-1`, `voice-1` and `fax-1`. RFC 5733 has one email, one voice and one fax number, none of them per postalInfo.
 - **Proxy:** 501 (`02102`), as for `links` and more than 3 street lines. More than one localization is a 501 too. The profile only says to reject it, without a result code.
 - Profile §4.1.10 defines additional keys (`-1`, `-2`) for `emails` and `phones` only. A registry may hold several URLs, as DENIC RRI does for a RegAcc (`regacc:url`, 0 to n in the XSD, 0 to 1 in its documentation).
-- **Proxy (RRI):** an organisation read gives the first URL as `url`. The Card of the drafts (`RecordLink`) has no `url-1`, so further URLs are left out, and logged by the name of the field.
+- **Proxy (RRI):** an organisation read keeps the first URL as the link `url`. The Card profile defines no key for a further link (`RecordLink` allows `url` and `contact-uri` only, and §4.1.10 has no `url-1`), so further URLs are left out, and logged by the name of the field.
 
 ## Card in the JSON draft
 

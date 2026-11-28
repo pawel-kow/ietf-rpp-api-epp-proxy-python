@@ -2539,7 +2539,7 @@ The variable `{Ulabel}` expands to the U-label of the domain name. The encoding 
 * add the member rpp:messages to the schema document as the extension point for message types #248
 * the type parameter of the message query takes the identifiers of the message types #248
 * inform the losing client of a transfer with a transfer outcome message #248
-* add the general request and abuse templates of a registrar to the organisation data object, and the request template object #249
+* add the general request and abuse templates of a registrar to the organisation data object, and the request template object; the organisation read keeps the first URL of a registrar #249
 
 {toc="exclude"}
 {numbered="false"}
@@ -2634,7 +2634,7 @@ The implementation serves the Read operation of the Organisation Data Object wit
 | `contactInfo.addresses.addr`        | `regacc:postal`                                                   |
 | `contactInfo.phones`                | `regacc:phone` and `regacc:fax`                                   |
 | `contactInfo.emails.email`          | `regacc:email`                                                    |
-| `contactInfo.links`                 | `regacc:url`                                                      |
+| `contactInfo.links.url`             | the first `regacc:url` with a scheme                              |
 | `generalRequestTemplate`            | `regacc:contact role="generalrequest"`                            |
 | `abuseTemplate`                     | `regacc:contact role="abusecontact"`                              |
 | `requestTemplate.uriTemplate`       | `contact:uri-template`                                            |
@@ -2645,7 +2645,7 @@ Table: Mapping of regacc INFO
 * `regacc:memberacc` identifies the member that holds the RegAcc. It is a reference to an organisation that regacc INFO may not find, in which case its Read is 404. A MemberAccId equal to the RegAccId is not represented, as an organisation that is its own parent would be a loop [@!I-D.ietf-rpp-data-objects, section 14.2].
 * Each `regacc:address` is a `name` component, in its order, `regacc:postalCode` the `postcode`, `regacc:city` the `locality`, and `regacc:countryCode` the `countryCode`.
 * The phone and fax numbers of a RegAcc are E.123 numbers (`\+[/\-\.\s0-9x]{1,254}`). Each becomes an rpp-telephone-uri of the RPP JSContact profile [@I-D.wullink-rpp-jscontact-profile]: the digits before the first separator (space, `-`, `.`, or `/`) are the country code, the other digits before an `x` the subscriber number, and the digits after the `x` the extension (`;ext=`). The phone numbers are `voice`, `voice-1`, and so on, without `features`, the fax numbers `fax`, `fax-1`, and so on, with the feature `fax`, in their order. A number that does not give an rpp-telephone-uri is left out.
-* The first `regacc:url` is the link `url`, further ones `url-1`, `url-2`, and so on. A URL without a scheme is left out.
+* The first URL with a scheme is the link `url`. The Card profile defines no key for a further link, so further URLs are left out. A URL without a scheme is left out.
 * The `contact:type` of a template (`REQUEST`) is not represented. A `regacc:contact` without `contact:uri-template` is left out.
 * Create, Update, and Delete of an organisation, and its `users` and `processes` endpoints, are 501 (`02101`). The registry maintains RegAccs outside RRI.
 
