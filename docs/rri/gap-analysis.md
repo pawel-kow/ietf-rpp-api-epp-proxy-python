@@ -19,7 +19,7 @@ Status: analysis only. No code has been changed.
 | …that map to an existing RPP operation with little friction | 10 (LOGIN, LOGOUT, contact CHECK, contact INFO, domain CHECK, domain INFO, domain DELETE, QUEUE-READ, QUEUE-DELETE, regacc INFO) |
 | …that map, but need new orchestration in the proxy | 7 (contact CREATE/UPDATE, domain CREATE/UPDATE/CHHOLDER, CREATE-AUTHINFO1, DELETE-AUTHINFO1) |
 | …that map only after a maintainer decision | 2 (CHPROV, RESTORE) |
-| …that have no RPP operation | 2 (CREATE-AUTHINFO2, TRANSIT) |
+| …that have no RPP operation | 1 (TRANSIT); CREATE-AUTHINFO2 is the `authInfoIssueProcess` of the `rri` extension (#250) |
 | RPP operations the proxy implements over EPP that RRI cannot serve | hosts (all 7), contact delete, contact transfer (6), domain renew, domain transfer query/cancel/approve/reject |
 
 The main findings:
@@ -66,9 +66,9 @@ Legend for **Fit**: ✅ direct; 🟡 maps, with new orchestration or partial dat
 | domain TRANSIT (§6.12) | — | ⛔ | Hands the domain to DENIC. Closest RPP is a push transfer to DENIC, see Q8. |
 | domain CHECK (§6.13) | `domainNames_availability`, `domainNames_availabilityHead` | ✅ | `free` → available. Every other status → not available, with the status as `reason`. Accepts the U-label and the A-label, see §3.1. |
 | domain INFO (§6.14) | `domainNames_read`, plus each read-back | 🟡 | `recursive=false` for reads. `RPP-Authorization` → `AuthInfo` for foreign domains. See §3.1 for the fields. |
-| domain CREATE-AUTHINFO1 (§6.15) | `authInfo` in domain create, PUT and PATCH | 🟡 | The proxy hashes `authdata` (SHA-256, hex) and sends `AuthInfoHash`. Lifetime is ≤ 30 days, see Q4. |
-| domain DELETE-AUTHINFO1 (§6.16) | removing `authInfo` in PUT and PATCH; replacing it (delete, then create) | 🟡 | Only one AuthInfo1 per domain, so a change is DELETE then CREATE, which is not atomic. |
-| domain CREATE-AUTHINFO2 (§6.17) | — | ⛔ | Any registrar asks DENIC to post a code to the holders. Nothing in RPP fits, see Q9. |
+| domain CREATE-AUTHINFO1 (§6.15) | `authInfo` in domain create, PUT and PATCH; `authInfoProcess` create of the `rri` extension | 🟡 | The proxy hashes `authdata` (SHA-256, hex) and sends `AuthInfoHash`, never printed. The `authInfo` member has the registry's default lifetime, see Q4; the process sends the client's `expiryDate` as `expire` and checks no limit, see §4.3. |
+| domain DELETE-AUTHINFO1 (§6.16) | removing `authInfo` in PUT and PATCH; replacing it (delete, then create); `authInfoProcess` delete of the `rri` extension | 🟡 | Only one AuthInfo1 per domain, so a change is DELETE then CREATE, which is not atomic. |
+| domain CREATE-AUTHINFO2 (§6.17) | `authInfoIssueProcess` create of the `rri` extension (#250) | 🟡 | Any registrar asks DENIC to post a code to the holders: 200 without a body of substance, 409 where one exists. The code is never returned. See §4.3. |
 | domain CHPROV (§6.18) | `domainNameTransferProcesses_transferCreate` (pull, with `RPP-Authorization`) | 🟡 | Immediate. Needs complete domain data with the gainer's handles, which the `rri` request extension carries, see §4.3 and Q3. |
 | regacc INFO (§6.19) | `organisations_read` | ✅ | Public registrar data of any RegAcc, to any client: `id` and `spClientId` are the RegAccId, `status` and the role `registrar` are `ok`, `parent` is the MemberAccId unless it is the RegAccId, the Card has name, address, phones and faxes (E.123 converted, or left out), email and urls; the General Request and Abuse templates are members of the `rri` extension. Create, update, delete, users and processes are 501 (`02101`). The mapping is in [rri-extension.md](rri-extension.md#mapping-of-regacc-info). |
 | QUEUE-READ (§6.20) | `messages_query`, `messages_read` | ✅ | Oldest message. `Msgcnt` → `RPP-Queue-Size`. The `msgType` filter could serve the RPP `type` parameter, see §3.4. |
@@ -260,7 +260,8 @@ omitted optional element is deleted (ref §3.2). Consequences:
 | `authInfo.authdata` on a domain (sponsor sets it) | AuthInfo1. The proxy sends only the SHA-256 hex hash; DENIC never stores or returns the secret. 8–16 characters from a restricted charset. Lifetime ≤ 30 days, default 30. |
 | `RPP-Authorization` on a read of a foreign domain | INFO `AuthInfo`. This shows holder data, but no handles. |
 | `RPP-Authorization` on a transfer | CHPROV `AuthInfo` (AuthInfo1 or AuthInfo2). |
-| — | AuthInfo2, which DENIC posts to the holders on request by any registrar. No RPP operation. |
+| `authInfoProcess` create, read, delete (`rri` extension, sponsor only) | CREATE-AUTHINFO1 with `expire`, INFO `domain:authInfo1` (the date as the registry states it, in its UTC offset), DELETE-AUTHINFO1. A second create (`63391068704`) is 409, a read or delete without one 404. |
+| `authInfoIssueProcess` create (`rri` extension, any client) | AuthInfo2, which DENIC posts to the holders on request by any registrar: CREATE-AUTHINFO2. An existing one (`63393068704`) is 409. Read, update and delete are 501. |
 
 The `method` of `authInfo.create` must be the plain-password method. Any other method → 501.
 

@@ -1,0 +1,109 @@
+{
+  "test_id": "test3-second_create_conflicts",
+  "description": "A domain has at most one authorisation information: the second create is refused.",
+  "setup": [
+    {
+      "comment": "Creates contact AI3; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:AI3}"
+      }
+    },
+    {
+      "comment": "Creates domain ai3 with registrant AI3, dns records a and no authInfo; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "ai3-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:AI3}"
+        },
+        "authInfo": {
+          "select": [
+            {
+              "omit": true
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Creates authInfoProcess of domain ai3 with authInfo; expects 200 01000. The authorisation information the step below meets.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ai3-{random_name}.{tld}/processes/authInfoProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "authInfoProcess",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc23456"
+          },
+          "expiryDate": "{date:+1d}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "authInfoProcess",
+          "expiryDate": "{date:+1d}"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "comment": "Creates authInfoProcess of domain ai3 with authInfo again; expects 409 02302. The error answer this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ai3-{random_name}.{tld}/processes/authInfoProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "authInfoProcess",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc23456"
+          },
+          "expiryDate": "{date:+1d}"
+        }
+      },
+      "response": {
+        "status": 409,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02302"
+        }
+      }
+    }
+  ],
+  "teardown": [
+    {
+      "comment": "Deletes domain ai3; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "ai3-{random_name}.{tld}"
+      }
+    }
+  ]
+}

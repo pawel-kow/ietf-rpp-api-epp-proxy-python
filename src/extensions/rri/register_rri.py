@@ -27,6 +27,14 @@ STRICT_PRESET_KEY = "rri-strict"
 
 PROFILE_KEY = "rri"
 
+# The Process Objects it adds to a domain name (docs/rri/rri-extension.md).
+PROCESSES = {"domainName": ("authInfoProcess", "authInfoIssueProcess")}
+
+# The operations of each, the leaves the test selectors read.
+AUTH_INFO_PROCESS = "domainName.processes.authInfoProcess.operations"
+
+AUTH_INFO_ISSUE_PROCESS = "domainName.processes.authInfoIssueProcess.operations"
+
 # The request contacts of a domain, 0 to 1 of each role (rri 5.0 reference §5.2): a domain needs none.
 REQUEST_CONTACT_LIMITS = {"min_count": 0, "max_count": 1}
 
@@ -54,6 +62,7 @@ def register(registry: ExtensionRegistry) -> None:
         schema=json.loads((SCHEMAS / "rri-extension.schema.json").read_text(encoding="utf-8")),
         data_objects=DATA_OBJECTS,
         objects=("requestContact",),
+        processes=PROCESSES,
         openapi=openapi_fragment,
         handlers=HANDLERS,
         backend_parts={"rri": "registry_adapter.rri.extensions.rri"},
@@ -62,10 +71,13 @@ def register(registry: ExtensionRegistry) -> None:
             "extensions": [EXTENSION_ID],
             "presets": [PRESET_KEY],
             "default_preset": PRESET_KEY,
-            "domainName": {"generalRequest": REQUEST_CONTACT_LIMITS, "abuse": REQUEST_CONTACT_LIMITS},
+            "domainName": {"generalRequest": REQUEST_CONTACT_LIMITS, "abuse": REQUEST_CONTACT_LIMITS,
+                           "processes": {"authInfoProcess": {"operations": ["create", "read", "delete"]},
+                                         "authInfoIssueProcess": {"operations": ["create"]}}},
         },
-        profile_leaves={f"domainName.{role}.{limit}": int for role in ("generalRequest", "abuse")
-                        for limit in ("min_count", "max_count")},
+        profile_leaves={**{f"domainName.{role}.{limit}": int for role in ("generalRequest", "abuse")
+                           for limit in ("min_count", "max_count")},
+                        AUTH_INFO_PROCESS: tuple, AUTH_INFO_ISSUE_PROCESS: tuple},
         presets={PRESET_KEY: _definition("rri-preset.yaml"), STRICT_PRESET_KEY: _definition("rri-strict-preset.yaml")},
         profiles={PROFILE_KEY: _profile()},
     ))

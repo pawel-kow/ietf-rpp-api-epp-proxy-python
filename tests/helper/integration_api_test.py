@@ -3,7 +3,8 @@ import json
 import re
 import pytest
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from tests.helper.check_datetime import check_datetime_format_utc_and_delta
 
 def header_list(value):
@@ -160,6 +161,17 @@ def replace_pad_placeholders(value: str) -> str:
         missing = length - len(text)
         return text + (DIGITS * (missing // len(DIGITS) + 1))[:missing]
     return PAD.sub(replace, value)
+
+DATE = re.compile(r"\{date:\+(\d+)d\}")
+
+# The registry of the German domains (DENIC) counts its days in this zone.
+REGISTRY_ZONE = ZoneInfo("Europe/Berlin")
+
+def replace_date_placeholders(value: str, today: date | None = None) -> str:
+    """Replaces {date:+Nd} by the date N days from today (YYYY-MM-DD, the day of the registry's zone), for a date the
+    registry limits to a period from now, such as the expiry of an authorisation information."""
+    today = today or datetime.now(REGISTRY_ZONE).date()
+    return DATE.sub(lambda match: (today + timedelta(days=int(match.group(1)))).isoformat(), value)
 
 def response_matches(expected, response, test_name, signalling="header") -> bool:
     """Whether a response matches an `until`: the parts it states (status, body, fields, headers), and only those."""

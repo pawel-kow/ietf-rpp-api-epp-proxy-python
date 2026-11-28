@@ -1,9 +1,10 @@
 import json
+from datetime import date
 
 import pytest
 
 from tests.helper.integration_api_test import (assert_headers, assert_response, endpoint_test, field_value,
-                                               replace_pad_placeholders, replace_upper_placeholders,
+                                               replace_date_placeholders, replace_pad_placeholders, replace_upper_placeholders,
                                                substitute_captures)
 from tests.helper.recursive_compare_existing import recusive_compare_existing
 
@@ -170,6 +171,14 @@ def test_pad_placeholder_of_the_text_length_is_the_text():
 def test_pad_placeholder_shorter_than_its_text_fails():
     with pytest.raises(pytest.fail.Exception, match="longer than 2"):
         replace_pad_placeholders("{pad:2:abc}")
+
+
+def test_date_placeholder_is_the_date_n_days_from_today():
+    assert replace_date_placeholders('"{date:+0d}" "{date:+30d}"', date(2026, 11, 28)) == '"2026-11-28" "2026-12-28"'
+
+
+def test_text_without_date_placeholder_is_unchanged():
+    assert replace_date_placeholders("2026-11-28 {date:x}") == "2026-11-28 {date:x}"
 
 
 def test_delay_seconds_waits_before_the_request():

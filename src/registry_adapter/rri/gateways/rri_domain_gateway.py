@@ -15,7 +15,7 @@ from core.result.operation_response import OperationResponse
 from core.result.partially_applied import PartiallyApplied
 from core.result.result_code import ResultCode
 from registry_adapter.rri.commands.domain.auth_info import (
-    rri_create_auth_info1, rri_delete_auth_info1, valid_auth_info1,
+    bad_auth_info, rri_create_auth_info1, rri_delete_auth_info1, valid_auth_info1,
 )
 from registry_adapter.rri.commands.domain.check import rri_domain_check
 from registry_adapter.rri.commands.domain.common import (
@@ -31,12 +31,6 @@ from registry_adapter.rri.commands.shared.rri_command import refused
 logger = logging.getLogger(__name__)
 
 AUTH_INFO = "authInfo"
-
-
-def _bad_auth_info(client_transaction_id) -> ErrorResponse:
-    return refused(ResultCode.PARAMETER_VALUE_POLICY_ERROR,
-                   "An authInfo for RRI is 8 to 16 characters of A-H J-N P-Z a-k m-n p-z 2-9 + - / *",
-                   client_transaction_id)
 
 
 def _no_dns_data(client_transaction_id) -> ErrorResponse:
@@ -96,7 +90,7 @@ class RriDomainGateway:
             return refused(ResultCode.PARAMETER_VALUE_POLICY_ERROR, idn_refusal, client_transaction_id)
         password = domain.authInfo.pw if domain.authInfo else None
         if password is not None and not valid_auth_info1(password):
-            return _bad_auth_info(client_transaction_id)
+            return bad_auth_info(client_transaction_id)
         state = state_of_domain(domain)
         if not state.dnsentries(domain.name):
             return _no_dns_data(client_transaction_id)
@@ -139,7 +133,7 @@ class RriDomainGateway:
         keep_auth_info = AUTH_INFO in wanted.unchanged
         password = wanted.authInfo.pw if wanted.authInfo else None
         if not keep_auth_info and password is not None and not valid_auth_info1(password):
-            return _bad_auth_info(client_transaction_id)
+            return bad_auth_info(client_transaction_id)
         steps = []
         holders_change = not before.same_holders(after)
         if holders_change:

@@ -20,7 +20,9 @@ from settings.load_settings import load_settings
 from tests.helper import durations, includes, selectors
 from tests.helper.case_data import case_data_dir
 from tests.helper.idn_labels import replace_idn_placeholders
-from tests.helper.integration_api_test import endpoint_test, replace_pad_placeholders, replace_upper_placeholders
+from tests.helper.integration_api_test import (
+    endpoint_test, replace_date_placeholders, replace_pad_placeholders, replace_upper_placeholders,
+)
 from tests.helper.pacer import Pacer
 from tests.helper.run_directory import run_directory, run_once
 from tests.helper.step_runner import StepRunner
@@ -257,6 +259,7 @@ def process_placeholders(json_data, environment: TestEnvironment, obj=None, star
             .replace("{test_start}", started.isoformat())# type: ignore
         replaced = replace_values(replaced, environment, random_id_10)
         replaced = replace_upper_placeholders(replace_pad_placeholders(replace_idn_placeholders(replaced, random_id_10)))
+        replaced = replace_date_placeholders(replaced)
         replaced = replaced.replace("{unique_cltrid}", str(uuid.uuid4()))  # RPP-Cltrid is unique per request
         if "{rpp:" in replaced:
             # `with_rpp_headers` resolved the placeholders of the request headers, the only place they may stand

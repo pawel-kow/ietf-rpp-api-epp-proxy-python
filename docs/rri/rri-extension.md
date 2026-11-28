@@ -24,7 +24,7 @@ organization = "DENIC"
 
 .# Abstract
 
-This document defines a private extension of the RESTful Provisioning Protocol (RPP) for a server whose registry operates the DENIC Registry Robot Interface (RRI) version 5.0. The extension defines the Request Contact Data Object, adds the General Request and Abuse contacts to the Domain Name Data Object, adds the General Request and Abuse URI Templates of a registrar to the Organisation Data Object, adds the data of the domain to the Create operation of the Domain Transfer Process Object, and defines message types for the notifications of the registry.
+This document defines a private extension of the RESTful Provisioning Protocol (RPP) for a server whose registry operates the DENIC Registry Robot Interface (RRI) version 5.0. The extension defines the Request Contact Data Object, adds the General Request and Abuse contacts to the Domain Name Data Object, adds the General Request and Abuse URI Templates of a registrar to the Organisation Data Object, adds the data of the domain to the Create operation of the Domain Transfer Process Object, defines Process Objects with which a client sets authorisation information with an expiry date and asks the registry to issue authorisation information to the registrants of a domain name, and defines message types for the notifications of the registry.
 
 {mainmatter}
 
@@ -44,6 +44,9 @@ Registrar request templates
 
 Transfer data
 : The only transfer of the registry (CHPROV) is requested by the gaining client together with the complete data of the domain name: its holders, its request contacts, and its DNS data, all of which belong to the gaining client. The Domain Transfer Process Object has no data element for this data.
+
+Authorisation information
+: The registry holds two kinds of authorisation information for a domain name, each at most once. The sponsoring client sets the first, with an expiry date that the client chooses within a limit of the registry. Any client can ask the registry to generate the second, which the registry sends to the holders of the domain name by post and does not disclose to any client. The Authorisation Information Object [@!I-D.ietf-rpp-data-objects, section 9.12] has no expiry date, and the base specifications define no operation that asks the server to issue authorisation information.
 
 Registry notifications
 : The registry queues notifications of fifteen kinds for a client, for example a warning that domain names expire, a change of a domain name by the registry, or a request to verify a contact. The base specifications define message types for a few of them only [@!I-D.ietf-rpp-data-objects, section 9.19], and a Service Notice Message Object carries no structured data. Some notifications name several objects, while the Base Message Object refers to one object.
@@ -80,6 +83,8 @@ The General Request and Abuse contacts are defined as data elements of their own
 
 The General Request and Abuse URI Templates of a registrar are defined as data elements of the Organisation Data Object whose Data Type is a new Component Object, the Request Template Object (#request-template), and not as relations to Request Contact Data Objects. The registry discloses no Handle ID and no sponsoring client for them, and a client cannot provision them, so they are not resources. The data elements have Identifiers of their own, and not those of the General Request and Abuse contacts of a domain name, because their Data Type differs.
 
+The operations on authorisation information are defined as new Process Objects of the Domain Name Data Object, the Authorisation Information Process Object (#auth-info-process) and the Authorisation Information Issue Process Object (#auth-info-issue-process). An expiry date is not a data element of the Authorisation Information Object, which is immutable and consists of a method and a value. Issuing authorisation information to the registrants is an action on the domain name with no data element of the domain name as its input, for which [@!I-D.ietf-rpp-core, section 16.1.4] asks for a Process Object. The Authorisation Information (`authInfo`) data element of the Domain Name Data Object is not changed.
+
 The notifications of the registry are defined as message types that extend the Base Message Object [@!I-D.ietf-rpp-data-objects, section 9.19.1], as [@!I-D.ietf-rpp-data-objects, section 5] recommends for extensions. Where a message type of the base specifications fits a notification, it is used: the notification of a completed transfer to the losing client is a Transfer Outcome Message Object. A message type for a notification that names several objects extends the Bulk Base Message Object (#bulk-base-message), which holds a list of object references in place of the single Object Type and Object Identifier of the Base Message Object.
 
 The base specifications define no extension point for message types: the `data` property of the Message Data Object is a fixed union of the message types of the base specifications [@!I-D.ietf-rpp-json, section 6.8], and the Extension Mapper only adds properties to a definition. The schema document of the extension therefore names its message types in the member `rpp:messages` (#message-type-mapping).
@@ -95,8 +100,8 @@ This section identifies the extension.
 | Version              | 0.3.0                                                                                         |
 | RPP version          | [@!I-D.ietf-rpp-core], [@!I-D.ietf-rpp-data-objects], [@!I-D.ietf-rpp-json]                   |
 | Schema `$id`         | <https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json> |
-| Changed base objects | `domainName`, `organisation`, `domainTransferProcess`, `message`                              |
-| New objects          | `requestContact`, `requestContactAvailability`, `objectReference`, `datedObjectReference`, `registryNotice`, `bulkBaseMessage`, `requestTemplate`, and the message types of (#message-types) |
+| Changed base objects | `domainName`, `organisation`, `processes`, `domainTransferProcess`, `message`                 |
+| New objects          | `requestContact`, `requestContactAvailability`, `objectReference`, `datedObjectReference`, `registryNotice`, `bulkBaseMessage`, `requestTemplate`, `authInfoProcess`, `authInfoIssueProcess`, and the message types of (#message-types) |
 Table: Extension Overview
 
 # External Data Types {#external-data-types}
@@ -125,7 +130,7 @@ A server that supports the extension lists `requestContact` in the `objects` of 
 
 # Updated Data Objects {#updated-data-objects}
 
-This section defines the data elements that the extension adds to existing Data Objects.
+This section defines the data elements that the extension adds to existing Data Objects and Component Objects.
 
 ## Domain Name Data Object {#domain-name}
 
@@ -162,6 +167,10 @@ The Create, Read, and Update operations [@!I-D.ietf-rpp-data-objects, section 11
 
 None.
 
+### Processes {#domain-name-processes}
+
+The Domain Name Data Object supports, in addition to the Process Objects of [@!I-D.ietf-rpp-data-objects, section 11.4], the Process Objects of (#new-process-objects).
+
 ## Organisation Data Object {#organisation}
 
 * Identifier: organisation
@@ -190,6 +199,33 @@ The registry maintains these data elements outside the protocol. They appear in 
 ### Operations {#organisation-operations}
 
 None.
+
+## Processes Object {#processes}
+
+* Identifier: processes
+
+### Data Elements {#processes-data-elements}
+
+The following data elements are added to the Processes Object [@!I-D.ietf-rpp-data-objects, section 9.16], as it requires for the Process Objects that an extension defines.
+
+* Authorisation Information Processes
+  * Identifier: authInfoProcess
+  * Cardinality: 0+
+  * Mutability: read-only
+  * Data Type: Aggregation[Authorisation Information Process Object]
+  * Direct Access: true
+  * Description: The authorisation information processes initiated on the owning domain name.
+  * Constraints: (None)
+* Authorisation Information Issue Processes
+  * Identifier: authInfoIssueProcess
+  * Cardinality: 0+
+  * Mutability: read-only
+  * Data Type: Aggregation[Authorisation Information Issue Process Object]
+  * Direct Access: true
+  * Description: The authorisation information issue processes initiated on the owning domain name.
+  * Constraints: (None)
+
+These data elements appear only in the Processes Object of a Domain Name Data Object.
 
 ## Message Data Object {#message}
 
@@ -841,11 +877,120 @@ The Read (Transfer Query), Delete (Transfer Cancel), Approve, and Reject operati
 
 # New Process Objects {#new-process-objects}
 
-None.
+This section defines the Process Objects that the extension introduces. Their Owner Data Object is the Domain Name Data Object.
+
+## Authorisation Information Process Object {#auth-info-process}
+
+* Name: Authorisation Information Process Object
+* Identifier: authInfoProcess
+* Unique Identifier: processId
+* Extends: Base Process Object
+* Description: Represents the authorisation information that the sponsoring client sets for a domain name, with its expiry date. Creating this object sets the authorisation information, reading it returns its expiry date, and deleting it removes the authorisation information.
+
+### Data Elements {#auth-info-process-data-elements}
+
+* Authorisation Information
+  * Identifier: authInfo
+  * Cardinality: 1
+  * Mutability: create-only
+  * Data Type: Authorisation Information Object
+  * Description: The authorisation information that the sponsoring client sets for the domain name.
+  * Constraints:
+    * The Method MUST be `authinfo`.
+    * The value MUST satisfy the policy of the server for the authorisation information of a domain name, which is the policy for the Authorisation Information (`authInfo`) data element of the Domain Name Data Object.
+    * The server MUST NOT return the value in any operation.
+* Expiry Date
+  * Identifier: expiryDate
+  * Cardinality: 0-1
+  * Mutability: create-only
+  * Data Type: Date
+  * Description: The last day on which the authorisation information is valid.
+  * Constraints: (None)
+
+The authorisation information of this Process Object is the Authorisation Information (`authInfo`) of the domain name [@!I-D.ietf-rpp-data-objects, section 11.2]. A domain name has at most one. An update of the `authInfo` of the domain name replaces it, with an expiry date of the server's policy, and a removal of the `authInfo` removes it.
+
+### Operations {#auth-info-process-operations}
+
+#### Create {#auth-info-process-create}
+
+* Identifier: create
+
+The Create operation sets the authorisation information of a domain name.
+
+* Input:
+  * Reference: Owner Data Object
+  * Object: Authorisation Information Process Object
+* Output:
+  * Object: Authorisation Information Process Object
+* Authorisation:
+  * Only the sponsoring client is authorised to perform this operation.
+
+When the Create operation has no Expiry Date, the server sets the expiry date by its policy. The server MUST reject a Create for a domain name that has authorisation information, and a Create whose Expiry Date its policy does not allow. The output contains the Expiry Date that applies, when the server knows it.
+
+#### Read {#auth-info-process-read}
+
+* Identifier: read
+
+The Read operation returns the expiry date of the authorisation information of a domain name.
+
+* Input:
+  * Reference: This Object
+* Output:
+  * Object: Authorisation Information Process Object
+* Authorisation:
+  * Only the sponsoring client is authorised to perform this operation.
+
+The output contains the Expiry Date and not the Authorisation Information. The server MUST respond to a Read for a domain name without authorisation information as for a Process Object that does not exist.
+
+#### Delete {#auth-info-process-delete}
+
+* Identifier: delete
+
+The Delete operation removes the authorisation information of a domain name.
+
+* Input:
+  * Reference: This Object
+* Authorisation:
+  * Only the sponsoring client is authorised to perform this operation.
+
+The server MUST respond to a Delete for a domain name without authorisation information as for a Process Object that does not exist.
+
+The Update operation is not supported.
+
+## Authorisation Information Issue Process Object {#auth-info-issue-process}
+
+* Name: Authorisation Information Issue Process Object
+* Identifier: authInfoIssueProcess
+* Unique Identifier: processId
+* Extends: Base Process Object
+* Description: Represents a request of a client that the server generate authorisation information for a domain name and deliver it to the registrants of the domain name, by a channel outside the protocol.
+* Data Elements: (None)
+
+### Operations {#auth-info-issue-process-operations}
+
+#### Create {#auth-info-issue-process-create}
+
+* Identifier: create
+
+The Create operation asks the server to issue authorisation information for a domain name.
+
+* Input:
+  * Reference: Owner Data Object
+  * Object: Authorisation Information Issue Process Object
+* Output:
+  * Object: Authorisation Information Issue Process Object
+* Authorisation:
+  * Any authenticated client is authorised to perform this operation.
+
+The server generates the authorisation information and delivers it to the registrants. It MUST NOT return the authorisation information to any client. The server informs the sponsoring client with a message whose Data is an Authorisation Information Issue Message Object (#auth-info-issue-message). A client uses the authorisation information that a registrant passes on to it as the Object Authorisation of a transfer request or a read of the domain name [@!I-D.ietf-rpp-core, section 6.1].
+
+The authorisation information issued is not the Authorisation Information (`authInfo`) of the domain name, and the Authorisation Information Process Object does not affect it. The server MUST reject a Create for a domain name for which issued authorisation information is valid, and a Create for a domain name whose status its policy does not allow it in.
+
+The Read, Update, and Delete operations are not supported.
 
 # Endpoints {#endpoints}
 
-This section lists the endpoints that result from the new Data Object, derived by the rules of [@!I-D.ietf-rpp-core, section 16.1]. The `plural()` function applied to the Identifier `requestContact` gives the collection path segment `requestContacts`. This section is non-normative.
+This section lists the endpoints that result from the new Data Object and the new Process Objects, derived by the rules of [@!I-D.ietf-rpp-core, section 16.1]. The `plural()` function applied to the Identifiers `requestContact`, `authInfoProcess`, and `authInfoIssueProcess` gives the path segments `requestContacts`, `authInfoProcesses`, and `authInfoIssueProcesses`. This section is non-normative.
 
 | Operation                     | HTTP Method | URL path                             |
 | ----------------------------- | ----------- | ------------------------------------ |
@@ -855,6 +1000,16 @@ This section lists the endpoints that result from the new Data Object, derived b
 | Request Contact: delete       | DELETE      | /requestContacts/{id}                |
 | Request Contact: availability | HEAD or GET | /requestContacts/{id}/availability   |
 Table: Endpoints of the Request Contact Data Object
+
+| Operation                                      | HTTP Method | URL path                                                  |
+| ---------------------------------------------- | ----------- | --------------------------------------------------------- |
+| Authorisation Information: create              | POST        | /domainNames/{id}/processes/authInfoProcesses             |
+| Authorisation Information: read                | GET         | /domainNames/{id}/processes/authInfoProcesses/latest      |
+| Authorisation Information: delete              | DELETE      | /domainNames/{id}/processes/authInfoProcesses/latest      |
+| Authorisation Information Issue: create        | POST        | /domainNames/{id}/processes/authInfoIssueProcesses        |
+Table: Endpoints of the Process Objects
+
+A server that assigns no Process ID exposes no process resource. It responds to a Create of either Process Object with HTTP status code 200 (OK) and without a `Location` header field [@!I-D.ietf-rpp-core, section 16.1.4], and serves the Read and Delete of an Authorisation Information Process Object at `latest` only.
 
 The data elements that the extension adds to the Domain Name Data Object, the Organisation Data Object, and the Domain Transfer Process Object do not have Direct Access and add no endpoints. The message types of the extension add no endpoints either: a client retrieves them at the messages endpoint [@!I-D.ietf-rpp-core, section 16.10] and selects them with the `type` query parameter (#message-operations).
 
@@ -928,6 +1083,41 @@ RPP-Cltrid: ABC-12346
 RPP-Code: 01000
 ```
 
+Example Authorisation Information create request:
+
+```http
+POST /domainNames/foo.example/processes/authInfoProcesses HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Content-Type: application/rpp+json
+RPP-Cltrid: ABC-12348
+Content-Length: 132
+```
+
+Example Authorisation Information create response:
+
+```http
+HTTP/1.1 200 OK
+Date: Sat, 14 Nov 2026 12:00:00 GMT
+Content-Type: application/rpp+json
+RPP-Svtrid: XYZ-12348
+RPP-Cltrid: ABC-12348
+RPP-Code: 01000
+```
+
+Example Authorisation Information Issue create request:
+
+```http
+POST /domainNames/foo.example/processes/authInfoIssueProcesses HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Content-Type: application/rpp+json
+RPP-Cltrid: ABC-12349
+Content-Length: 35
+```
+
 Example request for the oldest message about the status of a domain name or the verification of a contact:
 
 ```http
@@ -955,6 +1145,7 @@ The Extension Mapper maps the base definitions to the definitions of the extensi
     "#/$defs/domainName.read": "#/$defs/ext.rri.domainName.read",
     "#/$defs/domainName.update": "#/$defs/ext.rri.domainName.update",
     "#/$defs/organisation.read": "#/$defs/ext.rri.organisation.read",
+    "#/$defs/processes.read": "#/$defs/ext.rri.processes.read",
     "#/$defs/domainTransferProcess.create": "#/$defs/ext.rri.domainTransferProcess.create"
   }
 }
@@ -1616,6 +1807,152 @@ Create request schema:
 }
 ```
 
+## Processes Object {#json-processes}
+
+Read response schema:
+
+<!-- definition ext.rri.processes.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.processes.read": {
+      "type": "object",
+      "properties": {
+        "authInfoProcess": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ext.rri.authInfoProcess.reference" },
+          "readOnly": true
+        },
+        "authInfoIssueProcess": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ext.rri.authInfoIssueProcess.reference" },
+          "readOnly": true
+        }
+      }
+    }
+  }
+}
+```
+
+## Authorisation Information Process Object {#json-auth-info-process}
+
+### Create
+
+Create request schema:
+
+<!-- definition ext.rri.authInfoProcess.create -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoProcess.create": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoProcess" },
+        "authInfo": { "$ref": "#/$defs/authInfo.create", "writeOnly": true },
+        "expiryDate": { "type": "string", "format": "date", "writeOnly": true }
+      },
+      "required": ["@type", "authInfo"]
+    }
+  }
+}
+```
+
+### Read
+
+Read response schema, which is also the response schema of the Create operation:
+
+<!-- definition ext.rri.authInfoProcess.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoProcess.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoProcess", "readOnly": true },
+        "processId": { "type": "string", "readOnly": true },
+        "expiryDate": { "type": "string", "format": "date", "readOnly": true }
+      },
+      "required": ["@type"]
+    }
+  }
+}
+```
+
+### Reference
+
+<!-- definition ext.rri.authInfoProcess.reference -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoProcess.reference": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoProcess" },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "processId"]
+    }
+  }
+}
+```
+
+## Authorisation Information Issue Process Object {#json-auth-info-issue-process}
+
+### Create
+
+Create request schema:
+
+<!-- definition ext.rri.authInfoIssueProcess.create -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoIssueProcess.create": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoIssueProcess" }
+      },
+      "required": ["@type"]
+    }
+  }
+}
+```
+
+Response schema of the Create operation:
+
+<!-- definition ext.rri.authInfoIssueProcess.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoIssueProcess.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoIssueProcess", "readOnly": true },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type"]
+    }
+  }
+}
+```
+
+### Reference
+
+<!-- definition ext.rri.authInfoIssueProcess.reference -->
+```json
+{
+  "$defs": {
+    "ext.rri.authInfoIssueProcess.reference": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoIssueProcess" },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "processId"]
+    }
+  }
+}
+```
+
 # Examples {#examples}
 
 This section contains examples of the new and updated objects. Each valid example validates against the Effective Schema [@!I-D.ietf-rpp-json, section 7.2] of a server that supports the extension, and each invalid example fails it. This section is non-normative.
@@ -1769,6 +2106,49 @@ Example domain transfer request with the Input Data Elements of the extension:
             { "@type": "dnsRecord", "name": "@", "type": "ns", "rdata": { "nsdname": "ns2.example.com." } }
         ]
     }
+}
+```
+
+### Authorisation Information
+
+Example authorisation information create request with an expiry date:
+
+<!-- example valid authInfoProcess.create -->
+```json
+{
+    "@type": "authInfoProcess",
+    "authInfo": { "@type": "authInfo", "method": "authinfo", "authdata": "Abc23456" },
+    "expiryDate": "2026-12-01"
+}
+```
+
+Example authorisation information create or read response:
+
+<!-- example valid authInfoProcess.read -->
+```json
+{
+    "@type": "authInfoProcess",
+    "expiryDate": "2026-12-01"
+}
+```
+
+### Authorisation Information Issue
+
+Example authorisation information issue create request:
+
+<!-- example valid authInfoIssueProcess.create -->
+```json
+{
+    "@type": "authInfoIssueProcess"
+}
+```
+
+Example authorisation information issue create response:
+
+<!-- example valid authInfoIssueProcess.read -->
+```json
+{
+    "@type": "authInfoIssueProcess"
 }
 ```
 
@@ -2081,6 +2461,16 @@ Example organisation read response with a reference to a request contact as Abus
 }
 ```
 
+Example authorisation information create request without authorisation information:
+
+<!-- example invalid authInfoProcess.create -->
+```json
+{
+    "@type": "authInfoProcess",
+    "expiryDate": "2026-12-01"
+}
+```
+
 # IANA Considerations {#iana}
 
 This document has no IANA actions. The extension is a private extension [@!I-D.wullink-rpp-extension-guidelines, section 10], and its Identifier is formed by reverse domain name notation [@!I-D.wullink-rpp-extension-guidelines, section 7].
@@ -2171,6 +2561,52 @@ Input Data Elements
 | dns            | DNS                     | 1     | DNS Data Object                           | The DNS data of the domain name.                 |
 
 Parameters: (None)
+
+Object: processes (additions)
+
+Data Elements
+
+| Element Identifier   | Element Name                              | Card. | Mutability | Data Type                                                | Description                                                              |
+| -------------------- | ----------------------------------------- | ----- | ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
+| authInfoProcess      | Authorisation Information Processes       | 0+    | read-only  | Aggregation[Authorisation Information Process Object]       | The authorisation information processes initiated on the owning domain name. |
+| authInfoIssueProcess | Authorisation Information Issue Processes | 0+    | read-only  | Aggregation[Authorisation Information Issue Process Object] | The authorisation information issue processes initiated on the owning domain name. |
+
+Object: authInfoProcess
+
+Object Name: Authorisation Information Process Object
+
+Object Type: Process
+
+Extends: baseProcess
+
+Description: Represents the authorisation information that the sponsoring client sets for a domain name, with its expiry date.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name              | Card. | Mutability  | Data Type                        | Description                                              |
+| ------------------ | ------------------------- | ----- | ----------- | -------------------------------- | -------------------------------------------------------- |
+| authInfo           | Authorisation Information | 1     | create-only | Authorisation Information Object | The authorisation information that the sponsoring client sets. |
+| expiryDate         | Expiry Date               | 0-1   | create-only | Date                             | The last day on which the authorisation information is valid. |
+
+Operations: create, read, delete. Input Data Elements: (None). Parameters: (None).
+
+Object: authInfoIssueProcess
+
+Object Name: Authorisation Information Issue Process Object
+
+Object Type: Process
+
+Extends: baseProcess
+
+Description: Represents a request that the server issue authorisation information for a domain name to its registrants.
+
+Reference: [This-ID]
+
+Data Elements: (None)
+
+Operations: create. Input Data Elements: (None). Parameters: (None).
 
 Object: objectReference
 
@@ -2511,7 +2947,9 @@ Parameters: the values of `type` (Message Type) include the identifiers of the m
 
 The extension inherits the authentication and authorisation services of the objects it extends [@!I-D.wullink-rpp-extension-guidelines, section 12]. A request contact is accessible to its sponsoring client only. A server MUST reject the use of another client's request contact in any operation, including as a data element of a domain name.
 
-The Object Authorisation of a transfer request is forwarded to the registry. A server MUST NOT record it in logs.
+The Object Authorisation of a transfer request and the Authorisation Information of an Authorisation Information Process Object are passed to the registry. A server MUST NOT record them in logs.
+
+Any client can create an Authorisation Information Issue Process Object for any domain name. The server delivers the authorisation information to the registrants only, by a channel outside the protocol, and informs the sponsoring client, so that neither the requesting client nor the sponsoring client learns it.
 
 A server forwards the URI Template to the registry, which expands it with a sample domain name on creation and rejects a template that it cannot expand. A server that does not forward the template to such a registry MUST check the constraints of (#request-contact-data-elements) itself before it stores or publishes the template.
 
@@ -2520,6 +2958,8 @@ A server forwards the URI Template to the registry, which expands it with a samp
 The expanded URI Template of a domain name's request contacts is published in the registry's registration data directory service. A `mailto` template that names the mailbox of a natural person makes that address public. A client SHOULD use a role mailbox or a web form in a request contact, because the template is published for every domain name that refers to it. A request contact holds no other personal data, and the registry rejects verification data on it.
 
 The General Request and Abuse Templates of an organisation are part of the public contact data of a registrar, which the registry publishes, and any client can read them [@!I-D.ietf-rpp-data-objects, section 14.3.2]. As for a request contact, a `mailto` template that names the mailbox of a natural person makes that address public.
+
+The server delivers issued authorisation information with the contact data that the registry holds for the registrants. The Authorisation Information Issue Process Object discloses none of it to the requesting client.
 
 The message types of the extension name contacts by their Handle ID and carry no contact information, such as the name or the postal address of a holder. The Claims of a Contact Verification Message Object name the kinds of contact information to verify, not their values.
 
@@ -2540,6 +2980,7 @@ The variable `{Ulabel}` expands to the U-label of the domain name. The encoding 
 * the type parameter of the message query takes the identifiers of the message types #248
 * inform the losing client of a transfer with a transfer outcome message #248
 * add the general request and abuse templates of a registrar to the organisation data object, and the request template object, and keep the first URL of a registrar in the organisation read #249
+* add the authorisation information process and the authorisation information issue process of a domain name, and their data elements of the processes object #250
 
 {toc="exclude"}
 {numbered="false"}
@@ -2574,9 +3015,21 @@ This appendix describes how a server that implements the extension maps it to RR
 | `domainName.generalRequest`             | `domain:contact role="generalrequest"`                |
 | `domainName.abuse`                      | `domain:contact role="abusecontact"`                  |
 | `domainTransferProcess` transferCreate  | domain CHPROV with the complete data of the domain    |
+| `authInfoProcess` create                | domain CREATE-AUTHINFO1                               |
+| `authInfoProcess` read                  | domain INFO, `domain:authInfo1`                       |
+| `authInfoProcess` delete                | domain DELETE-AUTHINFO1                               |
+| `authInfoIssueProcess` create           | domain CREATE-AUTHINFO2                               |
 Table: Mapping to RRI
 
 The registry holds 0 to 1 request contact of each role per domain name, so a domain name needs none. The backend profile of the implementation states this as `domainName.generalRequest` and `domainName.abuse` with `min_count` 0 and `max_count` 1.
+
+The implementation serves the Process Objects of authorisation information as follows:
+
+* The authorisation information of an Authorisation Information Process Object is an AuthInfo1. The implementation sends its SHA-256 hash, in hexadecimal, as `hash`, and the registry never holds or returns the value. The value is 8 to 16 characters of `A-H J-N P-Z a-k m-n p-z 2-9 + - / *`, as for the `authInfo` of a domain name, which is an AuthInfo1 too.
+* The Expiry Date is the `expire` attribute (`YYYYMMDD`), the last day on which the AuthInfo1 is valid. Without it, the registry applies its default lifetime. The registry limits the lifetime, to at most 30 days by its documentation. MTEST accepted only the day after today (`63391068618` for today and for each of the next 2 to 30 days, checked on 2026-11-28 at 07:58 in Europe/Berlin), which is also its default (the AuthInfo1 expires at the end of the next day). The implementation does not check the limit and maps the refusal (`63391068618`, `63391068603`).
+* A Read is a domain INFO: `domain:authInfo1` is the instant at which the AuthInfo1 expires, in the registry's own UTC offset (for `expire` `20261129` MTEST states `2026-11-30T00:00:00+01:00`), so the Expiry Date is the day of the instant less one microsecond: the last day on which it is valid, in the registry's offset (`24:00:00` is the midnight that ends the day). When the implementation cannot read the instant, the Read response has no Expiry Date. A domain without `domain:authInfo1` has no Authorisation Information Process Object. The Create response is a domain INFO after CREATE-AUTHINFO1 in the same way; when that INFO fails, the response has the Expiry Date of the request, or none if the request had none, because the server then does not know the date that applies.
+* The registry deletes an AuthInfo1 at its expiry, on its use in CHPROV, on a holder change, on TRANSIT, and on the deletion of the domain.
+* The authorisation information of an Authorisation Information Issue Process Object is an AuthInfo2. The registry sends it by post to every holder, notifies the sponsoring RegAcc with `authInfo2Notify` (an Authorisation Information Issue Message Object), and allows it for a domain in the status `connect`, `failed`, or `redemptionPeriod`. For a domain in `redemptionPeriod` the registry restarts the redemption period with 30 days. An AuthInfo2 is valid for 30 days, and an AuthInfo1 and an AuthInfo2 can exist together.
 
 The implementation maps the notifications of the registry (QUEUE-READ) to the message types as follows:
 
@@ -2668,6 +3121,12 @@ The implementation maps the refusals of the registry to RPP result codes as foll
 | Read of an organisation whose identifier is not a RegAccId (63310062008) | 400     | 02005           |
 | Read of an organisation that does not exist (63300062010)            | 404         | 02303           |
 | Create, Update, or Delete of an organisation, its users or processes | 501         | 02101           |
+| authorisation information whose method is not `authinfo`             | 501         | 02102           |
+| authorisation information that is not 8 to 16 characters of the registry's set | 422 | 02306           |
+| AuthInfo1 exists (63391068704) or AuthInfo2 exists (63393068704)     | 409         | 02302           |
+| Expiry Date refused by the registry (63391068618, 63391068603)       | 400         | 02004           |
+| Read of a domain without AuthInfo1, or Delete (63392068709)          | 404         | 02303           |
+| Update of either Process Object, Read or Delete of an Authorisation Information Issue Process Object | 501 | 02101 |
 Table: Refusals of the implementation
 
 The registry does not document how it encodes a U-label in an expanded template.

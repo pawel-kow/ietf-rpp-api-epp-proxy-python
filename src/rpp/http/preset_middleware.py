@@ -1,7 +1,7 @@
 from connexion import ProblemException
 
 from core.result.result_code import ResultCode
-from rpp.http.extension_paths import collections, plural
+from rpp.http.extension_paths import collections, plural, process_owners, process_segment
 from rpp.http.headers import problem_headers
 from rpp.http.request_presets import RequestPresets
 from rpp.schema.extensions import EXTENSIONS
@@ -35,6 +35,8 @@ class PresetMiddleware:
         # offered extensions have paths: any other is a 404, as without the extension.
         self.owners = {plural(obj): ext for ext in extensions for obj in EXTENSIONS[ext].objects}
         self.collections = collections(extensions)
+        # The same for the Process Objects an extension adds to an object (`/domainNames/{name}/processes/authInfoProcesses`).
+        self.process_owners = process_owners(extensions)
         self.signalling = signalling
         self.request_presets = request_presets
 
@@ -58,17 +60,25 @@ class PresetMiddleware:
             obj = self.collections.get(segment)
             if obj is not None:
                 self._check_object(segment, obj, selection.request)
+            process = process_segment(scope["path"])
+            owner = self.process_owners.get(process)
+            if owner is not None and owner not in selection.request.extension_ids:
+                self._refuse_extension(selection.request, f"the {process[1]} processes of {process[0]}")
         await self.app(scope, receive, send)
 
     def _check_object(self, segment, obj, preset) -> None:
         owner = self.owners.get(segment)
         if owner is not None and owner not in preset.extension_ids:
-            code = ResultCode.COMMAND_SYNTAX_ERROR
-            raise ProblemException(
-                status=400, title=code.value[1],
-                detail=f"The preset {preset.id} does not contain the extension of {obj}", headers=problem_headers(code))
+            self._refuse_extension(preset, obj)
         if obj not in self.request_presets.profile_of(preset).objects:
             code = ResultCode.UNIMPLEMENTED_OBJECT_SERVICE
             raise ProblemException(
                 status=501, title=code.value[1],
                 detail=f"The preset {preset.id} has no {obj} object on this server", headers=problem_headers(code))
+
+    @staticmethod
+    def _refuse_extension(preset, what) -> None:
+        code = ResultCode.COMMAND_SYNTAX_ERROR
+        raise ProblemException(
+            status=400, title=code.value[1],
+            detail=f"The preset {preset.id} does not contain the extension of {what}", headers=problem_headers(code))
