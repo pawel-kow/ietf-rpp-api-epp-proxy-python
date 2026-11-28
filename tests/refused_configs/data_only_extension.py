@@ -7,8 +7,8 @@ def register_definitions(registry: ExtensionRegistry, name: str, presets=(), pro
     `tests/helper/preset_fixtures.py`): no data object and no path, and a SQLite part without tables (the backend holds only extensions that have a part)."""
     identifier = f"org.example.rpp.extension.{name}"
     # The SQLite backend holds what its catalogue lists: this extension is test-only, so its entry is made here, in the
-    # process that registers it (a test that starts the server in a process of its own too), never in production code.
-    PARTS[identifier] = "tests.refused_configs.definitions_sqlite_part"
+    # process that registers it (a test that starts the server in a process of its own too), never in production code; `tests/conftest.py` restores the catalogue after each test.
+    PARTS.setdefault(identifier, "tests.refused_configs.definitions_sqlite_part")
     registry.add(RegisteredExtension(
         id=identifier,
         schema={"$id": f"https://example.org/{name}", "rpp:extension": {"id": identifier, "name": name, "version": "1.0"},

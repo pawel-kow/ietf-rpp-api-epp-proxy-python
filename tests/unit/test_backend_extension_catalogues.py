@@ -17,7 +17,8 @@ from tests.helper.test_environment import REPOSITORY
 
 # The extension package of each part module, by the backend's catalogue.
 CATALOGUES = {"rri": RRI_PARTS, "sqlite": SQLITE_PARTS}
-ENVIRONMENTS = {"rri": ["rri-mtest.yaml", "rri-local.yaml"], "sqlite": ["sqlite-demo.yaml", "sqlite-demo-extended.yaml", "sqlite-demo-bound.yaml", "sqlite-demo-inherit.yaml"]}
+ENVIRONMENTS = sorted(subprocess.run(["git", "ls-files", "config/environments/*.yaml"], cwd=REPOSITORY, capture_output=True,
+                                     text=True, check=True).stdout.split())
 
 
 def _extension_id(part_module: str, backend: str) -> str:
@@ -34,17 +35,16 @@ def _extension_id(part_module: str, backend: str) -> str:
 @pytest.mark.parametrize("backend", CATALOGUES)
 def test_every_key_of_a_catalogue_is_the_id_of_the_extension_its_part_belongs_to(backend):
     for extension_id, part_module in CATALOGUES[backend].items():
+        assert part_module.startswith(f"registry_adapter.{backend}.extensions."), part_module
         assert extension_id == _extension_id(part_module, backend)
         assert importlib.import_module(part_module)
 
 
-@pytest.mark.parametrize("backend", CATALOGUES)
-def test_every_extension_of_the_configurations_of_a_backend_is_in_its_catalogue(backend):
-    for name in ENVIRONMENTS[backend]:
-        path = REPOSITORY / "config" / "environments" / name
-        settings = load_settings(str(path))
-        registry = load_extensions(settings.extensions)
-        assert set(registry.ids()) <= set(CATALOGUES[backend]), name
+@pytest.mark.parametrize("environment", ENVIRONMENTS)
+def test_every_extension_of_a_tracked_environment_is_in_the_catalogue_of_its_backend(environment):
+    settings = load_settings(str(REPOSITORY / environment))
+
+    assert set(load_extensions(settings.extensions).ids()) <= set(held_parts(settings.backend)), environment
 
 
 def test_the_parts_of_a_backend_are_those_of_the_registered_extensions_only():
