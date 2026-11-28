@@ -1,0 +1,280 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test6-verification_process_with_a_deadline",
+  "description": "A domain whose holder failed the verification of its name gets a verification deadline from the registry. The sponsor reads the process in full, another client with Object Authorisation reduced, and without it not at all.",
+  "setup": [
+    {
+      "comment": "Creates contact V6 with a failed verification of its name; expects 201 01000. The holder of the domain below, which the registry puts on hold.",
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          },
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "failed",
+              "reference": "REF-V6-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ],
+          "id": "{handle:a:V6}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:V6}",
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "failed",
+              "reference": "REF-V6-{random_id_10}",
+              "date": "2026-11-12T09:00:00.000000Z",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Creates domain v6 with registrant V6, dns records a and the authInfo Abc2345678; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "v6-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:V6}"
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Waits for the risk assessment of domain v6, which the registry makes within seconds.",
+      "loop": [
+        {
+          "comment": "Reads verificationProcess of domain v6; expects 404 02303 until the registry has assessed the risk, then 200 01000.",
+          "request": {
+            "method": "GET",
+            "url": "/domainNames/v6-{random_name}.{tld}/processes/verificationProcesses/latest",
+            "headers": {
+              "Authorization": "{auth:a}",
+              "Accept": "{rpp:accept}",
+              "RPP-Preset": "{rpp:preset}",
+              "RPP-Cltrid": "{unique_cltrid}"
+            }
+          },
+          "response": {
+            "any_of": [
+              {
+                "status": 200,
+                "content_type": "application/rpp+json",
+                "headers": {
+                  "RPP-Code": "01000"
+                },
+                "body": {
+                  "@type": "verificationProcess"
+                }
+              },
+              {
+                "status": 404,
+                "content_type": "application/problem+json",
+                "headers": {
+                  "RPP-Code": "02303"
+                },
+                "body": {
+                  "type": "urn:ietf:params:rpp:error"
+                }
+              }
+            ]
+          },
+          "until": {
+            "headers": {
+              "RPP-Code": "01000"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "comment": "Reads verificationProcess of domain v6 as the sponsor; expects 200 01000 with the deadline, the holder and its record.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/v6-{random_name}.{tld}/processes/verificationProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "verificationProcess",
+          "holders": [
+            {
+              "@type": "holderVerification",
+              "holder": {
+                "@type": "contact",
+                "id": "{handle:a:V6}"
+              },
+              "verifications": [
+                {
+                  "@type": "verificationInformation",
+                  "claims": [
+                    "name"
+                  ],
+                  "result": "failed",
+                  "reference": "REF-V6-{random_id_10}",
+                  "date": "2026-11-12T09:00:00.000000Z",
+                  "evidence": "idcard",
+                  "method": "auth",
+                  "trustFramework": "de_denic"
+                }
+              ]
+            }
+          ]
+        },
+        "fields": {
+          "deletionDeadline": {
+            "type": "not_null"
+          }
+        }
+      }
+    },
+    {
+      "comment": "Reads verificationProcess of domain v6 as registrar b with RPP-Authorization; expects 200 01000 without the holder and with the claims and the result only.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/v6-{random_name}.{tld}/processes/verificationProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "RPP-Authorization": "authinfo value=QWJjMjM0NTY3OA=="
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "verificationProcess",
+          "holders": [
+            {
+              "@type": "holderVerification",
+              "verifications": [
+                {
+                  "@type": "verificationInformation",
+                  "claims": [
+                    "name"
+                  ],
+                  "result": "failed"
+                }
+              ]
+            }
+          ]
+        },
+        "fields": {
+          "deletionDeadline": {
+            "type": "not_null"
+          }
+        }
+      }
+    },
+    {
+      "comment": "Reads verificationProcess of domain v6 as registrar b without RPP-Authorization; expects 403 02201.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/v6-{random_name}.{tld}/processes/verificationProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "RPP-Code": "02201"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

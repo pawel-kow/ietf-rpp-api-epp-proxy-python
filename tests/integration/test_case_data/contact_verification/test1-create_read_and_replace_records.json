@@ -1,0 +1,232 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test1-create_read_and_replace_records",
+  "description": "A contact is created with verification information, read back with it, and a full update that states other records replaces them.",
+  "steps": [
+    {
+      "comment": "Creates contact V1 with verification information; expects 201 01000.",
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          },
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ],
+          "id": "{handle:a:V1}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:V1}",
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T09:00:00.000000Z",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Reads contact V1; expects 200 01000 with the verification information.",
+      "request": {
+        "method": "GET",
+        "url": "/contacts/{handle:a:V1}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T09:00:00.000000Z",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Replaces contact V1 with a full update that states another record; expects 200 01000.",
+      "request": {
+        "method": "PUT",
+        "url": "/contacts/{handle:a:V1}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          },
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "email"
+              ],
+              "result": "success",
+              "reference": "REF-V1B-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "email_ver_transaction_log",
+              "method": "reachability",
+              "trustFramework": "de_denic"
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "email"
+              ],
+              "result": "success",
+              "reference": "REF-V1B-{random_id_10}",
+              "date": "2026-11-12T09:00:00.000000Z",
+              "evidence": "email_ver_transaction_log",
+              "method": "reachability",
+              "trustFramework": "de_denic"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

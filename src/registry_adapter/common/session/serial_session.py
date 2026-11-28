@@ -76,12 +76,12 @@ class SerialSession:
                 # cannot run it twice.
                 self._open_session()
                 self._write(message, loggable)
-            return self._read()
+            return self._read(loggable)
 
     def _exchange(self, message: str, loggable=True) -> str:
         """One exchange on the open socket, for the login and logout. Callers must hold self._lock."""
         self._write(message, loggable)
-        return self._read()
+        return self._read(loggable)
 
     def _write(self, message: str, loggable=True):
         """Sends, and closes the session if that fails. Callers must hold self._lock."""
@@ -95,10 +95,11 @@ class SerialSession:
             self.disconnect(send_logout=False)
             raise
 
-    def _read(self) -> str:
-        """Receives, and closes the session if that fails. Callers must hold self._lock."""
+    def _read(self, loggable=True) -> str:
+        """Receives, and closes the session if that fails. The reply of a command that was not loggable is not printed
+        either: it can hold what the command asked for. Callers must hold self._lock."""
         try:
-            return self.client.receive()
+            return self.client.receive() if loggable else self.client.receive(loggable=False)
         except Exception as e:
             print(f"Error receiving from the {self.name} server: {e}")
             self.disconnect(send_logout=False)

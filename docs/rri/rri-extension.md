@@ -2504,7 +2504,7 @@ Example contact partial update request that adds the result of a failed verifica
 [
   {
     "op": "add",
-    "path": "/verifications/-",
+    "path": "/verifications",
     "value": {
       "@type": "verificationInformation",
       "claims": [ "email" ],
@@ -3762,6 +3762,7 @@ Table: Mapping of verification information
 
 * In contact CREATE and UPDATE, each block has `xsi:type="verification:verificationInformationType"`, in which all elements are required, and follows the other elements of the contact. Contact INFO returns the blocks of the contact. In domain INFO, a block of a holder has `xsi:type="verification:domainVerificationInformationType"`, in which only `verifiedClaims` and `verificationResult` are required.
 * The registry compares the claims without regard to case. The implementation sends them, and returns them, in lower case.
+* MTEST refuses a verification timestamp in the form with `Z` (`63200041861`, checked 2026-11-28 at 09:00 in Europe/Berlin) and takes one with an offset, so the implementation states the instant of the Date at the offset `+01:00`, and returns it in UTC.
 * A contact UPDATE replaces all data of the contact, and one without blocks deletes them. On a full update whose preset contains the extension, the implementation sends the blocks of the request. On a full update whose preset does not, and on a partial update that does not change the Verifications, it sends the blocks of the contact INFO that it reads before the update. A partial update of the Verifications is applied to the blocks of that INFO.
 * The registry allows blocks on a contact of type `PERSON` or `ORG` only, and the allowed combinations of evidence, method, and claim are tabulated in its documentation. The implementation does not check the combination and maps the refusal (`63200041867`).
 * When a verification of the email address failed, the registry asks for a block with the result `failed`, and for a further block when a later verification succeeds. A block with the result `failed` places the domain names that the contact holds on hold. The client keeps the evidence for 12 months by the rules of the registry.

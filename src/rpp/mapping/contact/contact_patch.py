@@ -9,6 +9,7 @@ from rpp.dto.rpp_contact import RPPContact
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
 from rpp.dto.rpp_status import RPPStatus
 from rpp.mapping.contact import contact_replacement, contacts
+from rpp.mapping.contact.contact_members import CONTACT_MEMBERS
 from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
 from rpp.mapping.shared.common import parse_rpp, reject_operation
 from rpp.mapping.shared.needs_current_state import NeedsCurrentState
@@ -47,10 +48,15 @@ ENTRIES = {
 FAX_FEATURES = {contacts.PHONE_FAX: True}
 
 
-def _check(operation: RPPPatchOperation):
+def _member_paths(extensions: tuple[str, ...]) -> tuple[str, ...]:
+    """The paths of the members the offered extensions add, which a patch changes on the read contact."""
+    return tuple(f"/{member}" for member in CONTACT_MEMBERS.members("contact.update", extensions))
+
+
+def _check(operation: RPPPatchOperation, extensions: tuple[str, ...] = ()):
     if operation.op not in ("add", "remove", "replace"):
         raise ValueError(f"Operation '{operation.op}' is not allowed")
-    if operation.path not in (STATUS_PATH, AUTH_INFO_PATH, DISCLOSE_PATH) and not operation.path.startswith(f"{CONTACT_INFO_PATH}/") and operation.path != CONTACT_INFO_PATH:
+    if operation.path not in (STATUS_PATH, AUTH_INFO_PATH, DISCLOSE_PATH, *_member_paths(extensions)) and not operation.path.startswith(f"{CONTACT_INFO_PATH}/") and operation.path != CONTACT_INFO_PATH:
         raise ValueError(f"Path '{operation.path}' cannot be changed")
     if operation.path == DISCLOSE_PATH:
         raise NotSupportedByProxy("'disclose'")
@@ -59,14 +65,18 @@ def _check(operation: RPPPatchOperation):
 class _PatchedUpdate:
     """Collects the effect of the patch operations that need no read on a ContactUpdate."""
 
-    def __init__(self):
+    def __init__(self, extensions: tuple[str, ...] = ()):
+        self.extensions = extensions
+        self.member_paths = _member_paths(extensions)
         self.add = ContactUpdateChanges()
         self.remove = ContactUpdateChanges()
         self.auth_info = None
         self.change = ContactUpdateChange()
 
     def apply(self, operation: RPPPatchOperation):
-        _check(operation)
+        _check(operation, self.extensions)
+        if operation.path in self.member_paths:
+            raise NeedsCurrentState()    # a member an extension adds is changed on the read contact
         if operation.path == AUTH_INFO_PATH:
             self._apply_to_auth_info(operation)
         elif operation.path == STATUS_PATH:
@@ -157,14 +167,14 @@ def _operations(rpp: list) -> list[RPPPatchOperation]:
     return [parse_rpp(RPPPatchOperation, operation) for operation in rpp]
 
 
-def rpp_to_model(contact_id: str, rpp: list) -> ContactUpdate | None:
+def rpp_to_model(contact_id: str, rpp: list, extensions: tuple[str, ...] = ()) -> ContactUpdate | None:
     """Converts a partial update (JSON Patch, json draft §5.2) to a ContactUpdate.
 
     None when an operation needs the current contact, then `rpp_to_model_with_current` converts it.
     Under a preset with applicable profiles it is None too, after the same conversion (so what that refuses is refused alike): the profiles are checked on the
     object the patch results in (core §Extensions and Profiles of a Request: every request), which needs the current one.
     """
-    update = _PatchedUpdate()
+    update = _PatchedUpdate(extensions)
     try:
         for operation in _operations(rpp):
             update.apply(operation)
@@ -188,7 +198,8 @@ def _with_derived_kind(patched: dict, operations: list[RPPPatchOperation]) -> di
     return {**patched, "contactInfo": card}
 
 
-def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact, *, kind_held: bool = False) -> ContactReplacement:
+def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact, *, kind_held: bool = False,
+                              extensions: tuple[str, ...] = ()) -> ContactReplacement:
     """Applies the patch to the current contact (its read representation) and returns the contact it asks for.
 
     A read need not show a data element with onDemand Visibility (`authInfo`), so its operations are converted as
@@ -197,22 +208,32 @@ def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact, *, k
     """
     operations = _operations(rpp)
     for operation in operations:
-        _check(operation)
-    read = contacts.model_to_rpp(current)
+        _check(operation, extensions)
+    read = contacts.model_to_rpp(current, extensions)
     patched = json_patch.apply(
-        patch_statuses.without_server_statuses(read), operations, ARRAY_PATHS,
+        patch_statuses.without_server_statuses(read), operations,
+        ARRAY_PATHS + tuple(f"/{member}" for member in CONTACT_MEMBERS.arrays("contact.update", extensions)),
         ignored_paths=include_elements.on_demand_paths(OBJECT), absent_parents=ABSENT_PARENTS,
     )
     patched = patch_statuses.with_server_statuses(patched, read, "contactStatus")
-    validate_schema("contact.read", patched)
+    validate_schema("contact.read", patched, extensions)
     contacts.check_rpp_rules(patched["contactInfo"])
-    refuse_removals_by_profile("contact.update", operations)    # after step 1, before step 2
-    validate_request_schema("contact.read", patched, patched=True)
+    CONTACT_MEMBERS.check(patched, extensions)    # before step 2: an extension's refusal is not a broken profile constraint
+    refuse_removals_by_profile("contact.update", operations, extensions)    # after step 1, before step 2
+    validate_request_schema("contact.read", patched, extensions, patched=True)
+    # A member the patch names is restated, and checked as an update states it: the read definition does not enforce
+    # the values a request may use. One it leaves alone is left as it is stored, whatever the read shows.
+    stated = frozenset(member for member in CONTACT_MEMBERS.members("contact.update", extensions)
+                       if any(operation.path == f"/{member}" for operation in operations))
+    validate_schema("contact.update", {"@type": "contact", "contactInfo": {"@type": "Card", "version": "2.0"},
+                                       **{member: patched[member] for member in stated if member in patched}},
+                    extensions)
     patched = patched if kind_held else _with_derived_kind(patched, operations)
     requested = {member: value for member, value in patched.items() if member not in READ_ONLY_MEMBERS}
-    auth_info_update = _PatchedUpdate()
+    requested, held = CONTACT_MEMBERS.split(requested, "contact.update", extensions, stated=stated)
+    auth_info_update = _PatchedUpdate(extensions)
     for operation in operations:
         if operation.path == AUTH_INFO_PATH:
             auth_info_update.apply(operation)
     unchanged = include_elements.left_alone_by_patch(OBJECT, [operation.path for operation in operations])
-    return contact_replacement.replacement_from_rpp(parse_rpp(RPPContact, requested), auth_info_update.auth_info, unchanged)
+    return contact_replacement.replacement_from_rpp(parse_rpp(RPPContact, requested), auth_info_update.auth_info, unchanged, held)

@@ -179,7 +179,7 @@ RRI contact types: `PERSON` and `ORG` (holders), and `REQUEST` (a URI template f
 | `phones` voice | `Phone` (exactly 1, **mandatory** since 2026-01-28) | A second voice number → 501. A Card without a phone → DENIC refuses it (`63200042402`). Q13: check that up front? |
 | `phones` fax | — | No fax in RRI 5.0 → 501. |
 | `status`, `authInfo`, `disclose` | — | 501. |
-| — | verification blocks (0–5) | NIS2 pre-verification has no place in RPP, see §4.5. Omitting it in an UPDATE **deletes** it, so the adapter must carry it over from the INFO it read. |
+| `verifications` (`rri` extension) | verification blocks (0–5) | The member `verifications` of the contact in the `rri` extension ([rri-extension.md](rri-extension.md#contact)), read-write, see §4.5. Omitting the blocks in an UPDATE **deletes** them, so the adapter carries them over from the INFO it read unless the request states them. |
 | `REQUEST` contacts | `Type: REQUEST`, `URI-Template` | Not a contact: the data object `requestContact` of the `rri` extension (`/requestContacts`), see Q2. A contact read of a REQUEST handle answers 404. |
 
 **Read (`contacts_read` → contact INFO)**: own contacts only. `provMetadata.spClientId` is required in RPP. RRI does
@@ -188,8 +188,9 @@ not return it, but it is the RegAccId encoded in the handle prefix. `upDate` ←
 
 **Update**: full replacement in RRI (§3.1 has the pattern). `contact_difference.py` makes an EPP delta and refuses
 what EPP cannot clear. After the split ([refactoring.md §3.5](refactoring.md#35-full-and-partial-updates)),
-a PUT reaches the RRI adapter as a `ContactReplacement`, which it sends whole with the verification blocks
-carried over. A PATCH reaches it as a delta, which is applied to the contact it read. A contact UPDATE starts a new NIS2 risk assessment for every domain that uses the contact as holder
+a PUT reaches the RRI adapter as a `ContactReplacement`, which it sends whole. Its `extensions` entry for the `rri` extension (present under a preset that
+has it, empty when the PUT omits `verifications`) replaces the blocks; without the entry (a PUT under `base`, a partial update that leaves them alone) the blocks of the INFO
+it read are sent again. A PATCH reaches it as a delta, which is applied to the contact it read. A contact UPDATE starts a new NIS2 risk assessment for every domain that uses the contact as holder
 (ref §6.4). That is a significant side effect of a PATCH, and the response cannot express it.
 
 **Delete (`contacts_delete`)**: no RRI command. DENIC deletes unused contacts itself (ref §5.1) → 501.
@@ -310,9 +311,14 @@ RRI 5.0 carries, with no RPP place for it:
   in write responses;
 - the `domainStatusUpdate` and `contactVerificationRequired` messages, which have message types of the extension (§3.4).
 
-A registrar that uses RPP alone could not pre-verify holders, and a domain would then go to `serverHold` and be
-deleted after 90 days. This is the largest functional gap. It needs an RPP extension or a DENIC profile (Q16).
-Until then the adapter must at least keep the stored verification blocks across updates (§4.1).
+The deadlines and the blocks of the holders are the read-only Process Object `verificationProcess` of the domain (`GET /domainNames/{name}/processes/verificationProcesses/latest`): a domain INFO with
+`recursive="true"`, with `domain:authInfo` from `RPP-Authorization`. The sponsor sees it in full, another client with `RPP-Authorization` without the holders' handles and with claims and result only, one
+without it is refused (403 `02201`), and a domain without a deadline has none (404 `02303`). MTEST sets the deadline asynchronously: a domain of a holder whose pre-verification failed is `pendingCreate`
+and, within seconds, `serverHold` with `verificationDeadlineBeforeDeletion` (checked 2026-11-28; a hold deadline is not set for a domain that is on hold already). The commands that carry or return
+verification data (contact CREATE/UPDATE with blocks, contact INFO, the recursive INFO) are not printed, nor their replies (`loggable=False`).
+
+A registrar that uses RPP alone, without the extension, cannot pre-verify holders, and a domain would then go to `serverHold` and be
+deleted after 90 days. The stored verification blocks are kept across updates (§4.1) whatever the preset.
 
 ### 4.6 Sponsor identity
 

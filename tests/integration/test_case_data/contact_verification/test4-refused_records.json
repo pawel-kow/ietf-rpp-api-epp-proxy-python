@@ -1,0 +1,258 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test4-refused_records",
+  "description": "Records that the registry refuses are a client error: a combination it does not allow, and conflicting claims, are 422; a value the definition does not list is 400.",
+  "steps": [
+    {
+      "comment": "Creates contact V4 with the evidence idcard and the method reachability for the claim address; expects 422 02306.",
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          },
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "address"
+              ],
+              "result": "success",
+              "reference": "REF-V4-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "idcard",
+              "method": "reachability",
+              "trustFramework": "de_denic"
+            }
+          ],
+          "id": "{handle:a:V4}"
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "RPP-Code": "02306"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "comment": "Creates contact V4 with a success and a failure of the claim name; expects 422 02306.",
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          },
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V4A-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            },
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "failed",
+              "reference": "REF-V4B-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ],
+          "id": "{handle:a:V4}"
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "RPP-Code": "02306"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "comment": "Creates contact V4 with an evidence the definition does not list; expects 400 02001.",
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          },
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V4-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "retina_scan",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ],
+          "id": "{handle:a:V4}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02001"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

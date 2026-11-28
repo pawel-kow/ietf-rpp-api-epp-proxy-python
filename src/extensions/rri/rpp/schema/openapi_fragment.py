@@ -75,6 +75,7 @@ PROCESS_SUFFIXES = ("", "/latest", "/{processId}")
 PROCESSES = (
     ("authInfoProcess", "domainNameAuthInfoProcesses", f"{HANDLERS}.auth_info_process_handlers"),
     ("authInfoIssueProcess", "domainNameAuthInfoIssueProcesses", f"{HANDLERS}.auth_info_issue_process_handlers"),
+    ("verificationProcess", "domainNameVerificationProcesses", f"{HANDLERS}.verification_process_handlers"),
 )
 
 PROCESS_OPERATIONS = {"transferCreate": "create", "transferRead": "read", "transferDelete": "delete",

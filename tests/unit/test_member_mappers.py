@@ -2,7 +2,11 @@
 domain's one and the rri extension's mapper."""
 import pytest
 
+from core.model.contact.contacts import Contact
 from core.model.domain.domains import ContactReference, Domain
+from extensions.rri.core.model.contact_verifications import ContactVerifications
+from extensions.rri.core.model.verification_information import VerificationInformation
+from rpp.mapping.contact.contact_members import CONTACT_MEMBERS
 from extensions.rri.core.ports.rri_gateways import EXTENSION_ID
 from rpp.mapping.domain.domain_members import DOMAIN_MEMBERS
 from rpp.mapping.shared.member_mappers import MemberMappers
@@ -67,3 +71,38 @@ def test_a_member_the_request_has_reaches_the_mapper_whatever_its_value(value):
     rest, _ = mappers.split({"name": "a.de", "abuse": value}, "domainName.create", (EXTENSION_ID,))
 
     assert seen == [{"abuse": value}] and rest == {"name": "a.de"}
+
+
+def test_a_full_update_states_the_members_so_an_omitted_one_is_the_empty_value():
+    members = CONTACT_MEMBERS.members("contact.update", (EXTENSION_ID,))
+
+    rest, held = CONTACT_MEMBERS.split({"contactInfo": {}}, "contact.update", (EXTENSION_ID,), stated=members)
+
+    assert rest == {"contactInfo": {}} and held[EXTENSION_ID].blocks == []
+
+
+def test_a_preset_without_the_extension_makes_no_entry_even_for_a_full_update():
+
+    rest, held = CONTACT_MEMBERS.split({"contactInfo": {}}, "contact.update", (), stated=())
+
+    assert held == {}
+
+
+def test_a_patch_states_only_the_members_it_names_and_drops_the_others_unconverted():
+    read = {"contactInfo": {}, "verifications": [{"@type": "verificationInformation", "claims": ["name"], "result": "success"}]}
+
+    rest, untouched = CONTACT_MEMBERS.split(read, "contact.update", (EXTENSION_ID,), stated=frozenset())
+    _, removed = CONTACT_MEMBERS.split({"contactInfo": {}}, "contact.update", (EXTENSION_ID,), stated={"verifications"})
+
+    assert rest == {"contactInfo": {}} and untouched == {}
+    assert removed[EXTENSION_ID].blocks == []
+
+
+def test_the_members_of_a_contact_are_shown_as_the_read_definition_has_them():
+    contact = Contact(id="DENIC-1-X", extensions={EXTENSION_ID: ContactVerifications(
+        blocks=[VerificationInformation(claims=["name"], result="success")])})
+
+    assert CONTACT_MEMBERS.to_rpp(contact, "contact.read", (EXTENSION_ID,)) == {"verifications": [
+        {"@type": "verificationInformation", "claims": ["name"], "result": "success"}]}
+    assert CONTACT_MEMBERS.to_rpp(contact, "contact.read", ()) == {}
+    assert CONTACT_MEMBERS.to_rpp(Contact(id="DENIC-1-X"), "contact.read", (EXTENSION_ID,)) == {}

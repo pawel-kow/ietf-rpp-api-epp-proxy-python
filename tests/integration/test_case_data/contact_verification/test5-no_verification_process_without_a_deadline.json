@@ -1,0 +1,123 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test5-no_verification_process_without_a_deadline",
+  "description": "A domain without a verification deadline has no verification process; another client needs Object Authorisation to ask.",
+  "setup": [
+    {
+      "comment": "Creates contact V5; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:V5}"
+      }
+    },
+    {
+      "comment": "Creates domain v5 with registrant V5, dns records a and the authInfo Abc2345678; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "v5-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:V5}"
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Reads verificationProcess of domain v5 as the sponsor; expects 404 02303.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/v5-{random_name}.{tld}/processes/verificationProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "RPP-Code": "02303"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "comment": "Reads verificationProcess of domain v5 as registrar b without RPP-Authorization; expects 403 02201.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/v5-{random_name}.{tld}/processes/verificationProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "RPP-Code": "02201"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "comment": "Reads verificationProcess of domain v5 as registrar b with RPP-Authorization; expects 404 02303.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/v5-{random_name}.{tld}/processes/verificationProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "RPP-Authorization": "authinfo value=QWJjMjM0NTY3OA=="
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "RPP-Code": "02303"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    },
+    {
+      "comment": "Reads verificationProcess of domain v5 as registrar b with a wrong RPP-Authorization; expects 401 02202.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/v5-{random_name}.{tld}/processes/verificationProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "RPP-Authorization": "authinfo value=V3Jvbmc5OTk5"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "RPP-Code": "02202"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

@@ -13,7 +13,9 @@ class ContactReplacement:
 
     `status` holds client statuses only, the server's are not the client's to replace. `unchanged` names the members
     the replacement does not state, which stay as they are stored: a data element with onDemand Visibility the request
-    did not include. `type` is the kind the request states, which a backend that holds no kind ignores.
+    did not include. `type` is the kind the request states, which a backend that holds no kind ignores. `extensions` holds a
+    typed object per extension whose members the request restates (an omitted member is its empty value); an extension without
+    an entry is not restated, and the backend keeps what it holds of it.
     """
     id: str
     type: Optional[ContactType] = None
@@ -28,3 +30,4 @@ class ContactReplacement:
     status_reasons: Dict[str, str] = field(default_factory=dict)
     authInfo: Optional[AuthInfo] = None
     unchanged: FrozenSet[str] = frozenset()
+    extensions: Dict[str, object] = field(default_factory=dict)

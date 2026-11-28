@@ -3,6 +3,7 @@ from core.model.contact.contacts import Contact
 from core.model.shared.common import AuthInfo
 from rpp.dto.rpp_contact import RPPContact
 from rpp.mapping.contact import contacts
+from rpp.mapping.contact.contact_members import CONTACT_MEMBERS
 from rpp.mapping.shared import auth_info, include_elements
 from rpp.mapping.shared.common import parse_rpp
 from rpp.schema.validator import validate_request_schema, validate_schema
@@ -15,7 +16,7 @@ OBJECT = "contact"
 
 
 def replacement_from_rpp(
-    contact_rpp: RPPContact, password: AuthInfo | None, unchanged: frozenset[str],
+    contact_rpp: RPPContact, password: AuthInfo | None, unchanged: frozenset[str], extensions: dict | None = None,
 ) -> ContactReplacement:
     """The contact a full update or a patched read asks for. The caller converts
     `authInfo`, which a read need not show, and names the members the request leaves `unchanged`."""
@@ -34,20 +35,31 @@ def replacement_from_rpp(
         status_reasons={status.label: status.reason for status in contact_rpp.status or [] if status.reason},
         authInfo=password,
         unchanged=unchanged,
+        extensions=extensions or {},
     )
 
 
-def rpp_to_model(contact_id: str, rpp: dict, requested: frozenset[str] = frozenset()) -> ContactReplacement:
+def changeable(extensions: tuple[str, ...]) -> tuple[str, ...]:
+    """The members a client may replace, with the members the offered extensions add."""
+    return CHANGEABLE + CONTACT_MEMBERS.members("contact.update", extensions)
+
+
+def rpp_to_model(contact_id: str, rpp: dict, requested: frozenset[str] = frozenset(),
+                 extensions: tuple[str, ...] = ()) -> ContactReplacement:
     """Converts a full update to the contact it asks for. What it omits is cleared, except the data elements with
     onDemand Visibility that `requested` (the `includeElements` of the request) does not name.
 
     A member outside `contact.update` is rejected, also a create-only or a read-only one (json §4.4, core §16.8).
     """
-    validate_schema("contact.update", rpp)
+    validate_schema("contact.update", rpp, extensions)
     contacts.check_rpp_rules(rpp["contactInfo"])
-    validate_request_schema("contact.update", rpp)
-    for member in rpp.keys() - {TYPE, *CHANGEABLE}:
+    CONTACT_MEMBERS.check(rpp, extensions)    # before step 2: an extension's refusal is not a broken profile constraint
+    validate_request_schema("contact.update", rpp, extensions)
+    for member in rpp.keys() - {TYPE, *changeable(extensions)}:
         raise ValueError(f"'{member}' cannot be sent in a full update")
-    contact_rpp = parse_rpp(RPPContact, {**rpp, "id": contact_id})  # rejects undeclared members at any depth
+    # A full update states every member the preset's extensions add: an omitted one is cleared.
+    rest, held = CONTACT_MEMBERS.split(rpp, "contact.update", extensions,
+                                       stated=CONTACT_MEMBERS.members("contact.update", extensions))
+    contact_rpp = parse_rpp(RPPContact, {**rest, "id": contact_id})  # rejects undeclared members at any depth
     unchanged = include_elements.left_alone(OBJECT, rpp, requested)
-    return replacement_from_rpp(contact_rpp, auth_info.rpp_to_model(contact_rpp.authInfo), unchanged)
+    return replacement_from_rpp(contact_rpp, auth_info.rpp_to_model(contact_rpp.authInfo), unchanged, held)

@@ -34,7 +34,7 @@ class FakeTransport:
         self.sent.append(message)
         self.logged.append(loggable)
 
-    def receive(self):
+    def receive(self, loggable=True):
         return self.replies.pop(0)
 
 

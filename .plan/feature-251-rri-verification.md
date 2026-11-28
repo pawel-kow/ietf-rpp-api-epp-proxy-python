@@ -7,15 +7,15 @@ order #253, #255, #256, #257, this. The spec is committed (90f806d): docs/rri/rr
 ## Tasks
 
 - [x] Read the spec, #250's plan and code, PR #247's entry "Full update of a member an extension adds"
-- [~] Plan approved by the orchestrator
-- [ ] copy_models.sh: schema into src
-- [ ] Generic: `CONTACT_MEMBERS` (`MemberMappers` for the contact), `Contact.extensions` / `ContactReplacement.extensions`, mapper functions take `extensions`, `MemberMappers.split(stated=)`
-- [ ] Core of the extension: models (verification information, contact verifications, holder verification, verification process), port, flow
-- [ ] RRI part: contact members hook (`RriExtensionPart.contact_members`), XML of the blocks, gateway wiring, refusal codes, verification process INFO
-- [ ] Handlers, OpenAPI fragment, preset check, profile leaves
-- [ ] Unit tests (mappers, wire, flows, XML, refusals, presets)
-- [ ] MTEST integration cases
-- [ ] Docs: gap-analysis.md (§3.2, §4.5, Q16 left), architecture.project.md, testing.project.md, rri-5.0-reference.md facts
+- [x] Plan approved by the orchestrator
+- [x] copy_models.sh: schema into src
+- [x] Generic: `CONTACT_MEMBERS` (`MemberMappers` for the contact), `Contact.extensions` / `ContactReplacement.extensions`, mapper functions take `extensions`, `MemberMappers.split(stated=)`
+- [x] Core of the extension: models (verification information, contact verifications, holder verification, verification process), port, flow
+- [x] RRI part: contact members hook (`RriExtensionPart.contact_members`), XML of the blocks, gateway wiring, refusal codes, verification process INFO
+- [x] Handlers, OpenAPI fragment, preset check, profile leaves
+- [x] Unit tests (mappers, wire, flows, XML, refusals, presets)
+- [x] MTEST integration cases
+- [x] Docs: gap-analysis.md (§3.2, §4.5, Q16 left), architecture.project.md, testing.project.md, rri-5.0-reference.md facts
 - [ ] Checks (lint-imports, unit, smoke incl. MTEST), draft PR
 
 ## Approach
@@ -102,3 +102,17 @@ Verification elements and values are never logged by the proxy. `loggable=False`
 ## Decisions
 
 - (orchestrator, settled before the plan) see the task message.
+- (orchestrator, plan approved) 1. patch example path becomes `/verifications` (one-line spec fix, no Changes History line). 2. no entry for 63450064002.
+  3. deadline without holders: 404 02303, logged without values. 4. reduction in the core flow too. 5. every RRI exchange that can carry verification
+  data is not printed: contact CREATE/UPDATE with blocks, recursive domain INFO and contact INFO (reply too): `loggable=False` suppresses the reply print as well
+  (serial_session/tcp_client), with a test that a verification value never reaches stdout/log; the remaining print of other replies is known debt in
+  security.project.md (existing issue #14). 6. MTEST probes as listed.
+
+## Findings (MTEST, 2026-11-28)
+
+- `verificationTimestamp` with `Z` is refused (63200041861), an offset is taken: the proxy sends the instant at `+01:00`. Appendix of rri-extension.md has the fact: **needs the maintainer's confirmation** (a spec appendix edit).
+- Valid: name+idcard+auth, email+email_ver_transaction_log+reachability. 63200041867: address+idcard+reachability, email+email_ver_transaction_log+data. 63200041863: a success and a failure of one claim in two blocks.
+- A domain of a holder with a failed block: pendingCreate, within seconds serverHold with `verificationDeadlineBeforeDeletion` only. `test6` polls (paced by rpp_requests_per_minute).
+- `delay_seconds` in a case is refused by the loader (waits are periods of the facts); the loop is paced by the pacer instead.
+- Spec patch example fixed to `/verifications`.
+- Contact INFO blocks are `DerivedElement`s in xsdata (xsi:type): unwrapped.

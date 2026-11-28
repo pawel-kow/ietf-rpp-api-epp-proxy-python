@@ -30,6 +30,8 @@ class Contact(ProvisioningObject, ContactMinimal):
     # What the backend holds of the contact beyond the model and loses unless it is sent again in a full update, such
     # as RRI's verification data. Opaque to everything but the adapter that read it, and never shown.
     carried_over: Optional[Any] = None
+    # What the extensions of the request's preset add to a contact: a typed object of the extension's own core per extension id.
+    extensions: Dict[str, object] = field(default_factory=dict)
 
     def __post_init__(self):
         localized = self.localizedPostalInfo

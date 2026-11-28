@@ -34,7 +34,8 @@ def test_the_plural_of_an_identifier_ending_in_s_has_es():
 
 def test_the_process_owners_are_those_of_the_offered_extensions_only():
     assert process_owners([EXTENSION_ID]) == {("domainNames", "authInfoProcesses"): EXTENSION_ID,
-                                              ("domainNames", "authInfoIssueProcesses"): EXTENSION_ID}
+                                              ("domainNames", "authInfoIssueProcesses"): EXTENSION_ID,
+                                              ("domainNames", "verificationProcesses"): EXTENSION_ID}
     assert process_owners([]) == {}
 
 

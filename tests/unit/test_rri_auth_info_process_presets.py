@@ -13,7 +13,7 @@ from tests.unit.test_presets_wire import BASE, RRI, rri_client
 from tests.unit.test_preset_header_wire import named
 from tests.unit.test_openapi_preset_documents import preset_document
 
-PROCESSES = ("authInfoProcesses", "authInfoIssueProcesses")
+PROCESSES = ("authInfoProcesses", "authInfoIssueProcesses", "verificationProcesses")
 
 
 def named_preset(preset):
@@ -51,6 +51,7 @@ def test_a_process_of_another_object_than_the_extension_adds_it_to_is_left_to_ro
     ("GET", "/domainNames/x.de/processes/authInfoProcesses/latest"),
     ("DELETE", "/domainNames/x.de/processes/authInfoProcesses/latest"),
     ("POST", "/domainNames/x.de/processes/authInfoIssueProcesses"),
+    ("GET", "/domainNames/x.de/processes/verificationProcesses/latest"),
 ])
 def test_a_process_of_the_domain_name_is_refused_under_base_only(method, path):
     refused = rri_client().request(method, path, headers=named_preset(BASE))
