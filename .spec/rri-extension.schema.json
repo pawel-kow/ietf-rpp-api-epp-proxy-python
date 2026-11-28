@@ -12,6 +12,7 @@
     "#/$defs/domainName.read": "#/$defs/ext.rri.domainName.read",
     "#/$defs/domainName.update": "#/$defs/ext.rri.domainName.update",
     "#/$defs/organisation.read": "#/$defs/ext.rri.organisation.read",
+    "#/$defs/processes.read": "#/$defs/ext.rri.processes.read",
     "#/$defs/domainTransferProcess.create": "#/$defs/ext.rri.domainTransferProcess.create"
   },
   "rpp:messages": {
@@ -116,6 +117,70 @@
         "upDate": { "type": "string", "format": "date-time", "readOnly": true }
       },
       "required": ["@type", "uriTemplate"]
+    },
+    "ext.rri.processes.read": {
+      "type": "object",
+      "properties": {
+        "authInfoProcess": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ext.rri.authInfoProcess.reference" },
+          "readOnly": true
+        },
+        "authInfoIssueProcess": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ext.rri.authInfoIssueProcess.reference" },
+          "readOnly": true
+        }
+      }
+    },
+    "ext.rri.authInfoProcess.create": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoProcess" },
+        "authInfo": { "$ref": "#/$defs/authInfo.create", "writeOnly": true },
+        "expiryDate": { "type": "string", "format": "date", "writeOnly": true }
+      },
+      "required": ["@type", "authInfo"]
+    },
+    "ext.rri.authInfoProcess.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoProcess", "readOnly": true },
+        "processId": { "type": "string", "readOnly": true },
+        "expiryDate": { "type": "string", "format": "date", "readOnly": true }
+      },
+      "required": ["@type"]
+    },
+    "ext.rri.authInfoProcess.reference": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoProcess" },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "processId"]
+    },
+    "ext.rri.authInfoIssueProcess.create": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoIssueProcess" }
+      },
+      "required": ["@type"]
+    },
+    "ext.rri.authInfoIssueProcess.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoIssueProcess", "readOnly": true },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type"]
+    },
+    "ext.rri.authInfoIssueProcess.reference": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoIssueProcess" },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "processId"]
     },
     "ext.rri.domainTransferProcess.create": {
       "type": "object",
