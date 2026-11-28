@@ -289,8 +289,8 @@ forbidden_modules = ["main", "registry_adapter", "settings", "lxml", "sqlalchemy
 
 # The generic extensions of the messages: none imports the rri extension, its RRI part included, and the two that define message
 # types know nothing of each other. Each builds on the messages extension only.
-# `extension-not-adapter` already keeps every extension off the registry adapters; the only reference to the RRI backend in a
-# generic extension is the module path in `backend_parts`.
+# `extension-not-adapter` already keeps every extension off the registry adapters: an extension names no backend (#267), the
+# backend lists the extensions it holds (`registry_adapter.<backend>.extensions.PARTS`, plain strings).
 [[tool.importlinter.contracts]]
 id = "generic-extensions-not-rri"
 name = "The generic message extensions and their RRI parts do not import the rri extension"

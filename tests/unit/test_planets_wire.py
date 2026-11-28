@@ -15,7 +15,7 @@ from registry_adapter.sqlite.common_part import COMMON_PART
 from registry_adapter.sqlite.extension_part import load_extension_parts
 from registry_adapter.sqlite.sqlite_backend import SqliteBackend
 from registry_adapter.sqlite.sqlite_database import SqliteDatabase
-from registry_setup import backend_profile, load_registry
+from registry_setup import backend_parts, backend_profile, load_registry
 from rpp.http.app import create_app
 from settings.load_settings import load_settings
 from settings.sqlite_settings import SqliteSettings
@@ -106,7 +106,7 @@ def middleware_only_client():
     settings = load_settings(str(REPOSITORY / "config/environments/sqlite-demo.yaml"))
     registry = load_registry(settings)
     profile = backend_profile(settings, registry)
-    parts = load_extension_parts(registry.backend_parts("sqlite"))
+    parts = load_extension_parts(backend_parts("sqlite", registry))
     database = SqliteDatabase("sqlite://", [COMMON_PART, *(part.part for part in parts)])
     clients = ClientDirectory(settings.sqlite.rpp_sqlite_clients)
 

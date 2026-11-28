@@ -46,7 +46,6 @@ def register(registry: ExtensionRegistry) -> None:
         schema=json.loads((SCHEMAS / "planet-atmosphere-extension.schema.json").read_text(encoding="utf-8")),
         data_objects={},
         objects=(),
-        backend_parts={"sqlite": "registry_adapter.sqlite.extensions.planet_atmosphere"},
         profile_layer={"extensions": [EXTENSION_ID]},
         presets=PRESETS,
         profiles=PROFILES,

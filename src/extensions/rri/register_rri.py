@@ -72,7 +72,6 @@ def register(registry: ExtensionRegistry) -> None:
         processes=PROCESSES,
         openapi=openapi_fragment,
         handlers=HANDLERS,
-        backend_parts={"rri": "registry_adapter.rri.extensions.rri"},
         profile_layer={
             "objects": ["requestContact"],
             "extensions": [EXTENSION_ID],

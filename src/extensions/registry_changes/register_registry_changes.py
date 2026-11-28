@@ -18,6 +18,5 @@ def register(registry: ExtensionRegistry) -> None:
         schema=json.loads((SCHEMAS / "registry-changes-extension.schema.json").read_text(encoding="utf-8")),
         data_objects={},
         objects=(),
-        backend_parts={"rri": "registry_adapter.rri.extensions.registry_changes"},
         profile_layer={"extensions": [EXTENSION_ID]},
     ))

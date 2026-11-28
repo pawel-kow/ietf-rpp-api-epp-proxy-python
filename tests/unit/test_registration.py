@@ -26,10 +26,9 @@ def test_an_extension_is_registered_once():
 
 def test_the_registry_gives_what_each_extension_registered():
     registry = ExtensionRegistry()
-    registry.add(extension("a", backend_parts={"sqlite": "mod.a"}, profile_leaves={"a.x": int}))
-    registry.add(extension("b", backend_parts={"epp": "mod.b"}, profile_leaves={"b.y": str}))
+    registry.add(extension("a", profile_leaves={"a.x": int}))
+    registry.add(extension("b", profile_leaves={"b.y": str}))
 
-    assert registry.backend_parts("sqlite") == {"a": "mod.a"}
     assert registry.profile_leaves() == {"a.x": int, "b.y": str}
     assert registry.handler_packages() == ("x.handlers", "x.handlers")
 

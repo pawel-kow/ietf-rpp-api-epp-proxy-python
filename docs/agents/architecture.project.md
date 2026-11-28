@@ -582,7 +582,7 @@ each and calls its `register(registry)` ([registration/](../../src/registration/
 | the OpenAPI fragment of its paths (built from the OpenAPI document of the drafts), and the package of its handlers (every operationId is a fully qualified function name, or names the module of its handler) | `create_app` (`add_registered_paths`, `ExtensionResolver`), per app |
 | the presets and the profiles it brings | `Definitions.load(registry)` in `create_app`, per app: nothing of them is process-global, and an app without the extension does not know them |
 | its objects | `PresetMiddleware` and discovery, through the extension's schema |
-| its part of a backend (`backend_parts`) | the backend: the SQLite backend imports `registry_adapter.sqlite.extensions.<name>`, which has `PART` (its tables, in a metadata of their own, with a schema version) and `gateways(context)`; the RRI backend imports `registry_adapter.rri.extensions.<name>`, which may have `gateways(client)` (none for an extension of message types only) and `MESSAGE_TYPES` |
+| (not part of the registration) its part of a backend | the backend lists the extensions it holds in its own package, `registry_adapter/<backend>/extensions/__init__.py`: `PARTS = {extension id: part module path}`, plain strings, so that importing it imports no extension (a test checks each key against the `EXTENSION_ID` of its extension). The registration names no backend. `registry_setup.backend_parts` takes the entries of the registered extensions; a backend without that package (EPP) holds none. The backend then loads the parts: the SQLite backend imports `registry_adapter.sqlite.extensions.<name>`, which has `PART` (its tables, in a metadata of their own, with a schema version) and `gateways(context)`; the RRI backend imports `registry_adapter.rri.extensions.<name>`, which may have `gateways(client)` (none for an extension of message types only) and `MESSAGE_TYPES` |
 | the leaves it adds to the backend profile (`objects`, `extensions` and `presets` are added to the generic profile's, other leaves are new) | `BackendProfile.from_layers(..., extra_leaves=...)`: the list of leaves stays closed, and without the extension a leaf of it is unknown |
 
 An extension may build on the definitions of another: a `$ref` of its schema to a definition that another extension defines
@@ -594,7 +594,7 @@ type; each of the others has the event of its core and a `MessageMapper` for its
 (`registry_adapter/rri/extensions/<name>/`, `MESSAGE_TYPES`; `gateways(client)` is optional, so `RriExtensionPart.gateways` may be None, and `load_extension_parts` refuses a missing one for an extension with objects, processes or handlers) reads the
 `msgType`s it owns: `lockCreate`/`lockDelete`, and `domainUpdate`/`contactUpdate`/`domainDelete`/`contactDelete`. The RRI part of `messages` holds what
 those parts share (`references.py`). A generic extension imports nothing of `extensions.rri` (a contract), and a preset that holds `rri` without one of
-the two message extensions sends their notifications as service notices. Every extension of a deployment still needs a backend part
+the two message extensions sends their notifications as service notices. Every extension of a deployment still needs a part in the backend's `PARTS`
 ([#203](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/203) is not changed by this).
 
 The demo configurations compose the three demo extensions differently (README, [testing.project.md](testing.project.md#the-demo-configurations)):
@@ -604,7 +604,7 @@ extension in two versions, stops the app at start naming the conflict; those are
 
 A backend gives the gateways of an extension by its id, `RegistryBackend.extension(extension_id)` (a `KeyError` where the
 backend does not hold it), so no backend names an extension. An extension the configuration names that does not import,
-has no `register`, has a definition named as a base definition or as another extension's, or has no part in the
+has no `register`, has a definition named as a base definition or as another extension's, or is not in the `PARTS` of the
 configured backend, stops the app. The extension schema and the data model are process-global (registration is idempotent); what depends on the configuration is
 per app: the presets, the profiles, the effective schema and the validators (`PresetSchemas`), see
 [RPP presets and profiles](#rpp-presets-and-profiles).
