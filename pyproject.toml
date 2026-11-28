@@ -289,6 +289,8 @@ forbidden_modules = ["main", "registry_adapter", "settings", "lxml", "sqlalchemy
 
 # The generic extensions of the messages: none imports the rri extension, its RRI part included, and the two that define message
 # types know nothing of each other. Each builds on the messages extension only.
+# `extension-not-adapter` already keeps every extension off the registry adapters; the only reference to the RRI backend in a
+# generic extension is the module path in `backend_parts`.
 [[tool.importlinter.contracts]]
 id = "generic-extensions-not-rri"
 name = "The generic message extensions and their RRI parts do not import the rri extension"
@@ -299,14 +301,6 @@ source_modules = [
     "registry_adapter.rri.extensions.registry_changes",
 ]
 forbidden_modules = ["extensions.rri", "registry_adapter.rri.extensions.rri"]
-
-# The generic extensions are not bound to a backend: the only reference to the RRI one is the module path in `backend_parts`.
-[[tool.importlinter.contracts]]
-id = "generic-extensions-not-bound-to-a-backend"
-name = "The generic message extensions import no registry adapter and not the rri extension"
-type = "forbidden"
-source_modules = ["extensions.messages", "extensions.domain_lock", "extensions.registry_changes"]
-forbidden_modules = ["registry_adapter", "extensions.rri"]
 
 [[tool.importlinter.contracts]]
 id = "message-extensions-independent"

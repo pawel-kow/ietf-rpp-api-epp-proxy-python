@@ -84,7 +84,7 @@ without the own/base checks; test_rri_extension_doc.py is folded into test_exten
 
 ## Checks after review round 1 (final commit, no edits during the runs)
 
-lint-imports 42 kept, 0 broken (new contract generic-extensions-not-bound-to-a-backend, proved by mutation on a scratch copy);
+lint-imports 42 kept (contract generic-extensions-not-bound-to-a-backend, redundant with extension-not-adapter, was removed in round 2: 41 kept);
 unit 3435 passed; MTEST reachability passed; smoke 251 passed, 581 skipped (includes rri-mtest).
 
 ## Findings
@@ -100,3 +100,8 @@ unit 3435 passed; MTEST reachability passed; smoke 251 passed, 581 skipped (incl
    notifications are then service notices. Recommend: accept.
 2. Order in `rpp_extensions` and in the preset: messages, domain-lock, registry-changes, rri (discovery order follows the preset
    list). Recommend: the order of docs/rri/rri-preset.md (rri first, then the three).
+
+## Review round 2
+
+Removed the redundant contract (a pyproject.toml change only). lint-imports and the unit tests were rerun on the final code commit;
+the smoke run (251 passed, 581 skipped, incl. rri-mtest) and MTEST reachability of 00b2239 stand, as no code or test changed since.
