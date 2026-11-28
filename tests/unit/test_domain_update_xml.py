@@ -54,9 +54,10 @@ def test_status_and_dnssec_are_updated():
         remove=DomainUpdateRemove(status=["clientUpdateProhibited"]),
     ))
 
-    assert '<domain:status s="clientHold" lang="en">Pending</domain:status>' in xml
-    assert '<domain:status s="clientUpdateProhibited" lang="en"/>' in xml
+    assert '<domain:status s="clientHold">Pending</domain:status>' in xml
+    assert '<domain:status s="clientUpdateProhibited"/>' in xml
     assert "<secDNS:add>" in xml and "<secDNS:keyTag>1</secDNS:keyTag>" in xml
+    assert "<secDNS:update>" in xml  # urgent is left out, not "false" (#243)
     assert "<secDNS:rem>" not in xml
 
 
@@ -65,7 +66,7 @@ def test_removed_host_attribute_names_its_addresses():
 
     xml = update_xml_of(DomainUpdate(name="foo.example", remove=DomainUpdateRemove(ns=ns)))
 
-    assert '<domain:hostAddr ip="v4">192.0.2.1</domain:hostAddr>' in xml
+    assert '<domain:hostAddr>192.0.2.1</domain:hostAddr>' in xml
 
 
 def test_auth_info_is_cleared_with_null():

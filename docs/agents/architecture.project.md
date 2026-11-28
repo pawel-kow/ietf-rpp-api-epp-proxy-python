@@ -230,7 +230,8 @@ flow, the port and the EPP commands of one object.
    a command it asks the transport whether the server has closed the idle
    session (`closed_by_peer`) and logs in again if so. A failed send is sent once more on a new session, a failed
    receive never, because the server may have run the command. `xml/codec.py` renders a request with the namespace
-   map it is given and parses a reply; `xml/generated/` holds xsdata-generated dataclasses for the EPP XSDs
+   map it is given, leaving out an optional attribute at its schema default (`urgent="false"`, `ip="v4"`, `lang="en"`,
+   `hosts="all"`), and parses a reply; `xml/generated/` holds xsdata-generated dataclasses for the EPP XSDs
    (domain-1.0, contact-1.0, secDNS-1.1, etc.). `idn_tables.py` maps a domain's `lgr` to the table of the EPP IDN
    extension and back, for the domain commands.
 10. **`registry_adapter/common/`:** `transport/tcp_client.py` and `transport/tls.py` carry the bytes, and

@@ -22,7 +22,7 @@ def test_status_is_added_and_removed_with_its_reason():
         remove=ContactUpdateChanges(status=["clientDeleteProhibited"]),
     )
 
-    assert '<contact:status s="clientUpdateProhibited" lang="en">why</contact:status>' in text.replace("\n", "")
+    assert '<contact:status s="clientUpdateProhibited">why</contact:status>' in text.replace("\n", "")
     assert 'contact:rem' in text and 'clientDeleteProhibited' in text
     assert "<contact:chg" not in text
 

@@ -48,7 +48,7 @@ def test_create_without_addresses():
 def test_create_with_addresses():
     xml = create_host_xml(Host(name="ns1.example.example", ipv4=["192.0.2.1"], ipv6=["2001:db8::1"]), ns_map=EPP_NS_MAP)
 
-    assert '<host:addr ip="v4">192.0.2.1</host:addr>' in xml
+    assert '<host:addr>192.0.2.1</host:addr>' in xml
     assert '<host:addr ip="v6">2001:db8::1</host:addr>' in xml
 
 
@@ -61,7 +61,7 @@ def test_update_add_and_remove():
 
     add = xml[xml.index("<host:add>"):xml.index("</host:add>")]
     rem = xml[xml.index("<host:rem>"):xml.index("</host:rem>")]
-    assert '<host:addr ip="v4">192.0.2.2</host:addr>' in add
+    assert '<host:addr>192.0.2.2</host:addr>' in add
     assert 's="clientUpdateProhibited"' in add
     assert '<host:addr ip="v6">2001:db8::1</host:addr>' in rem
     assert 's="clientDeleteProhibited"' in rem

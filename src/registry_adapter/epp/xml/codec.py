@@ -12,8 +12,10 @@ from registry_adapter.epp.xml.generated.epp_1_0 import Epp
 
 logger = logging.getLogger('uvicorn.error')
 
+# An optional attribute at its schema default is left out, so the request says only what the proxy sets: a server
+# may refuse one it does not expect, as SIDN refuses secDNS urgent="false" (#243).
 serializer_config = SerializerConfig(
-    pretty_print=True,
+    ignore_default_attributes=True,
 )
 
 serializer = XmlSerializer(config=serializer_config)
