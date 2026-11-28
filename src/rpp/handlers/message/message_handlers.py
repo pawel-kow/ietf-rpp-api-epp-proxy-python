@@ -2,17 +2,18 @@ import logging
 import re
 
 from connexion import ProblemException
-from flask import Response
+from flask import Response, request as flask_request
 
 from core.flows.message.message_flows import read_message
 from core.model.message.message_error_response import MessageErrorResponse
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
-from rpp.http.context import backend_profile, get_backend
+from rpp.http.context import backend_profile, get_backend, response_profile
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers, problem_headers
 from rpp.http.operation import require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
 from rpp.mapping.message import messages
+from rpp.schema.extensions import message_types_outside
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -69,15 +70,28 @@ def _require_valid_id(id: str):
         )
 
 
+def _types() -> tuple[str, ...] | None:
+    """The message types of the query (core §16.10.1, rule 7): a repeated parameter, with one value each. A value with commas is
+    taken as several, as the generated OpenAPI (`explode: false`) describes it. None without a value. The values that name a message type of an
+    extension the response preset lacks are dropped: the server never sends them under that preset, so a Query of only
+    those is an empty queue (an empty tuple)."""
+    types = tuple(dict.fromkeys(part for value in flask_request.args.getlist("type") for part in value.split(",") if part))
+    if not types:
+        return None
+    unsent = message_types_outside(response_profile().extensions)  # those of an extension the response preset lacks are never sent
+    return tuple(value for value in types if value not in unsent)
+
+
 @rpp_operation
 def messages_query():
-    """The head of the queue. The EPP Compatibility Profile ignores `type` (core §16.10.1)."""
-    resp = get_backend().messages.poll(client_transaction_id=client_transaction_id())
+    """The head of the queue, or the oldest message of the types asked for where the backend selects by type; the
+    EPP Compatibility Profile ignores `type` (core §16.10.1)."""
+    resp = get_backend().messages.poll(client_transaction_id=client_transaction_id(), message_types=_types())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
     if resp.payload.message is None:
         return [], 200, _headers(resp)
-    return [messages.model_to_rpp(resp.payload.message, backend_name=backend_profile().name)], 200, _headers(resp, resp.payload.message.lang)
+    return [messages.model_to_rpp(resp.payload.message, backend_name=backend_profile().name, extensions=response_profile().extensions)], 200, _headers(resp, resp.payload.message.lang)
 
 
 @rpp_operation
@@ -86,7 +100,7 @@ def messages_read(id):
     resp = read_message(get_backend(), id, client_transaction_id=client_transaction_id())
     if isinstance(resp, ErrorResponse):
         _raise(resp)
-    return messages.model_to_rpp(resp.payload.message, backend_name=backend_profile().name), 200, _headers(resp, resp.payload.message.lang)
+    return messages.model_to_rpp(resp.payload.message, backend_name=backend_profile().name, extensions=response_profile().extensions), 200, _headers(resp, resp.payload.message.lang)
 
 
 @rpp_operation

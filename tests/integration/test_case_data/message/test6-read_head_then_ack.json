@@ -289,8 +289,9 @@
                     {
                       "@type": "message",
                       "data": {
-                        "@type": "serviceNoticeMessage",
-                        "message": "RRI chprovAuthInfo: ms6-{random_name}.{tld}"
+                        "@type": "transferOutcomeMessage",
+                        "objectId": "ms6-{random_name}.{tld}",
+                        "trStatus": "serverApproved"
                       }
                     }
                   ]
@@ -336,7 +337,7 @@
       ]
     },
     {
-      "comment": "Polls the message queue; expects 200 01301 with the message of the transfer above at the head: on RRI the chprovAuthInfo notice of the domain, else the transfer request; RPP-Queue-Size 1 where the server queues nothing of its own (message.queue.server_notices). The operation this case checks. Keeps head for later steps.",
+      "comment": "Polls the message queue; expects 200 01301 with the message of the transfer above at the head: on RRI the chprovAuthInfo notice of the domain, a transferOutcomeMessage, else the transfer request; RPP-Queue-Size 1 where the server queues nothing of its own (message.queue.server_notices). The operation this case checks. Keeps head for later steps.",
       "request": {
         "method": "GET",
         "url": "/messages",
@@ -364,8 +365,16 @@
                   "@type": "message",
                   "status": "queued",
                   "data": {
-                    "@type": "serviceNoticeMessage",
-                    "message": "RRI chprovAuthInfo: ms6-{random_name}.{tld}"
+                    "@type": "transferOutcomeMessage",
+                    "objectType": "domainName",
+                    "objectId": "ms6-{random_name}.{tld}",
+                    "trStatus": "serverApproved",
+                    "process": {
+                      "@type": "domainTransferProcess",
+                      "trStatus": "serverApproved",
+                      "reqClientId": "{regacc:b}",
+                      "actClientId": "{regacc:b}"
+                    }
                   }
                 }
               ]
@@ -419,6 +428,64 @@
       },
       "capture": {
         "head": "0.id"
+      }
+    },
+    {
+      "comment": "Polls the message queue (type=transferOutcomeMessage); expects 200 01301 with the transfer outcome of the domain above, RPP-Queue-Size 1 where the server queues nothing of its own (message.queue.server_notices): the type selects it by its RRI msgType. Only on RRI, the other backends ignore the type.",
+      "when": {
+        "profile.extensions": {
+          "contains": "de.denic.rpp.rri"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "url": "/messages?type=transferOutcomeMessage",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": [
+          {
+            "@type": "message",
+            "status": "queued",
+            "data": {
+              "@type": "transferOutcomeMessage",
+              "objectType": "domainName",
+              "objectId": "ms6-{random_name}.{tld}",
+              "trStatus": "serverApproved"
+            }
+          }
+        ],
+        "fields": {
+          "0.id": {
+            "type": "not_empty_string"
+          }
+        },
+        "headers": {
+          "RPP-Code": "01301",
+          "RPP-Queue-Size": {
+            "select": [
+              {
+                "when": {
+                  "env.message.queue.server_notices": false
+                },
+                "then": "1"
+              },
+              {
+                "then": {
+                  "type": "not_null"
+                }
+              }
+            ]
+          }
+        }
       }
     },
     {

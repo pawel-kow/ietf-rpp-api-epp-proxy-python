@@ -170,7 +170,7 @@
                   "@type": "extension",
                   "name": "DENIC RRI",
                   "id": "de.denic.rpp.rri",
-                  "version": "0.2.0",
+                  "version": "0.3.0",
                   "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json"
                 }
               ],
@@ -199,7 +199,7 @@
                   "@type": "extension",
                   "name": "DENIC RRI",
                   "id": "de.denic.rpp.rri",
-                  "version": "0.2.0",
+                  "version": "0.3.0",
                   "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json"
                 }
               ],
@@ -231,7 +231,7 @@
               "@type": "extension",
               "name": "DENIC RRI",
               "id": "de.denic.rpp.rri",
-              "version": "0.2.0",
+              "version": "0.3.0",
               "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json"
             }
           ]

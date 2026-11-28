@@ -4,7 +4,7 @@
   "rpp:extension": {
     "name": "DENIC RRI",
     "id": "de.denic.rpp.rri",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "objects": ["requestContact"]
   },
   "rpp:extends": {
@@ -12,6 +12,22 @@
     "#/$defs/domainName.read": "#/$defs/ext.rri.domainName.read",
     "#/$defs/domainName.update": "#/$defs/ext.rri.domainName.update",
     "#/$defs/domainTransferProcess.create": "#/$defs/ext.rri.domainTransferProcess.create"
+  },
+  "rpp:messages": {
+    "domainExpiryWarningMessage": "#/$defs/ext.rri.domainExpiryWarningMessage.read",
+    "domainExpiryMessage": "#/$defs/ext.rri.domainExpiryMessage.read",
+    "authInfoExpiryMessage": "#/$defs/ext.rri.authInfoExpiryMessage.read",
+    "authInfoIssueMessage": "#/$defs/ext.rri.authInfoIssueMessage.read",
+    "authInfoWithdrawalMessage": "#/$defs/ext.rri.authInfoWithdrawalMessage.read",
+    "domainDeletionMessage": "#/$defs/ext.rri.domainDeletionMessage.read",
+    "domainLockMessage": "#/$defs/ext.rri.domainLockMessage.read",
+    "domainUnlockMessage": "#/$defs/ext.rri.domainUnlockMessage.read",
+    "domainUpdateMessage": "#/$defs/ext.rri.domainUpdateMessage.read",
+    "domainReleaseMessage": "#/$defs/ext.rri.domainReleaseMessage.read",
+    "contactUpdateMessage": "#/$defs/ext.rri.contactUpdateMessage.read",
+    "contactDeletionMessage": "#/$defs/ext.rri.contactDeletionMessage.read",
+    "domainStatusMessage": "#/$defs/ext.rri.domainStatusMessage.read",
+    "contactVerificationMessage": "#/$defs/ext.rri.contactVerificationMessage.read"
   },
   "$defs": {
     "ext.rri.requestContact.reference": {
@@ -105,6 +121,184 @@
         "dns": { "$ref": "#/$defs/dnsData.create", "writeOnly": true }
       },
       "required": ["registrant", "dns"]
+    },
+    "ext.rri.objectReference.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "objectReference", "readOnly": true },
+        "objectType": { "type": "string", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId"]
+    },
+    "ext.rri.datedObjectReference.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "datedObjectReference", "readOnly": true },
+        "objectType": { "type": "string", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "date": { "type": "string", "format": "date-time", "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "date"]
+    },
+    "ext.rri.registryNotice.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "registryNotice", "readOnly": true },
+        "code": { "type": "string", "pattern": "^[0-9]+$", "readOnly": true },
+        "text": { "type": "string", "readOnly": true },
+        "arguments": { "type": "array", "items": { "type": "string" }, "readOnly": true }
+      },
+      "required": ["@type", "code", "text"]
+    },
+    "ext.rri.bulkBaseMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "bulkBaseMessage", "readOnly": true },
+        "objects": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.objectReference.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objects"]
+    },
+    "ext.rri.domainExpiryWarningMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainExpiryWarningMessage", "readOnly": true },
+        "objects": { "type": "array", "minItems": 1, "items": { "allOf": [{ "$ref": "#/$defs/ext.rri.datedObjectReference.read" }, { "properties": { "objectType": { "const": "domainName" } } }] }, "readOnly": true }
+      },
+      "required": ["@type", "objects"]
+    },
+    "ext.rri.domainExpiryMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainExpiryMessage", "readOnly": true },
+        "objects": { "type": "array", "minItems": 1, "items": { "allOf": [{ "$ref": "#/$defs/ext.rri.datedObjectReference.read" }, { "properties": { "objectType": { "const": "domainName" } } }] }, "readOnly": true }
+      },
+      "required": ["@type", "objects"]
+    },
+    "ext.rri.contactDeletionMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "contactDeletionMessage", "readOnly": true },
+        "objects": { "type": "array", "minItems": 1, "items": { "allOf": [{ "$ref": "#/$defs/ext.rri.objectReference.read" }, { "properties": { "objectType": { "const": "contact" } } }] }, "readOnly": true }
+      },
+      "required": ["@type", "objects"]
+    },
+    "ext.rri.authInfoExpiryMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoExpiryMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "expiryDate": { "type": "string", "format": "date-time", "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "expiryDate"]
+    },
+    "ext.rri.authInfoIssueMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoIssueMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId"]
+    },
+    "ext.rri.authInfoWithdrawalMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "authInfoWithdrawalMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    },
+    "ext.rri.domainDeletionMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainDeletionMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    },
+    "ext.rri.domainLockMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainLockMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    },
+    "ext.rri.domainUnlockMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainUnlockMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    },
+    "ext.rri.domainUpdateMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainUpdateMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    },
+    "ext.rri.domainReleaseMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainReleaseMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    },
+    "ext.rri.contactUpdateMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "contactUpdateMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "contact", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "notices"]
+    },
+    "ext.rri.domainStatusMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "domainStatusMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "domainName", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "status": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/domainStatus.read" }, "readOnly": true },
+        "holders": { "type": "array", "minItems": 1, "items": { "allOf": [{ "$ref": "#/$defs/ext.rri.objectReference.read" }, { "properties": { "objectType": { "const": "contact" } } }] }, "readOnly": true },
+        "holdDeadline": { "type": "string", "format": "date-time", "readOnly": true },
+        "deletionDeadline": { "type": "string", "format": "date-time", "readOnly": true },
+        "notices": { "type": "array", "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "status", "holders"]
+    },
+    "ext.rri.contactVerificationMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "contactVerificationMessage", "readOnly": true },
+        "objectType": { "type": "string", "const": "contact", "readOnly": true },
+        "objectId": { "type": "string", "readOnly": true },
+        "claims": { "type": "array", "minItems": 1, "items": { "type": "string" }, "readOnly": true },
+        "referencedDomains": { "type": "integer", "minimum": 0, "readOnly": true },
+        "earliestHold": { "allOf": [{ "$ref": "#/$defs/ext.rri.datedObjectReference.read" }, { "properties": { "objectType": { "const": "domainName" } } }], "readOnly": true },
+        "earliestDeletion": { "allOf": [{ "$ref": "#/$defs/ext.rri.datedObjectReference.read" }, { "properties": { "objectType": { "const": "domainName" } } }], "readOnly": true },
+        "notices": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.registryNotice.read" }, "readOnly": true }
+      },
+      "required": ["@type", "objectType", "objectId", "claims", "referencedDomains", "earliestDeletion", "notices"]
     }
   }
 }

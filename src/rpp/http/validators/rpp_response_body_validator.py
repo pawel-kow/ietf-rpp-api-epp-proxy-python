@@ -19,6 +19,9 @@ class RppResponseBodyValidator(JSONResponseBodyValidator):
             return
         array = self._schema.get("type") == "array" and isinstance(self._schema.get("items"), dict)
         name = (self._schema["items"] if array else self._schema).get(MARKER)
+        if array and name is None and self._schema.get(MARKER):
+            # an array that is a definition itself (`message.query`): its items are of definitions by reference, as the preset has them
+            name, array = self._schema[MARKER], False
         schemas = self._scope.get("extensions", {}).get("connexion_context", {}).get(REQUEST_SCHEMAS)
         if name is None or schemas is None:
             super()._validate(body)

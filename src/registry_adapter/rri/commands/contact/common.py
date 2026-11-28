@@ -1,9 +1,8 @@
 """The contact model ↔ RRI XML. RRI holds one postal form, one phone, no fax, no region and no authInfo."""
-from datetime import timezone
-
 from core.model.contact.address import Address
 from core.model.contact.contacts import Contact, ContactType
 from core.result.result_code import ResultCode
+from registry_adapter.rri.commands.shared.rri_time import utc_time
 from registry_adapter.rri.xml.generated import contact_5_0 as rri
 
 # "At least one Contact does not exist" is the contact itself for a command on one contact.
@@ -52,7 +51,7 @@ def changed_of(data: rri.InfoData) -> str | None:
     """The `changed` of an INFO, in the UTC form the EPP adapter gives too."""
     if not data.changed:
         return None
-    return data.changed.to_datetime().astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    return utc_time(data.changed)
 
 
 def contact_from_rri(data: rri.InfoData) -> Contact:

@@ -268,7 +268,7 @@ LGR. QUEUE-DELMSG states no count of the messages left, so the proxy answers an 
 (#172, `env.bugs.queue_del_no_msgcnt`, `message/test6`). DENIC queues notices of its own
 (`env.message.queue.server_notices`): a `domainStatusUpdate` of a domain some time after a case created it, a
 `contactDelete` of its housekeeping, so `message/test6` acknowledges the heads that are not its own until the
-`chprovAuthInfo` notice of its transfer is the head. A first run drained a backlog of about 2900 messages; the run setup
+`chprovAuthInfo` notice of its transfer (a `transferOutcomeMessage`, also read by `?type=transferOutcomeMessage`) is the head. A first run drained a backlog of about 2900 messages; the run setup
 drains at the registrar's whole rate, as the other workers of the environment wait for it.
 
 ### Local RRI

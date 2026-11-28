@@ -218,13 +218,13 @@ Mapping of the 15 RRI message types (ref §9) to the RPP message data types:
 
 | RRI `msgType` | RPP `data` | Notes |
 |---|---|---|
-| `chprovAuthInfo` | `transferOutcomeMessage` (`trStatus` `serverApproved`?, gaining client `new`, losing `old`) | No request or action dates beyond `msgtime`. |
-| `expire`, `domainDelete` | `expirationDeletionMessage` (`deletionDate` ← `msgtime` or `expire`) | |
-| `expireWarning`, `authInfoExpire`, `authInfo2Notify`, `authInfo2Delete`, `domainUpdate`, `domainTransit`, `lockCreate`, `lockDelete`, `domainStatusUpdate`, `contactUpdate`, `contactDelete`, `contactVerificationRequired` | `serviceNoticeMessage` (`objectType`, `objectId`, `message`) | `domainStatusUpdate` (the result of the risk assessment) is close to `reviewResponseMessage` (`approved` ← `connect`, not approved ← `serverHold`). The match is loose, see Q15. `contactDelete` names up to 100 handles, but RPP has one `objectId`. |
+| `chprovAuthInfo` | `transferOutcomeMessage` (`trStatus` `serverApproved`, the process with the gaining client `new`) | No request or action dates beyond `msgtime`; `old`, the receiving RegAcc, is not represented. |
+| the 14 others | one message type each of the `rri` extension (`domainExpiryWarningMessage`, `domainExpiryMessage`, `authInfoExpiryMessage`, `authInfoIssueMessage`, `authInfoWithdrawalMessage`, `domainDeletionMessage`, `domainLockMessage`, `domainUnlockMessage`, `domainUpdateMessage`, `domainReleaseMessage`, `contactUpdateMessage`, `contactDeletionMessage`, `domainStatusMessage`, `contactVerificationMessage`) | [rri-extension.md](rri-extension.md#message-types) and its mapping appendix. Those about several objects (`expireWarning`, `expire`, `contactDelete`) extend the Bulk Base Message Object. |
 
-Today's rule carries over: anything the proxy cannot translate becomes a `serviceNoticeMessage`, so a client can
-always read and acknowledge it. The `QueueMessage.event` union (`TransferEvent | PendingActionEvent`) is EPP-shaped
-and gains RRI events, see [refactoring.md](refactoring.md#36-models).
+Anything the proxy cannot translate (a `msgType` it has no type for, a message that lacks what its type needs, a message of the
+extension under a preset without it) is a `serviceNoticeMessage`, so a client can always read and acknowledge it. The
+`QueueMessage.event` union (`TransferEvent | PendingActionEvent | ExtensionEvent`) holds the typed events, see
+[refactoring.md](refactoring.md#36-models).
 
 ### 3.5 Status mapping
 
@@ -307,7 +307,7 @@ RRI 5.0 carries, with no RPP place for it:
 - contact verification blocks (claims, result, reference, timestamp, evidence, method, trust framework);
 - domain `VerificationDeadlineBeforeDedelegation` / `…BeforeDeletion`, and the deadline infos `16350000040`/`41`
   in write responses;
-- the `domainStatusUpdate` and `contactVerificationRequired` messages, which become service notices (§3.4).
+- the `domainStatusUpdate` and `contactVerificationRequired` messages, which have message types of the extension (§3.4).
 
 A registrar that uses RPP alone could not pre-verify holders, and a domain would then go to `serverHold` and be
 deleted after 90 days. This is the largest functional gap. It needs an RPP extension or a DENIC profile (Q16).

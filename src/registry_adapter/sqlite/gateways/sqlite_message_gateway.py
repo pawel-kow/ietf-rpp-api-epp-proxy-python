@@ -36,7 +36,7 @@ class SqliteMessageGateway:
         return OperationResponse(code=code, msg=msg, server_transaction_id=new_server_transaction_id(),
                                  client_transaction_id=client_transaction_id, payload=payload)
 
-    def poll(self, client_transaction_id=None):
+    def poll(self, client_transaction_id=None, message_types=None):
         client, store = self._context.sponsor_id, self._context.messages
         with self._context.database.transaction() as session:
             row, size = store.head(session, client), store.size(session, client)
@@ -46,6 +46,9 @@ class SqliteMessageGateway:
                                 MessageQueue(queue_size=0), client_transaction_id)
         return self._answer(ResultCode.COMMAND_COMPLETED_ACK_TO_DEQUEUE, "Command completed successfully; ack to dequeue",
                             MessageQueue(queue_size=size, message=message), client_transaction_id)
+
+    def find(self, message_id, client_transaction_id=None):
+        return None
 
     def ack(self, message_id, client_transaction_id=None):
         client, store = self._context.sponsor_id, self._context.messages

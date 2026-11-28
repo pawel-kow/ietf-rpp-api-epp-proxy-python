@@ -12,6 +12,19 @@ def _own_name(name: str) -> str:
     return name.split(".", 2)[2] if name.startswith("ext.") else name
 
 
+def check_messages(extension) -> None:
+    """What `rpp:messages` maps is a definition of the extension, with an identifier no base message type and no other
+    extension's message type has: the identifiers share one namespace (the `type` of a Query)."""
+    taken = {identifier: other.id for other in EXTENSIONS.values() if other.id != extension.id for identifier in other.messages}
+    for identifier, name in extension.messages.items():
+        if name not in extension.defs:
+            raise ValueError(f"The extension {extension.id} maps the message type {identifier} to {name}, which it does not define")
+        if f"{identifier}.read" in bundle_definitions():
+            raise ValueError(f"The extension {extension.id} maps {identifier}, a message type of the base schema")
+        if identifier in taken:
+            raise ValueError(f"The extension {extension.id} maps {identifier}, which the extension {taken[identifier]} maps")
+
+
 def check_names(schema: dict) -> None:
     """No definition of an extension has the name of a base definition, or of another extension's: the mappers name
     a definition without the extension (guidelines §8, D10), so a clash would validate with the wrong schema."""
@@ -21,6 +34,7 @@ def check_names(schema: dict) -> None:
     composed = set(extension.extends.values())
     taken = {_own_name(name): extension_id for extension_id, other in EXTENSIONS.items()
              for name in other.defs if name not in other.extends.values()}
+    check_messages(extension)
     for name in extension.defs:
         if name in bundle_definitions():
             raise ValueError(f"The extension {extension.id} defines {name}, a definition of the base schema")

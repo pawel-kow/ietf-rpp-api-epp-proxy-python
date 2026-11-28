@@ -87,6 +87,10 @@ def compose(extensions, profiles, inject: bool, required=None) -> dict:
         for base, ext in extension.extends.items():
             extended.setdefault(base, []).append(ext)
             branches.add(ext)
+    for extension in extensions:
+        for message in ("message.read", "message.create"):
+            data = definitions[message]["properties"]["data"]["oneOf"]
+            data.extend(ref for ref in _refs(extension.messages.values()) if ref not in data)
     constrained: dict[str, list[str]] = {}
     for profile in profiles:
         if profile.schema is None:

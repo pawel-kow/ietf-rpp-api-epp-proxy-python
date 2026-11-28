@@ -21,3 +21,6 @@ class RppExtension:
     defs: dict
     objects: tuple = ()
     owners: dict = field(default_factory=dict)
+    # identifier of each message type (`rpp:messages`) -> its definition in `defs`; the effective schema adds a branch for each
+    # to the `data` union of `message.read` and `message.create`
+    messages: dict = field(default_factory=dict)

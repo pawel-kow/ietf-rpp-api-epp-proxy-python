@@ -175,6 +175,7 @@ type = "forbidden"
 source_modules = [
     "api_docs", "core", "registration", "rpp", "settings", "registry_adapter.common", "registry_adapter.epp",
     "registry_adapter.rri.commands", "registry_adapter.rri.extension_part", "registry_adapter.rri.gateways",
+    "registry_adapter.rri.message_type",
     "registry_adapter.rri.result_codes", "registry_adapter.rri.session", "registry_adapter.rri.statuses",
     "registry_adapter.rri.xml",
     "registry_adapter.sqlite.client_directory", "registry_adapter.sqlite.clock", "registry_adapter.sqlite.common_part",
@@ -273,6 +274,7 @@ name = "The common part of the RRI backend does not import the part of an extens
 type = "forbidden"
 source_modules = [
     "registry_adapter.rri.commands", "registry_adapter.rri.extension_part", "registry_adapter.rri.gateways",
+    "registry_adapter.rri.message_type",
     "registry_adapter.rri.result_codes", "registry_adapter.rri.session", "registry_adapter.rri.statuses",
     "registry_adapter.rri.xml",
 ]
