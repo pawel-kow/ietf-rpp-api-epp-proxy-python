@@ -134,3 +134,8 @@ The secret (`authdata`) is never returned and never logged.
 - `pytest -n 4 tests/unit`: 3259 passed.
 - `pytest -n 4 -m smoke tests/integration`: 241 passed, 511 skipped (8 min), MTEST included (the reachability case passed first;
   `authinfo_process/test1` is a smoke case). The whole group `authinfo_process/` (9 cases) passed on MTEST on its own too.
+
+## Check results after review round 1 (commit 0e7f59f, no edits during the runs)
+
+- lint-imports: 32 kept, 0 broken. Unit: 3279 passed. MTEST reachability case: passed. Smoke: 241 passed, 511 skipped (MTEST
+  included). `authinfo_process/` on MTEST alone: 9 passed.
