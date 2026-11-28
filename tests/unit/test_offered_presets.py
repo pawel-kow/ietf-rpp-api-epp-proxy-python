@@ -10,6 +10,10 @@ from tests.helper.preset_fixtures import (
     ADMIN_ONLY, AT_MOST_ONE, AUTH_REQUIRED, BASE, definitions_with, preset, profile)
 
 RRI = "de.denic.rpp.rri"
+MESSAGES = "io.github.pawel-kow.rpp.messages"
+# the rri extension refers to the Component Objects of the messages extension, so a preset that has it has that one too
+WITH_RRI = [(RRI, "0.4.0"), (MESSAGES, "0.1.0")]
+HELD = (RRI, MESSAGES)
 BASE_KEY = "base"
 
 
@@ -43,13 +47,13 @@ def test_a_preset_is_the_union_of_its_bases_and_what_two_bases_share_counts_once
 
 
 def test_the_extensions_of_the_bases_are_in_the_preset_once():
-    left = preset("left", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
-    right = preset("right", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
+    left = preset("left", base_presets=[BASE["id"]], extensions=WITH_RRI)
+    right = preset("right", base_presets=[BASE["id"]], extensions=WITH_RRI)
     both = preset("both", base_presets=[left[0], right[0]])
 
-    offered = build(definitions_with([left, right, both]), ["both"], held=(RRI,)).offered[0]
+    offered = build(definitions_with([left, right, both]), ["both"], held=HELD).offered[0]
 
-    assert offered.extension_ids == (RRI,)
+    assert offered.extension_ids == (RRI, MESSAGES)
 
 
 def test_the_applicable_profiles_are_those_of_the_preset_the_bound_ones_and_the_bases_of_all():
@@ -76,28 +80,28 @@ def test_a_cycle_of_presets_or_of_profiles_stops_the_server_and_names_the_cycle(
 
 
 def test_two_bases_with_different_versions_of_one_extension_stop_the_server():
-    left = preset("left", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
-    right = preset("right", base_presets=[BASE["id"]], extensions=[(RRI, "0.4.0")])
+    left = preset("left", base_presets=[BASE["id"]], extensions=[(RRI, "0.4.0")])
+    right = preset("right", base_presets=[BASE["id"]], extensions=[(RRI, "0.5.0")])
     both = preset("both", base_presets=[left[0], right[0]])
 
-    with pytest.raises(ValueError, match=f"{RRI} in the versions 0.3.0 and 0.4.0"):
+    with pytest.raises(ValueError, match=f"{RRI} in the versions 0.4.0 and 0.5.0"):
         build(definitions_with([left, right, both]), ["both"], held=(RRI,))
 
 
 def test_a_preset_that_pins_another_version_than_the_proxy_implements_stops_the_server():
     pinned = preset("pinned", extensions=[(RRI, "9.9")])
 
-    with pytest.raises(ValueError, match=f"{RRI} in version 9.9, the proxy implements version 0.3.0"):
-        build(definitions_with([pinned]), ["pinned"], held=(RRI,))
+    with pytest.raises(ValueError, match=f"{RRI} in version 9.9, the proxy implements version 0.4.0"):
+        build(definitions_with([pinned]), ["pinned"], held=HELD)
 
 
 def test_an_extension_the_backend_does_not_hold_stops_the_server():
     with pytest.raises(ValueError, match="which the backend does not hold"):
-        build(definitions_with([preset("x", extensions=[(RRI, "0.3.0")])]), ["x"])
+        build(definitions_with([preset("x", extensions=WITH_RRI)]), ["x"])
 
 
 def test_a_bound_profile_the_preset_lacks_an_extension_of_stops_the_server_and_names_both():
-    needing = profile("needing", required=[(RRI, "0.3.0")])
+    needing = profile("needing", required=[(RRI, "0.4.0")])
     plain = preset("plain", base_presets=[BASE["id"]])
 
     with pytest.raises(ValueError, match=f"{needing[0]} requires the extension {RRI}, which the preset {plain[0]} does not contain"):
@@ -105,7 +109,7 @@ def test_a_bound_profile_the_preset_lacks_an_extension_of_stops_the_server_and_n
 
 
 def test_a_requirement_through_a_base_profile_counts():
-    needing = profile("needing", required=[(RRI, "0.3.0")])
+    needing = profile("needing", required=[(RRI, "0.4.0")])
     building = profile("building", base_profiles=[needing[0]])
     plain = preset("plain", base_presets=[BASE["id"]], profiles=[building[0]])
 
@@ -114,10 +118,10 @@ def test_a_requirement_through_a_base_profile_counts():
 
 
 def test_a_preset_that_has_the_extension_may_bind_the_profile():
-    needing = profile("needing", required=[(RRI, "0.3.0")])
-    having = preset("having", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")])
+    needing = profile("needing", required=[(RRI, "0.4.0")])
+    having = preset("having", base_presets=[BASE["id"]], extensions=WITH_RRI)
 
-    offered = build(definitions_with([having], [needing]), ["having"], bound={"having": ["needing"]}, held=(RRI,))
+    offered = build(definitions_with([having], [needing]), ["having"], bound={"having": ["needing"]}, held=HELD)
 
     assert [p.id for p in offered.offered[0].bound_profiles] == [needing[0]]
 
@@ -208,20 +212,20 @@ def test_a_profile_that_constrains_an_extension_it_does_not_require_stops_the_se
     url = EXTENSIONS[RRI].url
     sneaky = profile("sneaky", constraints={}, defs={"profile.s": {"properties": {}}})
     sneaky[1]["schema"]["rpp:constraints"] = {f"{url}#/$defs/ext.rri.domainName.create": "#/$defs/profile.s"}
-    having = preset("r", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")], profiles=[sneaky[0]])
+    having = preset("r", base_presets=[BASE["id"]], extensions=WITH_RRI, profiles=[sneaky[0]])
 
     with pytest.raises(ValueError, match=f"{sneaky[0]} constrains ext.rri.domainName.create of the extension {RRI}, "
                                          "which the profile does not require"):
-        build(definitions_with([having], [sneaky]), ["r"], held=(RRI,))
+        build(definitions_with([having], [sneaky]), ["r"], held=HELD)
 
 
 def test_a_profile_that_requires_the_extension_may_constrain_it_and_the_composition_holds_it():
     url = EXTENSIONS[RRI].url
-    ok = profile("ok", required=[(RRI, "0.3.0")], constraints={}, defs={"profile.s": {"properties": {}}})
+    ok = profile("ok", required=[(RRI, "0.4.0")], constraints={}, defs={"profile.s": {"properties": {}}})
     ok[1]["schema"]["rpp:constraints"] = {f"{url}#/$defs/ext.rri.domainName.create": "#/$defs/profile.s"}
-    having = preset("r", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")], profiles=[ok[0]])
+    having = preset("r", base_presets=[BASE["id"]], extensions=WITH_RRI, profiles=[ok[0]])
 
-    offered = build(definitions_with([having], [ok]), ["r"], held=(RRI,)).offered[0]
+    offered = build(definitions_with([having], [ok]), ["r"], held=HELD).offered[0]
 
     from rpp.schema.effective_schema import compose
     composed = compose(offered.extensions, offered.applicable, False, offered.required)
@@ -230,20 +234,20 @@ def test_a_profile_that_requires_the_extension_may_constrain_it_and_the_composit
 
 def test_a_base_uri_that_names_a_definition_of_an_extension_stops_the_server():
     mislabel = profile("mislabel", constraints={"ext.rri.domainName.create": "profile.q"}, defs={"profile.q": {}})
-    having = preset("r2", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")], profiles=[mislabel[0]])
+    having = preset("r2", base_presets=[BASE["id"]], extensions=WITH_RRI, profiles=[mislabel[0]])
 
     with pytest.raises(ValueError, match="constrains ext.rri.domainName.create, which does not exist in RPP"):
-        build(definitions_with([having], [mislabel]), ["r2"], held=(RRI,))
+        build(definitions_with([having], [mislabel]), ["r2"], held=HELD)
 
 
 def test_an_extension_uri_that_names_a_definition_of_the_base_stops_the_server():
     url = EXTENSIONS[RRI].url
-    wrong = profile("wrong", required=[(RRI, "0.3.0")], constraints={}, defs={"profile.w": {}})
+    wrong = profile("wrong", required=[(RRI, "0.4.0")], constraints={}, defs={"profile.w": {}})
     wrong[1]["schema"]["rpp:constraints"] = {f"{url}#/$defs/domainName.create": "#/$defs/profile.w"}
-    having = preset("r3", base_presets=[BASE["id"]], extensions=[(RRI, "0.3.0")], profiles=[wrong[0]])
+    having = preset("r3", base_presets=[BASE["id"]], extensions=WITH_RRI, profiles=[wrong[0]])
 
     with pytest.raises(ValueError, match=f"constrains domainName.create, which the extension {RRI} does not define"):
-        build(definitions_with([having], [wrong]), ["r3"], held=(RRI,))
+        build(definitions_with([having], [wrong]), ["r3"], held=HELD)
 
 
 
@@ -279,3 +283,46 @@ def test_an_extension_that_extends_a_definition_its_owner_lacks_stops_the_server
 
     with pytest.raises(ValueError, match="org.example.adding extends thing.create, which the extension org.example.owner does not define"):
         build(definitions_with([both]), ["both"], held=(owner.id, adding.id))
+
+
+def _referring_pair():
+    """An extension of shared definitions, and one whose definitions refer to them (as a message type of an extension
+    refers to the Component Objects of the messages extension)."""
+    shared = RppExtension(id="org.example.shared", name="s", version="1.0", url="https://example.org/shared.schema.json",
+                          extends={}, defs={"ext.shared.note.read": {"type": "object", "properties": {"text": {"type": "string"}}}})
+    using = RppExtension(id="org.example.using", name="u", version="1.0", url="https://example.org/using.schema.json",
+                         extends={}, defs={"ext.using.event.read": {
+                             "type": "object", "properties": {"notes": {"type": "array",
+                                                                       "items": {"$ref": "#/$defs/ext.shared.note.read"}}}}})
+    return shared, using
+
+
+def test_an_extension_that_refers_to_the_definitions_of_another_needs_it_in_the_preset(monkeypatch):
+    shared, using = _referring_pair()
+    monkeypatch.setitem(EXTENSIONS, shared.id, shared)
+    monkeypatch.setitem(EXTENSIONS, using.id, using)
+    held = (shared.id, using.id)
+    both = preset("both", base_presets=[BASE["id"]], extensions=[(shared.id, "1.0"), (using.id, "1.0")])
+    alone = preset("alone", base_presets=[BASE["id"]], extensions=[(using.id, "1.0")])
+
+    assert build(definitions_with([both, alone]), ["both"], held=held).offered[0].extension_ids == (shared.id, using.id)
+    with pytest.raises(ValueError, match="org.example.using uses ext.shared.note.read of the extension org.example.shared.*alone"):
+        build(definitions_with([both, alone]), ["alone"], held=held)
+
+
+def test_an_extension_that_others_refer_to_needs_none_of_them(monkeypatch):
+    shared, using = _referring_pair()
+    monkeypatch.setitem(EXTENSIONS, shared.id, shared)
+    monkeypatch.setitem(EXTENSIONS, using.id, using)
+    only = preset("only", base_presets=[BASE["id"]], extensions=[(shared.id, "1.0")])
+
+    assert build(definitions_with([only]), ["only"], held=(shared.id, using.id)).offered[0].extension_ids == (shared.id,)
+
+
+def test_the_definitions_an_extension_refers_to_in_the_base_or_in_itself_are_no_dependency():
+    from rpp.schema.extension_dependencies import foreign_references
+    _, using = _referring_pair()
+    own = RppExtension(id="org.example.own", name="o", version="1.0", url="https://example.org/own.schema.json", extends={}, defs={
+        "ext.own.a.read": {"$ref": "#/$defs/ext.own.b.read"}, "ext.own.b.read": {"$ref": "#/$defs/contact.reference"}})
+
+    assert foreign_references(own, [own, using]) == {}

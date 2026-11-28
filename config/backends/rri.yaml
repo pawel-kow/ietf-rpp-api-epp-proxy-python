@@ -4,10 +4,14 @@ include:
 
 rpp_preset_signalling: media-type
 
-# The RRI extension (docs/rri/rri-extension.md): request contacts, and the transfer with the gainer's data. It adds itself,
-# its leaves and its preset to the profile.
+# The RRI extension (docs/rri/rri-extension.md) and the generic extensions of the messages of the registry that it builds on
+# (docs/extensions/): request contacts, the transfer with the gainer's data, and the message types. Each adds itself, its leaves
+# and its preset to the profile.
 rpp_extensions:
   - extensions.rri
+  - extensions.messages
+  - extensions.domain_lock
+  - extensions.registry_changes
 
 # The profile of this server (see backends/epp.yaml): DENIC's, src/settings/profiles/rri.yaml.
 rpp_backend_profile:

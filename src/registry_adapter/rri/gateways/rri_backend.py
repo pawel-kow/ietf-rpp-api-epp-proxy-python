@@ -21,7 +21,8 @@ class RriBackend:
         self.hosts = RriHostGateway()
         self.messages = RriMessageGateway(rri_client, extension_parts)
         self.organisations = RriOrganisationGateway(rri_client, extension_parts)
-        self._extensions = {part.extension_id: part.gateways(rri_client) for part in extension_parts}
+        self._extensions = {part.extension_id: part.gateways(rri_client) for part in extension_parts
+                            if part.gateways is not None}
 
     @property
     def sponsor_id(self) -> str:

@@ -49,6 +49,8 @@ def test_an_offered_extension_is_described():
     """Json §6.2.12, from the extension's schema file."""
     extensions = discovery.model_to_rpp(a_discovery(), RRI_PRESETS)["extensions"]
 
-    assert extensions == [{"@type": "extension", "name": "DENIC RRI", "id": "de.denic.rpp.rri", "version": "0.3.0",
-                           "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/"
-                                  "rri-extension.schema.json"}]
+    assert extensions[0] == {"@type": "extension", "name": "DENIC RRI", "id": "de.denic.rpp.rri", "version": "0.4.0",
+                             "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/"
+                                    "rri-extension.schema.json"}
+    assert [e["id"] for e in extensions[1:]] == ["io.github.pawel-kow.rpp.messages", "io.github.pawel-kow.rpp.domain-lock",
+                                                 "io.github.pawel-kow.rpp.registry-changes"]

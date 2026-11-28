@@ -585,6 +585,18 @@ each and calls its `register(registry)` ([registration/](../../src/registration/
 | its part of a backend (`backend_parts`) | the backend: the SQLite backend imports `registry_adapter.sqlite.extensions.<name>`, which has `PART` (its tables, in a metadata of their own, with a schema version) and `gateways(context)`; the RRI backend imports `registry_adapter.rri.extensions.<name>`, which has `gateways(client)` |
 | the leaves it adds to the backend profile (`objects`, `extensions` and `presets` are added to the generic profile's, other leaves are new) | `BackendProfile.from_layers(..., extra_leaves=...)`: the list of leaves stays closed, and without the extension a leaf of it is unknown |
 
+An extension may build on the definitions of another: a `$ref` of its schema to a definition that another extension defines
+(`#/$defs/ext.messages.registryNotice.read`) makes it depend on that extension. The dependency is implicit
+(`rpp/schema/extension_dependencies.py`), and `OfferedPresets._offer` refuses a preset that offers the one without the other, naming both.
+The extensions of message types are packages of their own (`extensions/messages/`, `domain_lock/`, `registry_changes/`; the rri extension builds
+on `messages`): `messages` holds the Component Objects (`core/model`, and the builders of their JSON in `rpp/mapping/components.py`) and no message
+type; each of the others has the event of its core and a `MessageMapper` for its message types, and its RRI part
+(`registry_adapter/rri/extensions/<name>/`, `MESSAGE_TYPES`, no `gateways`, so `RriExtensionPart.gateways` is optional) reads the
+`msgType`s it owns: `lockCreate`/`lockDelete`, and `domainUpdate`/`contactUpdate`/`domainDelete`/`contactDelete`. The RRI part of `messages` holds what
+those parts share (`references.py`). A generic extension imports nothing of `extensions.rri` (a contract), and a preset that holds `rri` without one of
+the two message extensions sends their notifications as service notices. Every extension of a deployment still needs a backend part
+([#203](https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/issues/203) is not changed by this).
+
 The demo configurations compose the three demo extensions differently (README, [testing.project.md](testing.project.md#the-demo-configurations)):
 `config/environments/sqlite-demo.yaml` (planets only), `sqlite-demo-extended.yaml`, `sqlite-demo-bound.yaml` (profiles bound to presets) and
 `sqlite-demo-inherit.yaml` (several bases). A configuration that cannot hold, a binding without a required extension, a cycle or one

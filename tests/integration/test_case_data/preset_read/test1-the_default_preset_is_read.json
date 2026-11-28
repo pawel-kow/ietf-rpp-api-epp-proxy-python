@@ -93,7 +93,25 @@
               "@type": "extension",
               "id": "de.denic.rpp.rri",
               "name": "DENIC RRI",
-              "version": "0.3.0"
+              "version": "0.4.0"
+            },
+            {
+              "@type": "extension",
+              "id": "io.github.pawel-kow.rpp.messages",
+              "name": "RPP Message Components",
+              "version": "0.1.0"
+            },
+            {
+              "@type": "extension",
+              "id": "io.github.pawel-kow.rpp.domain-lock",
+              "name": "RPP Domain Lock Messages",
+              "version": "0.1.0"
+            },
+            {
+              "@type": "extension",
+              "id": "io.github.pawel-kow.rpp.registry-changes",
+              "name": "RPP Registry Change Messages",
+              "version": "0.1.0"
             }
           ],
           "profiles": [],

@@ -203,6 +203,27 @@ containers = ["extensions.rri"]
 layers = ["register_rri", "rpp", "core"]
 
 [[tool.importlinter.contracts]]
+id = "extension-layers-messages"
+name = "Inside the messages extension: the registration -> rpp -> core"
+type = "layers"
+containers = ["extensions.messages"]
+layers = ["register_messages", "rpp", "core"]
+
+[[tool.importlinter.contracts]]
+id = "extension-layers-domain-lock"
+name = "Inside the domain lock extension: the registration -> rpp -> core"
+type = "layers"
+containers = ["extensions.domain_lock"]
+layers = ["register_domain_lock", "rpp", "core"]
+
+[[tool.importlinter.contracts]]
+id = "extension-layers-registry-changes"
+name = "Inside the registry changes extension: the registration -> rpp -> core"
+type = "layers"
+containers = ["extensions.registry_changes"]
+layers = ["register_registry_changes", "rpp", "core"]
+
+[[tool.importlinter.contracts]]
 id = "extension-layers-members"
 name = "Inside an extension that adds members: the registration -> rpp -> core"
 type = "layers"
@@ -224,6 +245,13 @@ containers = ["extensions.planet_atmosphere.rpp", "extensions.satellite_orbit.rp
 layers = ["mapping", "dto | schema"]
 
 [[tool.importlinter.contracts]]
+id = "extension-rpp-layers-messages"
+name = "Inside the rpp of an extension of message types: mapping -> schema"
+type = "layers"
+containers = ["extensions.messages.rpp", "extensions.domain_lock.rpp", "extensions.registry_changes.rpp"]
+layers = ["mapping", "schema"]
+
+[[tool.importlinter.contracts]]
 id = "extension-rpp-layers"
 name = "Inside the rpp of an extension: handlers -> mapping -> dto, schema"
 type = "layers"
@@ -243,10 +271,12 @@ name = "The core of an extension imports the core of the proxy and the standard 
 type = "forbidden"
 source_modules = [
     "extensions.planets.core", "extensions.planet_atmosphere.core", "extensions.satellite_orbit.core", "extensions.rri.core",
+    "extensions.messages.core", "extensions.domain_lock.core", "extensions.registry_changes.core",
 ]
 forbidden_modules = [
     "api_docs", "main", "registration", "registry_adapter", "rpp", "settings", "extensions.planets.rpp",
-    "extensions.planet_atmosphere.rpp", "extensions.satellite_orbit.rpp", "extensions.rri.rpp", "sqlalchemy",
+    "extensions.planet_atmosphere.rpp", "extensions.satellite_orbit.rpp", "extensions.rri.rpp", "extensions.messages.rpp", "extensions.domain_lock.rpp",
+    "extensions.registry_changes.rpp", "sqlalchemy",
     "connexion", "dataclasses_json", "flask", "jsonschema", "lxml", "starlette", "werkzeug", "xsdata", "yaml",
 ]
 
@@ -256,6 +286,35 @@ name = "An extension imports no registry adapter, settings or XML"
 type = "forbidden"
 source_modules = ["extensions"]
 forbidden_modules = ["main", "registry_adapter", "settings", "lxml", "sqlalchemy", "xsdata"]
+
+# The generic extensions of the messages: none imports the rri extension, its RRI part included, and the two that define message
+# types know nothing of each other. Each builds on the messages extension only.
+[[tool.importlinter.contracts]]
+id = "generic-extensions-not-rri"
+name = "The generic message extensions and their RRI parts do not import the rri extension"
+type = "forbidden"
+source_modules = [
+    "extensions.messages", "extensions.domain_lock", "extensions.registry_changes",
+    "registry_adapter.rri.extensions.messages", "registry_adapter.rri.extensions.domain_lock",
+    "registry_adapter.rri.extensions.registry_changes",
+]
+forbidden_modules = ["extensions.rri", "registry_adapter.rri.extensions.rri"]
+
+[[tool.importlinter.contracts]]
+id = "message-extensions-independent"
+name = "The extensions of message types are independent of each other"
+type = "independence"
+modules = ["extensions.domain_lock", "extensions.registry_changes"]
+
+[[tool.importlinter.contracts]]
+id = "messages-imports-no-dependent"
+name = "The messages extension imports none of the extensions that build on it"
+type = "forbidden"
+source_modules = ["extensions.messages", "registry_adapter.rri.extensions.messages"]
+forbidden_modules = [
+    "extensions.domain_lock", "extensions.registry_changes", "registry_adapter.rri.extensions.domain_lock",
+    "registry_adapter.rri.extensions.registry_changes",
+]
 
 [[tool.importlinter.contracts]]
 id = "sqlite-extensions-core-only"
@@ -286,8 +345,9 @@ name = "The RRI part of an extension imports the core of an extension only, of t
 type = "forbidden"
 source_modules = ["registry_adapter.rri.extensions"]
 forbidden_modules = [
-    "extensions.*.rpp", "extensions.*.core.flows", "extensions.rri.register_rri", "rpp", "core.flows", "core.session",
-    "registration", "settings",
+    "extensions.*.rpp", "extensions.*.core.flows", "extensions.rri.register_rri", "extensions.messages.register_messages",
+    "extensions.domain_lock.register_domain_lock", "extensions.registry_changes.register_registry_changes", "rpp", "core.flows",
+    "core.session", "registration", "settings",
 ]
 
 [[tool.importlinter.contracts]]

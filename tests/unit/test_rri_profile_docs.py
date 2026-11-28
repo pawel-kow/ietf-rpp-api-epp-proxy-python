@@ -24,7 +24,8 @@ SPEC = ROOT / ".spec"
 
 DEFINITIONS = Definitions.load(RRI_REGISTRY, EXTENSIONS)
 PROFILE = DEFINITIONS.profiles["rri"]
-EXTENSION_IDS = ("de.denic.rpp.rri",)
+EXTENSION_IDS = ("de.denic.rpp.rri", "io.github.pawel-kow.rpp.messages", "io.github.pawel-kow.rpp.domain-lock",
+                 "io.github.pawel-kow.rpp.registry-changes")
 
 
 def read(name):

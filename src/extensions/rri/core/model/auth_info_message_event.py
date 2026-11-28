@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from extensions.rri.core.model.message_kind import RriMessageKind
-from extensions.rri.core.model.object_reference import ObjectReference
+from extensions.messages.core.model.object_reference import ObjectReference
 
 
 @dataclass(kw_only=True)

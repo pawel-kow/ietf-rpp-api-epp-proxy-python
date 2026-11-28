@@ -42,13 +42,31 @@ docs/rri/rri-extension.md 0.4.0, rri-preset.md, rri-strict-preset.md, rri-profil
 
 ## Tasks
 
-- [~] Plan checkpoint (orchestrator approval)
-- [ ] Packages, schemas copies, registration, RRI parts, rri slimmed, 0.4.0
-- [ ] Dependency check in OfferedPresets + unit tests
-- [ ] Configs and deploy templates, preset/profile yamls
-- [ ] Doc test for docs/extensions, test updates, docs (overview, architecture, specification.project.md)
-- [ ] import-linter contracts
-- [ ] Checks (lint-imports, unit, smoke, MTEST reachability), draft PR
+- [x] Plan checkpoint (approved)
+- [x] Packages, schemas copies, registration, RRI parts, rri slimmed, 0.4.0
+- [x] Dependency check in OfferedPresets + unit tests
+- [x] Configs and deploy templates, preset/profile yamls
+- [x] Doc test for docs/extensions, test updates, docs (overview, architecture, specification.project.md)
+- [x] import-linter contracts
+- [x] Checks, draft PR
+- [~] Review rounds, finish
+
+## Decisions of the orchestrator (after the plan)
+
+- Open question 1: only `messages` is a dependency; a preset with rri but without domain-lock or registry-changes is valid and
+  those notifications fall back to service notices. The rri preset includes both. One unit test covers the fallback
+  (`test_a_notification_of_an_extension_the_response_preset_lacks_is_a_service_notice`).
+- Open question 2: order rri, messages, domain-lock, registry-changes everywhere.
+- Issue #203 (an extension without objects needs a backend part): not fixed here. This change does not affect it: `messages`
+  has an RRI part without gateways (only `RriExtensionPart.gateways` became optional), because `load_registry` still
+  requires a part in the backend for every extension.
+
+## Checks (commit of the PR, no edits during the runs)
+
+- `PYTHONPATH=src lint-imports`: 39 contracts kept, 0 broken.
+- `pytest -n 4 tests/unit`: 3431 passed.
+- MTEST reachability (`rri-mtest domain_availability test3`): passed, so the smoke run covers rri-mtest.
+- `pytest -n 4 -m smoke tests/integration`: 251 passed, 581 skipped (rri-mtest `message::test1-query_head` passes).
 
 ## Findings
 

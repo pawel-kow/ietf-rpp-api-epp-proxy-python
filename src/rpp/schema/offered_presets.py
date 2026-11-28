@@ -3,6 +3,7 @@ from dataclasses import replace
 from rpp.schema.definitions import Definitions
 from rpp.schema.bundle_definitions import bundle_definitions
 from rpp.schema.extension_additivity import check_additive
+from rpp.schema.extension_dependencies import foreign_references
 from rpp.schema.extensions import EXTENSIONS
 from rpp.schema.offered_preset import OfferedPreset
 from rpp.schema.preset_flattening import PresetFlattening
@@ -16,7 +17,8 @@ class OfferedPresets:
 
     `build` checks the choice and stops the app on a wrong one, naming what conflicts: an unknown preset or profile, a
     preset offered twice or without being a default, a cycle, one extension in two versions, an extension the proxy does
-    not implement in the version stated or the backend does not hold, a profile that requires an extension its preset
+    not implement in the version stated or the backend does not hold, an extension whose definitions refer to those of another extension
+    that its preset lacks, a profile that requires an extension its preset
     lacks (also one a binding adds), a profile bound that the preset already includes, a Profile Schema that declares what
     its target does not, an Extension Schema that constrains, `$defs` keys that clash, and an informational profile that no
     offered preset applies.
@@ -73,6 +75,10 @@ class OfferedPresets:
                                      f"which the preset {preset.id} does not contain")
                 if name not in owner.defs:
                     raise ValueError(f"The extension {extension.id} extends {name}, which the extension {owner.id} does not define")
+            for name, owner in foreign_references(extension, EXTENSIONS.values()).items():
+                if owner not in extensions:
+                    raise ValueError(f"The extension {extension.id} uses {name} of the extension {owner.id}, "
+                                     f"which the preset {preset.id} does not contain")
         profiles = flattening.profiles(preset)
         if len(set(bound_keys)) != len(bound_keys):
             raise ValueError(f"bound_profiles of {preset.key} names a profile twice")
