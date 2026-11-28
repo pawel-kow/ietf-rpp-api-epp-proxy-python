@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/domain-lock-extension.schema.json",
+  "title": "RPP Domain Lock Messages extension",
+  "description": "Message types for the lock of a domain name and its removal. See docs/extensions/domain-lock-extension.md.",
+  "rpp:extension": {
+    "name": "RPP Domain Lock Messages",
+    "id": "io.github.pawel-kow.rpp.domain-lock",
+    "version": "0.1.0",
+    "objects": []
+  },
+  "rpp:extends": {},
+  "rpp:messages": {
+    "domainLockMessage": "#/$defs/ext.domainLock.domainLockMessage.read",
+    "domainUnlockMessage": "#/$defs/ext.domainLock.domainUnlockMessage.read"
+  },
+  "$defs": {
+    "ext.domainLock.domainLockMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "const": "domainLockMessage",
+          "readOnly": true
+        },
+        "objectType": {
+          "type": "string",
+          "const": "domainName",
+          "readOnly": true
+        },
+        "objectId": {
+          "type": "string",
+          "readOnly": true
+        },
+        "notices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ext.messages.registryNotice.read"
+          },
+          "readOnly": true
+        }
+      },
+      "required": [
+        "@type",
+        "objectType",
+        "objectId",
+        "notices"
+      ]
+    },
+    "ext.domainLock.domainUnlockMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "const": "domainUnlockMessage",
+          "readOnly": true
+        },
+        "objectType": {
+          "type": "string",
+          "const": "domainName",
+          "readOnly": true
+        },
+        "objectId": {
+          "type": "string",
+          "readOnly": true
+        },
+        "notices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ext.messages.registryNotice.read"
+          },
+          "readOnly": true
+        }
+      },
+      "required": [
+        "@type",
+        "objectType",
+        "objectId",
+        "notices"
+      ]
+    }
+  }
+}

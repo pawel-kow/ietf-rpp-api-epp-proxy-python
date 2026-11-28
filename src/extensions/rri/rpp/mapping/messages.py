@@ -1,63 +1,43 @@
 """The message types of the rri extension (docs/rri/rri-extension.md, Message Types): the events of its core as the `data` of a
 message, for the definitions `rpp:messages` of its schema maps."""
+from extensions.messages.rpp.mapping.components import notice, reference, subject
 from extensions.rri.core.model.auth_info_message_event import AuthInfoMessageEvent
 from extensions.rri.core.model.bulk_message_event import BulkMessageEvent
 from extensions.rri.core.model.contact_verification_message_event import ContactVerificationMessageEvent
 from extensions.rri.core.model.domain_status_message_event import DomainStatusMessageEvent
 from extensions.rri.core.model.notice_message_event import NoticeMessageEvent
-from extensions.rri.core.model.object_reference import ObjectReference
-from extensions.rri.core.model.registry_notice import RegistryNotice
 from extensions.rri.core.ports.rri_gateways import EXTENSION_ID
 
 
-def _reference(reference: ObjectReference) -> dict:
-    """An Object Reference Object, a Dated Object Reference Object where the reference has a date."""
-    if reference.date is None:
-        return {"@type": "objectReference", "objectType": reference.object_type, "objectId": reference.object_id}
-    return {"@type": "datedObjectReference", "objectType": reference.object_type, "objectId": reference.object_id,
-            "date": reference.date}
-
-
-def _notice(notice: RegistryNotice) -> dict:
-    rpp = {"@type": "registryNotice", "code": notice.code, "text": notice.text}
-    if notice.arguments:
-        rpp["arguments"] = list(notice.arguments)
-    return rpp
-
-
-def _subject(reference: ObjectReference) -> dict:
-    return {"objectType": reference.object_type, "objectId": reference.object_id}
-
-
 def _bulk(event: BulkMessageEvent) -> dict:
-    return {"objects": [_reference(reference) for reference in event.objects]}
+    return {"objects": [reference(r) for r in event.objects]}
 
 
 def _notices(event: NoticeMessageEvent) -> dict:
-    return {**_subject(event.object), "notices": [_notice(notice) for notice in event.notices]}
+    return {**subject(event.object), "notices": [notice(n) for n in event.notices]}
 
 
 def _auth_info(event: AuthInfoMessageEvent) -> dict:
-    return {**_subject(event.object), **({"expiryDate": event.expiry_date} if event.expiry_date else {})}
+    return {**subject(event.object), **({"expiryDate": event.expiry_date} if event.expiry_date else {})}
 
 
 def _domain_status(event: DomainStatusMessageEvent) -> dict:
-    rpp = {**_subject(event.object), "status": [{"@type": "domainStatus", "label": label} for label in event.status],
-           "holders": [_reference(reference) for reference in event.holders]}
+    rpp = {**subject(event.object), "status": [{"@type": "domainStatus", "label": label} for label in event.status],
+           "holders": [reference(r) for r in event.holders]}
     if event.hold_deadline:
         rpp["holdDeadline"] = event.hold_deadline
     if event.deletion_deadline:
         rpp["deletionDeadline"] = event.deletion_deadline
     if event.notices:
-        rpp["notices"] = [_notice(notice) for notice in event.notices]
+        rpp["notices"] = [notice(n) for n in event.notices]
     return rpp
 
 
 def _contact_verification(event: ContactVerificationMessageEvent) -> dict:
-    rpp = {**_subject(event.object), "claims": list(event.claims), "referencedDomains": event.referenced_domains,
-           "earliestDeletion": _reference(event.earliest_deletion), "notices": [_notice(notice) for notice in event.notices]}
+    rpp = {**subject(event.object), "claims": list(event.claims), "referencedDomains": event.referenced_domains,
+           "earliestDeletion": reference(event.earliest_deletion), "notices": [notice(n) for n in event.notices]}
     if event.earliest_hold is not None:
-        rpp["earliestHold"] = _reference(event.earliest_hold)
+        rpp["earliestHold"] = reference(event.earliest_hold)
     return rpp
 
 

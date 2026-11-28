@@ -31,7 +31,8 @@ differ, ask which revision applies.
 
 **Extension specification.** An RPP extension the proxy implements is specified in a Markdown file under `docs/`
 (`de.denic.rpp.rri`: [rri-extension.md](../rri/rri-extension.md), `org.example.rpp.extension.planets`:
-[planets-extension.md](../demo/planets-extension.md)). It has the section list of guidelines §9, in that
+[planets-extension.md](../demo/planets-extension.md)), and the generic extensions of the tree `io.github.pawel-kow.rpp.<name>` in
+`docs/extensions/<name>-extension.md` (`io.github.pawel-kow.rpp.messages`: [messages-extension.md](../extensions/messages-extension.md)). It has the section list of guidelines §9, in that
 order, with "None" in a section that does not apply. Each section takes the shape of the draft that defines the base
 concept: object sections that of data-objects, the JSON Schema and Examples sections that of json, and Result Codes,
 Problem Details, HTTP Headers and Endpoints that of core. How the extension is implemented is in
@@ -111,8 +112,9 @@ agree as [specification.md](specification.md#consistency-checks) describes.
 
 In an extension specification, an example marked `<!-- example valid <definition> -->` or
 `<!-- example invalid <definition> -->` is validated against the extension's schema, and a definition shown after
-`<!-- definition <name> -->` must equal the schema's. `tests/unit/test_rri_extension_doc.py` checks this for
-[rri-extension.md](../rri/rri-extension.md). Run it after editing that document.
+`<!-- definition <name> -->` must equal the schema's. `tests/unit/test_extension_docs.py` checks this for
+[rri-extension.md](../rri/rri-extension.md) and the three documents of [docs/extensions/](../extensions/) (it also checks that the
+schema copy in `src/extensions/<name>/rpp/schema/` is the one of `.spec/`). Run it after editing one of them.
 
 ## Changes History
 

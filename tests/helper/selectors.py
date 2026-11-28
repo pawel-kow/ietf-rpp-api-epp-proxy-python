@@ -17,7 +17,8 @@ from registration import load_extensions
 from tests.helper.durations import seconds
 
 # The extensions of the repository, whose leaves a profile of a server that does not register them lacks.
-REPOSITORY_EXTENSIONS = ("extensions.planets", "extensions.planet_atmosphere", "extensions.satellite_orbit", "extensions.rri")
+REPOSITORY_EXTENSIONS = ("extensions.planets", "extensions.planet_atmosphere", "extensions.satellite_orbit", "extensions.rri",
+                         "extensions.messages", "extensions.domain_lock", "extensions.registry_changes")
 
 
 @cache

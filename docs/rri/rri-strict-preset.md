@@ -32,7 +32,7 @@ This document defines a private preset of the RESTful Provisioning Protocol (RPP
 
 This section states the purpose of the preset and the clients and servers it is intended for.
 
-The preset is for clients that provision domain names in a registry that operates the DENIC Registry Robot Interface (RRI) version 5.0 and want every request that the registry cannot hold refused as a broken profile constraint. It applies the profile [DENIC RRI](rri-profile.md) to the DENIC RRI preset, which contains the DENIC RRI extension ([rri-extension](rri-extension.md)). The DENIC RRI preset stays available without the profile.
+The preset is for clients that provision domain names in a registry that operates the DENIC Registry Robot Interface (RRI) version 5.0 and want every request that the registry cannot hold refused as a broken profile constraint. It applies the profile [DENIC RRI](rri-profile.md) to the DENIC RRI preset, which contains the DENIC RRI extension ([rri-extension](rri-extension.md)) and the extensions it builds on. The DENIC RRI preset stays available without the profile.
 
 The preset follows the Preset Specification Format of [@!I-D.wullink-rpp-extension-guidelines].
 
@@ -56,7 +56,7 @@ The terms Profile, Preset, Applicable Profiles, and Profile Binding are used as 
 | Specification | <https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-strict-preset.md> |
 Table: Preset Overview
 
-The preset has no extension of its own. It contains the extension of its base preset, which the profile requires.
+The preset has no extension of its own. It contains the extensions of its base preset, of which the profile requires the DENIC RRI extension.
 
 A client signals the preset with each request, as defined in [@!I-D.ietf-rpp-core]:
 
@@ -70,7 +70,7 @@ This document has no IANA actions. The preset is a private preset, and its ident
 
 # Security Considerations {#security}
 
-The preset adds no functionality and no constraints of its own. The security considerations of its extension and its profile apply.
+The preset adds no functionality and no constraints of its own. The security considerations of its extensions and its profile apply.
 
 {removeInRFC="true"}
 {toc="exclude"}
@@ -81,3 +81,4 @@ The preset adds no functionality and no constraints of its own. The security con
 ## 1.0
 
 * initial version #183
+* contain the extensions of the preset de.denic.rpp.preset.rri, which builds on the extensions io.github.pawel-kow.rpp.messages, io.github.pawel-kow.rpp.domain-lock and io.github.pawel-kow.rpp.registry-changes #261

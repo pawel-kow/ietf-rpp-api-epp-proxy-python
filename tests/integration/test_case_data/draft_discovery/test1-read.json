@@ -171,8 +171,29 @@
                   "@type": "extension",
                   "name": "DENIC RRI",
                   "id": "de.denic.rpp.rri",
-                  "version": "0.3.0",
+                  "version": "0.4.0",
                   "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json"
+                },
+                {
+                  "@type": "extension",
+                  "name": "RPP Message Components",
+                  "id": "io.github.pawel-kow.rpp.messages",
+                  "version": "0.1.0",
+                  "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/messages-extension.schema.json"
+                },
+                {
+                  "@type": "extension",
+                  "name": "RPP Domain Lock Messages",
+                  "id": "io.github.pawel-kow.rpp.domain-lock",
+                  "version": "0.1.0",
+                  "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/domain-lock-extension.schema.json"
+                },
+                {
+                  "@type": "extension",
+                  "name": "RPP Registry Change Messages",
+                  "id": "io.github.pawel-kow.rpp.registry-changes",
+                  "version": "0.1.0",
+                  "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/registry-changes-extension.schema.json"
                 }
               ],
               "profiles": [],
@@ -200,8 +221,29 @@
                   "@type": "extension",
                   "name": "DENIC RRI",
                   "id": "de.denic.rpp.rri",
-                  "version": "0.3.0",
+                  "version": "0.4.0",
                   "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json"
+                },
+                {
+                  "@type": "extension",
+                  "name": "RPP Message Components",
+                  "id": "io.github.pawel-kow.rpp.messages",
+                  "version": "0.1.0",
+                  "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/messages-extension.schema.json"
+                },
+                {
+                  "@type": "extension",
+                  "name": "RPP Domain Lock Messages",
+                  "id": "io.github.pawel-kow.rpp.domain-lock",
+                  "version": "0.1.0",
+                  "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/domain-lock-extension.schema.json"
+                },
+                {
+                  "@type": "extension",
+                  "name": "RPP Registry Change Messages",
+                  "id": "io.github.pawel-kow.rpp.registry-changes",
+                  "version": "0.1.0",
+                  "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/registry-changes-extension.schema.json"
                 }
               ],
               "profiles": [
@@ -234,8 +276,29 @@
               "@type": "extension",
               "name": "DENIC RRI",
               "id": "de.denic.rpp.rri",
-              "version": "0.3.0",
+              "version": "0.4.0",
               "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json"
+            },
+            {
+              "@type": "extension",
+              "name": "RPP Message Components",
+              "id": "io.github.pawel-kow.rpp.messages",
+              "version": "0.1.0",
+              "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/messages-extension.schema.json"
+            },
+            {
+              "@type": "extension",
+              "name": "RPP Domain Lock Messages",
+              "id": "io.github.pawel-kow.rpp.domain-lock",
+              "version": "0.1.0",
+              "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/domain-lock-extension.schema.json"
+            },
+            {
+              "@type": "extension",
+              "name": "RPP Registry Change Messages",
+              "id": "io.github.pawel-kow.rpp.registry-changes",
+              "version": "0.1.0",
+              "url": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/registry-changes-extension.schema.json"
             }
           ]
         },

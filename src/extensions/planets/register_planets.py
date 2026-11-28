@@ -55,7 +55,6 @@ def register(registry: ExtensionRegistry) -> None:
         objects=("planet", "satellite"),
         openapi=openapi_fragment,
         handlers=HANDLERS,
-        backend_parts={"sqlite": "registry_adapter.sqlite.extensions.planets"},
         profile_layer={
             "objects": ["planet", "satellite"],
             "extensions": [EXTENSION_ID],

@@ -7,6 +7,10 @@ cp -v $SPEC_FOLDER/json-schema/rpp.schema.normalized.json ./src/rpp/schema/schem
 cp -v .spec/draft-ietf-rpp-data-objects.yaml ./src/rpp/schema/schemas/
 # The RRI extension, described in docs/rri/rri-extension.md.
 cp -v .spec/rri-extension.schema.json .spec/rri-profile.schema.json ./src/extensions/rri/rpp/schema/
+# The generic message extensions (docs/extensions/).
+cp -v .spec/messages-extension.schema.json ./src/extensions/messages/rpp/schema/
+cp -v .spec/domain-lock-extension.schema.json ./src/extensions/domain_lock/rpp/schema/
+cp -v .spec/registry-changes-extension.schema.json ./src/extensions/registry_changes/rpp/schema/
 # The Profile Schema of the EPP Compatibility Profile, from draft-kowalik-rpp-epp-compatibility.
 cp -v .spec/epp-compatibility-profile.schema.json ./src/rpp/schema/schemas/profiles/epp-compatibility.schema.json
 # The demo extension of the SQLite backend, described in docs/demo/planets-extension.md.

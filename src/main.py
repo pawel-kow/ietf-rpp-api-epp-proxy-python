@@ -22,7 +22,7 @@ from registry_adapter.sqlite.common_part import COMMON_PART
 from registry_adapter.sqlite.sqlite_backend import SqliteBackend
 from registry_adapter.sqlite.sqlite_database import SqliteDatabase
 from registration import ExtensionRegistry
-from registry_setup import backend_profile, load_registry
+from registry_setup import backend_parts, backend_profile, load_registry
 from rpp.http.app import create_app
 from rpp.http.rpp_app import RppApp
 from settings.load_settings import load_settings
@@ -86,7 +86,7 @@ def compose(settings: Settings) -> Composition:
 
     def rri_backend_factory():
         """The RRI parts of the registered extensions (loaded now), and the factory of a client's session."""
-        parts = load_rri_parts(registry.backend_parts("rri"))
+        parts = load_rri_parts(backend_parts("rri", registry), registry.needing_gateways())
 
         def new_rri_backend(username, password):
             return RriBackend(new_rri_client(username, password), profile, settings.rri.rpp_rri_lgr, parts)
@@ -94,7 +94,7 @@ def compose(settings: Settings) -> Composition:
 
     def sqlite_backend_factory():
         """The database of the demo backend (its tables are created now), and the factory of a client's session."""
-        parts = load_extension_parts(registry.backend_parts("sqlite"))
+        parts = load_extension_parts(backend_parts("sqlite", registry))
         database = SqliteDatabase(settings.sqlite.rpp_sqlite_url, [COMMON_PART, *(part.part for part in parts)])
         clients = ClientDirectory(settings.sqlite.rpp_sqlite_clients)
 

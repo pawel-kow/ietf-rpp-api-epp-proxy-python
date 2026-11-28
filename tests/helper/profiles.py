@@ -6,9 +6,10 @@ from core.capabilities.backend_profile import BackendProfile
 from registry_adapter.rri.extension_part import load_extension_parts as load_rri_parts
 from registration import ExtensionRegistry, load_extensions, with_extensions
 from rpp.schema.extension_registration import register_all
+from registry_setup import backend_parts
 from settings.load_settings import PROFILES
 
-RRI_EXTENSION = "extensions.rri"
+RRI_EXTENSIONS = ("extensions.rri", "extensions.messages", "extensions.domain_lock", "extensions.registry_changes")
 
 
 def registry_of(*modules: str) -> ExtensionRegistry:
@@ -27,8 +28,8 @@ def generic_profile(protocol: str, lgrs=(), registry: ExtensionRegistry | None =
                                       extra_leaves=registry.profile_leaves())
 
 
-RRI_REGISTRY = registry_of(RRI_EXTENSION)
+RRI_REGISTRY = registry_of(*RRI_EXTENSIONS)
 EPP_PROFILE = generic_profile("epp")
 RRI_PROFILE = generic_profile("rri", registry=RRI_REGISTRY)
 
-RRI_PARTS = load_rri_parts(RRI_REGISTRY.backend_parts("rri"))
+RRI_PARTS = load_rri_parts(backend_parts("rri", RRI_REGISTRY), RRI_REGISTRY.needing_gateways())

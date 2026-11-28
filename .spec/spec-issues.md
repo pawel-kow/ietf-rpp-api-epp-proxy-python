@@ -720,6 +720,25 @@ they were. The proxy follows the proposals, with the following.
 - Json §Extension Framework (json.md:300-314) maps `rpp:extends` to a base definition, and the guidelines (extension-guidelines.md C10) only say that a profile that constrains a definition of an extension requires it. Neither says how an Extension Schema adds members to a data object that another extension defines (the planet atmosphere extension to the Planet of the planets extension).
 - **Proxy:** the key of `rpp:extends` may be `<$id of the owner extension>#/$defs/<definition>`, as `rpp:constraints` names a definition of an extension. The extending extension implicitly requires the owner: a preset that contains it without the owner does not start, and both are named. The additivity check reads the definition of the owner, so "a property the base declares" is one the owner's definition declares. There is no new member of `rpp:extension`. A specification should state the dependency in its Extension Overview ("Changed base objects"). Json should say that an Extension Schema may extend the definitions of another extension, and that this requires it.
 
+## An extension that uses the definitions of another extension
+
+- The guidelines (§8.3) forbid an extension to depend on a definition of another extension or to require another extension,
+  and ask for a new version of the extension instead. Component Objects that the message types of several extensions share
+  (an object reference, a notice of the registry, a base for a message about several objects) then have to be restated in each
+  of them, under names that may not clash, and a client sees one `@type` with several definitions.
+- Json (§7) says how an Extension Schema names a base definition, but not how it refers to a definition of another
+  extension, and the drafts give an extension no way to state that it needs another one.
+- **Proxy (#261):** `io.github.pawel-kow.rpp.messages` defines the Component Objects, and the rules for the message types of
+  the extensions that build on it, and no message type. The extensions whose message types use them
+  (`io.github.pawel-kow.rpp.domain-lock`, `io.github.pawel-kow.rpp.registry-changes`, `de.denic.rpp.rri`) refer to them with a
+  `$ref` to their name in the shared `$defs` (`#/$defs/ext.messages.registryNotice.read`), as to a base definition (see
+  Referring to a base definition), and their specifications require the messages extension, 0.1.0 or a later version with the
+  same major version, in the same preset. The dependency is implicit, as for an extension that extends a definition of
+  another: a `$ref` that names a definition of another extension makes a preset without that extension refuse to start,
+  naming both, instead of failing at validation. There is no new member of `rpp:extension`. The guidelines should allow an
+  extension to build on a shared extension of definitions, and json should say how its schema refers to them and how it
+  states the dependency.
+
 ## Message types of an extension
 
 - Data-objects §5 says extensions should define new message types on the Base Message Object, but json gives them no extension
@@ -730,9 +749,9 @@ they were. The proxy follows the proposals, with the following.
   each mapped definition to the `oneOf` of `data`. Json should define such a member, or say that every definition that extends
   `baseMessage` joins the union.
 - Data-objects §2.5 does not say whether a derived object may restate an inherited data element with a derived Data Type, or
-  leave out an inherited element. The Bulk Base Message Object of `de.denic.rpp.rri` holds a list of Object Reference Objects, its
-  expiry message types restate the list with Dated Object Reference Objects, and its message types leave out `objectType` and
-  `objectId` of the Base Message Object. Json §6.2.16 says the schema of each message type repeats the inherited elements.
+  leave out an inherited element. The Bulk Base Message Object of `io.github.pawel-kow.rpp.messages` holds a list of Object Reference
+  Objects, the expiry message types of `de.denic.rpp.rri` restate the list with Dated Object Reference Objects, and the message
+  types that extend it leave out `objectType` and `objectId` of the Base Message Object. Json §6.2.16 says the schema of each message type repeats the inherited elements.
 - **Proxy:** the bulk message types declare neither `objectType` nor `objectId`, so a message with them fails the schema.
 - Message type identifiers of extensions share one namespace with those of the base, with no registry and no prefix rule
   (data-objects §15.3.3 only says the `type` value "MUST be a valid identifier for an RPP message component").

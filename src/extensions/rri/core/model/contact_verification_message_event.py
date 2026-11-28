@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from extensions.rri.core.model.object_reference import ObjectReference
-from extensions.rri.core.model.registry_notice import RegistryNotice
+from extensions.messages.core.model.object_reference import ObjectReference
+from extensions.messages.core.model.registry_notice import RegistryNotice
 
 
 @dataclass(kw_only=True)

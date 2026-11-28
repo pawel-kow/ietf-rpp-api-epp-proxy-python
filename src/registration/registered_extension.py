@@ -5,7 +5,7 @@ from typing import Any, Callable
 @dataclass(frozen=True, kw_only=True)
 class RegisteredExtension:
     """Everything one extension adds to the pipeline, as its `register` states it. The registry holds it as data: it
-    imports nothing of the proxy, and the code that reads it (the app, a backend) knows what each part is.
+    imports nothing of the proxy, names no backend (a backend lists the extensions it holds, `registry_adapter.<backend>.extensions.PARTS`), and the code that reads it (the app, a backend) knows what each part is.
 
     - `id`: the extension id of its RPP schema.
     - `schema`: the parsed RPP extension schema (guidelines §8).
@@ -21,7 +21,6 @@ class RegisteredExtension:
       qualified function name in `handlers`, or names the module of its handler (`x-openapi-router-controller`). None for an
       extension without paths.
     - `handlers`: the package of its handler modules (None for an extension without paths).
-    - `backend_parts`: the module of its part in each backend that can hold it (`{"sqlite": "registry_adapter..."}`).
     - `profile_layer`: the leaves it adds to the backend profile, with `objects`, `extensions` and `presets` to add to those the
       generic profile lists; `profile_leaves` the type of each leaf of it that the profile does not have.
     - `presets`: the presets it brings (`{key: definition}`, as a preset file of `rpp/schema/schemas/presets` states it).
@@ -35,7 +34,6 @@ class RegisteredExtension:
     processes: dict[str, tuple[str, ...]] = field(default_factory=dict)
     openapi: Callable[[dict], dict] | None = None
     handlers: str | None = None
-    backend_parts: dict[str, str] = field(default_factory=dict)
     profile_layer: dict[str, Any] = field(default_factory=dict)
     profile_leaves: dict[str, type] = field(default_factory=dict)
     presets: dict[str, dict] = field(default_factory=dict)
