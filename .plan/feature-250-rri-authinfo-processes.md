@@ -121,3 +121,10 @@ The secret (`authdata`) is never returned and never logged.
   unknown, the class mapping stays (6 -> 422 02306), not 409 02304.
 - Added `{date:+Nd}` to the integration placeholders (documented in testing.project.md).
 - Hash of CREATE-AUTHINFO1 is no longer printed (CHPROV was already not).
+
+## Check results (commit b41a37c, no edits during the runs)
+
+- `PYTHONPATH=src lint-imports`: 32 kept, 0 broken.
+- `pytest -n 4 tests/unit`: 3259 passed.
+- `pytest -n 4 -m smoke tests/integration`: 241 passed, 511 skipped (8 min), MTEST included (the reachability case passed first;
+  `authinfo_process/test1` is a smoke case). The whole group `authinfo_process/` (9 cases) passed on MTEST on its own too.
