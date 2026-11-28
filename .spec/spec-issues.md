@@ -399,6 +399,30 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - Data-objects §9.16 makes each data element of the Processes Object an aggregation of a Process Object, and json's process references require `processId`. Core §16.1.4 lets a server assign no Process ID and expose a process at `latest` only. Such a server cannot list its processes in a Processes Object, and core §16.1.4 asks a 200 only of a server that exposes no process resource, without saying what a server answers that exposes one at `latest` only.
 - **Proxy:** a process exposed at `latest` only is created with a 200 without `Location`, as for restore, and the Processes Object is not returned. The references of the `de.denic.rpp.rri` processes require `processId` as the base ones do.
 
+## Verification of contact information
+
+- Registries under NIS2 (Directive (EU) 2022/2555, Article 28) require registrars to verify the contact information of
+  holders and to report each verification (claims, result, date, evidence, method). The Contact Data Object (data-objects
+  §12) has no place for it, and no object holds the deadlines after which a registry suspends or deletes a domain name
+  whose holders are not verified.
+- **Proxy (RRI, #251):** the `de.denic.rpp.rri` extension adds `verifications` (0-5 Verification Information Objects) to
+  the contact, read-write, and a read-only `verificationProcess` of the domain name with the deadlines and the blocks of
+  the holders. A full update follows the entry "Full update of a member an extension adds": under a preset without the
+  extension the stored blocks are kept.
+
+## A Process Object that the server starts
+
+- Every Process Object of data-objects §10 is created by a client, or implicitly by the create of its owner (§10.4). A
+  process that the server starts on its own, which a client only reads (the verification that a registry requires after a
+  risk assessment), has no create, and data-objects does not say that a Process Object may lack one. Core §16.1.4 states
+  the read at `latest` without saying how a client learns that such a process exists, other than a message.
+- Data-objects §11.3.3 lets a server redact properties of a Read for another client with Object Authorisation "according
+  to server policy", but says nothing for a Process Object: its operations state "only the sponsoring client" or "any
+  client".
+- **Proxy (RRI, #251):** `verificationProcess` has only a Read, at `latest`. It exists while the registry states a
+  verification deadline, otherwise 404. Another client reads it with `RPP-Authorization` only, without the holder handles
+  and with claims and result only (the registry's own visibility); without it, 403.
+
 ## Sponsor of a deleted domain
 
 - Data-objects requires `provMetadata.spClientId` in every read of a domain. DENIC RRI shows no RegAcc for a domain in

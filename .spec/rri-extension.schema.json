@@ -11,6 +11,9 @@
     "#/$defs/domainName.create": "#/$defs/ext.rri.domainName.create",
     "#/$defs/domainName.read": "#/$defs/ext.rri.domainName.read",
     "#/$defs/domainName.update": "#/$defs/ext.rri.domainName.update",
+    "#/$defs/contact.create": "#/$defs/ext.rri.contact.create",
+    "#/$defs/contact.read": "#/$defs/ext.rri.contact.read",
+    "#/$defs/contact.update": "#/$defs/ext.rri.contact.update",
     "#/$defs/organisation.read": "#/$defs/ext.rri.organisation.read",
     "#/$defs/processes.read": "#/$defs/ext.rri.processes.read",
     "#/$defs/domainTransferProcess.create": "#/$defs/ext.rri.domainTransferProcess.create"
@@ -102,6 +105,52 @@
         "abuse": { "$ref": "#/$defs/ext.rri.requestContact.reference" }
       }
     },
+    "ext.rri.contact.create": {
+      "type": "object",
+      "properties": {
+        "verifications": { "type": "array", "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/ext.rri.verificationInformation.create" } }
+      }
+    },
+    "ext.rri.contact.read": {
+      "type": "object",
+      "properties": {
+        "verifications": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/ext.rri.verificationInformation.read" } }
+      }
+    },
+    "ext.rri.contact.update": {
+      "type": "object",
+      "properties": {
+        "verifications": { "type": "array", "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/ext.rri.verificationInformation.create" } }
+      }
+    },
+    "ext.rri.verificationInformation.create": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "verificationInformation" },
+        "claims": { "type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": { "type": "string", "enum": ["name", "address", "email"] } },
+        "result": { "type": "string", "enum": ["success", "failed"] },
+        "reference": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "format": "date-time" },
+        "evidence": { "type": "string", "enum": ["idcard", "passport", "population_register", "residence_permit", "proof_of_arrival", "drivers_licence", "company_register", "company_statement", "bank_account", "online_payment_account", "utility_account", "bank_statement", "tax_statement", "written_attestation", "digital_attestation", "postal_ver_transaction_log", "email_ver_transaction_log", "address_database"] },
+        "method": { "type": "string", "enum": ["auth", "electronic_document", "physical_document", "vdig", "bvr", "pvr", "data", "reachability"] },
+        "trustFramework": { "type": "string", "enum": ["de_denic"] }
+      },
+      "required": ["@type", "claims", "result", "reference", "date", "evidence", "method", "trustFramework"]
+    },
+    "ext.rri.verificationInformation.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "verificationInformation", "readOnly": true },
+        "claims": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "result": { "type": "string", "enum": ["success", "failed"] },
+        "reference": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "evidence": { "type": "string" },
+        "method": { "type": "string" },
+        "trustFramework": { "type": "string" }
+      },
+      "required": ["@type", "claims", "result"]
+    },
     "ext.rri.organisation.read": {
       "type": "object",
       "properties": {
@@ -129,6 +178,11 @@
         "authInfoIssueProcess": {
           "type": "array",
           "items": { "$ref": "#/$defs/ext.rri.authInfoIssueProcess.reference" },
+          "readOnly": true
+        },
+        "verificationProcess": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ext.rri.verificationProcess.reference" },
           "readOnly": true
         }
       }
@@ -178,6 +232,35 @@
       "type": "object",
       "properties": {
         "@type": { "type": "string", "const": "authInfoIssueProcess" },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "processId"]
+    },
+    "ext.rri.verificationProcess.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "verificationProcess", "readOnly": true },
+        "processId": { "type": "string", "readOnly": true },
+        "holdDeadline": { "type": "string", "format": "date-time", "readOnly": true },
+        "deletionDeadline": { "type": "string", "format": "date-time", "readOnly": true },
+        "holders": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.holderVerification.read" }, "readOnly": true }
+      },
+      "required": ["@type", "holders"],
+      "anyOf": [{ "required": ["holdDeadline"] }, { "required": ["deletionDeadline"] }]
+    },
+    "ext.rri.holderVerification.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "holderVerification", "readOnly": true },
+        "holder": { "$ref": "#/$defs/contact.reference", "readOnly": true },
+        "verifications": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/ext.rri.verificationInformation.read" }, "readOnly": true }
+      },
+      "required": ["@type"]
+    },
+    "ext.rri.verificationProcess.reference": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "verificationProcess" },
         "processId": { "type": "string", "readOnly": true }
       },
       "required": ["@type", "processId"]

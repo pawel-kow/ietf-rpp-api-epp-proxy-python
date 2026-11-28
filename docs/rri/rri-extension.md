@@ -6,7 +6,7 @@ workgroup = "Network Working Group"
 submissiontype = "IETF"
 keyword = ["RPP", "provisioning", "registry", "extension", "RRI"]
 TocDepth = 4
-date = 2026-11-27
+date = 2026-11-28
 
 [seriesInfo]
 name = "Internet-Draft"
@@ -24,7 +24,7 @@ organization = "DENIC"
 
 .# Abstract
 
-This document defines a private extension of the RESTful Provisioning Protocol (RPP) for a server whose registry operates the DENIC Registry Robot Interface (RRI) version 5.0. The extension defines the Request Contact Data Object, adds the General Request and Abuse contacts to the Domain Name Data Object, adds the General Request and Abuse URI Templates of a registrar to the Organisation Data Object, adds the data of the domain to the Create operation of the Domain Transfer Process Object, defines Process Objects with which a client sets authorisation information with an expiry date and asks the registry to issue authorisation information to the registrants of a domain name, and defines message types for the notifications of the registry.
+This document defines a private extension of the RESTful Provisioning Protocol (RPP) for a server whose registry operates the DENIC Registry Robot Interface (RRI) version 5.0. The extension defines the Request Contact Data Object, adds the General Request and Abuse contacts to the Domain Name Data Object, adds the General Request and Abuse URI Templates of a registrar to the Organisation Data Object, adds verification information to the Contact Data Object, adds the data of the domain to the Create operation of the Domain Transfer Process Object, defines Process Objects with which a client sets authorisation information with an expiry date, asks the registry to issue authorisation information to the registrants of a domain name, and reads the verification of the holders that the registry requires for a domain name, and defines message types for the notifications of the registry.
 
 {mainmatter}
 
@@ -47,6 +47,9 @@ Transfer data
 
 Authorisation information
 : The registry holds two kinds of authorisation information for a domain name, each at most once. The sponsoring client sets the first, with an expiry date that the client chooses within a limit of the registry. Any client can ask the registry to generate the second, which the registry sends to the holders of the domain name by post and does not disclose to any client. The Authorisation Information Object [@!I-D.ietf-rpp-data-objects, section 9.12] has no expiry date, and the base specifications define no operation that asks the server to issue authorisation information.
+
+Verification information
+: The registry requires its clients to verify the name, the postal address, and the email address of the holders of domain names, as the Directive (EU) 2022/2555 (NIS2) [@NIS2] requires of the registry. A client states each verification of a contact, with its result, its evidence, and its method, and the registry holds up to five such records per contact. After a risk assessment of a domain name, the registry sets deadlines by which verification information for its holders must be provided, after which it places the domain name on hold and then deletes it. The base specifications define no data element for the verification of a contact and no object for the deadlines.
 
 Registry notifications
 : The registry queues notifications of fifteen kinds for a client, for example a warning that domain names expire, a change of a domain name by the registry, or a request to verify a contact. The base specifications define message types for a few of them only [@!I-D.ietf-rpp-data-objects, section 9.19], and a Service Notice Message Object carries no structured data. Some notifications name several objects, while the Base Message Object refers to one object.
@@ -85,6 +88,8 @@ The General Request and Abuse URI Templates of a registrar are defined as data e
 
 The operations on authorisation information are defined as new Process Objects of the Domain Name Data Object, the Authorisation Information Process Object (#auth-info-process) and the Authorisation Information Issue Process Object (#auth-info-issue-process). An expiry date is not a data element of the Authorisation Information Object, which is immutable and consists of a method and a value. Issuing authorisation information to the registrants is an action on the domain name with no data element of the domain name as its input, for which [@!I-D.ietf-rpp-core, section 16.1.4] asks for a Process Object. The Authorisation Information (`authInfo`) data element of the Domain Name Data Object is not changed.
 
+The verification information of a contact is a data element of the Contact Data Object, the Verifications (`verifications`), whose Data Type is a new Component Object, the Verification Information Object (#verification-information). It describes the contact, not a domain name, and a client provides it with the contact in the Create and Update operations, where the registry takes it. The verification that the registry requires for a domain name is a new Process Object of the Domain Name Data Object, the Verification Process Object (#verification-process), and not a data element of the domain name: the server starts and ends it after a risk assessment, it has deadlines, and a client completes it through the Contact Data Objects of the holders and not with an operation on the domain name. A client can therefore only read it.
+
 The notifications of the registry are defined as message types that extend the Base Message Object [@!I-D.ietf-rpp-data-objects, section 9.19.1], as [@!I-D.ietf-rpp-data-objects, section 5] recommends for extensions. Where a message type of the base specifications fits a notification, it is used: the notification of a completed transfer to the losing client is a Transfer Outcome Message Object. A message type for a notification that names several objects extends the Bulk Base Message Object (#bulk-base-message), which holds a list of object references in place of the single Object Type and Object Identifier of the Base Message Object.
 
 The base specifications define no extension point for message types: the `data` property of the Message Data Object is a fixed union of the message types of the base specifications [@!I-D.ietf-rpp-json, section 6.8], and the Extension Mapper only adds properties to a definition. The schema document of the extension therefore names its message types in the member `rpp:messages` (#message-type-mapping).
@@ -100,8 +105,8 @@ This section identifies the extension.
 | Version              | 0.3.0                                                                                         |
 | RPP version          | [@!I-D.ietf-rpp-core], [@!I-D.ietf-rpp-data-objects], [@!I-D.ietf-rpp-json]                   |
 | Schema `$id`         | <https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json> |
-| Changed base objects | `domainName`, `organisation`, `processes`, `domainTransferProcess`, `message`                 |
-| New objects          | `requestContact`, `requestContactAvailability`, `objectReference`, `datedObjectReference`, `registryNotice`, `bulkBaseMessage`, `requestTemplate`, `authInfoProcess`, `authInfoIssueProcess`, and the message types of (#message-types) |
+| Changed base objects | `domainName`, `contact`, `organisation`, `processes`, `domainTransferProcess`, `message`      |
+| New objects          | `requestContact`, `requestContactAvailability`, `objectReference`, `datedObjectReference`, `registryNotice`, `bulkBaseMessage`, `requestTemplate`, `verificationInformation`, `holderVerification`, `authInfoProcess`, `authInfoIssueProcess`, `verificationProcess`, and the message types of (#message-types) |
 Table: Extension Overview
 
 # External Data Types {#external-data-types}
@@ -171,6 +176,36 @@ None.
 
 The Domain Name Data Object supports, in addition to the Process Objects of [@!I-D.ietf-rpp-data-objects, section 11.4], the Process Objects of (#new-process-objects).
 
+## Contact Data Object {#contact}
+
+* Identifier: contact
+
+### Data Elements {#contact-data-elements}
+
+The following data element is added to the Contact Data Object.
+
+* Verifications
+  * Identifier: verifications
+  * Cardinality: 0-5
+  * Mutability: read-write
+  * Data Type: Verification Information Object
+  * Description: The verifications of the contact information that the sponsoring client performed, each with the claims verified, its result, and how it was performed.
+  * Constraints:
+    * Two entries MUST NOT be equal.
+    * The combination of the Claims, the Evidence, and the Method of each entry MUST be one that the policy of the server allows.
+
+The Create, Read, and Update operations [@!I-D.ietf-rpp-data-objects, section 12.3] process the Verifications as any other read-write data element. The server MUST reject a Create or Update whose Verifications do not satisfy these constraints or the constraints of (#verification-information). The Read response contains every data element of each Verification Information Object, so that a full update that repeats the Verifications of a Read is valid. A server MUST NOT return the Verifications in a response to a client other than the sponsoring client of the contact.
+
+A full update [@!I-D.ietf-rpp-core, section 16.8] replaces the Verifications of the contact with those of the request, and a full update without Verifications removes them, when the preset of the request contains the extension. A preset that does not contain the extension does not declare the Verifications, so that a client cannot send them. A server MUST NOT change the Verifications of a contact on a full update whose preset does not contain the extension.
+
+A Read can contain a value that this document does not list (#verification-information), which a Create or Update does not accept. A client that changes a contact with such an entry and keeps the entry uses a partial update [@!I-D.ietf-rpp-core, section 16.8] that does not change the Verifications, which leaves them as they are.
+
+A change of the Verifications of a holder can change the status of the domain names that it holds, see (#verification-process). The server informs the sponsoring client of the result with a Domain Status Message Object (#domain-status-message).
+
+### Operations {#contact-operations}
+
+None.
+
 ## Organisation Data Object {#organisation}
 
 * Identifier: organisation
@@ -223,6 +258,14 @@ The following data elements are added to the Processes Object [@!I-D.ietf-rpp-da
   * Data Type: Aggregation[Authorisation Information Issue Process Object]
   * Direct Access: true
   * Description: The authorisation information issue processes initiated on the owning domain name.
+  * Constraints: (None)
+* Verification Processes
+  * Identifier: verificationProcess
+  * Cardinality: 0+
+  * Mutability: read-only
+  * Data Type: Aggregation[Verification Process Object]
+  * Direct Access: true
+  * Description: The verification processes of the owning domain name.
   * Constraints: (None)
 
 These data elements appear only in the Processes Object of a Domain Name Data Object.
@@ -401,6 +444,95 @@ The Request Contact Data Object supports no Process Objects.
     * Mutability: read-only
     * Data Type: Timestamp
     * Description: The date and time of the most recent modification of the URI Template.
+    * Constraints: (None)
+
+## Verification Information Object {#verification-information}
+
+* Name: Verification Information Object
+* Identifier: verificationInformation
+* Description: A record of a verification of the contact information of a contact, as the registry requires it of the sponsoring client: which claims were verified, with which result, when, and by which evidence and method.
+* Data Elements:
+  * Claims
+    * Identifier: claims
+    * Cardinality: 1-3
+    * Mutability: read-write
+    * Data Type: String
+    * Description: The claims of the contact information that were verified: `name` (the name of the contact), `address` (its postal address), or `email` (its email address).
+    * Constraints:
+      * Each value MUST be `name`, `address`, or `email`. Values are case-sensitive.
+      * The values MUST be distinct.
+  * Result
+    * Identifier: result
+    * Cardinality: 1
+    * Mutability: read-write
+    * Data Type: String
+    * Description: The result of the verification.
+    * Constraints:
+      * The value MUST be `success` or `failed`.
+  * Reference
+    * Identifier: reference
+    * Cardinality: 0-1
+    * Mutability: read-write
+    * Data Type: String
+    * Description: An identifier of the verification in the records of the sponsoring client, for example the identifier of an audit record or a ticket.
+    * Constraints:
+      * The value MUST contain at least one character.
+  * Date
+    * Identifier: date
+    * Cardinality: 0-1
+    * Mutability: read-write
+    * Data Type: Timestamp
+    * Description: The date and time of the verification.
+    * Constraints: (None)
+  * Evidence
+    * Identifier: evidence
+    * Cardinality: 0-1
+    * Mutability: read-write
+    * Data Type: String
+    * Description: The kind of evidence on which the verification is based.
+    * Constraints:
+      * The value MUST be one of `idcard`, `passport`, `population_register`, `residence_permit`, `proof_of_arrival`, `drivers_licence`, `company_register`, `company_statement`, `bank_account`, `online_payment_account`, `utility_account`, `bank_statement`, `tax_statement`, `written_attestation`, `digital_attestation`, `postal_ver_transaction_log`, `email_ver_transaction_log`, or `address_database`.
+  * Method
+    * Identifier: method
+    * Cardinality: 0-1
+    * Mutability: read-write
+    * Data Type: String
+    * Description: The method of the verification: `auth` (an electronic identification), `electronic_document` (an electronic document), `physical_document` (a physical document), `vdig` (a verification at a post office), `bvr` (a verification by photograph), `pvr` (a verification by video), `data` (a record of a transaction), or `reachability` (a test of reachability).
+    * Constraints:
+      * The value MUST be one of `auth`, `electronic_document`, `physical_document`, `vdig`, `bvr`, `pvr`, `data`, or `reachability`.
+  * Trust Framework
+    * Identifier: trustFramework
+    * Cardinality: 0-1
+    * Mutability: read-write
+    * Data Type: String
+    * Description: The trust framework whose rules the verification follows.
+    * Constraints:
+      * The value MUST be `de_denic`.
+
+In the input of the Create and Update operations of a Contact Data Object, every data element of the Verification Information Object is REQUIRED. The output of an operation contains only the Claims and the Result where (#verification-process-read) says so.
+
+A client MUST accept, in a response, a value of the Claims, the Evidence, the Method, or the Trust Framework that this document does not list, as the registry may add values. A server returns such a value as the registry states it.
+
+## Holder Verification Object {#holder-verification}
+
+* Name: Holder Verification Object
+* Identifier: holderVerification
+* Description: The verification information of one holder of a domain name, as a Verification Process Object (#verification-process) shows it.
+* Data Elements:
+  * Holder
+    * Identifier: holder
+    * Cardinality: 0-1
+    * Mutability: read-only
+    * Data Type: Aggregation[Contact Data Object]
+    * Description: The holder.
+    * Constraints:
+      * The value MUST be present in a response to the sponsoring client and MUST NOT be present in a response to another client.
+  * Verifications
+    * Identifier: verifications
+    * Cardinality: 0-5
+    * Mutability: read-only
+    * Data Type: Verification Information Object
+    * Description: The Verifications (`verifications`) of the holder (#contact-data-elements).
     * Constraints: (None)
 
 ## Message Components {#message-components}
@@ -988,9 +1120,71 @@ The authorisation information issued is not the Authorisation Information (`auth
 
 The Read, Update, and Delete operations are not supported.
 
+## Verification Process Object {#verification-process}
+
+* Name: Verification Process Object
+* Identifier: verificationProcess
+* Unique Identifier: processId
+* Extends: Base Process Object
+* Description: Represents the verification of the holders of a domain name that the server requires after a risk assessment of the domain name, with the deadlines by which verification information must be provided. The server starts and ends the process. A client provides the verification information in the Verifications (`verifications`) of the Contact Data Objects of the holders (#contact).
+
+### Data Elements {#verification-process-data-elements}
+
+* Hold Deadline
+  * Identifier: holdDeadline
+  * Cardinality: 0-1
+  * Mutability: read-only
+  * Data Type: Timestamp
+  * Description: The date and time by which verification information must be provided, after which the server places the domain name on hold.
+  * Constraints: (None)
+* Deletion Deadline
+  * Identifier: deletionDeadline
+  * Cardinality: 0-1
+  * Mutability: read-only
+  * Data Type: Timestamp
+  * Description: The date and time by which verification information must be provided, after which the server deletes the domain name.
+  * Constraints: (None)
+* Holders
+  * Identifier: holders
+  * Cardinality: 1+
+  * Mutability: read-only
+  * Data Type: Holder Verification Object
+  * Description: The verification information of the holders of the domain name.
+  * Constraints:
+    * The entries MUST be in the order of the holders of the domain name: the Registrant (`registrant`) first, then the entries of the Contacts (`contacts`) labelled `registrant`, in their order.
+
+A Verification Process Object has at least one of the Hold Deadline and the Deletion Deadline. The deadlines have the meaning of the Hold Deadline (`holdDeadline`) and the Deletion Deadline (`deletionDeadline`) of the Domain Status Message Object (#domain-status-message). A domain name has at most one Verification Process Object. The server ends it when it no longer requires verification information for the domain name.
+
+The server informs the sponsoring client with a message whose Data is a Domain Status Message Object (#domain-status-message) when it decides the status of the domain name after a risk assessment and when it sets the deadlines, and with a Contact Verification Message Object (#contact-verification-message) for each holder for which it requires verification information, with the claims to verify.
+
+### Operations {#verification-process-operations}
+
+#### Read {#verification-process-read}
+
+* Identifier: read
+
+The Read operation returns the deadlines and the verification information of the holders of a domain name.
+
+* Input:
+  * Reference: This Object
+* Output:
+  * Object: Verification Process Object
+* Authorisation:
+  * Sponsoring client:
+    * Full object
+  * Other client:
+    * Without Object Authorisation:
+      * Operation denied
+    * With Object Authorisation:
+      * The object without the Holder (`holder`) of each entry, and with only the Claims (`claims`) and the Result (`result`) of each Verification Information Object
+
+The server MUST respond to a Read for a domain name for which it requires no verification information as for a Process Object that does not exist. The server MUST NOT return to a client other than the sponsoring client the Holder of an entry, or a data element of a Verification Information Object other than the Claims and the Result.
+
+The Create, Update, and Delete operations are not supported.
+
 # Endpoints {#endpoints}
 
-This section lists the endpoints that result from the new Data Object and the new Process Objects, derived by the rules of [@!I-D.ietf-rpp-core, section 16.1]. The `plural()` function applied to the Identifiers `requestContact`, `authInfoProcess`, and `authInfoIssueProcess` gives the path segments `requestContacts`, `authInfoProcesses`, and `authInfoIssueProcesses`. This section is non-normative.
+This section lists the endpoints that result from the new Data Object and the new Process Objects, derived by the rules of [@!I-D.ietf-rpp-core, section 16.1]. The `plural()` function applied to the Identifiers `requestContact`, `authInfoProcess`, `authInfoIssueProcess`, and `verificationProcess` gives the path segments `requestContacts`, `authInfoProcesses`, `authInfoIssueProcesses`, and `verificationProcesses`. This section is non-normative.
 
 | Operation                     | HTTP Method | URL path                             |
 | ----------------------------- | ----------- | ------------------------------------ |
@@ -1007,11 +1201,12 @@ Table: Endpoints of the Request Contact Data Object
 | Authorisation Information: read                | GET         | /domainNames/{id}/processes/authInfoProcesses/latest      |
 | Authorisation Information: delete              | DELETE      | /domainNames/{id}/processes/authInfoProcesses/latest      |
 | Authorisation Information Issue: create        | POST        | /domainNames/{id}/processes/authInfoIssueProcesses        |
+| Verification: read                             | GET         | /domainNames/{id}/processes/verificationProcesses/latest  |
 Table: Endpoints of the Process Objects
 
-A server that assigns no Process ID exposes no process resource. It responds to a Create of either Process Object with HTTP status code 200 (OK) and without a `Location` header field [@!I-D.ietf-rpp-core, section 16.1.4], and serves the Read and Delete of an Authorisation Information Process Object at `latest` only.
+A server that assigns no Process ID exposes no process resource. It responds to a Create of the Authorisation Information Process Object or the Authorisation Information Issue Process Object with HTTP status code 200 (OK) and without a `Location` header field [@!I-D.ietf-rpp-core, section 16.1.4], serves the Read and Delete of an Authorisation Information Process Object at `latest` only, and serves the Read of a Verification Process Object at `latest` only.
 
-The data elements that the extension adds to the Domain Name Data Object, the Organisation Data Object, and the Domain Transfer Process Object do not have Direct Access and add no endpoints. The message types of the extension add no endpoints either: a client retrieves them at the messages endpoint [@!I-D.ietf-rpp-core, section 16.10] and selects them with the `type` query parameter (#message-operations).
+The data elements that the extension adds to the Domain Name Data Object, the Contact Data Object, the Organisation Data Object, and the Domain Transfer Process Object do not have Direct Access and add no endpoints. The message types of the extension add no endpoints either: a client retrieves them at the messages endpoint [@!I-D.ietf-rpp-core, section 16.10] and selects them with the `type` query parameter (#message-operations).
 
 The endpoints behave as defined for the corresponding operations in [@!I-D.ietf-rpp-core, section 16]:
 
@@ -1118,6 +1313,17 @@ RPP-Cltrid: ABC-12349
 Content-Length: 35
 ```
 
+Example Verification read request of another client with Object Authorisation:
+
+```http
+GET /domainNames/foo.example/processes/verificationProcesses/latest HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+RPP-Cltrid: ABC-12350
+RPP-Authorization: authinfo value=QWJjMjM0NTY3OA==
+```
+
 Example request for the oldest message about the status of a domain name or the verification of a contact:
 
 ```http
@@ -1144,6 +1350,9 @@ The Extension Mapper maps the base definitions to the definitions of the extensi
     "#/$defs/domainName.create": "#/$defs/ext.rri.domainName.create",
     "#/$defs/domainName.read": "#/$defs/ext.rri.domainName.read",
     "#/$defs/domainName.update": "#/$defs/ext.rri.domainName.update",
+    "#/$defs/contact.create": "#/$defs/ext.rri.contact.create",
+    "#/$defs/contact.read": "#/$defs/ext.rri.contact.read",
+    "#/$defs/contact.update": "#/$defs/ext.rri.contact.update",
     "#/$defs/organisation.read": "#/$defs/ext.rri.organisation.read",
     "#/$defs/processes.read": "#/$defs/ext.rri.processes.read",
     "#/$defs/domainTransferProcess.create": "#/$defs/ext.rri.domainTransferProcess.create"
@@ -1247,6 +1456,106 @@ Update request schema:
   }
 }
 ```
+
+## Contact Data Object {#json-contact}
+
+Create request schema:
+
+<!-- definition ext.rri.contact.create -->
+```json
+{
+  "$defs": {
+    "ext.rri.contact.create": {
+      "type": "object",
+      "properties": {
+        "verifications": { "type": "array", "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/ext.rri.verificationInformation.create" } }
+      }
+    }
+  }
+}
+```
+
+Read response schema:
+
+<!-- definition ext.rri.contact.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.contact.read": {
+      "type": "object",
+      "properties": {
+        "verifications": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/ext.rri.verificationInformation.read" } }
+      }
+    }
+  }
+}
+```
+
+Update request schema:
+
+<!-- definition ext.rri.contact.update -->
+```json
+{
+  "$defs": {
+    "ext.rri.contact.update": {
+      "type": "object",
+      "properties": {
+        "verifications": { "type": "array", "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/ext.rri.verificationInformation.create" } }
+      }
+    }
+  }
+}
+```
+
+The Verification Information Object in a Create or Update request, with every data element required and the values of (#verification-information):
+
+<!-- definition ext.rri.verificationInformation.create -->
+```json
+{
+  "$defs": {
+    "ext.rri.verificationInformation.create": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "verificationInformation" },
+        "claims": { "type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": { "type": "string", "enum": ["name", "address", "email"] } },
+        "result": { "type": "string", "enum": ["success", "failed"] },
+        "reference": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "format": "date-time" },
+        "evidence": { "type": "string", "enum": ["idcard", "passport", "population_register", "residence_permit", "proof_of_arrival", "drivers_licence", "company_register", "company_statement", "bank_account", "online_payment_account", "utility_account", "bank_statement", "tax_statement", "written_attestation", "digital_attestation", "postal_ver_transaction_log", "email_ver_transaction_log", "address_database"] },
+        "method": { "type": "string", "enum": ["auth", "electronic_document", "physical_document", "vdig", "bvr", "pvr", "data", "reachability"] },
+        "trustFramework": { "type": "string", "enum": ["de_denic"] }
+      },
+      "required": ["@type", "claims", "result", "reference", "date", "evidence", "method", "trustFramework"]
+    }
+  }
+}
+```
+
+The Verification Information Object in a response, in which only the Claims and the Result are required. The Claims, the Evidence, the Method, and the Trust Framework are not enumerated, so that a client accepts a value that the registry adds:
+
+<!-- definition ext.rri.verificationInformation.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.verificationInformation.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "verificationInformation", "readOnly": true },
+        "claims": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "result": { "type": "string", "enum": ["success", "failed"] },
+        "reference": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "evidence": { "type": "string" },
+        "method": { "type": "string" },
+        "trustFramework": { "type": "string" }
+      },
+      "required": ["@type", "claims", "result"]
+    }
+  }
+}
+```
+
+The rule that two entries of the Verifications are not equal is `uniqueItems`. Whether a combination of Claims, Evidence, and Method is allowed cannot be expressed in JSON Schema and is decided by the server.
 
 ## Organisation Data Object {#json-organisation}
 
@@ -1827,6 +2136,11 @@ Read response schema:
           "type": "array",
           "items": { "$ref": "#/$defs/ext.rri.authInfoIssueProcess.reference" },
           "readOnly": true
+        },
+        "verificationProcess": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ext.rri.verificationProcess.reference" },
+          "readOnly": true
         }
       }
     }
@@ -1953,6 +2267,69 @@ Response schema of the Create operation:
 }
 ```
 
+## Verification Process Object {#json-verification-process}
+
+### Read
+
+Read response schema:
+
+<!-- definition ext.rri.verificationProcess.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.verificationProcess.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "verificationProcess", "readOnly": true },
+        "processId": { "type": "string", "readOnly": true },
+        "holdDeadline": { "type": "string", "format": "date-time", "readOnly": true },
+        "deletionDeadline": { "type": "string", "format": "date-time", "readOnly": true },
+        "holders": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ext.rri.holderVerification.read" }, "readOnly": true }
+      },
+      "required": ["@type", "holders"],
+      "anyOf": [{ "required": ["holdDeadline"] }, { "required": ["deletionDeadline"] }]
+    }
+  }
+}
+```
+
+The Holder Verification Object:
+
+<!-- definition ext.rri.holderVerification.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.holderVerification.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "holderVerification", "readOnly": true },
+        "holder": { "$ref": "#/$defs/contact.reference", "readOnly": true },
+        "verifications": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/ext.rri.verificationInformation.read" }, "readOnly": true }
+      },
+      "required": ["@type"]
+    }
+  }
+}
+```
+
+### Reference
+
+<!-- definition ext.rri.verificationProcess.reference -->
+```json
+{
+  "$defs": {
+    "ext.rri.verificationProcess.reference": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "verificationProcess" },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "processId"]
+    }
+  }
+}
+```
+
 # Examples {#examples}
 
 This section contains examples of the new and updated objects. Each valid example validates against the Effective Schema [@!I-D.ietf-rpp-json, section 7.2] of a server that supports the extension, and each invalid example fails it. This section is non-normative.
@@ -2023,6 +2400,121 @@ Example request contact partial update request:
     "op": "replace",
     "path": "/uriTemplate",
     "value": "https://www.example.com/abuse/{Ulabel}"
+  }
+]
+```
+
+## Contact {#examples-contact}
+
+### Create
+
+Example contact create request with verification information:
+
+<!-- example valid contact.create -->
+```json
+{
+    "@type": "contact",
+    "id": "DENIC-1000022-HOLDER",
+    "contactInfo": {
+        "@type": "Card",
+        "version": "2.0",
+        "kind": "individual",
+        "name": { "full": "Erika Mustermann" },
+        "addresses": {
+            "addr": {
+                "components": [
+                    { "kind": "name", "value": "Example Street 1" },
+                    { "kind": "locality", "value": "Frankfurt am Main" },
+                    { "kind": "postcode", "value": "60311" }
+                ],
+                "countryCode": "DE"
+            }
+        },
+        "emails": { "email": { "address": "erika@example.com" } },
+        "phones": { "voice": { "number": "tel:+49.6912345678" } }
+    },
+    "verifications": [
+        {
+            "@type": "verificationInformation",
+            "claims": [ "name", "address" ],
+            "result": "success",
+            "reference": "ABC123/45GHT",
+            "date": "2026-11-11T15:36:21+01:00",
+            "evidence": "idcard",
+            "method": "auth",
+            "trustFramework": "de_denic"
+        }
+    ]
+}
+```
+
+### Read
+
+Example contact read response of the sponsoring client:
+
+<!-- example valid contact.read -->
+```json
+{
+    "@type": "contact",
+    "id": "DENIC-1000022-HOLDER",
+    "provMetadata": {
+        "@type": "provMetadata",
+        "spClientId": "DENIC-1000022",
+        "upDate": "2026-11-12T09:00:00Z"
+    },
+    "status": [ { "@type": "contactStatus", "label": "ok" } ],
+    "contactInfo": {
+        "@type": "Card",
+        "version": "2.0",
+        "kind": "individual",
+        "name": { "full": "Erika Mustermann" },
+        "addresses": {
+            "addr": {
+                "components": [
+                    { "kind": "name", "value": "Example Street 1" },
+                    { "kind": "locality", "value": "Frankfurt am Main" },
+                    { "kind": "postcode", "value": "60311" }
+                ],
+                "countryCode": "DE"
+            }
+        },
+        "emails": { "email": { "address": "erika@example.com" } },
+        "phones": { "voice": { "number": "tel:+49.6912345678" } }
+    },
+    "verifications": [
+        {
+            "@type": "verificationInformation",
+            "claims": [ "name", "address" ],
+            "result": "success",
+            "reference": "ABC123/45GHT",
+            "date": "2026-11-11T15:36:21+01:00",
+            "evidence": "idcard",
+            "method": "auth",
+            "trustFramework": "de_denic"
+        }
+    ]
+}
+```
+
+### Update
+
+Example contact partial update request that adds the result of a failed verification of the email address:
+
+```json
+[
+  {
+    "op": "add",
+    "path": "/verifications/-",
+    "value": {
+      "@type": "verificationInformation",
+      "claims": [ "email" ],
+      "result": "failed",
+      "reference": "ABC123/45GHU",
+      "date": "2026-11-12T10:00:00+01:00",
+      "evidence": "email_ver_transaction_log",
+      "method": "data",
+      "trustFramework": "de_denic"
+    }
   }
 ]
 ```
@@ -2149,6 +2641,54 @@ Example authorisation information issue create response:
 ```json
 {
     "@type": "authInfoIssueProcess"
+}
+```
+
+### Verification
+
+Example verification read response of the sponsoring client for a domain name on hold:
+
+<!-- example valid verificationProcess.read -->
+```json
+{
+    "@type": "verificationProcess",
+    "deletionDeadline": "2026-11-24T14:51:08Z",
+    "holders": [
+        {
+            "@type": "holderVerification",
+            "holder": { "@type": "contact", "id": "DENIC-1000022-HOLDER" },
+            "verifications": [
+                {
+                    "@type": "verificationInformation",
+                    "claims": [ "name" ],
+                    "result": "failed",
+                    "reference": "ABC123/45GHV",
+                    "date": "2026-11-10T11:00:00+01:00",
+                    "evidence": "idcard",
+                    "method": "physical_document",
+                    "trustFramework": "de_denic"
+                }
+            ]
+        }
+    ]
+}
+```
+
+Example verification read response of another client with Object Authorisation for the same domain name:
+
+<!-- example valid verificationProcess.read -->
+```json
+{
+    "@type": "verificationProcess",
+    "deletionDeadline": "2026-11-24T14:51:08Z",
+    "holders": [
+        {
+            "@type": "holderVerification",
+            "verifications": [
+                { "@type": "verificationInformation", "claims": [ "name" ], "result": "failed" }
+            ]
+        }
+    ]
 }
 ```
 
@@ -2471,6 +3011,96 @@ Example authorisation information create request without authorisation informati
 }
 ```
 
+Example contact create request with verification information without the evidence:
+
+<!-- example invalid contact.create -->
+```json
+{
+    "@type": "contact",
+    "id": "DENIC-1000022-HOLDER",
+    "contactInfo": {
+        "@type": "Card",
+        "version": "2.0",
+        "kind": "individual",
+        "name": { "full": "Erika Mustermann" },
+        "addresses": {
+            "addr": {
+                "components": [
+                    { "kind": "name", "value": "Example Street 1" },
+                    { "kind": "locality", "value": "Frankfurt am Main" },
+                    { "kind": "postcode", "value": "60311" }
+                ],
+                "countryCode": "DE"
+            }
+        },
+        "emails": { "email": { "address": "erika@example.com" } },
+        "phones": { "voice": { "number": "tel:+49.6912345678" } }
+    },
+    "verifications": [
+        {
+            "@type": "verificationInformation",
+            "claims": [ "name" ],
+            "result": "success",
+            "reference": "ABC123/45GHT",
+            "date": "2026-11-11T15:36:21+01:00",
+            "method": "auth",
+            "trustFramework": "de_denic"
+        }
+    ]
+}
+```
+
+Example contact update request with a claim that the extension does not define:
+
+<!-- example invalid contact.update -->
+```json
+{
+    "@type": "contact",
+    "contactInfo": {
+        "@type": "Card",
+        "version": "2.0",
+        "kind": "individual",
+        "name": { "full": "Erika Mustermann" },
+        "addresses": {
+            "addr": {
+                "components": [
+                    { "kind": "name", "value": "Example Street 1" },
+                    { "kind": "locality", "value": "Frankfurt am Main" },
+                    { "kind": "postcode", "value": "60311" }
+                ],
+                "countryCode": "DE"
+            }
+        },
+        "emails": { "email": { "address": "erika@example.com" } },
+        "phones": { "voice": { "number": "tel:+49.6912345678" } }
+    },
+    "verifications": [
+        {
+            "@type": "verificationInformation",
+            "claims": [ "phone" ],
+            "result": "success",
+            "reference": "ABC123/45GHW",
+            "date": "2026-11-11T15:36:21+01:00",
+            "evidence": "utility_account",
+            "method": "data",
+            "trustFramework": "de_denic"
+        }
+    ]
+}
+```
+
+Example verification read response without a deadline:
+
+<!-- example invalid verificationProcess.read -->
+```json
+{
+    "@type": "verificationProcess",
+    "holders": [
+        { "@type": "holderVerification", "holder": { "@type": "contact", "id": "DENIC-1000022-HOLDER" } }
+    ]
+}
+```
+
 # IANA Considerations {#iana}
 
 This document has no IANA actions. The extension is a private extension [@!I-D.wullink-rpp-extension-guidelines, section 10], and its Identifier is formed by reverse domain name notation [@!I-D.wullink-rpp-extension-guidelines, section 7].
@@ -2528,6 +3158,45 @@ Data Elements
 | uriTemplate | URI Template | 1 | read-only | String | A URI Template that states where requests are sent. |
 | upDate | Update Date | 0-1 | read-only | Timestamp | The date and time of the most recent modification of the URI Template. |
 
+Object: verificationInformation
+
+Object Name: Verification Information Object
+
+Object Type: Component
+
+Description: A record of a verification of the contact information of a contact: the claims verified, the result, the date, the evidence, and the method.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| claims | Claims | 1-3 | read-write | String | The claims of the contact information that were verified. |
+| result | Result | 1 | read-write | String | The result of the verification. |
+| reference | Reference | 0-1 | read-write | String | An identifier of the verification in the records of the sponsoring client. |
+| date | Date | 0-1 | read-write | Timestamp | The date and time of the verification. |
+| evidence | Evidence | 0-1 | read-write | String | The kind of evidence on which the verification is based. |
+| method | Method | 0-1 | read-write | String | The method of the verification. |
+| trustFramework | Trust Framework | 0-1 | read-write | String | The trust framework whose rules the verification follows. |
+
+Object: holderVerification
+
+Object Name: Holder Verification Object
+
+Object Type: Component
+
+Description: The verification information of one holder of a domain name.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name | Card. | Mutability | Data Type | Description |
+| ------------------ | ------------ | ----- | ---------- | --------- | ----------- |
+| holder | Holder | 0-1 | read-only | Aggregation[Contact Data Object] | The holder. |
+| verifications | Verifications | 0-5 | read-only | Verification Information Object | The verifications of the holder. |
+
 Object: domainName (additions)
 
 Data Elements
@@ -2536,6 +3205,14 @@ Data Elements
 | ------------------ | ----------------------- | ----- | ---------- | --------------------------------------- | --------------------------------------------------------------------- |
 | generalRequest     | General Request Contact | 0-1   | read-write | Aggregation[Request Contact Data Object] | The request contact to which general requests about the domain name are sent. |
 | abuse              | Abuse Contact           | 0-1   | read-write | Aggregation[Request Contact Data Object] | The request contact to which reports of abuse of the domain name are sent.   |
+
+Object: contact (additions)
+
+Data Elements
+
+| Element Identifier | Element Name  | Card. | Mutability | Data Type                       | Description                                                                 |
+| ------------------ | ------------- | ----- | ---------- | ------------------------------- | --------------------------------------------------------------------------- |
+| verifications      | Verifications | 0-5   | read-write | Verification Information Object | The verifications of the contact information that the sponsoring client performed. |
 
 Object: organisation (additions)
 
@@ -2570,6 +3247,7 @@ Data Elements
 | -------------------- | ----------------------------------------- | ----- | ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
 | authInfoProcess      | Authorisation Information Processes       | 0+    | read-only  | Aggregation[Authorisation Information Process Object]       | The authorisation information processes initiated on the owning domain name. |
 | authInfoIssueProcess | Authorisation Information Issue Processes | 0+    | read-only  | Aggregation[Authorisation Information Issue Process Object] | The authorisation information issue processes initiated on the owning domain name. |
+| verificationProcess  | Verification Processes                    | 0+    | read-only  | Aggregation[Verification Process Object]                 | The verification processes of the owning domain name.                    |
 
 Object: authInfoProcess
 
@@ -2607,6 +3285,28 @@ Reference: [This-ID]
 Data Elements: (None)
 
 Operations: create. Input Data Elements: (None). Parameters: (None).
+
+Object: verificationProcess
+
+Object Name: Verification Process Object
+
+Object Type: Process
+
+Extends: baseProcess
+
+Description: Represents the verification of the holders of a domain name that the server requires, with its deadlines.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name      | Card. | Mutability | Data Type                  | Description |
+| ------------------ | ----------------- | ----- | ---------- | -------------------------- | ----------- |
+| holdDeadline       | Hold Deadline     | 0-1   | read-only  | Timestamp                  | The date and time after which the server places the domain name on hold. |
+| deletionDeadline   | Deletion Deadline | 0-1   | read-only  | Timestamp                  | The date and time after which the server deletes the domain name. |
+| holders            | Holders           | 1+    | read-only  | Holder Verification Object | The verification information of the holders of the domain name. |
+
+Operations: read. Input Data Elements: (None). Parameters: (None).
 
 Object: objectReference
 
@@ -2951,6 +3651,8 @@ The Object Authorisation of a transfer request and the Authorisation Information
 
 Any client can create an Authorisation Information Issue Process Object for any domain name. The server delivers the authorisation information to the registrants only, by a channel outside the protocol, and informs the sponsoring client, so that neither the requesting client nor the sponsoring client learns it.
 
+The Verification Information of a contact is passed to the registry. A client other than the sponsoring client reads the verification information of the holders of a domain name only with the Object Authorisation of the domain name, and only its Claims and Result, without the Handle IDs of the holders (#verification-process-read). A client that learns the Object Authorisation of a domain name therefore learns whether its holders were verified, and the deadlines of the domain name.
+
 A server forwards the URI Template to the registry, which expands it with a sample domain name on creation and rejects a template that it cannot expand. A server that does not forward the template to such a registry MUST check the constraints of (#request-contact-data-elements) itself before it stores or publishes the template.
 
 # Privacy Considerations {#privacy}
@@ -2961,7 +3663,11 @@ The General Request and Abuse Templates of an organisation are part of the publi
 
 The server delivers issued authorisation information with the contact data that the registry holds for the registrants. The Authorisation Information Issue Process Object discloses none of it to the requesting client.
 
-The message types of the extension name contacts by their Handle ID and carry no contact information, such as the name or the postal address of a holder. The Claims of a Contact Verification Message Object name the kinds of contact information to verify, not their values.
+A Verification Information Object records how the contact information of a holder, who can be a natural person, was verified: which claims, with which result, when, with which kind of evidence, for example an identity card or a passport, and by which method. It is personal data that the sponsoring client processes to meet the verification obligations of [@NIS2, Article 28]. It contains the kind of the evidence and not the evidence itself. A client SHOULD NOT put personal data, such as the number of an identity document, in the Reference, because the Reference serves only to find the record of the verification at the sponsoring client, and the server passes it to the registry.
+
+The server discloses the complete verification information of a contact to the sponsoring client only, in the Read of the contact and of the Verification Process Object of a domain name that the contact holds. To another client that presents the Object Authorisation of a domain name, it discloses the Claims and the Result of the verification information of each holder, without the Handle ID of the holder. It discloses verification information to no other client, and the registry does not publish it. A server MUST NOT record the data elements of a Verification Information Object in logs.
+
+The message types of the extension name contacts by their Handle ID and carry no contact information, such as the name or the postal address of a holder. The Claims of a Contact Verification Message Object name the kinds of contact information to verify, not their values, and the message types carry no verification information.
 
 # Internationalisation Considerations {#i18n}
 
@@ -2981,6 +3687,8 @@ The variable `{Ulabel}` expands to the U-label of the domain name. The encoding 
 * inform the losing client of a transfer with a transfer outcome message #248
 * add the general request and abuse templates of a registrar to the organisation data object, and the request template object, and keep the first URL of a registrar in the organisation read #249
 * add the authorisation information process and the authorisation information issue process of a domain name, and their data elements of the processes object #250
+* add the verification information object and the data element verifications of the contact data object, which a full update under a preset without the extension keeps #251
+* add the verification process of a domain name, the holder verification object, and the data element verificationProcess of the processes object #251
 
 {toc="exclude"}
 {numbered="false"}
@@ -3019,6 +3727,8 @@ This appendix describes how a server that implements the extension maps it to RR
 | `authInfoProcess` read                  | domain INFO, `domain:authInfo1`                       |
 | `authInfoProcess` delete                | domain DELETE-AUTHINFO1                               |
 | `authInfoIssueProcess` create           | domain CREATE-AUTHINFO2                               |
+| `contact.verifications`                 | `verification:verificationInformation` (0 to 5) of contact CREATE, UPDATE, INFO |
+| `verificationProcess` read              | domain INFO `recursive="true"`                        |
 Table: Mapping to RRI
 
 The registry holds 0 to 1 request contact of each role per domain name, so a domain name needs none. The backend profile of the implementation states this as `domainName.generalRequest` and `domainName.abuse` with `min_count` 0 and `max_count` 1.
@@ -3030,6 +3740,35 @@ The implementation serves the Process Objects of authorisation information as fo
 * A Read is a domain INFO: `domain:authInfo1` is the instant at which the AuthInfo1 expires, in the registry's own UTC offset (for `expire` `20261129` MTEST states `2026-11-30T00:00:00+01:00`), so the Expiry Date is the day of the instant less one microsecond: the last day on which it is valid, in the registry's offset (`24:00:00` is the midnight that ends the day). When the implementation cannot read the instant, the Read response has no Expiry Date. A domain without `domain:authInfo1` has no Authorisation Information Process Object. The Create response is a domain INFO after CREATE-AUTHINFO1 in the same way; when that INFO fails, the response has the Expiry Date of the request, or none if the request had none, because the server then does not know the date that applies.
 * The registry deletes an AuthInfo1 at its expiry, on its use in CHPROV, on a holder change, on TRANSIT, and on the deletion of the domain.
 * The authorisation information of an Authorisation Information Issue Process Object is an AuthInfo2. The registry sends it by post to every holder, notifies the sponsoring RegAcc with `authInfo2Notify` (an Authorisation Information Issue Message Object), and allows it for a domain in the status `connect`, `failed`, or `redemptionPeriod`. For a domain in `redemptionPeriod` the registry restarts the redemption period with 30 days. An AuthInfo2 is valid for 30 days, and an AuthInfo1 and an AuthInfo2 can exist together.
+
+The implementation maps the verification information as follows:
+
+| RPP                                   | RRI (XML 5.0), namespace `verification`                         |
+| ------------------------------------- | --------------------------------------------------------------- |
+| `verificationInformation`             | `verification:verificationInformation`                          |
+| `verificationInformation.claims`      | `verification:verifiedClaims/verification:claim`                |
+| `verificationInformation.result`      | `verification:verificationResult`                               |
+| `verificationInformation.reference`   | `verification:verificationReference`                            |
+| `verificationInformation.date`        | `verification:verificationTimestamp`                            |
+| `verificationInformation.evidence`    | `verification:verificationEvidence`                             |
+| `verificationInformation.method`      | `verification:verificationMethod`                               |
+| `verificationInformation.trustFramework` | `verification:trustFramework`                                |
+| `verificationProcess.holdDeadline`    | `domain:verificationDeadlineBeforeDedelegation`                 |
+| `verificationProcess.deletionDeadline`| `domain:verificationDeadlineBeforeDeletion`                     |
+| `verificationProcess.holders`         | `domain:contact role="holder"`, in their order                  |
+| `holderVerification.holder`           | `contact:handle` of the holder                                  |
+| `holderVerification.verifications`    | `verification:verificationInformation` of the holder            |
+Table: Mapping of verification information
+
+* In contact CREATE and UPDATE, each block has `xsi:type="verification:verificationInformationType"`, in which all elements are required, and follows the other elements of the contact. Contact INFO returns the blocks of the contact. In domain INFO, a block of a holder has `xsi:type="verification:domainVerificationInformationType"`, in which only `verifiedClaims` and `verificationResult` are required.
+* The registry compares the claims without regard to case. The implementation sends them, and returns them, in lower case.
+* A contact UPDATE replaces all data of the contact, and one without blocks deletes them. On a full update whose preset contains the extension, the implementation sends the blocks of the request. On a full update whose preset does not, and on a partial update that does not change the Verifications, it sends the blocks of the contact INFO that it reads before the update. A partial update of the Verifications is applied to the blocks of that INFO.
+* The registry allows blocks on a contact of type `PERSON` or `ORG` only, and the allowed combinations of evidence, method, and claim are tabulated in its documentation. The implementation does not check the combination and maps the refusal (`63200041867`).
+* When a verification of the email address failed, the registry asks for a block with the result `failed`, and for a further block when a later verification succeeds. A block with the result `failed` places the domain names that the contact holds on hold. The client keeps the evidence for 12 months by the rules of the registry.
+* A contact UPDATE starts a new risk assessment of the domain names that the contact holds. The registry reports its result with `domainStatusUpdate` (a Domain Status Message Object).
+* A Read of a Verification Process Object is a domain INFO with `recursive="true"`, and with the Object Authorisation of `RPP-Authorization` as `domain:authInfo` when the request has one. A domain INFO without `domain:verificationDeadlineBeforeDedelegation` and without `domain:verificationDeadlineBeforeDeletion` has no Verification Process Object. For a domain of another RegAcc, the registry returns the holders without `contact:handle` and their blocks with claims and result only. Without AuthInfo it returns no deadlines for a domain of another RegAcc, and the implementation refuses the Read.
+* The registry states the claims still to verify only in the notices of write responses and of messages (`16350000040`, `16350000041` with the argument `VerificationClaims`, and `contactVerificationRequired`), not in domain INFO, so the Verification Process Object has no list of them.
+* The Create, Update, and Delete of a Verification Process Object have no RRI command.
 
 The implementation maps the notifications of the registry (QUEUE-READ) to the message types as follows:
 
@@ -3126,7 +3865,11 @@ The implementation maps the refusals of the registry to RPP result codes as foll
 | AuthInfo1 exists (63391068704) or AuthInfo2 exists (63393068704)     | 409         | 02302           |
 | Expiry Date refused by the registry (63391068618, 63391068603)       | 400         | 02004           |
 | Read of a domain without AuthInfo1, or Delete (63392068709)          | 404         | 02303           |
-| Update of either Process Object, Read or Delete of an Authorisation Information Issue Process Object | 501 | 02101 |
+| verification information refused by the registry (63200041860, 63200041861, 63200041862, 63200041864, 63200041865, 63200041866) | 400 | 02005 |
+| conflicting claims (63200041863), or evidence, method, and claims that the registry does not allow together (63200041867) | 422 | 02306 |
+| Read of a Verification Process Object of a domain without a verification deadline | 404 | 02303 |
+| Read of a Verification Process Object of a domain of another RegAcc without `RPP-Authorization` | 403 | 02201 |
+| Update of either authorisation information Process Object, Read or Delete of an Authorisation Information Issue Process Object, or Create, Update, or Delete of a Verification Process Object | 501 | 02101 |
 Table: Refusals of the implementation
 
 The registry does not document how it encodes a U-label in an expanded template.
@@ -3137,5 +3880,15 @@ The registry does not document how it encodes a U-label in an expanded template.
     <author>
       <organization>DENIC eG</organization>
     </author>
+  </front>
+</reference>
+
+<reference anchor="NIS2" target="https://eur-lex.europa.eu/eli/dir/2022/2555/oj">
+  <front>
+    <title>Directive (EU) 2022/2555 of the European Parliament and of the Council of 14 December 2022 on measures for a high common level of cybersecurity across the Union (NIS 2 Directive)</title>
+    <author>
+      <organization>European Parliament and Council of the European Union</organization>
+    </author>
+    <date year="2022" month="December"/>
   </front>
 </reference>
