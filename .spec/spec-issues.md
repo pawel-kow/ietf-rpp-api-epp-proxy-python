@@ -410,6 +410,12 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
   the holders. A full update follows the entry "Full update of a member an extension adds": under a preset without the
   extension the stored blocks are kept.
 
+## Release of a domain name to the registry
+
+- A registry may let the sponsor return a domain name to the registry, which administers it until another registrar takes it over, keeping or replacing its name servers: DENIC RRI TRANSIT ([rri-5.0-reference.md](../docs/rri/rri-5.0-reference.md) §6.12). The drafts define no operation for it: a push transfer (data-objects §2.7.7) designates a gaining client, and the Delete takes no input (core §16.1.4).
+- A process after which the requesting client is no longer the sponsor has no client that can read it, so core §16.1.4 only fits as a create with 200 and no process resource.
+- **Proxy (RRI, #252):** a Process Object of the `de.denic.rpp.rri` extension on the domain, `releaseProcess` (create only, sponsor only, optional `keepNameservers`, default keep), served by TRANSIT.
+
 ## A Process Object that the server starts
 
 - Every Process Object of data-objects §10 is created by a client, or implicitly by the create of its owner (§10.4). A

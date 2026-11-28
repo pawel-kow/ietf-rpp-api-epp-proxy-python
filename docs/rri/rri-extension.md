@@ -24,7 +24,7 @@ organization = "DENIC"
 
 .# Abstract
 
-This document defines a private extension of the RESTful Provisioning Protocol (RPP) for a server whose registry operates the DENIC Registry Robot Interface (RRI) version 5.0. The extension defines the Request Contact Data Object, adds the General Request and Abuse contacts to the Domain Name Data Object, adds the General Request and Abuse URI Templates of a registrar to the Organisation Data Object, adds verification information to the Contact Data Object, adds the data of the domain to the Create operation of the Domain Transfer Process Object, defines Process Objects with which a client sets authorisation information with an expiry date, asks the registry to issue authorisation information to the registrants of a domain name, and reads the verification of the holders that the registry requires for a domain name, and defines message types for the notifications of the registry.
+This document defines a private extension of the RESTful Provisioning Protocol (RPP) for a server whose registry operates the DENIC Registry Robot Interface (RRI) version 5.0. The extension defines the Request Contact Data Object, adds the General Request and Abuse contacts to the Domain Name Data Object, adds the General Request and Abuse URI Templates of a registrar to the Organisation Data Object, adds verification information to the Contact Data Object, adds the data of the domain to the Create operation of the Domain Transfer Process Object, defines Process Objects with which a client sets authorisation information with an expiry date, asks the registry to issue authorisation information to the registrants of a domain name, and reads the verification of the holders that the registry requires for a domain name, and releases a domain name to the registry. It also defines message types for the notifications of the registry.
 
 {mainmatter}
 
@@ -50,6 +50,9 @@ Authorisation information
 
 Verification information
 : The registry requires its clients to verify the name, the postal address, and the email address of the holders of domain names, as the Directive (EU) 2022/2555 (NIS2) [@NIS2] requires of the registry. A client states each verification of a contact, with its result, its evidence, and its method, and the registry holds up to five such records per contact. After a risk assessment of a domain name, the registry sets deadlines by which verification information for its holders must be provided, after which it places the domain name on hold and then deletes it. The base specifications define no data element for the verification of a contact and no object for the deadlines.
+
+Release
+: The sponsoring client can return a domain name to the registry, which then administers it in place of a sponsoring client until another client takes it over, and chooses whether the name servers of the domain name are kept. The base specifications define no operation for it: the Delete operation [@!I-D.ietf-rpp-data-objects, section 11.3.5] deletes the domain name, and a push transfer [@!I-D.ietf-rpp-data-objects, section 2.7.7] designates a client as the gaining client.
 
 Registry notifications
 : The registry queues notifications of fifteen kinds for a client, for example a warning that domain names expire, a change of a domain name by the registry, or a request to verify a contact. The base specifications define message types for a few of them only [@!I-D.ietf-rpp-data-objects, section 9.19], and a Service Notice Message Object carries no structured data. Some notifications name several objects, while the Base Message Object refers to one object.
@@ -90,6 +93,8 @@ The operations on authorisation information are defined as new Process Objects o
 
 The verification information of a contact is a data element of the Contact Data Object, the Verifications (`verifications`), whose Data Type is a new Component Object, the Verification Information Object (#verification-information). It describes the contact, not a domain name, and a client provides it with the contact in the Create and Update operations, where the registry takes it. The verification that the registry requires for a domain name is a new Process Object of the Domain Name Data Object, the Verification Process Object (#verification-process), and not a data element of the domain name: the server starts and ends it after a risk assessment, it has deadlines, and a client completes it through the Contact Data Objects of the holders and not with an operation on the domain name. A client can therefore only read it.
 
+The release of a domain name is a new Process Object of the Domain Name Data Object, the Release Process Object (#release-process), and not an operation of the Domain Name Data Object. The base specifications map no operation of a Data Object beyond the uniform interface to an endpoint [@!I-D.ietf-rpp-core, section 16.1], and the Delete operation takes no input, so that a delete that carries data needs a new process [@!I-D.ietf-rpp-core, section 16.1.4]. A release is not a push transfer either: it designates no gaining client, and the registry is not a client.
+
 The notifications of the registry are defined as message types that extend the Base Message Object [@!I-D.ietf-rpp-data-objects, section 9.19.1], as [@!I-D.ietf-rpp-data-objects, section 5] recommends for extensions. Where a message type of the base specifications fits a notification, it is used: the notification of a completed transfer to the losing client is a Transfer Outcome Message Object. A message type for a notification that names several objects extends the Bulk Base Message Object (#bulk-base-message), which holds a list of object references in place of the single Object Type and Object Identifier of the Base Message Object.
 
 The base specifications define no extension point for message types: the `data` property of the Message Data Object is a fixed union of the message types of the base specifications [@!I-D.ietf-rpp-json, section 6.8], and the Extension Mapper only adds properties to a definition. The schema document of the extension therefore names its message types in the member `rpp:messages` (#message-type-mapping).
@@ -106,7 +111,7 @@ This section identifies the extension.
 | RPP version          | [@!I-D.ietf-rpp-core], [@!I-D.ietf-rpp-data-objects], [@!I-D.ietf-rpp-json]                   |
 | Schema `$id`         | <https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-extension.schema.json> |
 | Changed base objects | `domainName`, `contact`, `organisation`, `processes`, `domainTransferProcess`, `message`      |
-| New objects          | `requestContact`, `requestContactAvailability`, `objectReference`, `datedObjectReference`, `registryNotice`, `bulkBaseMessage`, `requestTemplate`, `verificationInformation`, `holderVerification`, `authInfoProcess`, `authInfoIssueProcess`, `verificationProcess`, and the message types of (#message-types) |
+| New objects          | `requestContact`, `requestContactAvailability`, `objectReference`, `datedObjectReference`, `registryNotice`, `bulkBaseMessage`, `requestTemplate`, `verificationInformation`, `holderVerification`, `authInfoProcess`, `authInfoIssueProcess`, `verificationProcess`, `releaseProcess`, and the message types of (#message-types) |
 Table: Extension Overview
 
 # External Data Types {#external-data-types}
@@ -266,6 +271,14 @@ The following data elements are added to the Processes Object [@!I-D.ietf-rpp-da
   * Data Type: Aggregation[Verification Process Object]
   * Direct Access: true
   * Description: The verification processes of the owning domain name.
+  * Constraints: (None)
+* Release Processes
+  * Identifier: releaseProcess
+  * Cardinality: 0+
+  * Mutability: read-only
+  * Data Type: Aggregation[Release Process Object]
+  * Direct Access: true
+  * Description: The release processes initiated on the owning domain name.
   * Constraints: (None)
 
 These data elements appear only in the Processes Object of a Domain Name Data Object.
@@ -1182,9 +1195,61 @@ The server MUST respond to a Read for a domain name for which it requires no ver
 
 The Create, Update, and Delete operations are not supported.
 
+## Release Process Object {#release-process}
+
+* Name: Release Process Object
+* Identifier: releaseProcess
+* Unique Identifier: processId
+* Extends: Base Process Object
+* Description: Represents the release of a domain name by its sponsoring client to the server, which then administers the domain name in place of a sponsoring client. Creating this object releases the domain name.
+
+### Data Elements {#release-process-data-elements}
+
+* Keep Name Servers
+  * Identifier: keepNameservers
+  * Cardinality: 0-1
+  * Mutability: create-only
+  * Data Type: Boolean
+  * Description: Whether the server keeps the name servers of the domain name, which are its Nameservers (`nameservers`) or the `ns` records of its DNS Data (`dns`). With the value `false`, the server replaces them with name servers of its own choice.
+  * Constraints: (None)
+
+### Operations {#release-process-operations}
+
+#### Create {#release-process-create}
+
+* Identifier: create
+
+The Create operation releases a domain name.
+
+* Input:
+  * Reference: Owner Data Object
+  * Object: Release Process Object
+* Output:
+  * Object: Release Process Object
+* Authorisation:
+  * Only the sponsoring client is authorised to perform this operation.
+
+When the Create operation has no Keep Name Servers, the server MUST keep the name servers of the domain name. The output contains the Keep Name Servers that applied.
+
+The release is completed immediately. The client is then no longer the sponsoring client of the domain name, and the release changes the domain name as follows:
+
+* The Authorisation Information (`authInfo`) of the domain name is removed, and with it its Authorisation Information Process Object (#auth-info-process). Authorisation information that the server issued to the registrants (#auth-info-issue-process) is not affected.
+* The General Request Contact (`generalRequest`) and the Abuse Contact (`abuse`) are removed.
+* The DNSSEC records, the `ds` and `dnskey` records of the DNS Data (`dns`), are removed.
+* With Keep Name Servers `false`, the name servers are replaced.
+* The holders are kept.
+
+A client becomes the sponsoring client of a released domain name by a transfer request (#transfer-create).
+
+The server MUST reject a Create for a domain name whose status its policy does not allow a release in, and a Create for a domain name that is locked against changes through the protocol.
+
+The response to the Create informs the client of the release. When a domain name is released other than by a Create of its sponsoring client, for example by the registry at the request of the registrant, the server informs the sponsoring client with a message whose Data is a Domain Release Message Object (#domain-release-message). A client can also receive a Domain Release Message Object for a domain name that it released itself.
+
+The Read, Update, and Delete operations are not supported.
+
 # Endpoints {#endpoints}
 
-This section lists the endpoints that result from the new Data Object and the new Process Objects, derived by the rules of [@!I-D.ietf-rpp-core, section 16.1]. The `plural()` function applied to the Identifiers `requestContact`, `authInfoProcess`, `authInfoIssueProcess`, and `verificationProcess` gives the path segments `requestContacts`, `authInfoProcesses`, `authInfoIssueProcesses`, and `verificationProcesses`. This section is non-normative.
+This section lists the endpoints that result from the new Data Object and the new Process Objects, derived by the rules of [@!I-D.ietf-rpp-core, section 16.1]. The `plural()` function applied to the Identifiers `requestContact`, `authInfoProcess`, `authInfoIssueProcess`, `verificationProcess`, and `releaseProcess` gives the path segments `requestContacts`, `authInfoProcesses`, `authInfoIssueProcesses`, `verificationProcesses`, and `releaseProcesses`. This section is non-normative.
 
 | Operation                     | HTTP Method | URL path                             |
 | ----------------------------- | ----------- | ------------------------------------ |
@@ -1202,9 +1267,10 @@ Table: Endpoints of the Request Contact Data Object
 | Authorisation Information: delete              | DELETE      | /domainNames/{id}/processes/authInfoProcesses/latest      |
 | Authorisation Information Issue: create        | POST        | /domainNames/{id}/processes/authInfoIssueProcesses        |
 | Verification: read                             | GET         | /domainNames/{id}/processes/verificationProcesses/latest  |
+| Release: create                                | POST        | /domainNames/{id}/processes/releaseProcesses              |
 Table: Endpoints of the Process Objects
 
-A server that assigns no Process ID exposes no process resource. It responds to a Create of the Authorisation Information Process Object or the Authorisation Information Issue Process Object with HTTP status code 200 (OK) and without a `Location` header field [@!I-D.ietf-rpp-core, section 16.1.4], serves the Read and Delete of an Authorisation Information Process Object at `latest` only, and serves the Read of a Verification Process Object at `latest` only.
+A server that assigns no Process ID exposes no process resource. It responds to a Create of the Authorisation Information Process Object, the Authorisation Information Issue Process Object, or the Release Process Object with HTTP status code 200 (OK) and without a `Location` header field [@!I-D.ietf-rpp-core, section 16.1.4], serves the Read and Delete of an Authorisation Information Process Object at `latest` only, and serves the Read of a Verification Process Object at `latest` only.
 
 The data elements that the extension adds to the Domain Name Data Object, the Contact Data Object, the Organisation Data Object, and the Domain Transfer Process Object do not have Direct Access and add no endpoints. The message types of the extension add no endpoints either: a client retrieves them at the messages endpoint [@!I-D.ietf-rpp-core, section 16.10] and selects them with the `type` query parameter (#message-operations).
 
@@ -1322,6 +1388,29 @@ Authorization: Bearer <token>
 Accept: application/rpp+json
 RPP-Cltrid: ABC-12350
 RPP-Authorization: authinfo value=QWJjMjM0NTY3OA==
+```
+
+Example Release create request:
+
+```http
+POST /domainNames/foo.example/processes/releaseProcesses HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Content-Type: application/rpp+json
+RPP-Cltrid: ABC-12351
+Content-Length: 63
+```
+
+Example Release create response:
+
+```http
+HTTP/1.1 200 OK
+Date: Sat, 14 Nov 2026 12:00:00 GMT
+Content-Type: application/rpp+json
+RPP-Svtrid: XYZ-12351
+RPP-Cltrid: ABC-12351
+RPP-Code: 01000
 ```
 
 Example request for the oldest message about the status of a domain name or the verification of a contact:
@@ -2141,6 +2230,11 @@ Read response schema:
           "type": "array",
           "items": { "$ref": "#/$defs/ext.rri.verificationProcess.reference" },
           "readOnly": true
+        },
+        "releaseProcess": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ext.rri.releaseProcess.reference" },
+          "readOnly": true
         }
       }
     }
@@ -2322,6 +2416,65 @@ The Holder Verification Object:
       "type": "object",
       "properties": {
         "@type": { "type": "string", "const": "verificationProcess" },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "processId"]
+    }
+  }
+}
+```
+
+## Release Process Object {#json-release-process}
+
+### Create
+
+Create request schema:
+
+<!-- definition ext.rri.releaseProcess.create -->
+```json
+{
+  "$defs": {
+    "ext.rri.releaseProcess.create": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "releaseProcess" },
+        "keepNameservers": { "type": "boolean", "writeOnly": true }
+      },
+      "required": ["@type"]
+    }
+  }
+}
+```
+
+Response schema of the Create operation:
+
+<!-- definition ext.rri.releaseProcess.read -->
+```json
+{
+  "$defs": {
+    "ext.rri.releaseProcess.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "releaseProcess", "readOnly": true },
+        "processId": { "type": "string", "readOnly": true },
+        "keepNameservers": { "type": "boolean", "readOnly": true }
+      },
+      "required": ["@type"]
+    }
+  }
+}
+```
+
+### Reference
+
+<!-- definition ext.rri.releaseProcess.reference -->
+```json
+{
+  "$defs": {
+    "ext.rri.releaseProcess.reference": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "releaseProcess" },
         "processId": { "type": "string", "readOnly": true }
       },
       "required": ["@type", "processId"]
@@ -2689,6 +2842,28 @@ Example verification read response of another client with Object Authorisation f
             ]
         }
     ]
+}
+```
+
+### Release
+
+Example release create request that does not keep the name servers:
+
+<!-- example valid releaseProcess.create -->
+```json
+{
+    "@type": "releaseProcess",
+    "keepNameservers": false
+}
+```
+
+Example release create response:
+
+<!-- example valid releaseProcess.read -->
+```json
+{
+    "@type": "releaseProcess",
+    "keepNameservers": false
 }
 ```
 
@@ -3101,6 +3276,16 @@ Example verification read response without a deadline:
 }
 ```
 
+Example release create request whose Keep Name Servers is not a Boolean:
+
+<!-- example invalid releaseProcess.create -->
+```json
+{
+    "@type": "releaseProcess",
+    "keepNameservers": "no"
+}
+```
+
 # IANA Considerations {#iana}
 
 This document has no IANA actions. The extension is a private extension [@!I-D.wullink-rpp-extension-guidelines, section 10], and its Identifier is formed by reverse domain name notation [@!I-D.wullink-rpp-extension-guidelines, section 7].
@@ -3248,6 +3433,7 @@ Data Elements
 | authInfoProcess      | Authorisation Information Processes       | 0+    | read-only  | Aggregation[Authorisation Information Process Object]       | The authorisation information processes initiated on the owning domain name. |
 | authInfoIssueProcess | Authorisation Information Issue Processes | 0+    | read-only  | Aggregation[Authorisation Information Issue Process Object] | The authorisation information issue processes initiated on the owning domain name. |
 | verificationProcess  | Verification Processes                    | 0+    | read-only  | Aggregation[Verification Process Object]                 | The verification processes of the owning domain name.                    |
+| releaseProcess       | Release Processes                         | 0+    | read-only  | Aggregation[Release Process Object]                      | The release processes initiated on the owning domain name.               |
 
 Object: authInfoProcess
 
@@ -3307,6 +3493,26 @@ Data Elements
 | holders            | Holders           | 1+    | read-only  | Holder Verification Object | The verification information of the holders of the domain name. |
 
 Operations: read. Input Data Elements: (None). Parameters: (None).
+
+Object: releaseProcess
+
+Object Name: Release Process Object
+
+Object Type: Process
+
+Extends: baseProcess
+
+Description: Represents the release of a domain name by its sponsoring client to the registry.
+
+Reference: [This-ID]
+
+Data Elements
+
+| Element Identifier | Element Name      | Card. | Mutability  | Data Type | Description |
+| ------------------ | ----------------- | ----- | ----------- | --------- | ----------- |
+| keepNameservers    | Keep Name Servers | 0-1   | create-only | Boolean   | Whether the server keeps the name servers of the domain name. |
+
+Operations: create. Input Data Elements: (None). Parameters: (None).
 
 Object: objectReference
 
@@ -3653,6 +3859,8 @@ Any client can create an Authorisation Information Issue Process Object for any 
 
 The Verification Information of a contact is passed to the registry. A client other than the sponsoring client reads the verification information of the holders of a domain name only with the Object Authorisation of the domain name, and only its Claims and Result, without the Handle IDs of the holders (#verification-process-read). A client that learns the Object Authorisation of a domain name therefore learns whether its holders were verified, and the deadlines of the domain name.
 
+A release cannot be undone by the client that requested it. The client is no longer the sponsoring client, the authorisation information that it set is removed, and with Keep Name Servers `false` the domain name no longer resolves to its name servers (#release-process-create). The client becomes the sponsoring client again only by a transfer request with authorisation information that the registrant provides, for example authorisation information that the server issued to the registrants (#auth-info-issue-process). Only the sponsoring client is authorised to release a domain name.
+
 A server forwards the URI Template to the registry, which expands it with a sample domain name on creation and rejects a template that it cannot expand. A server that does not forward the template to such a registry MUST check the constraints of (#request-contact-data-elements) itself before it stores or publishes the template.
 
 # Privacy Considerations {#privacy}
@@ -3666,6 +3874,8 @@ The server delivers issued authorisation information with the contact data that 
 A Verification Information Object records how the contact information of a holder, who can be a natural person, was verified: which claims, with which result, when, with which kind of evidence, for example an identity card or a passport, and by which method. It is personal data that the sponsoring client processes to meet the verification obligations of [@NIS2, Article 28]. It contains the kind of the evidence and not the evidence itself. A client SHOULD NOT put personal data, such as the number of an identity document, in the Reference, because the Reference serves only to find the record of the verification at the sponsoring client, and the server passes it to the registry.
 
 The server discloses the complete verification information of a contact to the sponsoring client only, in the Read of the contact and of the Verification Process Object of a domain name that the contact holds. To another client that presents the Object Authorisation of a domain name, it discloses the Claims and the Result of the verification information of each holder, without the Handle ID of the holder. It discloses verification information to no other client, and the registry does not publish it. A server MUST NOT record the data elements of a Verification Information Object in logs.
+
+The Release Process Object carries no personal data. A release keeps the holders of the domain name, whose data the registry then holds without a sponsoring client.
 
 The message types of the extension name contacts by their Handle ID and carry no contact information, such as the name or the postal address of a holder. The Claims of a Contact Verification Message Object name the kinds of contact information to verify, not their values, and the message types carry no verification information.
 
@@ -3689,6 +3899,7 @@ The variable `{Ulabel}` expands to the U-label of the domain name. The encoding 
 * add the authorisation information process and the authorisation information issue process of a domain name, and their data elements of the processes object #250
 * add the verification information object and the data element verifications of the contact data object, which a full update under a preset without the extension keeps #251
 * add the verification process of a domain name, the holder verification object, and the data element verificationProcess of the processes object #251
+* add the release process of a domain name and the data element releaseProcess of the processes object #252
 
 {toc="exclude"}
 {numbered="false"}
@@ -3729,6 +3940,8 @@ This appendix describes how a server that implements the extension maps it to RR
 | `authInfoIssueProcess` create           | domain CREATE-AUTHINFO2                               |
 | `contact.verifications`                 | `verification:verificationInformation` (0 to 5) of contact CREATE, UPDATE, INFO |
 | `verificationProcess` read              | domain INFO `recursive="true"`                        |
+| `releaseProcess` create                 | domain TRANSIT                                        |
+| `releaseProcess.keepNameservers`        | `disconnect`, negated                                 |
 Table: Mapping to RRI
 
 The registry holds 0 to 1 request contact of each role per domain name, so a domain name needs none. The backend profile of the implementation states this as `domainName.generalRequest` and `domainName.abuse` with `min_count` 0 and `max_count` 1.
@@ -3770,6 +3983,17 @@ Table: Mapping of verification information
 * A Read of a Verification Process Object is a domain INFO with `recursive="true"`, and with the Object Authorisation of `RPP-Authorization` as `domain:authInfo` when the request has one. A domain INFO without `domain:verificationDeadlineBeforeDedelegation` and without `domain:verificationDeadlineBeforeDeletion` has no Verification Process Object. For a domain of another RegAcc, the registry returns the holders without `contact:handle` and their blocks with claims and result only. Without AuthInfo it returns no deadlines for a domain of another RegAcc, and the implementation refuses the Read.
 * The registry states the claims still to verify only in the notices of write responses and of messages (`16350000040`, `16350000041` with the argument `VerificationClaims`, and `contactVerificationRequired`), not in domain INFO, so the Verification Process Object has no list of them.
 * The Create, Update, and Delete of a Verification Process Object have no RRI command.
+
+The implementation serves the Release Process Object as follows:
+
+* A Create is a domain TRANSIT, with `disconnect="false"` when Keep Name Servers is `true` or absent and `disconnect="true"` when it is `false`. The registry does not document its default for a TRANSIT without `disconnect`, so the implementation always sends it, and `63360043403` and `63360063402` do not arise from a request of a client.
+* With `disconnect="true"` the registry replaces the name servers with an entry that points to a web page of the registry.
+* TRANSIT deletes the AuthInfo1 (the response states `16330088732`) and keeps an AuthInfo2. It removes the General Request and Abuse contacts and all DNSKEYs. The RegAcc loses access to the domain. Another RegAcc takes it over with CHPROV, after which the registry runs a risk assessment.
+* The registry allows TRANSIT of an own domain that is not `failed`. It refuses TRANSIT of a domain under Registry Lock (`53000080009`), which goes to TRANSIT only manually through the registry, and without `disconnect`.
+* The output is the Keep Name Servers that the implementation sent.
+* The Read, Update, and Delete of a Release Process Object have no RRI command.
+
+A> TBC: whether TRANSIT needs a `Holder` (`63360082531` is in the code list of the registry, while its TRANSIT request has no Holder field), the code of the refusal of TRANSIT for a `failed` domain, and whether the registry queues `domainTransit` for the RegAcc after a TRANSIT of its own. To be checked on MTEST.
 
 The implementation maps the notifications of the registry (QUEUE-READ) to the message types as follows:
 
@@ -3870,7 +4094,9 @@ The implementation maps the refusals of the registry to RPP result codes as foll
 | conflicting claims (63200041863), or evidence, method, and claims that the registry does not allow together (63200041867) | 422 | 02306 |
 | Read of a Verification Process Object of a domain without a verification deadline | 404 | 02303 |
 | Read of a Verification Process Object of a domain of another RegAcc without `RPP-Authorization` | 403 | 02201 |
-| Update of either authorisation information Process Object, Read or Delete of an Authorisation Information Issue Process Object, or Create, Update, or Delete of a Verification Process Object | 501 | 02101 |
+| release of a domain of another RegAcc (63300022003)                  | 403         | 02201           |
+| release of a domain under Registry Lock (53000080009), or of a `failed` domain | 409 | 02304       |
+| Update of either authorisation information Process Object, Read or Delete of an Authorisation Information Issue Process Object, Create, Update, or Delete of a Verification Process Object, or Read, Update, or Delete of a Release Process Object | 501 | 02101 |
 Table: Refusals of the implementation
 
 The registry does not document how it encodes a U-label in an expanded template.
