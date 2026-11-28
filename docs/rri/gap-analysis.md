@@ -16,10 +16,10 @@ Status: analysis only. No code has been changed.
 | | Count |
 |---|---|
 | RRI transactions (ref §6) | 21 |
-| …that map to an existing RPP operation with little friction | 10 (LOGIN, LOGOUT, contact CHECK, contact INFO, domain CHECK, domain INFO, domain DELETE, QUEUE-READ, QUEUE-DELETE, regacc INFO) |
-| …that map, but need new orchestration in the proxy | 7 (contact CREATE/UPDATE, domain CREATE/UPDATE/CHHOLDER, CREATE-AUTHINFO1, DELETE-AUTHINFO1) |
-| …that map only after a maintainer decision | 2 (CHPROV, RESTORE) |
-| …that have no RPP operation | 0: TRANSIT is the `releaseProcess` and CREATE-AUTHINFO2 the `authInfoIssueProcess` of the `rri` extension (#252, #250) |
+| …that map directly (✅ in §2) | 8 (LOGIN, LOGOUT, contact CHECK, domain CHECK, domain DELETE, QUEUE-READ, QUEUE-DELETE, regacc INFO) |
+| …that map, with new orchestration or partial data (🟡 in §2) | 12 (contact CREATE/UPDATE/INFO, domain CREATE/UPDATE/CHHOLDER/INFO, CREATE-AUTHINFO1, DELETE-AUTHINFO1, CHPROV, and, as Process Objects of the `rri` extension, TRANSIT (#252) and CREATE-AUTHINFO2 (#250)) |
+| …that map only after a maintainer decision (🟠 in §2) | 1 (RESTORE) |
+| …that have no RPP operation (⛔ in §2) | 0 |
 | RPP operations the proxy implements over EPP that RRI cannot serve | hosts (all 7), contact delete, contact transfer (6), domain renew, domain transfer query/cancel/approve/reject |
 
 The main findings:

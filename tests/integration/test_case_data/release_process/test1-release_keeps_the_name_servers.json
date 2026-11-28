@@ -56,7 +56,7 @@
       }
     },
     {
-      "comment": "Reads domain rp1 as registrar a; expects 200 with its record kept. A released domain stays readable.",
+      "comment": "Reads domain rp1 as registrar a; expects 200 with its record kept and the registry as its sponsor (DENIC-1000004 on MTEST). A released domain stays readable.",
       "request": {
         "method": "GET",
         "url": "/domainNames/rp1-{random_name}.{tld}",
@@ -84,6 +84,9 @@
                 }
               }
             ]
+          },
+          "provMetadata": {
+            "spClientId": "DENIC-1000004"
           }
         },
         "headers": {

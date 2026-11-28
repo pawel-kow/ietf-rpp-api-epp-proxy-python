@@ -95,3 +95,10 @@ RPP part (`extensions/rri/rpp`):
 - Validation error of a non-Boolean `keepNameservers` is 400 02001 (not 02005).
 - Cases `release_process/test1`, `test2` release a domain (not smoke, full run only); `test3` to `test6` smoke.
 - Checks of 295176b: lint-imports 32 kept; unit 3397 passed; smoke 251 passed 581 skipped (incl. MTEST); release_process on MTEST 6 passed (test1 and test2 release domains).
+
+## Review round 1 (4 low findings, all fixed)
+
+1. testing.project.md: release_process/ its own item; exception for test1/test2 in the "delete their domains" sentence.
+2. gap-analysis.md §1 summary now follows the Fit column of §2: 8 + 12 + 1 + 0 = 21.
+3. test1 asserts spClientId DENIC-1000004 of the released domain; the queue claim is marked "seen once, not checked by a case"; the `failed` refusal is checked by test5.
+4. Appendix bullet on disconnect="true": one A entry at www.<name>. on MTEST (checked by test2).

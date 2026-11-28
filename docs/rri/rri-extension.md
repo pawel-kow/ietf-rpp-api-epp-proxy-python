@@ -3987,12 +3987,12 @@ Table: Mapping of verification information
 The implementation serves the Release Process Object as follows:
 
 * A Create is a domain TRANSIT, with `disconnect="false"` when Keep Name Servers is `true` or absent and `disconnect="true"` when it is `false`. The registry does not document its default for a TRANSIT without `disconnect`, so the implementation always sends it, and `63360043403` and `63360063402` do not arise from a request of a client.
-* With `disconnect="true"` the registry replaces the name servers with an entry that points to a web page of the registry.
+* With `disconnect="true"` the registry replaces the name servers with an entry that points to a web page of the registry (on MTEST: one A entry at `www.<name>.`).
 * TRANSIT deletes the AuthInfo1 (the response states `16330088732`) and keeps an AuthInfo2. It removes the General Request and Abuse contacts and all DNSKEYs. The RegAcc loses access to the domain. Another RegAcc takes it over with CHPROV, after which the registry runs a risk assessment.
 * The registry allows TRANSIT of an own domain that is not `failed`. It refuses TRANSIT of a domain under Registry Lock (`53000080009`), which goes to TRANSIT only manually through the registry, and without `disconnect`.
 * The output is the Keep Name Servers that the implementation sent.
 * The Read, Update, and Delete of a Release Process Object have no RRI command.
-* MTEST (checked 2026-11-28) takes a TRANSIT without a Holder, although `63360082531` is in the code list of the registry, and the TRANSIT request has no Holder field, so the implementation sends none. The domain stays readable for the RegAcc after the TRANSIT, with another `regAcc`. It refuses TRANSIT of a `failed` domain with `53000080012` (a class 5 code, which the implementation maps explicitly, as it would answer 500 otherwise), and it queued no `domainTransit` for the RegAcc that sent a TRANSIT of its own (its queue was empty right after), so the implementation expects none; the Domain Release Message Object arises for a release by the registry.
+* MTEST (checked 2026-11-28) takes a TRANSIT without a Holder, although `63360082531` is in the code list of the registry, and the TRANSIT request has no Holder field, so the implementation sends none. The domain stays readable for the RegAcc after the TRANSIT, with another `regAcc`. It refuses TRANSIT of a `failed` domain with `53000080012` (seen on MTEST with a domain whose name servers do not serve it, and checked by a case; a class 5 code, which the implementation maps explicitly, as it would answer 500 otherwise), and, seen on MTEST once and not checked by a case, it queued no `domainTransit` for the RegAcc that sent a TRANSIT of its own (its queue was empty right after), so the implementation expects none; the Domain Release Message Object arises for a release by the registry.
 
 The implementation maps the notifications of the registry (QUEUE-READ) to the message types as follows:
 
