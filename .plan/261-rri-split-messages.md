@@ -82,6 +82,11 @@ the RRI parts of domain_lock and registry_changes; an RRI part without `gateways
 handlers is refused (`load_extension_parts`), and `RriBackend.extension` names what is missing; the dependency test now fails
 without the own/base checks; test_rri_extension_doc.py is folded into test_extension_docs.py; architecture wording.
 
+## Checks after review round 1 (final commit, no edits during the runs)
+
+lint-imports 42 kept, 0 broken (new contract generic-extensions-not-bound-to-a-backend, proved by mutation on a scratch copy);
+unit 3435 passed; MTEST reachability passed; smoke 251 passed, 581 skipped (includes rri-mtest).
+
 ## Findings
 
 - `RegisteredExtension` requires a backend part for every extension of a deployment (`registry_setup.load_registry`), so the
