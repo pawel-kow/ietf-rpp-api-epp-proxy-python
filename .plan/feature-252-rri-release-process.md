@@ -94,3 +94,4 @@ RPP part (`extensions/rri/rpp`):
 - Queue of the releasing RegAcc empty right after TRANSIT: no `domainTransit` for the own TRANSIT (not asserted by a case).
 - Validation error of a non-Boolean `keepNameservers` is 400 02001 (not 02005).
 - Cases `release_process/test1`, `test2` release a domain (not smoke, full run only); `test3` to `test6` smoke.
+- Checks of 295176b: lint-imports 32 kept; unit 3397 passed; smoke 251 passed 581 skipped (incl. MTEST); release_process on MTEST 6 passed (test1 and test2 release domains).
