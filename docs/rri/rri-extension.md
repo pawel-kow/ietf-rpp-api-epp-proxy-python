@@ -3992,8 +3992,7 @@ The implementation serves the Release Process Object as follows:
 * The registry allows TRANSIT of an own domain that is not `failed`. It refuses TRANSIT of a domain under Registry Lock (`53000080009`), which goes to TRANSIT only manually through the registry, and without `disconnect`.
 * The output is the Keep Name Servers that the implementation sent.
 * The Read, Update, and Delete of a Release Process Object have no RRI command.
-
-A> TBC: whether TRANSIT needs a `Holder` (`63360082531` is in the code list of the registry, while its TRANSIT request has no Holder field), the code of the refusal of TRANSIT for a `failed` domain, and whether the registry queues `domainTransit` for the RegAcc after a TRANSIT of its own. To be checked on MTEST.
+* MTEST (checked 2026-11-28) takes a TRANSIT without a Holder, although `63360082531` is in the code list of the registry, and the TRANSIT request has no Holder field, so the implementation sends none. The domain stays readable for the RegAcc after the TRANSIT, with another `regAcc`. It refuses TRANSIT of a `failed` domain with `53000080012` (a class 5 code, which the implementation maps explicitly, as it would answer 500 otherwise), and it queued no `domainTransit` for the RegAcc that sent a TRANSIT of its own (its queue was empty right after), so the implementation expects none; the Domain Release Message Object arises for a release by the registry.
 
 The implementation maps the notifications of the registry (QUEUE-READ) to the message types as follows:
 

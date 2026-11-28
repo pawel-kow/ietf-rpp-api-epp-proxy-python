@@ -73,3 +73,24 @@ RPP part (`extensions/rri/rpp`):
    the refusal is mapped by class and the spec/appendix says so (a spec-issue note for the orchestrator).
 4. **`domainTransit` queued for the releasing RegAcc.** Checked by reading the queue of `a` after the release case (queue is
    drained by the run setup/teardown; the case `exclusive: ["message_queue"]`). Recorded in rri-5.0-reference §9/§14 and the appendix.
+
+## Orchestrator decisions (plan approved)
+
+1. Teardown: no delete step, with a comment. Cases that actually release a domain are not smoke (full run only); cheap cases
+   (foreign 403, read 501) that release nothing stay smoke. State it in the case comments and in testing.project.md if it lists
+   such cases.
+2. Holder: probe as described.
+3. `failed` domain: try from the run's own setup; if it cannot be produced, keep the class mapping, say so in the appendix, and
+   file an issue like #258 (refusal code unknown, class 5 would answer 500 instead of 409); report its number.
+4. domainTransit queue check: as described.
+
+## Findings (MTEST, 2026-11-28, own setup objects only)
+
+- TRANSIT without a Holder succeeds (domain with a holder contact); 63360082531 did not arise. No INFO is sent.
+- TRANSIT of a `failed` domain (created with name servers that do not serve it, status `inactive` on RPP): 53000080012 "Domain
+  "Status" is "failed"", class 5 -> 500 before the mapping; now 409 02304 for the release only. No issue to file.
+- `disconnect="true"`: the domain's DNS data became one A entry at `www.<name>.`; `false` kept the `@` record. The released
+  domain reads for registrar a with `regAcc` DENIC-1000004 ("DENIC eG - TRANSIT").
+- Queue of the releasing RegAcc empty right after TRANSIT: no `domainTransit` for the own TRANSIT (not asserted by a case).
+- Validation error of a non-Boolean `keepNameservers` is 400 02001 (not 02005).
+- Cases `release_process/test1`, `test2` release a domain (not smoke, full run only); `test3` to `test6` smoke.

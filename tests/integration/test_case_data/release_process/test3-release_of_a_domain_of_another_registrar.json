@@ -1,0 +1,70 @@
+{
+  "when": {
+    "profile.domainName.processes.releaseProcess.operations": {
+      "contains": "create"
+    }
+  },
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test3-release_of_a_domain_of_another_registrar",
+  "description": "Only the sponsoring client releases a domain name: another registrar is refused with 403 02201, and the domain stays with its sponsor.",
+  "setup": [
+    {
+      "comment": "Creates contact RP3; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:RP3}"
+      }
+    },
+    {
+      "comment": "Creates domain rp3 of registrar a with registrant RP3; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "rp3-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:RP3}"
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Creates releaseProcess of domain rp3 as registrar b; expects 403 02201. The operation this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rp3-{random_name}.{tld}/processes/releaseProcesses",
+        "headers": {
+          "Authorization": "{auth:b}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "releaseProcess"
+        }
+      },
+      "response": {
+        "status": 403,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02201"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ],
+  "teardown": [
+    {
+      "comment": "Deletes domain rp3; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "rp3-{random_name}.{tld}"
+      }
+    }
+  ]
+}

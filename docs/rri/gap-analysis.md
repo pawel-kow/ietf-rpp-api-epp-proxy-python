@@ -19,7 +19,7 @@ Status: analysis only. No code has been changed.
 | …that map to an existing RPP operation with little friction | 10 (LOGIN, LOGOUT, contact CHECK, contact INFO, domain CHECK, domain INFO, domain DELETE, QUEUE-READ, QUEUE-DELETE, regacc INFO) |
 | …that map, but need new orchestration in the proxy | 7 (contact CREATE/UPDATE, domain CREATE/UPDATE/CHHOLDER, CREATE-AUTHINFO1, DELETE-AUTHINFO1) |
 | …that map only after a maintainer decision | 2 (CHPROV, RESTORE) |
-| …that have no RPP operation | 1 (TRANSIT); CREATE-AUTHINFO2 is the `authInfoIssueProcess` of the `rri` extension (#250) |
+| …that have no RPP operation | 0: TRANSIT is the `releaseProcess` and CREATE-AUTHINFO2 the `authInfoIssueProcess` of the `rri` extension (#252, #250) |
 | RPP operations the proxy implements over EPP that RRI cannot serve | hosts (all 7), contact delete, contact transfer (6), domain renew, domain transfer query/cancel/approve/reject |
 
 The main findings:
@@ -63,7 +63,7 @@ Legend for **Fit**: ✅ direct; 🟡 maps, with new orchestration or partial dat
 | domain CHHOLDER (§6.9) | `domainNames_update`/`updatePartial` when `registrant` changes | 🟡 | Carries all domain data like UPDATE. Invalidates all AuthInfos. |
 | domain DELETE (§6.10) | `domainNames_delete` | ✅ | Moves to `redemptionPeriod` (30 days). The optional `Holder` cross-check is not used. |
 | domain RESTORE (§6.11) | `domainNameRestoreProcesses_create` | 🟠 | One step, no restore report. The EPP proxy does not implement restore today (501). See Q6. |
-| domain TRANSIT (§6.12) | — | ⛔ | Hands the domain to DENIC. Closest RPP is a push transfer to DENIC, see Q8. |
+| domain TRANSIT (§6.12) | `domainNameReleaseProcesses_create` (extension `rri`) | 🟡 | Releases the domain to DENIC: a create-only Process Object, not a push transfer (which designates a gaining client), see Q8. `disconnect` is always sent. Refused: another RegAcc 403, Registry Lock or `failed` 409. Not served by the base presets. |
 | domain CHECK (§6.13) | `domainNames_availability`, `domainNames_availabilityHead` | ✅ | `free` → available. Every other status → not available, with the status as `reason`. Accepts the U-label and the A-label, see §3.1. |
 | domain INFO (§6.14) | `domainNames_read`, plus each read-back | 🟡 | `recursive=false` for reads. `RPP-Authorization` → `AuthInfo` for foreign domains. See §3.1 for the fields. |
 | domain CREATE-AUTHINFO1 (§6.15) | `authInfo` in domain create, PUT and PATCH; `authInfoProcess` create of the `rri` extension | 🟡 | The proxy hashes `authdata` (SHA-256, hex) and sends `AuthInfoHash`, never printed. The `authInfo` member has the registry's default lifetime, see Q4; the process sends the client's `expiryDate` as `expire` and checks no limit, see §4.3. |
@@ -289,7 +289,7 @@ Options (Q3):
 Whichever option is chosen, the result is immediate. That matches the existing "completed at once" path of
 `TransferHandlers.create` (200 with no `Location`). `transferRead`, `transferDelete`, `transferApprove` and
 `transferReject` answer 501, because RRI has no query, cancel, approve or reject, and the losing registrar cannot
-object. A push transfer (`transferDir: push`) → 501, unless TRANSIT is mapped to it (Q8).
+object. A push transfer (`transferDir: push`) → 501: TRANSIT is the `releaseProcess` of the `rri` extension, not a push transfer (Q8).
 
 ### 4.4 Several holders
 

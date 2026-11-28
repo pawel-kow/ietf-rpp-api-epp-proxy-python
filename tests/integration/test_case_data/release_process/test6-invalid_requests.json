@@ -1,0 +1,71 @@
+{
+  "when": {
+    "profile.domainName.processes.releaseProcess.operations": {
+      "contains": "create"
+    }
+  },
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test6-invalid_requests",
+  "description": "A keepNameservers that is not a Boolean is refused before any command, and the domain stays the client's.",
+  "setup": [
+    {
+      "comment": "Creates contact RP6; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:RP6}"
+      }
+    },
+    {
+      "comment": "Creates domain rp6 of registrar a with registrant RP6; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "rp6-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:RP6}"
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Creates releaseProcess of domain rp6 whose keepNameservers is a string; expects 400. The validation this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rp6-{random_name}.{tld}/processes/releaseProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "releaseProcess",
+          "keepNameservers": "no"
+        }
+      },
+      "response": {
+        "status": 400,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02001"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ],
+  "teardown": [
+    {
+      "comment": "Deletes domain rp6; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "rp6-{random_name}.{tld}"
+      }
+    }
+  ]
+}

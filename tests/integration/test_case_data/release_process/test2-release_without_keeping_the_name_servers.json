@@ -1,0 +1,94 @@
+{
+  "when": {
+    "profile.domainName.processes.releaseProcess.operations": {
+      "contains": "create"
+    }
+  },
+  "test_id": "test2-release_without_keeping_the_name_servers",
+  "description": "A release with keepNameservers false has the registry replace the name servers. The domain stays after the case: a released domain leaves the RegAcc, which can neither delete it nor take it back (TRANSIT removes AuthInfo1), and MTEST keeps what a case creates. So the case is not in the smoke suite.",
+  "setup": [
+    {
+      "comment": "Creates contact RP2; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:RP2}"
+      }
+    },
+    {
+      "comment": "Creates domain rp2 of registrar a with registrant RP2; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "rp2-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:RP2}"
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Creates releaseProcess of domain rp2 with keepNameservers false; expects 200 01000 with keepNameservers false. The operation this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rp2-{random_name}.{tld}/processes/releaseProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "releaseProcess",
+          "keepNameservers": false
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "releaseProcess",
+          "keepNameservers": false
+        }
+      }
+    },
+    {
+      "comment": "Reads domain rp2 as registrar a; expects 200 with the record of the registry in place of the client's (an A record at www).",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rp2-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "www.rp2-{random_name}.{tld}.",
+                "type": "a"
+              }
+            ]
+          }
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    }
+  ],
+  "teardown": []
+}

@@ -1,0 +1,123 @@
+{
+  "when": {
+    "profile.domainName.processes.releaseProcess.operations": {
+      "contains": "create"
+    }
+  },
+  "test_id": "test1-release_keeps_the_name_servers",
+  "description": "A release without keepNameservers keeps the name servers, answers 200 without a Location and echoes the value that applied; the domain then belongs to the registry. The domain stays after the case: a released domain leaves the RegAcc, which can neither delete it nor take it back (TRANSIT removes AuthInfo1), and MTEST keeps what a case creates. So the case is not in the smoke suite.",
+  "setup": [
+    {
+      "comment": "Creates contact RP1; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:RP1}"
+      }
+    },
+    {
+      "comment": "Creates domain rp1 of registrar a with registrant RP1; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "rp1-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:RP1}"
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Creates releaseProcess of domain rp1 without keepNameservers; expects 200 01000 with keepNameservers true. The operation this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rp1-{random_name}.{tld}/processes/releaseProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "releaseProcess"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "body": {
+          "@type": "releaseProcess",
+          "keepNameservers": true
+        }
+      }
+    },
+    {
+      "comment": "Reads domain rp1 as registrar a; expects 200 with its record kept. A released domain stays readable.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/rp1-{random_name}.{tld}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "domainName",
+          "dns": {
+            "@type": "dnsData",
+            "records": [
+              {
+                "@type": "dnsRecord",
+                "name": "@",
+                "type": "a",
+                "rdata": {
+                  "address": "192.0.2.10"
+                }
+              }
+            ]
+          }
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "comment": "Creates releaseProcess of domain rp1 again; expects 403 02201. The domain is no longer the client's.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/rp1-{random_name}.{tld}/processes/releaseProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "releaseProcess"
+        }
+      },
+      "response": {
+        "status": 403,
+        "content_type": "application/problem+json",
+        "headers": {
+          "RPP-Code": "02201"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ],
+  "teardown": []
+}
