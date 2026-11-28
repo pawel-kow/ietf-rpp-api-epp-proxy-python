@@ -26,7 +26,7 @@ from rpp.http.validators.rpp_request_body_validator import RppRequestBodyValidat
 from rpp.http.validators.rpp_response_body_validator import RppResponseBodyValidator
 from registration import ExtensionRegistry
 from rpp.http.body_definitions import mark_body_definitions
-from rpp.http.extension_paths import add_extension_paths, add_registered_paths, collections
+from rpp.http.extension_paths import add_registered_paths, collections
 from rpp.http.served_document import served_document
 from rpp.http.extension_resolver import ExtensionResolver
 from rpp.schema.bundle_definitions import bundle_definitions
@@ -77,7 +77,8 @@ def omitted_operations(openapi_settings, held_objects, extension_ids, resolver: 
         obj = segments.get(path.lstrip("/").split("/", 1)[0])
         if unheld and obj is not None and obj not in held_objects:
             return True
-        return unimplemented and not resolver.implements(operation.get("operationId", ""))
+        return unimplemented and not resolver.implements(operation.get("operationId", ""),
+                                                         operation.get("x-openapi-router-controller"))
     return omit
 
 
@@ -137,7 +138,7 @@ def create_app(sessions, profile: BackendProfile, discovery_settings=None, signa
     # with it, which the body validators validate with under the request's preset; the documents the app gives
     # (`openapi_documents`, served by `api_docs`) are OpenAPI 3.1, with the definitions of the default preset (#204) and of each
     # offered preset (#205).
-    spec = add_registered_paths(add_extension_paths(copy.deepcopy(parsed_spec()), presets.extension_ids()), registry)
+    spec = add_registered_paths(copy.deepcopy(parsed_spec()), registry)
     spec = mark_body_definitions(spec, {*bundle_definitions(), *own_definitions(presets.extension_ids())})
     resolver = ExtensionResolver('rpp.handlers', registry.handler_packages())
     omit = omitted_operations(openapi_settings, request_presets.profile_of(presets.default).objects, presets.extension_ids(),

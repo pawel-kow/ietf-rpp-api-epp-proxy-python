@@ -1,3 +1,5 @@
+import pytest
+
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
 from registry_adapter.epp.gateways.epp_backend import EppBackend
@@ -69,12 +71,7 @@ def test_a_registry_error_is_an_error_response_not_an_exception():
     assert isinstance(result, ErrorResponse) and result.code == ResultCode.OBJECT_DOES_NOT_EXIST
 
 
-def test_epp_has_no_request_contacts():
-    epp = backend()
-
-    answers = [epp.request_contacts.check("GR"), epp.request_contacts.info("GR"),
-               epp.request_contacts.create(None), epp.request_contacts.replace(None),
-               epp.request_contacts.delete("GR")]
-
-    assert all(isinstance(a, ErrorResponse) and a.code == ResultCode.UNIMPLEMENTED_COMMAND for a in answers)
-    assert not epp.epp_client.sent
+def test_epp_holds_no_extension():
+    """EPP has no request contacts: the rri extension is not one of its extensions."""
+    with pytest.raises(KeyError):
+        backend().extension("de.denic.rpp.rri")

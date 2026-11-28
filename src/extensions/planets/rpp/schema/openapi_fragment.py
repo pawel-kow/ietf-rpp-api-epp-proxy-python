@@ -170,8 +170,8 @@ def _satellite_of_planet() -> dict:
         _responses(_ok("#/components/schemas/ext.satellite.read"), ERRORS_READ), tag="Planet")}}
 
 
-def openapi_fragment() -> dict:
-    """The paths and the schemas the extension adds to the OpenAPI document."""
+def openapi_fragment(drafts: dict) -> dict:
+    """The paths and the schemas the extension adds to the OpenAPI document (it needs nothing of the document of the drafts, `drafts`)."""
     paths = {
         **_object_paths(PLANET, "planet", "Planet", "planet"),
         **_transfer_paths(),

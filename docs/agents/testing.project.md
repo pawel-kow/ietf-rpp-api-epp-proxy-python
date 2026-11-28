@@ -239,7 +239,7 @@ backends differ in what a case sends or expects, the case selects by the fact: a
 address on both (RRI requires them); a domain gets an `a` record (`profile.domainName.dns.min_count`) and a
 registrant, created in the case's setup (`profile.domainName.registrant.min_count`); a domain gets no
 General Request or Abuse contact, which RRI does not require (`profile.domainName.generalRequest.min_count` and
-`abuse.min_count` are 0), so the cases that work alike on both backends leave them out, and only the cases about them
+`abuse.min_count`, leaves of the rri extension, are 0; a profile without the extension has none, and a selector reads them as null), so the cases that work alike on both backends leave them out, and only the cases about them
 create them, in their setup; `expiryDate`, the provisioning metadata RRI does not
 show (`profile.domainName.metadata`) and a domain's authInfo are left out where they do not apply; the status a domain
 reads with right after its create is one of `env.domainName.processes.create.success_status` (`ok` on the EPP test

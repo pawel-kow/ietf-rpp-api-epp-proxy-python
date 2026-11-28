@@ -9,12 +9,14 @@ from rpp.dto.rpp_contact_reference import RPPContactReference
 from rpp.dto.rpp_host_reference import RPPHostReference
 from rpp.dto.rpp_labelled_contact import RPPLabelledContact
 from rpp.dto.rpp_patch_operation import RPPPatchOperation
-from rpp.mapping.domain import domain_request_contacts, domain_wanted
+from rpp.mapping.domain import domain_wanted
+from rpp.mapping.domain.domain_members import DOMAIN_MEMBERS
 from rpp.mapping.domain.domains import check_contact_label, check_host_objects, REGISTRANT
 from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
 from rpp.mapping.shared.common import parse_rpp
 from rpp.mapping.shared.dns_records import DNS_PARENTS
 from rpp.mapping.shared.needs_current_state import NeedsCurrentState
+from rpp.mapping.shared.profile_removals import refuse_removals_by_profile
 from rpp.schema.request_schemas import profiles_apply
 from rpp.schema.validator import validate_request_schema, validate_schema
 
@@ -59,9 +61,9 @@ class _PatchedUpdate:
 
     def __init__(self, profile: BackendProfile):
         self.profile = profile
-        # A request contact is one value, which the patch applied to the read domain sets or clears.
+        # A member an extension adds that stands for one value (`DOMAIN_MEMBERS`) is set or cleared by the patch applied to the read domain.
         self.request_paths = tuple(
-            f"/{member}" for member in domain_request_contacts.members("domainName.update", profile.extensions))
+            f"/{member}" for member in DOMAIN_MEMBERS.members("domainName.update", profile.extensions))
         self.add_hosts: list[HostObj] = []
         self.remove_hosts: list[HostObj] = []
         self.add_contacts: list[ContactReferenceNew] = []
@@ -191,6 +193,9 @@ def rpp_to_model_with_current(domain_name: str, rpp: list, current: dict, *, pro
         ignored_paths=include_elements.on_demand_paths(OBJECT), absent_parents=DNS_PARENTS, caseless=CASELESS_MATCH,
     )
     patched = patch_statuses.with_server_statuses(patched, current, "domainStatus")
+    validate_schema("domainName.read", patched, extensions=profile.extensions)
+    DOMAIN_MEMBERS.check(patched, profile.extensions)    # before step 2: an extension's refusal is not a broken profile constraint
+    refuse_removals_by_profile("domainName.update", operations, profile.extensions)    # after step 1, before step 2
     validate_request_schema("domainName.read", patched, extensions=profile.extensions, patched=True)
     domain_wanted.reject_other_changes(current, patched, profile)
     auth_info_update = _PatchedUpdate(profile)

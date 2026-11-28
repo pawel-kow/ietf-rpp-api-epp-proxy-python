@@ -1,6 +1,6 @@
 """The definition each body schema of the OpenAPI document stands for (#204). A body schema of the drafts is
 `#/components/schemas/gen.<definition>`, one of an extension's object `ext.<definition>`; the definition is named as the mappers
-validate with it (`domainName.create`, `planet.create`, `requestContact.create`). The routing spec marks each such schema with
+validate with it (`domainName.create`, `planet.create`: an object of a registered extension). The routing spec marks each such schema with
 `x-rpp-definition` next to its `$ref`, which Connexion keeps when it resolves the reference, so that the body validators validate
 with the definition of the request's preset, and the document served points the body at the preset's definition."""
 import re

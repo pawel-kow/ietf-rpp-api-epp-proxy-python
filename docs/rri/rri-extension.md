@@ -42,6 +42,8 @@ Request contacts
 Transfer data
 : The only transfer of the registry (CHPROV) is requested by the gaining client together with the complete data of the domain name: its holders, its request contacts, and its DNS data, all of which belong to the gaining client. The Domain Transfer Process Object has no data element for this data.
 
+The registry also limits what a client provisions with the data elements of the base specifications: it holds no host objects, a domain name has at least one holder, and the contacts of a domain name are its holders and its request contacts. These limits only constrain, so they are not part of the extension. They are specified as the DENIC RRI profile (`de.denic.rpp.profile.rri`, [rri-profile](rri-profile.md)). The preset `de.denic.rpp.preset.rri` ([rri-preset](rri-preset.md)) contains the extension without the profile, and the preset `de.denic.rpp.preset.rri-strict` ([rri-strict-preset](rri-strict-preset.md)) applies the profile as well.
+
 ## Conventions and Terminology {#terminology}
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 [@!RFC2119] [@!RFC8174] when, and only when, they appear in all capitals, as shown here.
@@ -980,6 +982,7 @@ The variable `{Ulabel}` expands to the U-label of the domain name. The encoding 
 {numbered="false"}
 ## 0.1.0 - 0.2.0
 
+* refer to the profile de.denic.rpp.profile.rri and the presets rri and rri-strict #183
 * add the request contact data object #131
 * add generalRequest and abuse to the domain name data object and the transfer request, instead of contacts labels #131
 * rename the extension identifier from rri to de.denic.rpp.rri #131

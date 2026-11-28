@@ -1,7 +1,7 @@
 from registration.extension_registry import ExtensionRegistry
 
-# The leaves that are lists the extensions add to, not replace.
-ADDITIVE = ("objects", "extensions")
+# The leaves that are lists the extensions add to, not replace (an extension brings its presets).
+ADDITIVE = ("objects", "extensions", "presets")
 
 
 def with_extensions(layers, registry: ExtensionRegistry) -> list[dict]:
@@ -21,5 +21,7 @@ def with_extensions(layers, registry: ExtensionRegistry) -> list[dict]:
                 extra[key] = value
     first = dict(layers[0])
     for key in ADDITIVE:
+        if not added[key]:
+            continue
         first[key] = [*first.get(key, ()), *(item for item in added[key] if item not in first.get(key, ()))]
     return [first, extra, *layers[1:]]

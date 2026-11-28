@@ -3,7 +3,6 @@ from registry_adapter.epp.gateways.epp_contact_gateway import EppContactGateway
 from registry_adapter.epp.gateways.epp_domain_gateway import EppDomainGateway
 from registry_adapter.epp.gateways.epp_host_gateway import EppHostGateway
 from registry_adapter.epp.gateways.epp_message_gateway import EppMessageGateway
-from registry_adapter.epp.gateways.epp_request_contact_gateway import EppRequestContactGateway
 from registry_adapter.epp.idn_tables import IdnTables
 from registry_adapter.epp.session.epp_client import EPPClient
 
@@ -29,7 +28,6 @@ class EppBackend:
         self.contacts = EppContactGateway(epp_client, ns_map)
         self.hosts = EppHostGateway(epp_client, ns_map)
         self.messages = EppMessageGateway(epp_client, ns_map)
-        self.request_contacts = EppRequestContactGateway()
 
     @property
     def sponsor_id(self) -> str:

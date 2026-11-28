@@ -1,7 +1,7 @@
 from registry_adapter.rri.gateways.rri_backend import RriBackend
 from registry_adapter.rri.session.rri_client import RriClient
 from registry_adapter.rri.xml.codec import rri_to_str, str_to_rri
-from tests.helper.profiles import RRI_PROFILE
+from tests.helper.profiles import RRI_PARTS, RRI_PROFILE
 
 
 class FakeRriClient(RriClient):
@@ -33,7 +33,7 @@ class FakeRriClient(RriClient):
 def rri_backends(client_factory, lgr=None):
     """A factory of backends over the RRI clients `client_factory` makes. The profile is RRI's, with `lgr`."""
     profile = RRI_PROFILE.with_changes({"lgrs": [lgr] if lgr else []})
-    return lambda username, password: RriBackend(client_factory(username, password), profile, lgr)
+    return lambda username, password: RriBackend(client_factory(username, password), profile, lgr, RRI_PARTS)
 
 
 GLOBAL = 'xmlns="http://registry.denic.de/global/5.0" xmlns:tr="http://registry.denic.de/transaction/5.0"'

@@ -1,0 +1,12 @@
+# The strict preset of DENIC's RRI (docs/rri/rri-strict-preset.md): the preset rri with the DENIC RRI profile applied.
+id: de.denic.rpp.preset.rri-strict
+name: DENIC RRI strict preset
+description: The DENIC RRI preset constrained by the DENIC RRI profile, which refuses what the registry cannot hold.
+version: "1.0"
+rppVersion: "1.0"
+url: https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-strict-preset.md
+basePresets:
+  - {id: "de.denic.rpp.preset.rri", version: "1.0"}
+extensions: []
+profiles:
+  - {id: "de.denic.rpp.profile.rri", version: "1.0"}

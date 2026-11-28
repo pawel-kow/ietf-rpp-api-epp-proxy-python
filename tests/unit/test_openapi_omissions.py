@@ -18,16 +18,17 @@ from tests.helper.api_docs import served_client
 from settings.load_settings import load_settings
 from settings.openapi_settings import OpenApiSettings
 from settings.sqlite_settings import SqliteSettings
-from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE
+from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE, RRI_REGISTRY
 from tests.helper.test_environment import REPOSITORY
 
 BASIC = "Basic " + base64.b64encode(b"demo-a:demo-a-password").decode()
 DRAFT_OBJECTS = ("/domainNames", "/contacts", "/hosts")
 
 
-def app(profile, unheld=False, unimplemented=False):
+def app(profile, unheld=False, unimplemented=False, registry=None):
     switches = SimpleNamespace(rpp_openapi_omit_unheld_objects=unheld, rpp_openapi_omit_unimplemented=unimplemented)
-    return served_client(create_app(SessionPool(lambda username, password: None), profile, openapi_settings=switches))
+    return served_client(create_app(SessionPool(lambda username, password: None), profile, openapi_settings=switches,
+                                  registry=registry))
 
 
 def paths(client):
@@ -84,7 +85,7 @@ def test_without_the_switches_the_document_has_every_path_of_the_contract():
 # --- the objects the backend does not hold
 
 def test_the_operations_on_objects_the_backend_does_not_hold_are_left_out():
-    found = paths(app(RRI_PROFILE, unheld=True))
+    found = paths(app(RRI_PROFILE, unheld=True, registry=RRI_REGISTRY))
 
     assert not [path for path in found if path.startswith("/hosts")]
     assert "/domainNames" in found and "/contacts" in found and "/requestContacts" in found
@@ -112,7 +113,7 @@ def test_a_path_keeps_the_operations_a_handler_serves():
 
 
 def test_each_switch_alone_leaves_out_only_its_own():
-    unheld, unimplemented = paths(app(RRI_PROFILE, unheld=True)), paths(app(RRI_PROFILE, unimplemented=True))
+    unheld, unimplemented = paths(app(RRI_PROFILE, unheld=True, registry=RRI_REGISTRY)), paths(app(RRI_PROFILE, unimplemented=True, registry=RRI_REGISTRY))
 
     assert "/organisations" in unheld
     assert [path for path in unimplemented if path.startswith("/hosts")]

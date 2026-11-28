@@ -12,11 +12,14 @@ class RegisteredExtension:
     - `data_objects`: the top-level data elements of each object it defines, with their Visibility
       (`{object: {element: visibility}}`), which `includeElements` reads.
     - `objects`: the identifiers of the objects it defines.
-    - `openapi`: a function that builds its OpenAPI fragment (`{"paths": ..., "components": {"schemas": ...}}`).
-      Every operationId of it is a fully qualified function name in `handlers`. None for an extension without paths.
+    - `openapi`: a function that builds its OpenAPI fragment (`{"paths": ..., "components": {"schemas": ...}}`) from the
+      OpenAPI document of the drafts (and of the extensions before it), which it reads and does not change: an object that
+      shares the uniform interface of a base object has the paths of that object. Every operationId of it is a fully
+      qualified function name in `handlers`, or names the module of its handler (`x-openapi-router-controller`). None for an
+      extension without paths.
     - `handlers`: the package of its handler modules (None for an extension without paths).
     - `backend_parts`: the module of its part in each backend that can hold it (`{"sqlite": "registry_adapter..."}`).
-    - `profile_layer`: the leaves it adds to the backend profile, with `objects` and `extensions` to add to those the
+    - `profile_layer`: the leaves it adds to the backend profile, with `objects`, `extensions` and `presets` to add to those the
       generic profile lists; `profile_leaves` the type of each leaf of it that the profile does not have.
     - `presets`: the presets it brings (`{key: definition}`, as a preset file of `rpp/schema/schemas/presets` states it).
     - `profiles`: the profiles it brings (`{key: definition}`, as a profile file states it, with its Profile Schema, if
@@ -26,7 +29,7 @@ class RegisteredExtension:
     schema: dict
     data_objects: dict[str, dict[str, str]]
     objects: tuple[str, ...]
-    openapi: Callable[[], dict] | None = None
+    openapi: Callable[[dict], dict] | None = None
     handlers: str | None = None
     backend_parts: dict[str, str] = field(default_factory=dict)
     profile_layer: dict[str, Any] = field(default_factory=dict)

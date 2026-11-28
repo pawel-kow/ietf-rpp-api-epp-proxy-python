@@ -63,7 +63,7 @@ def registry_with(presets=(), profiles=()) -> ExtensionRegistry:
         schema={"$id": "https://example.org/fixture", "rpp:extension": {"id": "org.example.rpp.extension.fixture",
                                                                           "name": "Fixture", "version": "1.0"},
                 "rpp:extends": {}, "$defs": {}},
-        data_objects={}, objects=(), openapi=lambda: {"paths": {}, "components": {"schemas": {}}},
+        data_objects={}, objects=(), openapi=lambda drafts: {"paths": {}, "components": {"schemas": {}}},
         handlers="rpp.handlers",
         presets={key.rsplit(".", 1)[1]: data for key, data in presets},
         profiles={key.rsplit(".", 1)[1]: data for key, data in profiles}))

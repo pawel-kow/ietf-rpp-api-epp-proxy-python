@@ -1,0 +1,12 @@
+# The preset of DENIC's RRI (docs/rri/rri-preset.md): the extension de.denic.rpp.rri on top of the base preset.
+id: de.denic.rpp.preset.rri
+name: DENIC RRI preset
+description: RPP with the extension de.denic.rpp.rri for DENIC RRI behind RPP.
+version: "1.0"
+rppVersion: "1.0"
+url: https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-preset.md
+basePresets:
+  - {id: "urn:ietf:params:rpp:preset:base", version: "1.0"}
+extensions:
+  - {id: "de.denic.rpp.rri", version: "0.2.0"}
+profiles: []

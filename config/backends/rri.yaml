@@ -4,13 +4,19 @@ include:
 
 rpp_preset_signalling: media-type
 
+# The RRI extension (docs/rri/rri-extension.md): request contacts, and the transfer with the gainer's data. It adds itself,
+# its leaves and its preset to the profile.
+rpp_extensions:
+  - extensions.rri
+
 # The profile of this server (see backends/epp.yaml): DENIC's, src/settings/profiles/rri.yaml.
 rpp_backend_profile:
   extends: rri
-  # The RPP presets offered (src/rpp/schema/schemas/presets), and the one a request gets when it names none.
+  # The RPP presets offered (src/rpp/schema/schemas/presets, and the extension's), and the one a request gets when it names none.
   presets:
     - base
     - rri
+    - rri-strict                       # the preset rri with the DENIC RRI profile applied (docs/rri/rri-strict-preset.md)
   default_preset: rri
 rpp_rri_lgr: latn-1.0   # the one LGR name a client may give for DENIC's IDN repertoire (gap Q11)
 

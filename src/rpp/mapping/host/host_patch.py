@@ -9,6 +9,7 @@ from rpp.dto.rpp_status import RPPStatus
 from rpp.mapping.host import host_dns
 from rpp.mapping.host.hosts import add_rpp_status, has_own_ns, replacement_from_rpp
 from rpp.mapping.shared import json_patch, patch_statuses
+from rpp.mapping.shared.profile_removals import refuse_removals_by_profile
 from rpp.mapping.shared.common import parse_rpp, reject_operation
 from rpp.mapping.shared.dns_records import ADDRESS_RECORDS, DNS_PARENTS
 from rpp.mapping.shared.needs_current_state import NeedsCurrentState
@@ -136,6 +137,8 @@ def rpp_to_model_with_current(host_name: str, rpp: list, current: dict) -> HostR
         patch_statuses.without_server_statuses(current), operations, ARRAY_PATHS, absent_parents=DNS_PARENTS,
     )
     patched = patch_statuses.with_server_statuses(patched, current, "hostStatus")
+    validate_schema("host.read", patched)
+    refuse_removals_by_profile("host.update", operations)    # after step 1, before step 2
     validate_request_schema("host.read", patched, patched=True)
     requested = {member: value for member, value in patched.items() if member != READ_ONLY_MEMBER}
     host_rpp = parse_rpp(RPPHost, {**requested, "hostName": current["hostName"]})

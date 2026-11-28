@@ -1,13 +1,8 @@
-"""The RPP extensions the proxy implements, one schema file each (copied from `.spec/` by copy_models.sh) in
-`schemas/extensions/`, and those a deployment registers by its configuration (`rpp_extensions`, `register_extension`).
-Which of them a deployment holds is the `extensions` of its backend profile, and which it offers those of its presets."""
-import json
-from pathlib import Path
-
+"""The RPP extensions the proxy implements, which a deployment registers by its configuration (`rpp_extensions`,
+`register_extension`): each has its schema file (copied from `.spec/` by copy_models.sh) in its own package. Which of them a
+deployment holds is the `extensions` of its backend profile, and which it offers those of its presets."""
 from rpp.schema.bundle_definitions import bundle_definitions
 from rpp.schema.rpp_extension import RppExtension
-
-FOLDER = Path(__file__).parent / "schemas" / "extensions"
 
 _DEF = "#/$defs/"
 
@@ -42,14 +37,8 @@ def _from_schema(schema: dict) -> RppExtension:
     )
 
 
-def _load(path: Path) -> RppExtension:
-    with open(path, encoding="utf-8") as f:
-        return _from_schema(json.load(f))
-
-
-EXTENSIONS: dict[str, RppExtension] = {
-    extension.id: extension for extension in map(_load, sorted(FOLDER.glob("*.json")))
-}
+# The extensions registered in this process, by id. The generic code knows none until a configuration registers it.
+EXTENSIONS: dict[str, RppExtension] = {}
 
 
 def register_extension(schema: dict) -> RppExtension:
@@ -80,7 +69,7 @@ def check_known(extensions):
 
 def own_definitions(extensions=None) -> dict[str, str]:
     """The definitions of the objects and types the extensions define, by the name a mapper validates with
-    (`requestContact.create`), to the name of the extension's definition: with a prefix (`ext.rri.requestContact.create`),
+    (`planet.create`), to the name of the extension's definition: with a prefix (`ext.<name>.<definition>`),
     or the same name where an extension of new objects names them as the base definitions are (`planet.create`). The
     definitions an extension composes with a base one are not among them."""
     names = {}

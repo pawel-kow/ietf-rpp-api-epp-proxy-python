@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-profile.schema.json",
+  "rpp:profile": {
+    "id": "de.denic.rpp.profile.rri",
+    "version": "1.0"
+  },
+  "rpp:constraints": {
+    "urn:ietf:params:rpp:schema:json-1.0#/$defs/domainName.create": "#/$defs/profile.rri.domainName",
+    "urn:ietf:params:rpp:schema:json-1.0#/$defs/domainName.update": "#/$defs/profile.rri.domainName"
+  },
+  "$defs": {
+    "profile.rri.domainName": {
+      "required": [
+        "registrant"
+      ],
+      "properties": {
+        "contacts": {
+          "items": {
+            "properties": {
+              "label": {
+                "enum": [
+                  "registrant"
+                ]
+              }
+            }
+          }
+        },
+        "nameservers": false
+      }
+    }
+  }
+}

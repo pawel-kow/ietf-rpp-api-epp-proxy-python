@@ -22,7 +22,7 @@ from tests.helper.openapi_documents import (
     p,
     preset_defs,
 )
-from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE
+from tests.helper.profiles import EPP_PROFILE, RRI_PROFILE, RRI_REGISTRY
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +41,7 @@ def epp():
 
 @pytest.fixture(scope="module")
 def rri():
-    return served_client(create_app(SessionPool(lambda username, password: None), RRI_PROFILE))
+    return served_client(create_app(SessionPool(lambda username, password: None), RRI_PROFILE, registry=RRI_REGISTRY))
 
 
 def request_ref(doc, path, method="post"):

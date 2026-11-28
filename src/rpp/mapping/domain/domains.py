@@ -8,7 +8,8 @@ from rpp.dto.rpp_contact_reference import RPPContactReference
 from rpp.dto.rpp_domain import RPPDomain
 from rpp.dto.rpp_host_reference import RPPHostReference
 from rpp.dto.rpp_labelled_contact import RPPLabelledContact
-from rpp.mapping.domain import domain_dns, domain_request_contacts
+from rpp.mapping.domain import domain_dns
+from rpp.mapping.domain.domain_members import DOMAIN_MEMBERS
 from rpp.mapping.shared import auth_info, prov_metadata, statuses
 from rpp.mapping.shared.common import parse_rpp, period_duration, reject_set
 from rpp.schema.validator import validate_request_schema, validate_schema
@@ -55,7 +56,7 @@ def check_requested(requested: frozenset[str], *, profile: BackendProfile) -> fr
 
 def _rpp_to_contacts(domain_rpp: RPPDomain, requests: list[tuple[str, str]], profile: BackendProfile,
                      ) -> list[ContactReference] | None:
-    """The registrant, the labelled contacts, and the request contacts by their roles."""
+    """The registrant, the labelled contacts, and the contacts the members of the extensions stand for, by their roles."""
     contacts = []
     if domain_rpp.registrant is not None:
         contacts.append(ContactReference(id=domain_rpp.registrant.id, types=[REGISTRANT]))
@@ -108,8 +109,10 @@ def _rpp_to_idn(domain_rpp: RPPDomain, profile: BackendProfile) -> DomainIdn | N
 def rpp_to_model(rpp: dict, *, profile: BackendProfile) -> Domain:
     """Converts a create request to a Domain, with what the backend of `profile` can hold, and the members its
     extensions add."""
+    validate_schema("domainName.create", rpp, extensions=profile.extensions)
+    DOMAIN_MEMBERS.check(rpp, profile.extensions)    # before step 2: an extension's refusal is not a broken profile constraint
     validate_request_schema("domainName.create", rpp, extensions=profile.extensions)
-    rpp, requests = domain_request_contacts.split(rpp, "domainName.create", profile.extensions)
+    rpp, requests = DOMAIN_MEMBERS.split(rpp, "domainName.create", profile.extensions)
     domain_rpp = parse_rpp(RPPDomain, rpp)
     reject_set(status=domain_rpp.status)
     ns, dns_sec, records = _rpp_to_delegation(domain_rpp, profile)
@@ -160,14 +163,10 @@ def _idn_to_rpp(domain: Domain) -> tuple[str | None, str | None]:
     return domain.idn.uname, domain.idn.lgr
 
 
-def _roles(domain: Domain) -> dict[str, str]:
-    return {label: contact.id for contact in domain.contacts or [] for label in contact.types}
-
-
 def model_to_rpp(domain: Domain, extensions: tuple[str, ...] = ()) -> dict:
     """Converts a Domain to its read representation, with the members the offered `extensions` add."""
     u_name, lgr = _idn_to_rpp(domain)
-    members = domain_request_contacts.members("domainName.read", extensions)
+    members = DOMAIN_MEMBERS.members("domainName.read", extensions)
     domain_dict = RPPDomain(
         name=domain.name,
         uName=u_name,
@@ -182,6 +181,6 @@ def model_to_rpp(domain: Domain, extensions: tuple[str, ...] = ()) -> dict:
         expiryDate=domain.exDate,
         authInfo=auth_info.model_to_rpp(domain.authInfo),
     ).to_rpp()
-    domain_dict.update(domain_request_contacts.to_rpp(_roles(domain), extensions))
+    domain_dict.update(DOMAIN_MEMBERS.to_rpp(domain, "domainName.read", extensions))
     validate_schema("domainName.read", domain_dict, extensions=extensions)
     return domain_dict

@@ -25,7 +25,7 @@ from registry_adapter.rri.commands.shared.rri_command import ctid
 from registry_adapter.rri.gateways.rri_backend import RriBackend
 from registry_adapter.rri.result_codes import result_code
 from tests.helper.fake_rri_client import FakeRriClient, error, reply
-from tests.helper.profiles import RRI_PROFILE
+from tests.helper.profiles import RRI_PARTS, RRI_PROFILE
 
 REPLIES = Path(__file__).parent / "rri_replies"
 
@@ -38,7 +38,7 @@ NAME = "rpp-exp-caa50f65.de"
 
 def backend(*replies):
     client = FakeRriClient(replies=list(replies))
-    return RriBackend(client, RRI_PROFILE), client
+    return RriBackend(client, RRI_PROFILE, extension_parts=RRI_PARTS), client
 
 
 def test_the_sponsor_is_the_regacc_of_the_login():
@@ -234,7 +234,7 @@ def test_partial_update_is_derived_from_the_full_one():
 
 def test_partial_update_that_changes_nothing_is_refused_to_another_regacc():
     client = FakeRriClient(username="DENIC-99-RRI", replies=[DOMAIN_INFO])
-    gateway = RriBackend(client, RRI_PROFILE)
+    gateway = RriBackend(client, RRI_PROFILE, extension_parts=RRI_PARTS)
 
     resp = gateway.domains.update(DomainUpdate(name=NAME), client_transaction_id="cl-1")
 

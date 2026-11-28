@@ -1,0 +1,10 @@
+# The DENIC RRI profile (docs/rri/rri-profile.md), without its Profile Schema, which the extension adds (rri-profile.schema.json).
+id: de.denic.rpp.profile.rri
+name: DENIC RRI profile
+description: Constrains a domain name to what DENIC RRI holds - holders and DNS data - and requires a registrant.
+version: "1.0"
+rppVersion: "1.0"
+url: https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-profile.md
+baseProfiles: []
+requiredExtensions:
+  - {id: "de.denic.rpp.rri", version: "0.2.0"}

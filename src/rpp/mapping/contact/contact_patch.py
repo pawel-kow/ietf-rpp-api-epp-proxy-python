@@ -12,6 +12,7 @@ from rpp.mapping.contact import contact_replacement, contacts
 from rpp.mapping.shared import auth_info, include_elements, json_patch, patch_statuses
 from rpp.mapping.shared.common import parse_rpp, reject_operation
 from rpp.mapping.shared.needs_current_state import NeedsCurrentState
+from rpp.mapping.shared.profile_removals import refuse_removals_by_profile
 from rpp.schema.request_schemas import profiles_apply
 from rpp.schema.validator import validate_request_schema, validate_schema
 
@@ -205,6 +206,7 @@ def rpp_to_model_with_current(contact_id: str, rpp: list, current: Contact, *, k
     patched = patch_statuses.with_server_statuses(patched, read, "contactStatus")
     validate_schema("contact.read", patched)
     contacts.check_rpp_rules(patched["contactInfo"])
+    refuse_removals_by_profile("contact.update", operations)    # after step 1, before step 2
     validate_request_schema("contact.read", patched, patched=True)
     patched = patched if kind_held else _with_derived_kind(patched, operations)
     requested = {member: value for member, value in patched.items() if member not in READ_ONLY_MEMBERS}

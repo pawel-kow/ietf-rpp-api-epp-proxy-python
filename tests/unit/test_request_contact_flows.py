@@ -1,15 +1,15 @@
 """The flows of a request contact: a mutation is read back, and an update that changes nothing sends nothing."""
 from dataclasses import replace
 
-from core.flows.request_contact.request_contact_flows import (
+from extensions.rri.core.flows.request_contact_flows import (
     create_request_contact, patch_request_contact, replace_request_contact,
 )
-from core.model.request_contact.request_contact import RequestContact
+from extensions.rri.core.model.request_contact import RequestContact
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
 from registry_adapter.rri.gateways.rri_backend import RriBackend
 from tests.helper.fake_rri_client import FakeRriClient, error, reply
-from tests.helper.profiles import RRI_PROFILE
+from tests.helper.profiles import RRI_PARTS, RRI_PROFILE
 from tests.unit.test_rri_request_contacts import HANDLE, REQUEST_INFO, TEMPLATE
 
 OTHER = "mailto:abuse@example.com"
@@ -17,7 +17,7 @@ OTHER = "mailto:abuse@example.com"
 
 def backend(*replies, username="DENIC-1000022-RRI"):
     client = FakeRriClient(username=username, replies=list(replies))
-    return RriBackend(client, RRI_PROFILE), client
+    return RriBackend(client, RRI_PROFILE, extension_parts=RRI_PARTS), client
 
 
 def test_create_reads_the_request_contact_back():

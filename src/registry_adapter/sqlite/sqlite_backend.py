@@ -28,7 +28,6 @@ class SqliteBackend:
         self.domains = UnsupportedGateway("domain name")
         self.contacts = UnsupportedGateway("contact")
         self.hosts = UnsupportedGateway("host")
-        self.request_contacts = UnsupportedGateway("request contact")
         self.messages = SqliteMessageGateway(context)
         self._extensions = {part.extension_id: part.gateways(context) for part in extension_parts if part.gateways is not None}
 

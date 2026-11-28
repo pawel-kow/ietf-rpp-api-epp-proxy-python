@@ -15,7 +15,7 @@ SCHEMA = "domainTransferProcess.create"
 
 def _domain_data(name: str, rpp: dict, profile: BackendProfile):
     """The request without the members an offered extension adds to it, and the domain they state: they are members
-    of a domain (docs/rri/rri-extension.md), converted as a create's are. Without such an extension, there is no
+    of a domain (an extension that adds them to the transfer request, as the rri extension does), converted as a create's are. Without such an extension, there is no
     domain, and a domain member stays in the request, where it is undeclared."""
     added = added_members(SCHEMA, profile.extensions)
     if not added:
