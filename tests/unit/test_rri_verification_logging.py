@@ -4,6 +4,8 @@ import socket
 import struct
 import threading
 
+from core.model.contact.contact_replacement import ContactReplacement
+from core.model.contact.address import Address
 from core.model.contact.contacts import Contact, ContactType
 from extensions.rri.core.model.contact_verifications import ContactVerifications
 from extensions.rri.core.model.verification_information import VerificationInformation
@@ -80,6 +82,20 @@ def test_a_contact_create_with_records_and_the_reply_to_a_contact_info_are_not_p
     out = capsys.readouterr().out
     assert "Sent message" in out and "Received message" in out      # the exchange is printed otherwise
     assert REFERENCE not in out and "Mustermann" not in out and "idcard" not in out
+
+
+def test_an_update_that_carries_the_stored_records_over_is_not_printed(capsys):
+    with ScriptedServer([reply(), CONTACT_INFO, reply()]) as server:
+        gateway, client = backend_over(server.port)
+        outcome = gateway.contacts.replace(ContactReplacement(
+            id="DENIC-1000022-HOLDER", name="Erika Mustermann", email=["new@example.com"], phone=["+49.6912345678"],
+            address=Address(street=["Musterweg 12"], city="Frankfurt am Main", postalCode="60596", country="DE"),
+            unchanged=frozenset({"authInfo"})))
+        client.disconnect(send_logout=False)
+
+    out = capsys.readouterr().out
+    assert not outcome.unchanged                        # the UPDATE was sent
+    assert "<contact:update>" not in out and REFERENCE not in out and "new@example.com" not in out
 
 
 def test_the_recursive_domain_info_of_the_verification_process_is_not_printed(capsys):

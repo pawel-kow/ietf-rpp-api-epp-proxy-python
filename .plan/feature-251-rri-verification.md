@@ -124,5 +124,5 @@ Verification elements and values are never logged by the proxy. `loggable=False`
 - MTEST reachability case (`domain_availability::test3-a_label`): passed first.
 - `pytest -n 4 -m smoke tests/integration`: first run 245 passed, 1 failed, 1 error: `contact_verification/test5` and `message/test1` got a 500 because
   the registry closed the connection ("Connection closed by server", not a proxy defect: both pass alone, 3 passed in 29 s). Second run: 247 passed, 553 skipped, MTEST included.
-- `contact_verification/` (6 cases; test4 is not smoke) passed on MTEST on its own too.
+- `contact_verification/` (6 cases, all smoke) passed on MTEST on its own too.
 - Pending: none. Not run: `./test_python_versions.sh` (no change to requirements*.txt; a `pyversions` test was not touched).

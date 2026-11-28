@@ -232,6 +232,9 @@ def check(case: dict, facts: Facts) -> None:
             elif "loop" in item:
                 if _untils(item["loop"]) != 1:
                     raise SelectorError(f"{here}: a loop has exactly one step with until, which ends it")
+                bound = item.get("max_iterations")
+                if "max_iterations" in item and (not isinstance(bound, int) or isinstance(bound, bool) or bound < 1):
+                    raise SelectorError(f"{here}: max_iterations is a whole number of at least 1")
                 items(item["loop"], f"{here} > loop", guarded or "when" in item, True)
             else:
                 step(item, here, guarded or "when" in item, in_loop)

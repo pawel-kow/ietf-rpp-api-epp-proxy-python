@@ -319,10 +319,17 @@ UNTIL = {**GET, "until": {"headers": {"RPP-Code": "01300"}}}
     {"setup": [{**GET, "wait": "domainName.processes.create.add_grace_period"}]},  # a wait the case does not select
     {"steps": [{"loop": [{"block": [UNTIL], "origin": "i"}, {"loop": [GET]}]}]},  # the inner loop has no until
     {"exclusive": "message_queue", "steps": []},
+    {"steps": [{"loop": [UNTIL], "max_iterations": 0}]},                   # a bound of no iteration
+    {"steps": [{"loop": [UNTIL], "max_iterations": "ten"}]},
+    {"steps": [{"loop": [UNTIL], "max_iterations": True}]},
 ])
 def test_check_refuses_a_bad_phase_block_or_loop(case):
     with pytest.raises(SelectorError):
         selectors.check(case, FACTS)
+
+
+def test_check_accepts_a_loop_with_a_bound():
+    selectors.check({"steps": [{"loop": [UNTIL], "max_iterations": 40}]}, FACTS)
 
 
 def test_check_accepts_phases_blocks_and_loops():

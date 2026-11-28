@@ -157,7 +157,8 @@
             }
           }
         }
-      ]
+      ],
+      "max_iterations": 60
     },
     {
       "comment": "Reads verificationProcess of domain v6 as the sponsor; expects 200 01000 with the deadline, the holder and its record.",
@@ -211,7 +212,7 @@
       }
     },
     {
-      "comment": "Reads verificationProcess of domain v6 as registrar b with RPP-Authorization; expects 200 01000 without the holder and with the claims and the result only.",
+      "comment": "Reads verificationProcess of domain v6 as registrar b with RPP-Authorization; expects 200 01000 with a holder that has the claims and the result of the record. What it must not show is checked by the unit tests, as a subset comparison cannot show an absence.",
       "request": {
         "method": "GET",
         "url": "/domainNames/v6-{random_name}.{tld}/processes/verificationProcesses/latest",

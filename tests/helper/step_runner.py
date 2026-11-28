@@ -69,13 +69,17 @@ class StepRunner:
         if "block" in prepared:
             self._items(prepared["block"], [*here, f"include {prepared.get('origin')}"], in_loop=False)
         elif "loop" in prepared:
-            self._loop(prepared["loop"], here)
+            self._loop(prepared["loop"], here, prepared.get("max_iterations"))
         else:
             self._step(prepared, here)
 
-    def _loop(self, items: list, here: list[str]) -> None:
+    def _loop(self, items: list, here: list[str], max_iterations: int | None = None) -> None:
+        """Runs the items until the `until` step matches. With `max_iterations` the loop fails after that many iterations that did
+        not end it, instead of running on."""
         iteration = 0
         while True:
+            if max_iterations is not None and iteration >= max_iterations:
+                raise StepFailure(f"{self.test_id} {' > '.join(here)}: the loop did not end in {max_iterations} iterations")
             iteration += 1
             try:
                 self._items(items, [*here, f"loop iteration {iteration}"], in_loop=True)

@@ -159,6 +159,7 @@ def test_a_full_update_without_verifications_keeps_them_under_the_base_preset():
 
     assert response.status_code == 200, response.text
     assert "new@example.com" in clients[0].sent[1] and "ABC123" in clients[0].sent[1]
+    assert clients[0].loggable[1] is False      # the blocks it carries over are not printed
 
 
 def test_a_full_update_that_repeats_the_read_changes_nothing_and_sends_no_update():
@@ -195,6 +196,7 @@ def test_a_partial_update_of_another_member_leaves_a_record_the_definition_does_
 
     assert response.status_code == 200, response.text
     assert "new@example.com" in clients[0].sent[1] and "retina_scan" in clients[0].sent[1]
+    assert clients[0].loggable[1] is False
 
 
 def test_a_partial_update_adds_a_record():
@@ -257,3 +259,37 @@ def test_a_partial_update_removes_a_record_by_a_match_and_refuses_one_that_is_no
     assert removed.status_code == 200, removed.text
     assert "verificationInformation" not in clients[0].sent[1]
     assert missing.status_code == 422 and missing.headers["RPP-Code"] == "02308", missing.text
+
+
+@pytest.mark.parametrize("date", ["2026-11-12t10:00:00z", "2026-11-12T10:00:00z", "2026-11-12t10:00:00+01:00"])
+def test_a_date_with_a_lower_case_t_or_z_is_valid_and_sent_as_an_instant(date):
+    client, clients = setup(reply(), CONTACT_INFO)
+
+    response = client.post("/contacts", json={**CONTACT, "id": HANDLE, "verifications": [broken({"date": date})]},
+                           headers=BODY_HEADERS)
+
+    assert response.status_code == 201, response.text
+    assert "<verification:verificationTimestamp>2026-11-12T" in clients[0].sent[0]
+
+
+@pytest.mark.parametrize("date", ["0001-01-01T00:30:00+05:00", "9999-12-31T23:59:59-05:00"])
+def test_a_date_the_server_cannot_state_is_refused_without_the_value_and_sends_nothing(date):
+    client, clients = setup()
+
+    response = client.post("/contacts", json={**CONTACT, "id": HANDLE, "verifications": [broken({"date": date})]},
+                           headers=BODY_HEADERS)
+
+    assert response.status_code == 400 and response.headers["RPP-Code"] == "02005", response.text
+    assert date not in response.text and date[:19] not in response.text
+    assert all(not c.sent for c in clients)
+
+
+def test_a_partial_update_with_a_date_the_server_cannot_state_is_refused_without_the_value():
+    client, clients = setup(CONTACT_INFO)
+
+    response = client.patch(URL, json=[{"op": "add", "path": "/verifications",
+                                        "value": broken({"reference": "NEW1", "date": "0001-01-01T00:30:00+05:00"})}],
+                            headers=BODY_HEADERS)
+
+    assert response.status_code == 400 and response.headers["RPP-Code"] == "02005", response.text
+    assert "0001-01-01" not in response.text and len(clients[0].sent) == 1

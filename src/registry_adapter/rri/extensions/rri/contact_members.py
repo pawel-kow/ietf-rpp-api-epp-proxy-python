@@ -61,10 +61,13 @@ OFFSET = timezone(timedelta(hours=1))
 
 def _instant(text: str) -> XmlDateTime:
     """The date of a request as the registry takes it: the instant at a fixed offset (`+01:00`), never `Z`. A date
-    without an offset is taken as UTC."""
-    moment = datetime.fromisoformat(text)
-    moment = moment.replace(tzinfo=timezone.utc) if moment.tzinfo is None else moment
-    moment = moment.astimezone(OFFSET)
+    without an offset is taken as UTC. The RPP mapper has refused a date that is no such instant; ValueError (with no part of the value) is for a stored one."""
+    try:
+        moment = datetime.fromisoformat(text)
+        moment = moment.replace(tzinfo=timezone.utc) if moment.tzinfo is None else moment
+        moment = moment.astimezone(OFFSET)
+    except (ValueError, OverflowError):
+        raise ValueError("A verification date cannot be stated at the offset of the registry") from None
     fraction = f".{moment.microsecond:06d}" if moment.microsecond else ""
     return XmlDateTime.from_string(f"{moment:%Y-%m-%dT%H:%M:%S}{fraction}+01:00")
 
