@@ -16,7 +16,7 @@ order #253, #255, #256, #257, this. The spec is committed (90f806d): docs/rri/rr
 - [x] Unit tests (mappers, wire, flows, XML, refusals, presets)
 - [x] MTEST integration cases
 - [x] Docs: gap-analysis.md (§3.2, §4.5, Q16 left), architecture.project.md, testing.project.md, rri-5.0-reference.md facts
-- [ ] Checks (lint-imports, unit, smoke incl. MTEST), draft PR
+- [x] Checks, draft PR
 
 ## Approach
 
@@ -116,3 +116,13 @@ Verification elements and values are never logged by the proxy. `loggable=False`
 - `delay_seconds` in a case is refused by the loader (waits are periods of the facts); the loop is paced by the pacer instead.
 - Spec patch example fixed to `/verifications`.
 - Contact INFO blocks are `DerivedElement`s in xsdata (xsi:type): unwrapped.
+
+## Check results (code commit ec6f89a, no edits during the runs)
+
+- `PYTHONPATH=src lint-imports`: 32 kept, 0 broken.
+- `pytest -n 4 tests/unit`: 3359 passed.
+- MTEST reachability case (`domain_availability::test3-a_label`): passed first.
+- `pytest -n 4 -m smoke tests/integration`: first run 245 passed, 1 failed, 1 error: `contact_verification/test5` and `message/test1` got a 500 because
+  the registry closed the connection ("Connection closed by server", not a proxy defect: both pass alone, 3 passed in 29 s). Second run: 247 passed, 553 skipped, MTEST included.
+- `contact_verification/` (6 cases; test4 is not smoke) passed on MTEST on its own too.
+- Pending: none. Not run: `./test_python_versions.sh` (no change to requirements*.txt; a `pyversions` test was not touched).
