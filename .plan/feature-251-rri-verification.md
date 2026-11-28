@@ -126,3 +126,14 @@ Verification elements and values are never logged by the proxy. `loggable=False`
   the registry closed the connection ("Connection closed by server", not a proxy defect: both pass alone, 3 passed in 29 s). Second run: 247 passed, 553 skipped, MTEST included.
 - `contact_verification/` (6 cases, all smoke) passed on MTEST on its own too.
 - Pending: none. Not run: `./test_python_versions.sh` (no change to requirements*.txt; a `pyversions` test was not touched).
+
+## Review round 1 (one medium, two low, all fixed)
+
+1. `_instant`: the RPP mapper (`verification_information.instant`) normalises a lower case `t`/`z`, and refuses an instant that cannot be stated at +01:00 with 400 02005 (`VerificationDateRefused`, no value in the message); the adapter's `_instant` raises a ValueError without the value for a stored one. The generic risk (str(e) in a 500 detail) is already issue #15: commented there with this reproducer instead of a duplicate issue.
+2. The base full update, the PATCH of another member and an UPDATE that carries the blocks over are asserted `loggable=False`/not printed.
+3. Loops take `max_iterations` (runner, selector check, testing.project.md, unit tests); test6 uses 60. The reduced-view comment claims only the subset.
+4. The note on test4: all six `contact_verification/` cases are smoke.
+
+## Check results after review round 1 (commit 2d6c0be... see git log, no edits during the runs)
+
+- lint-imports: 32 kept, 0 broken. Unit: 3372 passed. MTEST reachability case: passed. Smoke incl. MTEST: 247 passed, 553 skipped (contact_verification/ 6 cases included).
