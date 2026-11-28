@@ -7,6 +7,8 @@ Each entry says what the proxy does today.
 
 - The JSContact profile -02 requires `tel:+CC.number`, but the `contactInfo` examples (json §8.2) still use `tel:+1-703-555-5555`, which the profile rejects.
 - **Proxy:** follows the profile, anything else is a 400. `;ext=` maps to EPP `x`. The tests based on json §8.2 use the profile form.
+- A registry may hold numbers in another format: DENIC RRI gives the phone and fax numbers of a RegAcc in E.123 (`\+[/\-\.\s0-9x]{1,254}`, [rri-5.0-reference.md](../docs/rri/rri-5.0-reference.md) §3.6), without the `.` after the country code. The profile's format applies to what a server returns as well, and says nothing of a number that a server reads from such a registry.
+- **Proxy (RRI):** an organisation read takes the digits before the first separator as the country code, and leaves out a number that does not give an rpp-telephone-uri.
 
 ## Phone key and features
 
@@ -27,6 +29,8 @@ Each entry says what the proxy does today.
 
 - The profile allows a localized email, `email-1`, `voice-1` and `fax-1`. RFC 5733 has one email, one voice and one fax number, none of them per postalInfo.
 - **Proxy:** 501 (`02102`), as for `links` and more than 3 street lines. More than one localization is a 501 too. The profile only says to reject it, without a result code.
+- Profile §4.1.10 defines additional keys (`-1`, `-2`) for `emails` and `phones` only. A registry may hold several URLs, as DENIC RRI does for a RegAcc (`regacc:url`, 0 to n in the XSD, 0 to 1 in its documentation).
+- **Proxy (RRI):** an organisation read keeps the first URL as the link `url`. The Card profile defines no key for a further link (`RecordLink` allows `url` and `contact-uri` only, and §4.1.10 has no `url-1`), so further URLs are left out, and logged by the name of the field.
 
 ## Card in the JSON draft
 
@@ -392,6 +396,13 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - **Proxy:** such a domain reads with what RRI shows (`name`, status `pendingDelete`, `upDate`) and `spClientId`
   `unknown`, a placeholder, until RPP lets a read leave the sponsor out.
 
+## Organisation read from registrar data
+
+- An Organisation Data Object read from a registry that holds no organisation objects has data the drafts require and the registry does not hold. DENIC RRI regacc INFO ([rri-5.0-reference.md §6.19](../docs/rri/rri-5.0-reference.md#619-regacc-info)) gives a RegAcc's public contact data, but no status, no sponsor and no role.
+- Data-objects §9.2 requires `provMetadata.spClientId`. A RegAcc maintains its own profile, in the registry's web interface, so no client sponsors it in the sense of §9.2.
+- `parent` (data-objects §14.2) is an aggregation, but nothing says whether it must name an organisation the server can read. The member account of a RegAcc (`memberacc`) groups RegAccs and is not one, so regacc INFO may not find it.
+- **Proxy (RRI):** `spClientId` is the RegAccId itself, `status` and the status of the role `registrar` are `ok`, and `parent` is the MemberAccId, unless it equals the RegAccId. Its read may be 404.
+
 ## Discovery
 
 - Core §11 and data-objects §17.3.1 require the document without authentication. The drafts give no caching rule, and `datetime` is the current time, so a cached document goes stale.
@@ -401,7 +412,7 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 - Core §12.4 says the server MUST provide its supported profiles in `profiles`, and json §8.7.1 shows `urn:ietf:params:rpp:profile:epp-compatibility`, and data-objects §2.8 defines the EPP Compatibility Profile. Data-objects §19.13 only creates the RPP Profiles registry, with that URN as an example, so the draft registers no profile name. `GET /profiles/{name}` is still 501, and the proxy does not process the profile parameters of a client (core §14.2, §14.3), so a client can read the name in discovery but not the profile. Core §14.2 requires an error for an unsupported profile, while `RPP-Profile: profile=urn:bogus;version=9.9` gives 200 (#41). Core §12.4 tells clients to use the profile "version information", but discovery `profiles` is a list of strings with no version.
 - `links` is omitted because the proxy has no such documents. Data-objects §17.2 only says a server SHOULD provide privacy-policy and terms-of-service links.
 - The 400 without `RPP-Cltrid` follows core §6.1 and the OpenAPI, but sits awkwardly with data-objects §17.3.1 ("Input: (None)") and an anonymous read.
-- **Proxy:** answers 200 from configuration, constants and the backend's profile, without EPP: `versions` (`1.0`), `environment`, `tlds`, `profiles` (`epp-compatibility`), `objects` (`domainName`, `host`, `contact`) and `datetime`. It omits `extensions`, `links`, `idnLgr` and `notices`, and sends no `Cache-Control`. The media type is not negotiated (#41): `version` is ignored and `Accept` is not checked. Configuration that is missing or of the wrong shape, or a base URL that is not `https`, is 500 (`02400`) (#38).
+- **Proxy:** answers 200 from configuration, constants and the backend's profile, without EPP: `versions` (`1.0`), `environment`, `tlds`, `profiles` (`epp-compatibility`), `objects` and `datetime`. `objects` holds the data objects of the backend (`domainName`, `host` and `contact` on EPP, `domainName`, `contact` and `organisation` on RRI), `message` on EPP, RRI and SQLite, read as covered by the description of `Objects`, and the data objects of the extensions offered (`requestContact`). `extensions` lists the extensions of the offered presets. It omits `links`, `idnLgr` and `notices`, and sends no `Cache-Control`. The media type is not negotiated (#41): `version` is ignored and `Accept` is not checked. Configuration that is missing or of the wrong shape, or a base URL that is not `https`, is 500 (`02400`) (#38).
 
 ## Messages
 

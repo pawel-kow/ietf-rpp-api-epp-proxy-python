@@ -1,0 +1,66 @@
+{
+  "test_id": "test1-read_the_own_registrar",
+  "description": "A registrar reads its own organisation: the RegAccId is its id and its sponsor, the status and the role registrar are ok.",
+  "markers": [
+    "smoke"
+  ],
+  "steps": [
+    {
+      "comment": "Reads the organisation of the own RegAcc; expects 200 with the public contact data of the registrar. The operation this case checks.",
+      "request": {
+        "method": "GET",
+        "url": "/organisations/{regacc:a}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "@type": "organisation",
+          "id": "{regacc:a}",
+          "provMetadata": {
+            "@type": "provMetadata",
+            "spClientId": "{regacc:a}"
+          },
+          "status": [
+            {
+              "@type": "organisationStatus",
+              "label": "ok"
+            }
+          ],
+          "roles": {
+            "registrar": {
+              "@type": "organisationRole",
+              "status": [
+                {
+                  "@type": "organisationRoleStatus",
+                  "label": "ok"
+                }
+              ]
+            }
+          },
+          "contactInfo": {
+            "@type": "Card",
+            "kind": "org"
+          }
+        },
+        "fields": {
+          "provMetadata.upDate": {
+            "type": "not_empty_string"
+          },
+          "contactInfo.name.full": {
+            "type": "not_empty_string"
+          },
+          "contactInfo.emails.email.address": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}

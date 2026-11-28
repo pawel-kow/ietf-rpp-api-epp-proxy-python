@@ -1,0 +1,35 @@
+{
+  "test_id": "test4-an_unknown_regacc_is_not_found",
+  "description": "A well-formed RegAccId nobody holds.",
+  "steps": [
+    {
+      "comment": "Reads the organisation DENIC-999999999; expects 404 02303 (regacc INFO 63300062010).",
+      "request": {
+        "method": "GET",
+        "url": "/organisations/DENIC-999999999",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "RPP-Code": "02303"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 404,
+          "errors": [
+            {
+              "result": "02303"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

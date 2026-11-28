@@ -1,0 +1,43 @@
+{
+  "test_id": "test3-read_the_request_templates",
+  "description": "The templates of the registrar are members of the rri extension.",
+  "when": {
+    "profile.extensions": {
+      "contains": "de.denic.rpp.rri"
+    }
+  },
+  "steps": [
+    {
+      "comment": "Reads the organisation under the rri preset; expects a General Request Template with a URI template and its update date. Runs where the server offers the rri extension.",
+      "request": {
+        "method": "GET",
+        "url": "/organisations/{regacc:a}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "@type": "organisation",
+          "id": "{regacc:a}",
+          "generalRequestTemplate": {
+            "@type": "requestTemplate"
+          }
+        },
+        "fields": {
+          "generalRequestTemplate.uriTemplate": {
+            "type": "not_empty_string"
+          },
+          "generalRequestTemplate.upDate": {
+            "type": "not_empty_string"
+          }
+        }
+      }
+    }
+  ]
+}

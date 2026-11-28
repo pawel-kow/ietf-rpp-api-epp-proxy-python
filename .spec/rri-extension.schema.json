@@ -11,6 +11,7 @@
     "#/$defs/domainName.create": "#/$defs/ext.rri.domainName.create",
     "#/$defs/domainName.read": "#/$defs/ext.rri.domainName.read",
     "#/$defs/domainName.update": "#/$defs/ext.rri.domainName.update",
+    "#/$defs/organisation.read": "#/$defs/ext.rri.organisation.read",
     "#/$defs/domainTransferProcess.create": "#/$defs/ext.rri.domainTransferProcess.create"
   },
   "rpp:messages": {
@@ -99,6 +100,22 @@
         "generalRequest": { "$ref": "#/$defs/ext.rri.requestContact.reference" },
         "abuse": { "$ref": "#/$defs/ext.rri.requestContact.reference" }
       }
+    },
+    "ext.rri.organisation.read": {
+      "type": "object",
+      "properties": {
+        "generalRequestTemplate": { "$ref": "#/$defs/ext.rri.requestTemplate.read", "readOnly": true },
+        "abuseTemplate": { "$ref": "#/$defs/ext.rri.requestTemplate.read", "readOnly": true }
+      }
+    },
+    "ext.rri.requestTemplate.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "requestTemplate", "readOnly": true },
+        "uriTemplate": { "type": "string", "readOnly": true },
+        "upDate": { "type": "string", "format": "date-time", "readOnly": true }
+      },
+      "required": ["@type", "uriTemplate"]
     },
     "ext.rri.domainTransferProcess.create": {
       "type": "object",

@@ -15,7 +15,7 @@ def plural(identifier: str) -> str:
 
 
 # The data objects of the drafts that have paths of their own.
-DRAFT_OBJECTS = ("domainName", "contact", "host")
+DRAFT_OBJECTS = ("domainName", "contact", "host", "organisation")
 
 
 def collections(extensions) -> dict[str, str]:

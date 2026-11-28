@@ -16,10 +16,10 @@ Status: analysis only. No code has been changed.
 | | Count |
 |---|---|
 | RRI transactions (ref §6) | 21 |
-| …that map to an existing RPP operation with little friction | 9 (LOGIN, LOGOUT, contact CHECK, contact INFO, domain CHECK, domain INFO, domain DELETE, QUEUE-READ, QUEUE-DELETE) |
+| …that map to an existing RPP operation with little friction | 10 (LOGIN, LOGOUT, contact CHECK, contact INFO, domain CHECK, domain INFO, domain DELETE, QUEUE-READ, QUEUE-DELETE, regacc INFO) |
 | …that map, but need new orchestration in the proxy | 7 (contact CREATE/UPDATE, domain CREATE/UPDATE/CHHOLDER, CREATE-AUTHINFO1, DELETE-AUTHINFO1) |
 | …that map only after a maintainer decision | 2 (CHPROV, RESTORE) |
-| …that have no RPP operation | 3 (CREATE-AUTHINFO2, TRANSIT, regacc INFO) |
+| …that have no RPP operation | 2 (CREATE-AUTHINFO2, TRANSIT) |
 | RPP operations the proxy implements over EPP that RRI cannot serve | hosts (all 7), contact delete, contact transfer (6), domain renew, domain transfer query/cancel/approve/reject |
 
 The main findings:
@@ -70,7 +70,7 @@ Legend for **Fit**: ✅ direct; 🟡 maps, with new orchestration or partial dat
 | domain DELETE-AUTHINFO1 (§6.16) | removing `authInfo` in PUT and PATCH; replacing it (delete, then create) | 🟡 | Only one AuthInfo1 per domain, so a change is DELETE then CREATE, which is not atomic. |
 | domain CREATE-AUTHINFO2 (§6.17) | — | ⛔ | Any registrar asks DENIC to post a code to the holders. Nothing in RPP fits, see Q9. |
 | domain CHPROV (§6.18) | `domainNameTransferProcesses_transferCreate` (pull, with `RPP-Authorization`) | 🟡 | Immediate. Needs complete domain data with the gainer's handles, which the `rri` request extension carries, see §4.3 and Q3. |
-| regacc INFO (§6.19) | `organisations_read`? | ⛔ | Public registrar data. `/organisations` is 501 in the proxy today, see Q10. |
+| regacc INFO (§6.19) | `organisations_read` | ✅ | Public registrar data of any RegAcc, to any client: `id` and `spClientId` are the RegAccId, `status` and the role `registrar` are `ok`, `parent` is the MemberAccId unless it is the RegAccId, the Card has name, address, phones and faxes (E.123 converted, or left out), email and urls; the General Request and Abuse templates are members of the `rri` extension. Create, update, delete, users and processes are 501 (`02101`). The mapping is in [rri-extension.md](rri-extension.md#mapping-of-regacc-info). |
 | QUEUE-READ (§6.20) | `messages_query`, `messages_read` | ✅ | Oldest message. `Msgcnt` → `RPP-Queue-Size`. The `msgType` filter could serve the RPP `type` parameter, see §3.4. |
 | QUEUE-DELETE (§6.21) | `messages_delete` | ✅ | Only the oldest message can be deleted (`63650063607`), as with EPP `poll ack`. |
 

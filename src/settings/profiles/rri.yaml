@@ -6,6 +6,8 @@ name: RRI
 objects:                               # an RRI host is not an object: name servers are attributes of the domain
   - domainName
   - contact                            # the request contact of the rri extension is added by the extension
+  - organisation                       # a read only: regacc INFO of any RegAcc (docs/rri/rri-extension.md)
+  - message                            # the message queue (data-objects §17.2)
 presets:                               # the RPP presets offered (src/rpp/schema/schemas/presets): not the EPP one; the rri
   - base                               # extension adds its own preset, and makes it the default
 default_preset: base                   # applied when a request names none

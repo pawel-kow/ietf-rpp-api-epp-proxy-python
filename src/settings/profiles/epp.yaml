@@ -10,6 +10,7 @@ objects:                               # data-objects §2.8: the objects of EPP
   - domainName
   - host
   - contact
+  - message                            # the message queue (data-objects §17.2)
 presets:                               # the RPP presets offered (src/rpp/schema/schemas/presets), core §12.4
   - base                               # without the EPP Compatibility Profile
   - epp-compatible                     # with it

@@ -1,0 +1,35 @@
+{
+  "test_id": "test8-the_processes_of_an_organisation_are_not_implemented",
+  "description": "What the registry maintains outside RRI is not implemented.",
+  "steps": [
+    {
+      "comment": "GET /organisations/the own RegAccId/processes ; expects 501 02101.",
+      "request": {
+        "method": "GET",
+        "url": "/organisations/{regacc:a}/processes",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02101"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 501,
+          "errors": [
+            {
+              "result": "02101"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

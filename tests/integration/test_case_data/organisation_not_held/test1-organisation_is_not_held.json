@@ -1,0 +1,38 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test1-organisation_is_not_held",
+  "description": "A backend without organisations answers 501 02307 before any command.",
+  "steps": [
+    {
+      "comment": "Reads an organisation; expects 501 02307.",
+      "request": {
+        "method": "GET",
+        "url": "/organisations/DENIC-1",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 501,
+        "headers": {
+          "RPP-Code": "02307"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 501,
+          "errors": [
+            {
+              "result": "02307"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

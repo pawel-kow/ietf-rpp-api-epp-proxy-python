@@ -38,7 +38,7 @@ def test_an_app_without_the_extension_has_no_planet_path_and_no_handler_of_it():
     assert not [path for path in paths if path.startswith(("/planets", "/satellites"))]
     operation_ids = [operation["operationId"] for item in paths.values() for operation in item.values()]
     assert not [operation_id for operation_id in operation_ids if operation_id.startswith("extensions.")]
-    assert profile.objects == () and profile.extensions == ()
+    assert profile.objects == ("message",) and profile.extensions == ()
     with pytest.raises(AttributeError):
         profile.planet
 

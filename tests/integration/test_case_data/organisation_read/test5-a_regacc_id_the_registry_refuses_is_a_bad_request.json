@@ -1,0 +1,64 @@
+{
+  "test_id": "test5-a_regacc_id_the_registry_refuses_is_a_bad_request",
+  "description": "A RegAccId the registry cannot take.",
+  "steps": [
+    {
+      "comment": "Reads the organisation DENIC-999999999999; expects 400 02005 (regacc INFO 63310062008).",
+      "request": {
+        "method": "GET",
+        "url": "/organisations/DENIC-999999999999",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02005"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 400,
+          "errors": [
+            {
+              "result": "02005"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Reads the organisation NOT-A-REGACC; expects 400 02005 (the registry's XSD refuses it).",
+      "request": {
+        "method": "GET",
+        "url": "/organisations/NOT-A-REGACC",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "Content-Type": "{rpp:content-type}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "RPP-Code": "02005"
+        },
+        "body": {
+          "type": "urn:ietf:params:rpp:error",
+          "status": 400,
+          "errors": [
+            {
+              "result": "02005"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

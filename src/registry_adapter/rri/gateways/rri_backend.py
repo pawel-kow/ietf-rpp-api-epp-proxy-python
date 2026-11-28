@@ -4,6 +4,7 @@ from registry_adapter.rri.gateways.rri_contact_gateway import RriContactGateway
 from registry_adapter.rri.gateways.rri_domain_gateway import RriDomainGateway
 from registry_adapter.rri.gateways.rri_host_gateway import RriHostGateway
 from registry_adapter.rri.gateways.rri_message_gateway import RriMessageGateway
+from registry_adapter.rri.gateways.rri_organisation_gateway import RriOrganisationGateway
 from registry_adapter.rri.session.rri_client import RriClient
 
 
@@ -19,6 +20,7 @@ class RriBackend:
         self.contacts = RriContactGateway(rri_client)
         self.hosts = RriHostGateway()
         self.messages = RriMessageGateway(rri_client, extension_parts)
+        self.organisations = RriOrganisationGateway(rri_client, extension_parts)
         self._extensions = {part.extension_id: part.gateways(rri_client) for part in extension_parts}
 
     @property
