@@ -113,7 +113,7 @@ agree as [specification.md](specification.md#consistency-checks) describes.
 In an extension specification, an example marked `<!-- example valid <definition> -->` or
 `<!-- example invalid <definition> -->` is validated against the extension's schema, and a definition shown after
 `<!-- definition <name> -->` must equal the schema's. `tests/unit/test_extension_docs.py` checks this for
-[rri-extension.md](../rri/rri-extension.md) and the three documents of [docs/extensions/](../extensions/) (it also checks that the
+[rri-extension.md](../rri/rri-extension.md) and the documents of [docs/extensions/](../extensions/) (it also checks that the
 schema copy in `src/extensions/<name>/rpp/schema/` is the one of `.spec/`). Run it after editing one of them.
 
 ## Changes History

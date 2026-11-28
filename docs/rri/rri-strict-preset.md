@@ -82,3 +82,4 @@ The preset adds no functionality and no constraints of its own. The security con
 
 * initial version #183
 * contain the extensions of the preset de.denic.rpp.preset.rri, which builds on the extensions io.github.pawel-kow.rpp.messages, io.github.pawel-kow.rpp.domain-lock and io.github.pawel-kow.rpp.registry-changes #261
+* contain the extension io.github.pawel-kow.rpp.authinfo through the preset de.denic.rpp.preset.rri #262

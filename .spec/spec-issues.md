@@ -392,12 +392,12 @@ The "ensure gone" case is the same with `remove` and `match`, and EPP answers 23
 
 - The Authorisation Information Object (data-objects §9.12) is a method and a value. It has no expiry date, while a registry may limit its lifetime and let the sponsor choose it: DENIC RRI's AuthInfo1 takes an expiry date (`YYYYMMDD`, [rri-5.0-reference.md](../docs/rri/rri-5.0-reference.md) §6.15), and the domain INFO shows it. The drafts give no place to set or read it.
 - A registry may issue authorisation information itself, on request of any registrar, and deliver it to the registrants outside the protocol: DENIC RRI CREATE-AUTHINFO2 (§6.17). The drafts define no operation for it.
-- **Proxy (RRI, planned):** two Process Objects of the `de.denic.rpp.rri` extension on the domain, `authInfoProcess` (create with `authInfo` and an optional `expiryDate`, read of the expiry date, delete) and `authInfoIssueProcess` (create only, by any client). The domain `authInfo` stays, with the registry's default lifetime, and is the same AuthInfo1 as the `authInfoProcess`.
+- **Proxy (#250, #262):** two Process Objects of the `io.github.pawel-kow.rpp.authinfo` extension on the domain, `authInfoProcess` (create with `authInfo` and an optional `expiryDate`, read of the expiry date, delete) and `authInfoIssueProcess` (create only, by any client). The domain `authInfo` stays, with the registry's default lifetime, and is the same AuthInfo1 as the `authInfoProcess`.
 
 ## Process reference without a Process ID
 
 - Data-objects §9.16 makes each data element of the Processes Object an aggregation of a Process Object, and json's process references require `processId`. Core §16.1.4 lets a server assign no Process ID and expose a process at `latest` only. Such a server cannot list its processes in a Processes Object, and core §16.1.4 asks a 200 only of a server that exposes no process resource, without saying what a server answers that exposes one at `latest` only.
-- **Proxy:** a process exposed at `latest` only is created with a 200 without `Location`, as for restore, and the Processes Object is not returned. The references of the `de.denic.rpp.rri` processes require `processId` as the base ones do.
+- **Proxy:** a process exposed at `latest` only is created with a 200 without `Location`, as for restore, and the Processes Object is not returned. The references of the processes of `de.denic.rpp.rri` and `io.github.pawel-kow.rpp.authinfo` require `processId` as the base ones do.
 
 ## Verification of contact information
 
@@ -730,7 +730,7 @@ they were. The proxy follows the proposals, with the following.
   extension, and the drafts give an extension no way to state that it needs another one.
 - **Proxy (#261):** `io.github.pawel-kow.rpp.messages` defines the Component Objects, and the rules for the message types of
   the extensions that build on it, and no message type. The extensions whose message types use them
-  (`io.github.pawel-kow.rpp.domain-lock`, `io.github.pawel-kow.rpp.registry-changes`, `de.denic.rpp.rri`) refer to them with a
+  (`io.github.pawel-kow.rpp.domain-lock`, `io.github.pawel-kow.rpp.registry-changes`, `io.github.pawel-kow.rpp.authinfo`, `de.denic.rpp.rri`) refer to them with a
   `$ref` to their name in the shared `$defs` (`#/$defs/ext.messages.registryNotice.read`), as to a base definition (see
   Referring to a base definition), and their specifications require the messages extension, 0.1.0 or a later version with the
   same major version, in the same preset. The dependency is implicit, as for an extension that extends a definition of
