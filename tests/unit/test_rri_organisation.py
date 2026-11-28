@@ -5,6 +5,8 @@ import logging
 import pytest
 
 from core.model.contact.address import Address
+from core.model.organisation.organisation import Organisation
+from rpp.mapping.organisation.organisations import model_to_rpp
 from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
 from registry_adapter.rri.commands.organisation.common import dotted
@@ -89,6 +91,11 @@ def test_a_template_without_a_uri_template_is_left_out():
     ("+1234 5", None),
     ("+49 1234567890123456", None),
     ("+49 69x", None),
+    ("+49 69 1\u00b2", None),
+    ("+4\u00b2 69 1", None),
+    ("+49 69 1x\u00b2", None),
+    ("+49 69 ABC 1", None),
+    ("+49 69 1 / +49 69 2", None),
 ])
 def test_an_e123_number_becomes_the_dotted_one_or_is_left_out(number, expected):
     assert dotted(number) == expected
@@ -196,6 +203,8 @@ def test_the_refusals_of_the_registry(code, status, rpp_code):
     ("PATCH", f"/organisations/{HANDLE}", []),
     ("DELETE", f"/organisations/{HANDLE}", None),
     ("GET", f"/organisations/{HANDLE}/processes", None),
+    ("POST", f"/organisations/{HANDLE}/users", {"@type": "user"}),
+    ("GET", f"/organisations/{HANDLE}/users/{HANDLE}-U", None),
 ])
 def test_what_the_registry_maintains_outside_rri_is_501(method, url, body):
     client, clients = setup()
@@ -203,3 +212,24 @@ def test_what_the_registry_maintains_outside_rri_is_501(method, url, body):
     response = client.request(method, url, json=body, headers=BODY_HEADERS if body is not None else HEADERS)
 
     assert_refused(response, clients, "02101")
+
+
+@pytest.mark.parametrize("address", [
+    Address(street=["Example Street 1"], postalCode="60311", country="DE"),                       # no locality
+    Address(street=["Example Street 1"], city="Frankfurt", postalCode="60311", country="de"),     # a lowercase country code
+])
+def test_an_address_that_fails_its_definition_is_left_out_not_a_500(address):
+    organisation = Organisation(id=HANDLE, sponsor_id=HANDLE, status=["ok"], roles={"registrar": ["ok"]}, name="Example", address=address)
+
+    rpp = model_to_rpp(organisation)
+
+    assert "addresses" not in rpp["contactInfo"] and rpp["contactInfo"]["name"] == {"full": "Example"}
+
+
+def test_a_number_the_backend_cannot_state_is_left_out_not_a_500():
+    organisation = Organisation(id=HANDLE, sponsor_id=HANDLE, status=["ok"], roles={"registrar": ["ok"]}, phones=["+49-69"],
+                                faxes=["+49.69272350"])
+
+    card = model_to_rpp(organisation)["contactInfo"]
+
+    assert list(card["phones"]) == ["fax"]

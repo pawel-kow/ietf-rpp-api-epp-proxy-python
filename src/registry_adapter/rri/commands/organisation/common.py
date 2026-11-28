@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 STATUS = ["ok"]
 REGISTRAR = "registrar"
 
-SEPARATORS = re.compile(r"[/\-.\s]")
+# `+`, the country code, a separator, the rest (ASCII digits and separators), and an optional `x` with the extension.
+E123 = re.compile(r"\+([0-9]+)[/\-.\s]([/\-.\s0-9]*?)(?:\s*x\s*([0-9]+))?")
+DIGITS = "0123456789"
 SCHEME = re.compile(r"[A-Za-z][A-Za-z0-9+.\-]*:")
 
 MAX_COUNTRY_DIGITS = 3
@@ -24,20 +26,17 @@ MAX_DIGITS = 15
 def dotted(number: str) -> str | None:
     """`+49 69 27 235 0` as `+49.69272350`, `+1 703 555 5555 x12` as `+1.7035555555x12`: the digits before the first separator
     are the country code, the other digits before an `x` the subscriber number, those after it the extension. None for a number
-    that gives none of this."""
-    number = number.strip()
-    body, has_extension, extension = number.partition("x")
-    if has_extension and not extension.strip().isdigit():
+    that gives none of this, or holds anything but ASCII digits and separators after the country code."""
+    match = E123.fullmatch(number.strip())
+    if match is None:
         return None
-    code, *rest = SEPARATORS.split(body.strip(), maxsplit=1)
-    if not code.startswith("+") or not code[1:].isdigit() or not rest:
+    code, rest, extension = match.groups()
+    subscriber = "".join(c for c in rest if c in DIGITS)
+    if not (1 <= len(code) <= MAX_COUNTRY_DIGITS) or not (1 <= len(subscriber) <= MAX_NUMBER_DIGITS):
         return None
-    subscriber = "".join(c for c in rest[0] if c.isdigit())
-    if not (1 <= len(code) - 1 <= MAX_COUNTRY_DIGITS) or not (1 <= len(subscriber) <= MAX_NUMBER_DIGITS):
+    if len(code) + len(subscriber) > MAX_DIGITS:
         return None
-    if len(code) - 1 + len(subscriber) > MAX_DIGITS:
-        return None
-    return f"{code}.{subscriber}" + (f"x{extension.strip()}" if extension else "")
+    return f"+{code}.{subscriber}" + (f"x{extension}" if extension else "")
 
 
 def _numbers(values, field_name: str) -> list[str]:

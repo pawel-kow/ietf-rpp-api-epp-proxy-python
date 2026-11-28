@@ -2,6 +2,7 @@ import logging
 
 from jsonschema import ValidationError
 
+from core.capabilities.backend_requirement import BackendRequirement
 from core.model.contact.address import Address
 from core.model.organisation.organisation import Organisation
 from rpp.dto.rpp_card import RPPCard
@@ -47,7 +48,11 @@ def _address(address: Address | None) -> dict | None:
 def _numbers(numbers: list[str], base: str, features: dict | None) -> dict[str, dict]:
     entries = {}
     for number in numbers:
-        entry = RPPCardPhone(number=phones.model_to_rpp(number), features=features).to_rpp()
+        try:
+            entry = RPPCardPhone(number=phones.model_to_rpp(number), features=features).to_rpp()
+        except BackendRequirement:
+            logger.warning("An organisation read leaves out an entry of phones that is no number of the backend")
+            continue
         if _valid("Phone", entry, "phones"):
             entries[base if not entries else f"{base}-{len(entries)}"] = entry
     return entries

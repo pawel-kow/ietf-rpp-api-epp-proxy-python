@@ -2539,7 +2539,7 @@ The variable `{Ulabel}` expands to the U-label of the domain name. The encoding 
 * add the member rpp:messages to the schema document as the extension point for message types #248
 * the type parameter of the message query takes the identifiers of the message types #248
 * inform the losing client of a transfer with a transfer outcome message #248
-* add the general request and abuse templates of a registrar to the organisation data object, and the request template object; the organisation read keeps the first URL of a registrar #249
+* add the general request and abuse templates of a registrar to the organisation data object, and the request template object, and keep the first URL of a registrar in the organisation read #249
 
 {toc="exclude"}
 {numbered="false"}
