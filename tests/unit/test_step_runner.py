@@ -105,6 +105,23 @@ def test_a_loop_repeats_until_its_step_matches_and_then_takes_no_capture():
     assert client.urls == ["/messages", "/messages/1", "/messages", "/messages/2", "/messages", "/after"]
 
 
+def bounded(limit):
+    return {**drain(), "max_iterations": limit}
+
+
+def test_a_loop_with_a_bound_fails_when_it_does_not_end_within_it():
+    client = Client((200, [{"id": "1"}], "01301"), OK, (200, [{"id": "2"}], "01301"), OK, (200, [], "01300"))
+
+    with pytest.raises(StepFailure, match=r"t1 steps\[0\]: the loop did not end in 2 iterations"):
+        runner(client).run([bounded(2)], "steps")
+
+    assert client.urls == ["/messages", "/messages/1", "/messages", "/messages/2"]       # no third iteration
+
+
+def test_a_loop_with_a_bound_ends_on_its_until_in_the_last_iteration_allowed():
+    runner(Client((200, [{"id": "1"}], "01301"), OK, (200, [], "01300"), OK)).run([bounded(2), step("/after", body={})], "steps")
+
+
 def test_each_iteration_prepares_its_steps_again_so_the_cltrid_is_new():
     client = Client((200, [{"id": "1"}], "01301"), OK, (200, [], "01300"))
 

@@ -7,7 +7,8 @@ Generic rules are in [security.md](security.md).
 - HTTP Basic credentials are passed straight through as the EPP `clID`/`pw`, or the RRI LOGIN `user`/`password`.
   They are the registrar's registry credentials, so treat them as high-value secrets. The RRI LOGIN is sent with
   `loggable=False`, so `TCPClient` does not print it. A CHPROV holds the domain's AuthInfo in plaintext and is sent
-  with `loggable=False` too.
+  with `loggable=False` too. So is every RRI exchange that can carry verification data (the extension's "MUST NOT log"): a contact CREATE/UPDATE with blocks, contact INFO and the recursive domain INFO of the verification process, and a command sent
+  `loggable=False` has its reply not printed either (`unit/test_rri_verification_logging.py`).
 - RRI locks a user for an hour after 10 failed LOGINs, and every HTTP Basic attempt with a wrong password for a user
   without a session costs one: anyone who can reach the proxy can lock a RegAcc out. Accepted as a known risk for
   now (docs/rri/refactoring.md §7). The integration suite never sends a wrong password for a test account: its
@@ -29,7 +30,7 @@ Read in the code, not reproduced.
 
 - **Credentials in stdout:** `TCPClient` prints every sent message
   ([tcp_client.py:72](../../src/registry_adapter/common/transport/tcp_client.py#L72)), including the login
-  XML with `<pw>`. Received EPP messages are printed too. (#14)
+  XML with `<pw>`. Received messages are printed too, except the reply to a command sent `loggable=False` (the RRI exchanges that carry verification data or a secret). (#14)
 - **Unescaped XML:** `_send_login` interpolates the username and password into the
   login XML ([epp_client.py:175](../../src/registry_adapter/epp/session/epp_client.py#L175)). (#9)
 - **Raw exception text in 500 responses:** `rpp_operation` passes `detail=str(e)` in

@@ -50,6 +50,12 @@ class MemberMappers:
         """The members the mappers of these extensions handle on a definition."""
         return tuple(name for mapper in self.of(extensions) for name in self._added(mapper, schema))
 
+    def arrays(self, schema: str, extensions) -> tuple[str, ...]:
+        """The members of the mappers of these extensions that are arrays on a definition (a mapper names them in
+        `array_members`), which a patch addresses as arrays even where the object has none."""
+        return tuple(name for mapper in self.of(extensions)
+                     for name in self._added(mapper, schema) if name in getattr(mapper, "array_members", ()))
+
     def check(self, rpp: dict, extensions) -> None:
         """The checks of the mappers of these extensions on a request (or the object a patch results in)."""
         for mapper in self.of(extensions):
@@ -57,15 +63,24 @@ class MemberMappers:
             if check is not None:
                 check(rpp)
 
-    def split(self, rpp: dict, schema: str, extensions):
-        """The representation without the members the mappers handle on a definition, and what they make of those it has."""
+    def split(self, rpp: dict, schema: str, extensions, stated=None):
+        """The representation without the members the mappers handle on a definition, and what they make of those it has.
+
+        `stated` names the members the request restates (a full update states them all, a patch those its operations name):
+        a mapper with one of them is converted even where its member is absent from `rpp` (`to_model({})`, the empty
+        value), and a mapper with none is dropped unconverted. Without it a mapper is converted when a member is present."""
         rest = dict(rpp)
         results = []
         for mapper in self.of(extensions):
             names = self._added(mapper, schema)
             present = {name: rest[name] for name in names if name in rest}
             rest = {name: value for name, value in rest.items() if name not in names}
-            if present:
+            if stated is None:
+                convert = bool(present)
+            else:
+                convert = any(name in stated for name in names)
+                present = {name: value for name, value in present.items() if name in stated}
+            if convert:
                 results.append(mapper.to_model(present))
         return rest, self._merge(results)
 

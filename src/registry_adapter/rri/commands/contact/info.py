@@ -5,8 +5,9 @@ from registry_adapter.rri.xml.generated.contact_5_0 import Info, InfoData
 
 
 def rri_info(client, handle: str, client_transaction_id=None):
-    """Contact INFO, of the RegAcc's own handles only, with the `InfoData` as its payload: a contact of any type."""
-    return run(client, client_transaction_id, codes=CONTACT_CODES, write=False,
+    """Contact INFO, of the RegAcc's own handles only, with the `InfoData` as its payload: a contact of any type. Its reply
+    can hold verification information, so it is not printed."""
+    return run(client, client_transaction_id, codes=CONTACT_CODES, write=False, loggable=False,
                payload_of=lambda t: data_of(t, InfoData), info=Info(handle=handle))
 
 
@@ -19,8 +20,9 @@ def not_found(handle: str, what: str, client_transaction_id):
     return refused(ResultCode.OBJECT_DOES_NOT_EXIST, f"{handle} is not {what}", client_transaction_id)
 
 
-def rri_contact_info(client, handle: str, client_transaction_id=None):
-    """Contact INFO of a PERSON or an ORG. A REQUEST contact is a request contact, not a contact (gap Q2)."""
+def rri_contact_info(client, handle: str, client_transaction_id=None, members: dict | None = None):
+    """Contact INFO of a PERSON or an ORG. A REQUEST contact is a request contact, not a contact (gap Q2). `members` are
+    the contact members of the extensions (`RriExtensionPart.contact_members`, by extension id), which read what they add."""
     resp = rri_info(client, handle, client_transaction_id)
     data = getattr(resp, "payload", None)
     if data is None:
@@ -28,4 +30,5 @@ def rri_contact_info(client, handle: str, client_transaction_id=None):
     if is_request(data):
         return not_found(handle, "a contact", client_transaction_id)
     resp.payload = contact_from_rri(data)
+    resp.payload.extensions = {extension_id: member.read(data) for extension_id, member in (members or {}).items()}
     return resp

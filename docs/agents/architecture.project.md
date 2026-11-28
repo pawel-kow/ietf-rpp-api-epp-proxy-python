@@ -463,6 +463,22 @@ and maps the refusals of `expire` (`63391068618`, `63391068603`) to 400 `02004`.
 shared CREATE-AUTHINFO1 (domain create, PUT, PATCH and the process) and CHPROV. The extension's profile leaves `domainName.processes.authInfoProcess.operations` and
 `domainName.processes.authInfoIssueProcess.operations` are read by the test selectors only.
 
+**Members of a contact and the verification of the holders** (#251). An extension adds members to a contact by registering a mapper in `CONTACT_MEMBERS`
+(`rpp/mapping/contact/contact_members.py`, a `MemberMappers` as `DOMAIN_MEMBERS`, with its own `merge`: a dict of the typed objects by extension id). The core model holds them as
+`Contact.extensions` and `ContactReplacement.extensions`, as `Organisation.extensions`; the contact mappers (`contacts`, `contact_replacement`, `contact_patch`) take the `extensions` of the
+request's or response's preset, as the domain's do. `MemberMappers.split(..., stated=)` makes a full update restate every member: a mapper whose member the request omits is asked with none (`to_model({})`,
+the empty value, so the backend removes what it holds), and the replacement of a preset without the extension has no entry, which the backend reads as "keep what is stored" (spec-issues.md, "Full update
+of a member an extension adds"). A patch restates the members its operations name (`/verifications` takes the read path, is an array even where the contact has none (`array_members`), and is checked against
+`contact.update` for the enumerations the read definition does not enforce); one it leaves alone is dropped unconverted. The rri extension's `ContactVerificationMembers` maps `verifications` to a `ContactVerifications`
+of `VerificationInformation` records. Its RRI part (`registry_adapter/rri/extensions/rri/contact_members.py`, loaded by name as `RriExtensionPart.contact_members`, `read(InfoData)` and
+`fields(object)`) reads the blocks of a contact INFO (claims in lower case, the date in UTC) and writes each as `verification:verificationInformationType` with the date at the offset `+01:00`
+(MTEST refuses `Z`); `RriContactGateway` fills `Contact.extensions` on INFO, and an UPDATE sends the blocks of the entry the replacement states, else the raw blocks of the INFO it read (`carried_over`, as before), and its
+`same_contact` compares both in the same form, so a PUT that changes only the records is sent and one that repeats the read is not. The `verificationProcess` is a Process Object of the domain name that is only read
+(`extensions/rri/core/flows/verification_process_flows.py`): the gateway (`RriGateways.verification_processes`) does a recursive domain INFO with `domain:authInfo` from `RPP-Authorization`, and the flow refuses another client
+without it (403 `02201`), answers a domain without a deadline or without a holder 404 `02303` (the latter logged without values), and reduces the process for a client other than the sponsor itself (`VerificationProcess.reduced`: no handles,
+claims and result only), whatever the gateway returned. Nothing that carries verification data is printed: contact CREATE/UPDATE with blocks, contact INFO and the recursive domain INFO go with `loggable=False`, which
+`SerialSession` now passes to the reply too (`TCPClient.receive(loggable=False)`).
+
 Messages are in `rpp/handlers/message/message_handlers.py`. `GET /messages` is EPP `poll req`,
 `DELETE /messages/{id}` is `poll ack`, and `GET /messages/{id}` is `poll req` followed by a comparison of ids in
 `core/flows/message/message_flows.py`,

@@ -17,7 +17,7 @@ class RriBackend:
         self.rri_client = rri_client
         self.profile = profile
         self.domains = RriDomainGateway(rri_client, lgr)
-        self.contacts = RriContactGateway(rri_client)
+        self.contacts = RriContactGateway(rri_client, extension_parts)
         self.hosts = RriHostGateway()
         self.messages = RriMessageGateway(rri_client, extension_parts)
         self.organisations = RriOrganisationGateway(rri_client, extension_parts)

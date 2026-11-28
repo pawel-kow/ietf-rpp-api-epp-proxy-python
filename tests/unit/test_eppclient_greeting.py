@@ -39,7 +39,7 @@ class ScriptedTransport:
     def closed_by_peer(self):
         return False
 
-    def receive(self):
+    def receive(self, loggable=True):
         return self.received.pop(0)
 
     def disconnect(self):

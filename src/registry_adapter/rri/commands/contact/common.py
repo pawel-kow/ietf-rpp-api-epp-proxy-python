@@ -6,7 +6,15 @@ from registry_adapter.rri.commands.shared.rri_time import utc_time
 from registry_adapter.rri.xml.generated import contact_5_0 as rri
 
 # "At least one Contact does not exist" is the contact itself for a command on one contact.
-CONTACT_CODES = {"53000060009": ResultCode.OBJECT_DOES_NOT_EXIST}
+CONTACT_CODES = {
+    "53000060009": ResultCode.OBJECT_DOES_NOT_EXIST,
+    # Verification information (docs/rri/rri-extension.md, refusals): a value the registry refuses is a syntax error of the
+    # request, a combination it does not allow (or conflicting claims) a policy error.
+    **{code: ResultCode.PARAMETER_VALUE_SYNTAX_ERROR for code in (
+        "63200041860", "63200041861", "63200041862", "63200041864", "63200041865", "63200041866")},
+    "63200041863": ResultCode.PARAMETER_VALUE_POLICY_ERROR,
+    "63200041867": ResultCode.PARAMETER_VALUE_POLICY_ERROR,
+}
 
 PERSON = "PERSON"
 

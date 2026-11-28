@@ -53,7 +53,7 @@ class SessionTransport:
         self.sent.append(message)
         self.received.append(OK)
 
-    def receive(self):
+    def receive(self, loggable=True):
         if self.receive_failure and self.sent[-1] == COMMAND:
             raise ConnectionException("Connection closed by server")
         return self.received.pop(0)

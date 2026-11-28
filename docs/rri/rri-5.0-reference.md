@@ -576,6 +576,7 @@ puts it after the header line `[VerificationInformation]`.
 - Email: if an email check failed, the full block with `failed` must be reported, and a later
   `success` must be reported too.
 - Omitting all blocks in a contact UPDATE **deletes** the verification info.
+- MTEST (checked 2026-11-28): `verificationTimestamp` with `Z` is refused (`63200041861`), one with an offset (`+01:00`) is taken. `name` with `idcard` and `auth` passes, `email` with `email_ver_transaction_log` and `reachability` passes, `address` with `idcard` and `reachability` gives `63200041867`, and `email` with `email_ver_transaction_log` and `data` or `electronic_document` too. Two blocks that state a success and a failure of one claim give `63200041863`. A domain of a holder with a failed block is `pendingCreate` and within seconds `serverHold` with `verificationDeadlineBeforeDeletion` (no hold deadline).
 - Members must keep evidence for 12 months.
 
 ### 5.6 Public registrar contact details (RegAcc object)

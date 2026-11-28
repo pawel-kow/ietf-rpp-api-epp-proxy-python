@@ -1,0 +1,263 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test2-full_update_without_records_removes_them",
+  "description": "A full update under the rri preset that omits verifications removes them.",
+  "steps": [
+    {
+      "comment": "Creates contact V2 with verification information; expects 201 01000.",
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          },
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ],
+          "id": "{handle:a:V2}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:V2}",
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T09:00:00.000000Z",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Removes and adds the record again by one patch, which finds it by its reference; expects 200 01000.",
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/{handle:a:V2}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/verifications",
+            "match": {
+              "reference": "REF-V1-{random_id_10}"
+            }
+          },
+          {
+            "op": "add",
+            "path": "/verifications",
+            "value": {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T09:00:00.000000Z",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Replaces contact V2 with a full update without verifications; expects 200 01000.",
+      "request": {
+        "method": "PUT",
+        "url": "/contacts/{handle:a:V2}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
+    {
+      "comment": "Removes the record by its reference; expects 422 02308, as the contact holds none.",
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/{handle:a:V2}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/verifications",
+            "match": {
+              "reference": "REF-V1-{random_id_10}"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "RPP-Code": "02308"
+        },
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        }
+      }
+    }
+  ]
+}

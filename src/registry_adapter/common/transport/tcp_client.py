@@ -99,9 +99,12 @@ class TCPClient:
         readable, _, _ = select.select([self.socket], [], [], 0)
         return bool(readable)
 
-    def receive(self):
+    def receive(self, loggable=True):
         """
         Receives a message from the server.
+
+        Args:
+            loggable (bool): False for the reply to a command that was not loggable, which is then not printed.
         """
         if self.socket is None:
             self.connect()
@@ -119,7 +122,7 @@ class TCPClient:
             payload = self._recv_exact(payload_length - self._length_offset)
             message = payload.decode('utf-8')
 
-            print(f"TCPClient: Received message: {message}")
+            print(f"TCPClient: Received message: {message if loggable else '(not logged: the command was not loggable)'}")
             return message
 
         except Exception as e:

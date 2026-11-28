@@ -1,0 +1,200 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test3-full_update_under_base_keeps_the_records",
+  "description": "A full update under the base preset, which cannot state verifications, leaves the records of the contact as they are.",
+  "steps": [
+    {
+      "comment": "Creates contact V3 with verification information; expects 201 01000.",
+      "request": {
+        "method": "POST",
+        "url": "/contacts",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "erika@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          },
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T10:00:00+01:00",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ],
+          "id": "{handle:a:V3}"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact",
+          "id": "{handle:a:V3}",
+          "verifications": [
+            {
+              "@type": "verificationInformation",
+              "claims": [
+                "name"
+              ],
+              "result": "success",
+              "reference": "REF-V1-{random_id_10}",
+              "date": "2026-11-12T09:00:00.000000Z",
+              "evidence": "idcard",
+              "method": "auth",
+              "trustFramework": "de_denic"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Replaces contact V3 under the base preset with another email; expects 200 01000.",
+      "request": {
+        "method": "PUT",
+        "url": "/contacts/{handle:a:V3}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept:base}",
+          "RPP-Preset": "{rpp:preset:base}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type:base}"
+        },
+        "body_json": {
+          "@type": "contact",
+          "contactInfo": {
+            "@type": "Card",
+            "version": "2.0",
+            "kind": "individual",
+            "name": {
+              "full": "Erika Mustermann"
+            },
+            "addresses": {
+              "addr": {
+                "components": [
+                  {
+                    "kind": "name",
+                    "value": "Musterweg 12"
+                  },
+                  {
+                    "kind": "locality",
+                    "value": "Frankfurt am Main"
+                  },
+                  {
+                    "kind": "postcode",
+                    "value": "60596"
+                  }
+                ],
+                "countryCode": "DE"
+              }
+            },
+            "emails": {
+              "email": {
+                "address": "base@example.com"
+              }
+            },
+            "phones": {
+              "voice": {
+                "number": "tel:+49.6912345678"
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact"
+        }
+      }
+    },
+    {
+      "comment": "Removes the record by its reference under the rri preset; expects 200 01000, as the contact still holds it.",
+      "request": {
+        "method": "PATCH",
+        "url": "/contacts/{handle:a:V3}",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": [
+          {
+            "op": "remove",
+            "path": "/verifications",
+            "match": {
+              "reference": "REF-V1-{random_id_10}"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "contact"
+        }
+      }
+    }
+  ]
+}

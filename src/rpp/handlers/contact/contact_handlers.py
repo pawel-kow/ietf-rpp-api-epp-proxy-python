@@ -3,7 +3,7 @@ from connexion import request
 from core.flows.contact.contact_flows import create_contact, patch_contact, replace_contact
 from core.result.error_response import ErrorResponse
 from rpp.handlers.shared.requested_elements import requested_elements
-from rpp.http.context import backend_profile, get_backend, request_profile
+from rpp.http.context import backend_profile, get_backend, request_profile, response_profile
 from rpp.http.headers import client_transaction_id, generate_rpp_response_headers
 from rpp.http.operation import map_request, require_empty_body, rpp_operation
 from rpp.http.problem import raise_registry_error
@@ -16,13 +16,13 @@ OBJECT = "contact"
 
 def _contact_output(contact, requested):
     """The contact as a response shows it: with the onDemand data elements the request includes."""
-    return include_elements.visible(OBJECT, contacts.model_to_rpp(contact), requested)
+    return include_elements.visible(OBJECT, contacts.model_to_rpp(contact, response_profile().extensions), requested)
 
 
 @rpp_operation
 def contacts_create(body):
     requested = requested_elements(OBJECT)
-    contact = map_request(check_contact, map_request(contacts.rpp_to_model, body), profile=request_profile())
+    contact = map_request(check_contact, map_request(contacts.rpp_to_model, body, request_profile().extensions), profile=request_profile())
     result = create_contact(get_backend(), contact, client_transaction_id())
     return _mutation_answer(result, requested, 201, {"Location": f"{str(request.url).rstrip('/')}/{contact.id}"})
 
@@ -56,7 +56,8 @@ def _mutation_answer(result, requested, status=200, extra_headers=None):
 @rpp_operation
 def contacts_update(id, body):
     requested = requested_elements(OBJECT)
-    wanted = map_request(check_contact, map_request(contact_replacement.rpp_to_model, id, body, requested),
+    wanted = map_request(check_contact, map_request(contact_replacement.rpp_to_model, id, body, requested,
+                                              request_profile().extensions),
                          profile=request_profile())
     return _mutation_answer(replace_contact(get_backend(), wanted, client_transaction_id()), requested)
 
@@ -64,11 +65,12 @@ def contacts_update(id, body):
 @rpp_operation
 def contacts_updatePartial(id, body):
     requested = requested_elements(OBJECT)
-    update = map_request(check_contact_update, map_request(contact_patch.rpp_to_model, id, body), profile=request_profile())
+    update = map_request(check_contact_update, map_request(contact_patch.rpp_to_model, id, body, request_profile().extensions), profile=request_profile())
 
     def wanted_from_current(current):
         return map_request(check_contact, map_request(contact_patch.rpp_to_model_with_current, id, body, current,
-                                       kind_held=backend_profile().contact.kind.supported),
+                                       kind_held=backend_profile().contact.kind.supported,
+                                       extensions=request_profile().extensions),
                            profile=request_profile())
 
     return _mutation_answer(patch_contact(get_backend(), id, update, wanted_from_current, client_transaction_id()), requested)

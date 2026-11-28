@@ -25,7 +25,7 @@ class FakeTransport:
     def closed_by_peer(self):
         return False
 
-    def receive(self):
+    def receive(self, loggable=True):
         time.sleep(0.005)
         with self.guard:
             return REPLY.format(self.pending.pop(0))

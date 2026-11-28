@@ -13,6 +13,7 @@ from rpp.dto.rpp_card_organization import RPPCardOrganization
 from rpp.dto.rpp_card_phone import RPPCardPhone
 from rpp.dto.rpp_contact import RPPContact
 from rpp.mapping.contact import phones
+from rpp.mapping.contact.contact_members import CONTACT_MEMBERS
 from rpp.mapping.shared import auth_info, prov_metadata, statuses
 from rpp.mapping.shared.common import parse_rpp, reject_set
 from rpp.schema.validator import validate_request_schema, validate_schema
@@ -165,15 +166,18 @@ def contact_from_rpp(contact_rpp: RPPContact) -> Contact:
     )
 
 
-def rpp_to_model(rpp: dict) -> Contact:
-    """Converts a create request to a Contact."""
-    validate_schema("contact.create", rpp)
+def rpp_to_model(rpp: dict, extensions: tuple[str, ...] = ()) -> Contact:
+    """Converts a create request to a Contact, with the members the offered `extensions` add."""
+    validate_schema("contact.create", rpp, extensions)
     check_rpp_rules(rpp["contactInfo"])
-    validate_request_schema("contact.create", rpp)
-    contact_rpp = parse_rpp(RPPContact, rpp)
+    CONTACT_MEMBERS.check(rpp, extensions)    # before step 2: an extension's refusal is not a broken profile constraint
+    validate_request_schema("contact.create", rpp, extensions)
+    rest, held = CONTACT_MEMBERS.split(rpp, "contact.create", extensions)
+    contact_rpp = parse_rpp(RPPContact, rest)
     contact = contact_from_rpp(contact_rpp)
     reject_set(status=contact_rpp.status)
     contact.authInfo = auth_info.rpp_to_model(contact_rpp.authInfo)
+    contact.extensions = held
     return contact
 
 
@@ -234,8 +238,8 @@ def _card_to_rpp(contact: Contact) -> RPPCard:
     )
 
 
-def model_to_rpp(contact: Contact) -> dict:
-    """Converts a Contact to its read representation."""
+def model_to_rpp(contact: Contact, extensions: tuple[str, ...] = ()) -> dict:
+    """Converts a Contact to its read representation, with the members the offered `extensions` add."""
     contact_dict = RPPContact(
         id=contact.id,
         provMetadata=prov_metadata.model_to_rpp(contact),
@@ -243,5 +247,6 @@ def model_to_rpp(contact: Contact) -> dict:
         contactInfo=_card_to_rpp(contact),
         authInfo=auth_info.model_to_rpp(contact.authInfo),
     ).to_rpp()
-    validate_schema("contact.read", contact_dict)
+    contact_dict.update(CONTACT_MEMBERS.to_rpp(contact, "contact.read", extensions))
+    validate_schema("contact.read", contact_dict, extensions)
     return contact_dict
