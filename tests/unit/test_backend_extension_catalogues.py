@@ -17,8 +17,9 @@ from tests.helper.test_environment import REPOSITORY
 
 # The extension package of each part module, by the backend's catalogue.
 CATALOGUES = {"rri": RRI_PARTS, "sqlite": SQLITE_PARTS}
-ENVIRONMENTS = sorted(subprocess.run(["git", "ls-files", "config/environments/*.yaml"], cwd=REPOSITORY, capture_output=True,
-                                     text=True, check=True).stdout.split())
+ENVIRONMENTS = sorted(path.relative_to(REPOSITORY).as_posix()
+                      for path in (REPOSITORY / "config" / "environments").glob("*.yaml")
+                      if not path.name.endswith(".local.yaml"))
 
 
 def _extension_id(part_module: str, backend: str) -> str:

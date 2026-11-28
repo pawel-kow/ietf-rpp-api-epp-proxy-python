@@ -40,3 +40,5 @@ Stacked on #266 (`261-rri-split-messages`); the PR targets main and must merge a
 - `backend_parts` users: main.py:89,97, registry_setup.py:15, extension_registry.py, 7 registers, tests (4 files),
   architecture.project.md:585. No mention in config/, deploy/, docs/demo.
 - tests/refused_configs register test-only data extensions with a SQLite part: they need an entry in the SQLite PARTS.
+
+- Review rounds 1-2 changed tests only (catalogue restore fixture, environments by glob); the smoke run (251 passed, 581 skipped, incl. MTEST) stands.
