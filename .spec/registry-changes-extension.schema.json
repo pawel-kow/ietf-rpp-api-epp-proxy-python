@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/registry-changes-extension.schema.json",
+  "title": "RPP Registry Change Messages extension",
+  "description": "Message types for changes that the server made to the objects of a client. See docs/extensions/registry-changes-extension.md.",
+  "rpp:extension": {
+    "name": "RPP Registry Change Messages",
+    "id": "io.github.pawel-kow.rpp.registry-changes",
+    "version": "0.1.0",
+    "objects": []
+  },
+  "rpp:extends": {},
+  "rpp:messages": {
+    "domainUpdateMessage": "#/$defs/ext.registryChanges.domainUpdateMessage.read",
+    "contactUpdateMessage": "#/$defs/ext.registryChanges.contactUpdateMessage.read",
+    "domainDeletionMessage": "#/$defs/ext.registryChanges.domainDeletionMessage.read",
+    "contactDeletionMessage": "#/$defs/ext.registryChanges.contactDeletionMessage.read"
+  },
+  "$defs": {
+    "ext.registryChanges.domainUpdateMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "const": "domainUpdateMessage",
+          "readOnly": true
+        },
+        "objectType": {
+          "type": "string",
+          "const": "domainName",
+          "readOnly": true
+        },
+        "objectId": {
+          "type": "string",
+          "readOnly": true
+        },
+        "notices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ext.messages.registryNotice.read"
+          },
+          "readOnly": true
+        }
+      },
+      "required": [
+        "@type",
+        "objectType",
+        "objectId",
+        "notices"
+      ]
+    },
+    "ext.registryChanges.contactUpdateMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "const": "contactUpdateMessage",
+          "readOnly": true
+        },
+        "objectType": {
+          "type": "string",
+          "const": "contact",
+          "readOnly": true
+        },
+        "objectId": {
+          "type": "string",
+          "readOnly": true
+        },
+        "notices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ext.messages.registryNotice.read"
+          },
+          "readOnly": true
+        }
+      },
+      "required": [
+        "@type",
+        "objectType",
+        "objectId",
+        "notices"
+      ]
+    },
+    "ext.registryChanges.domainDeletionMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "const": "domainDeletionMessage",
+          "readOnly": true
+        },
+        "objectType": {
+          "type": "string",
+          "const": "domainName",
+          "readOnly": true
+        },
+        "objectId": {
+          "type": "string",
+          "readOnly": true
+        },
+        "notices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ext.messages.registryNotice.read"
+          },
+          "readOnly": true
+        }
+      },
+      "required": [
+        "@type",
+        "objectType",
+        "objectId",
+        "notices"
+      ]
+    },
+    "ext.registryChanges.contactDeletionMessage.read": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "const": "contactDeletionMessage",
+          "readOnly": true
+        },
+        "objects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/ext.messages.objectReference.read"
+              },
+              {
+                "properties": {
+                  "objectType": {
+                    "const": "contact"
+                  }
+                }
+              }
+            ]
+          },
+          "readOnly": true
+        }
+      },
+      "required": [
+        "@type",
+        "objects"
+      ]
+    }
+  }
+}

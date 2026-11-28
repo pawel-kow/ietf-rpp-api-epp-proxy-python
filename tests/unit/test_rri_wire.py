@@ -227,5 +227,8 @@ def test_discovery_states_the_rri_extension():
     body = client.get("/.well-known/rpp", headers={"Accept": MEDIA_TYPE, "RPP-Cltrid": "cl-1"}).json()
 
     assert [(e["@type"], e["id"], e["name"]) for e in body["extensions"]] == [
-        ("extension", "de.denic.rpp.rri", "DENIC RRI")]
+        ("extension", "de.denic.rpp.rri", "DENIC RRI"),
+        ("extension", "io.github.pawel-kow.rpp.messages", "RPP Message Components"),
+        ("extension", "io.github.pawel-kow.rpp.domain-lock", "RPP Domain Lock Messages"),
+        ("extension", "io.github.pawel-kow.rpp.registry-changes", "RPP Registry Change Messages")]
     assert body["extensions"][0]["url"].startswith("https://")

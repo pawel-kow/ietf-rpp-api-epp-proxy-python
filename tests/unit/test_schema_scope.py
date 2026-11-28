@@ -18,6 +18,11 @@ ONE_CONTACT = profile("one-contact", constraints={"domainName.read": "profile.on
 READ = {"@type": "domainName", "name": "foo.example", "status": [{"@type": "domainStatus", "label": "ok"}],
         "provMetadata": {"@type": "provMetadata", "spClientId": "clientA", "crClientId": "clientA", "crDate": "2025-01-01T00:00:00Z"}}
 
+# the rri extension refers to the Component Objects of the messages extension, so a preset that has it has that one too
+RRI_EXTENSIONS = ("de.denic.rpp.rri", "io.github.pawel-kow.rpp.messages")
+
+PRESET_EXTENSIONS = (*RRI_EXTENSIONS, "io.github.pawel-kow.rpp.domain-lock", "io.github.pawel-kow.rpp.registry-changes")
+
 
 def scope_of(*profiles, extensions=(), held=()):
     entries = [preset("p", base_presets=[BASE["id"]], profiles=[p[0] for p in profiles],
@@ -121,10 +126,10 @@ def test_a_definition_the_preset_does_not_have_is_not_built_not_a_refusal_of_the
 
 def test_the_extensions_of_a_preset_are_the_ones_it_validates_for():
     rri = Definitions.load(RRI_REGISTRY).presets["rri"]
-    offered = OfferedPresets.build(Definitions.load(RRI_REGISTRY), ["rri"], "rri", {}, ("de.denic.rpp.rri",)).offered[0]
+    offered = OfferedPresets.build(Definitions.load(RRI_REGISTRY), ["rri"], "rri", {}, PRESET_EXTENSIONS).offered[0]
     scope = SchemaScope(offered.extensions, offered.applicable)
 
-    assert scope.extensions == ("de.denic.rpp.rri",) and rri.id == "de.denic.rpp.preset.rri"
+    assert scope.extensions == PRESET_EXTENSIONS and rri.id == "de.denic.rpp.preset.rri"
     scope.validate("requestContact.create", {"@type": "requestContact", "id": "DENIC-1000022-GR",
                                              "uriTemplate": "https://example.com/c?d={Alabel}"})
 
@@ -164,10 +169,10 @@ def test_a_patched_object_names_the_profile_of_the_failure_the_client_caused_not
 
 def test_the_server_managed_members_are_those_of_the_composed_definition_including_an_extension_object():
     url = EXTENSIONS["de.denic.rpp.rri"].url
-    managed = profile("managed", required=[("de.denic.rpp.rri", "0.3.0")], constraints={}, defs={
+    managed = profile("managed", required=[("de.denic.rpp.rri", "0.4.0")], constraints={}, defs={
         "profile.m": {"properties": {"provMetadata": {"required": ["repositoryId"]}, "uriTemplate": {"minLength": 40}}}})
     managed[1]["schema"]["rpp:constraints"] = {f"{url}#/$defs/ext.rri.requestContact.read": "#/$defs/profile.m"}
-    scope = scope_of(managed, extensions=("de.denic.rpp.rri",))
+    scope = scope_of(managed, extensions=RRI_EXTENSIONS)
     stored = {"@type": "requestContact", "id": "DENIC-1000022-GR", "uriTemplate": "https://example.com/c?d={Alabel}",
               "provMetadata": {"@type": "provMetadata", "spClientId": "DENIC-1000022", "crDate": "2025-01-01T00:00:00Z"}}
 

@@ -86,7 +86,7 @@ def compose(settings: Settings) -> Composition:
 
     def rri_backend_factory():
         """The RRI parts of the registered extensions (loaded now), and the factory of a client's session."""
-        parts = load_rri_parts(registry.backend_parts("rri"))
+        parts = load_rri_parts(registry.backend_parts("rri"), registry.needing_gateways())
 
         def new_rri_backend(username, password):
             return RriBackend(new_rri_client(username, password), profile, settings.rri.rpp_rri_lgr, parts)

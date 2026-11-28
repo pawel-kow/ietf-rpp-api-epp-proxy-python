@@ -61,7 +61,9 @@ def test_the_rri_preset_has_the_rri_extension():
     body = read(rri_client(), RRI).json()
 
     assert body["defaultPreset"] is True
-    assert [(e["id"], e["version"]) for e in body["extensions"]] == [("de.denic.rpp.rri", "0.3.0")]
+    assert [(e["id"], e["version"]) for e in body["extensions"]] == [
+        ("de.denic.rpp.rri", "0.4.0"), ("io.github.pawel-kow.rpp.messages", "0.1.0"),
+        ("io.github.pawel-kow.rpp.domain-lock", "0.1.0"), ("io.github.pawel-kow.rpp.registry-changes", "0.1.0")]
     assert body["url"] == "https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-preset.md"
 
 
@@ -111,7 +113,9 @@ def test_discovery_states_the_offered_presets_their_profiles_and_extensions():
     assert "extensions" not in epp
     assert epp["objects"] == ["domainName", "host", "contact", "message"]
     assert [p["id"] for p in rri["presets"]] == [BASE, RRI]
-    assert [e["id"] for e in rri["extensions"]] == ["de.denic.rpp.rri"]
+    assert [e["id"] for e in rri["extensions"]] == [
+        "de.denic.rpp.rri", "io.github.pawel-kow.rpp.messages", "io.github.pawel-kow.rpp.domain-lock",
+        "io.github.pawel-kow.rpp.registry-changes"]
     assert "profiles" not in rri
     assert rri["objects"] == ["domainName", "contact", "organisation", "message", "requestContact"]
     assert "profileSchemas" not in epp

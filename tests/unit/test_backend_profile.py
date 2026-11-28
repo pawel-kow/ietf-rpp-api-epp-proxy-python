@@ -130,7 +130,8 @@ def test_a_profile_reads_as_a_tree():
 
 def test_each_backend_holds_its_extension_and_rri_transfers_with_its_own():
     assert EPP_PROFILE.extensions == ()      # EPP Compatibility is a profile, not an extension
-    assert RRI_PROFILE.extensions == ("de.denic.rpp.rri",)
+    assert RRI_PROFILE.extensions == ("de.denic.rpp.rri", "io.github.pawel-kow.rpp.messages", "io.github.pawel-kow.rpp.domain-lock",
+                                      "io.github.pawel-kow.rpp.registry-changes")
     assert RRI_PROFILE.domainName.processes.transfer.operations == ("request",)
 
 

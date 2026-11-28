@@ -12,6 +12,7 @@ from core.result.error_response import ErrorResponse
 from core.result.result_code import ResultCode
 from core.session.session_pool import SessionPool
 from rpp.http.app import create_app
+from rpp.mapping.message.messages import model_to_rpp
 from registry_adapter.rri.commands.shared.rri_time import utc_time_of_text
 from tests.helper.fake_rri_client import FakeRriClient, error, reply, rri_backends
 from tests.helper.profiles import RRI_PROFILE, RRI_REGISTRY
@@ -30,6 +31,12 @@ TYPES = {
     "contactUpdate": "contactUpdateMessage", "contactDelete": "contactDeletionMessage",
     "domainStatusUpdate": "domainStatusMessage", "contactVerificationRequired": "contactVerificationMessage",
 }
+
+# the extensions that own the types of the registry's lock, changes and deletions (docs/extensions/); the rest is the rri extension's
+LOCK = "io.github.pawel-kow.rpp.domain-lock"
+CHANGES = "io.github.pawel-kow.rpp.registry-changes"
+OWNERS = {"lockCreate": LOCK, "lockDelete": LOCK, "domainUpdate": CHANGES, "contactUpdate": CHANGES,
+          "domainDelete": CHANGES, "contactDelete": CHANGES}
 
 
 def queue(msg_type):
@@ -73,7 +80,7 @@ def test_every_notification_is_read_as_the_event_of_its_message_type(msg_type):
         assert (message.event.trStatus, message.event.objectId) == ("serverApproved", "foo.de")
         assert message.event.process.reqClientId == message.event.process.actClientId == "DENIC-1000002"
     else:
-        assert isinstance(message.event, ExtensionEvent) and message.event.extension_id == "de.denic.rpp.rri"
+        assert isinstance(message.event, ExtensionEvent) and message.event.extension_id == OWNERS.get(msg_type, "de.denic.rpp.rri")
 
 
 def test_a_query_by_type_reads_each_type_and_the_oldest_wins():
@@ -360,3 +367,14 @@ def test_a_type_of_the_base_under_a_preset_without_the_extension_is_still_read()
 def test_a_date_as_text_is_in_utc_and_one_without_offset_is_utc():
     assert utc_time_of_text("2026-11-12T15:51:08+01:00") == "2026-11-12T14:51:08.000000Z"
     assert utc_time_of_text("2026-11-12T15:51:08") == "2026-11-12T15:51:08.000000Z"
+
+
+def test_a_notification_of_an_extension_the_response_preset_lacks_is_a_service_notice():
+    gateway, _ = backend(queue("lockCreate"))
+    message = gateway.messages.poll().payload.message
+    messages_only = ("de.denic.rpp.rri", "io.github.pawel-kow.rpp.messages")
+
+    rpp = model_to_rpp(message, backend_name="RRI", extensions=messages_only)
+
+    assert rpp["data"]["@type"] == "serviceNoticeMessage"
+    assert model_to_rpp(message, backend_name="RRI", extensions=(*messages_only, LOCK))["data"]["@type"] == "domainLockMessage"

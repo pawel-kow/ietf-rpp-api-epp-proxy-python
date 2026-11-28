@@ -91,6 +91,9 @@ rpp_rri_port: 51131
 rpp_rri_use_tls: true
 rpp_extensions:
   - extensions.rri                # the RRI extension (src/extensions/rri), which adds its presets `rri` and `rri-strict`, its profile and its leaves
+  - extensions.messages           # the generic extensions of the messages of the registry (src/extensions, docs/extensions/) that the preset `rri` offers
+  - extensions.domain_lock
+  - extensions.registry_changes
 rpp_backend_profile:
   extends: rri                    # the generic RRI profile, src/settings/profiles/rri.yaml
   presets: [base, rri, rri-strict]  # the RPP presets offered (src/rpp/schema/schemas/presets, and the extension's)

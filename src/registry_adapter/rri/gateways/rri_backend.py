@@ -21,7 +21,8 @@ class RriBackend:
         self.hosts = RriHostGateway()
         self.messages = RriMessageGateway(rri_client, extension_parts)
         self.organisations = RriOrganisationGateway(rri_client, extension_parts)
-        self._extensions = {part.extension_id: part.gateways(rri_client) for part in extension_parts}
+        self._extensions = {part.extension_id: part.gateways(rri_client) for part in extension_parts
+                            if part.gateways is not None}
 
     @property
     def sponsor_id(self) -> str:
@@ -32,7 +33,11 @@ class RriBackend:
         return self.rri_client.connected
 
     def extension(self, extension_id: str):
-        return self._extensions[extension_id]
+        try:
+            return self._extensions[extension_id]
+        except KeyError:
+            raise KeyError(f"The RRI backend has no gateways for the extension {extension_id}: its part has none, or the extension "
+                           f"is not registered") from None
 
     def connect(self) -> None:
         self.rri_client.connect()

@@ -60,7 +60,7 @@ Holder
 | Identifier | `de.denic.rpp.profile.rri` |
 | Version | 1.0 |
 | RPP version | 1.0 |
-| Required extensions | `de.denic.rpp.rri` 0.3.0 |
+| Required extensions | `de.denic.rpp.rri` 0.4.0 |
 | Base profiles | None |
 | Profile Schema `$id` | <https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/.spec/rri-profile.schema.json> |
 | Specification | <https://github.com/pawel-kow/ietf-rpp-api-epp-proxy-python/blob/main/docs/rri/rri-profile.md> |
@@ -297,6 +297,7 @@ The profile requires a registrant for every domain name, which the registry requ
 
 * initial version #183
 * require the extension de.denic.rpp.rri 0.3.0 #248
+* require the extension de.denic.rpp.rri 0.4.0 #261
 
 {backmatter}
 
