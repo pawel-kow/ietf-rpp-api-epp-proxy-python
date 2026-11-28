@@ -102,3 +102,4 @@ RPP part (`extensions/rri/rpp`):
 2. gap-analysis.md §1 summary now follows the Fit column of §2: 8 + 12 + 1 + 0 = 21.
 3. test1 asserts spClientId DENIC-1000004 of the released domain; the queue claim is marked "seen once, not checked by a case"; the `failed` refusal is checked by test5.
 4. Appendix bullet on disconnect="true": one A entry at www.<name>. on MTEST (checked by test2).
+- Checks of 65fd77c (review round 1): lint-imports 32 kept; unit 3397 passed; smoke 251 passed 581 skipped; release_process on MTEST 6 passed.
