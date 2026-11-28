@@ -134,6 +134,6 @@ Verification elements and values are never logged by the proxy. `loggable=False`
 3. Loops take `max_iterations` (runner, selector check, testing.project.md, unit tests); test6 uses 60. The reduced-view comment claims only the subset.
 4. The note on test4: all six `contact_verification/` cases are smoke.
 
-## Check results after review round 1 (commit 2d6c0be... see git log, no edits during the runs)
+## Check results after review round 1 (code commit 4edb1d2, no edits during the runs)
 
 - lint-imports: 32 kept, 0 broken. Unit: 3372 passed. MTEST reachability case: passed. Smoke incl. MTEST: 247 passed, 553 skipped (contact_verification/ 6 cases included).
