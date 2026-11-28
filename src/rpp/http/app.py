@@ -26,7 +26,7 @@ from rpp.http.validators.rpp_request_body_validator import RppRequestBodyValidat
 from rpp.http.validators.rpp_response_body_validator import RppResponseBodyValidator
 from registration import ExtensionRegistry
 from rpp.http.body_definitions import mark_body_definitions
-from rpp.http.extension_paths import add_registered_paths, collections
+from rpp.http.extension_paths import add_registered_paths, collections, process_owners, process_segment
 from rpp.http.served_document import served_document
 from rpp.http.extension_resolver import ExtensionResolver
 from rpp.schema.bundle_definitions import bundle_definitions
@@ -87,9 +87,12 @@ def outside_the_preset(item, presets: OfferedPresets, omit):
     (400, core RC4), so they are no part of its API (#205)."""
     own = set(collections(item.extension_ids).values())
     foreign = {segment for segment, obj in collections(presets.extension_ids()).items() if obj not in own}
+    foreign_processes = {segment for segment, ext in process_owners(presets.extension_ids()).items()
+                         if ext not in item.extension_ids}
 
     def outside(path: str, operation: dict) -> bool:
-        return path.lstrip("/").split("/", 1)[0] in foreign or (omit is not None and omit(path, operation))
+        return (path.lstrip("/").split("/", 1)[0] in foreign or process_segment(path) in foreign_processes
+                or (omit is not None and omit(path, operation)))
     return outside
 
 

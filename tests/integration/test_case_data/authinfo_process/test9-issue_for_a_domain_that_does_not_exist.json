@@ -1,0 +1,74 @@
+{
+  "when": {
+    "profile.domainName.processes.authInfoIssueProcess.operations": {
+      "contains": "create"
+    }
+  },
+  "test_id": "test9-issue_for_a_domain_that_does_not_exist",
+  "description": "The registry has no domain to issue authorisation information for.",
+  "setup": [
+    {
+      "comment": "Creates contact AI9; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:AI9}"
+      }
+    },
+    {
+      "comment": "Creates domain ai9 with registrant AI9, dns records a and no authInfo; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "ai9-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:AI9}"
+        },
+        "authInfo": {
+          "select": [
+            {
+              "omit": true
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Creates authInfoIssueProcess of domain nx9; expects 404 02303. The error answer this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/nx9-{random_name}.{tld}/processes/authInfoIssueProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "authInfoIssueProcess"
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02303"
+        }
+      }
+    }
+  ],
+  "teardown": [
+    {
+      "comment": "Deletes domain ai9; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "ai9-{random_name}.{tld}"
+      }
+    }
+  ]
+}

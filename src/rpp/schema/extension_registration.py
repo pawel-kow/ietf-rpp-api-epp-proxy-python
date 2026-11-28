@@ -48,5 +48,5 @@ def check_names(schema: dict) -> None:
 def register_all(registry: ExtensionRegistry) -> None:
     for extension in registry:
         check_names(extension.schema)
-        register_extension(extension.schema)
+        register_extension(extension.schema, extension.processes)
         register_data_objects(extension.data_objects)

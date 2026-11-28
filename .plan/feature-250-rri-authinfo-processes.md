@@ -6,15 +6,15 @@ order #253, #255, #256, this. The spec is committed (b2cf658): docs/rri/rri-exte
 
 ## Tasks
 
-- [~] Plan approved by the orchestrator
-- [ ] copy_models.sh: schema into src (5 doc tests turn green)
-- [ ] Core of the extension: models, ports (`RriGateways`), flows
-- [ ] RRI part: commands (create with `expire`, info of AuthInfo1, delete, CREATE-AUTHINFO2), gateways, refusal codes
-- [ ] Handlers, OpenAPI fragment, preset check of the process paths, profile leaves
-- [ ] Unit tests (mappings, refusals, wire, preset signalling)
-- [ ] MTEST: probe the expiry limit (#134) and the AuthInfo2 status refusal; integration cases
-- [ ] Docs: gap-analysis.md, architecture.project.md, testing.project.md if cases need it, rri-extension.md facts found
-- [ ] Checks (lint-imports, unit, smoke incl. MTEST), draft PR
+- [x] Plan approved by the orchestrator
+- [x] copy_models.sh: schema into src
+- [x] Core of the extension: models, ports (`RriGateways`), flows
+- [x] RRI part: commands (create with `expire`, info of AuthInfo1, delete, CREATE-AUTHINFO2), gateways, refusal codes
+- [x] Handlers, OpenAPI fragment, preset check of the process paths, profile leaves
+- [x] Unit tests (mappings, refusals, wire, preset signalling)
+- [x] MTEST: probe the expiry limit (#134) and the AuthInfo2 status refusal; integration cases
+- [x] Docs: gap-analysis.md, architecture.project.md, testing.project.md if cases need it, rri-extension.md facts found
+- [~] Checks (lint-imports, unit, smoke incl. MTEST), draft PR
 
 ## Approach
 
@@ -94,3 +94,30 @@ The secret (`authdata`) is never returned and never logged.
    +2, +7, +14, +29, +30, and records the accepted maximum in #134 (close it if the PR settles it). The AuthInfo2 refusal probe
    is time-boxed: a domain state the registry refuses, if one can be made without touching other runs' domains; else class
    mapping stays and the spec-issue/doc says so.
+
+## Decisions of the orchestrator (plan approved)
+
+1. `processes` on `RegisteredExtension` and `RppExtension` (via `register_all`); `PresetMiddleware` maps the segment after
+   `.../processes/` to its extension and answers as for an extension's object path under a preset without it;
+   `outside_the_preset` drops those operations. Generic and tested, also that base processes are unaffected.
+2. The two profile leaves, read by the test selectors.
+3. Read-back failure after create: 200 with the requested date if sent, else `{"@type":"authInfoProcess"}`, logged by code only;
+   one sentence in the appendix if not covered (text in the Draft PR report).
+4. `loggable=False` for the shared CREATE-AUTHINFO1 and anything else carrying a hash or secret (check DELETE, CHPROV, INFO with
+   AuthInfo); test that the hash is not logged.
+5. DELETE left to the registry (63300022003 -> 403 02201); READ checks the sponsor (foreign domain 403 02201).
+6. Both MTEST probes, AuthInfo2 refusal time-boxed; findings in docs/rri (reference open points / gap analysis) and #134.
+
+## Findings (MTEST, 2026-11-28 07:58 Europe/Berlin)
+
+- CREATE-AUTHINFO1 `expire` of today+0, +2 .. +30 days: 63391068618; only today+1 accepted (the default, no `expire`, is the same
+  end of the next day). One probe case per value and a single case with all values both agree. Recorded in #134, the reference (open
+  point 6) and the extension appendix.
+- `domain:authInfo1` is the instant of expiry: `expire=20261129` reads back `2026-11-30T00:00:00+01:00`. The spec said the Expiry
+  Date is the date of `authInfo1`, which would answer a day after the request: the implementation answers the last valid day (the
+  instant less a microsecond, in the registry's offset). **Spec appendix reworded; needs the maintainer's confirmation.**
+- The CREATE-AUTHINFO1 reply holds `createAuthInfo1Data/expire` (the instant). Not used: the INFO read-back is the specified way.
+- CREATE-AUTHINFO2 works on a `pendingCreate` domain. No domain state that refuses it could be made (time-box): the code stays
+  unknown, the class mapping stays (6 -> 422 02306), not 409 02304.
+- Added `{date:+Nd}` to the integration placeholders (documented in testing.project.md).
+- Hash of CREATE-AUTHINFO1 is no longer printed (CHPROV was already not).

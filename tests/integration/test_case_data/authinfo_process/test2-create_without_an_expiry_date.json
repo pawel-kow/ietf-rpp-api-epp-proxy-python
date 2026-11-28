@@ -1,0 +1,104 @@
+{
+  "test_id": "test2-create_without_an_expiry_date",
+  "description": "Without an expiry date the registry applies its own, which the answer states.",
+  "setup": [
+    {
+      "comment": "Creates contact AI2; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:AI2}"
+      }
+    },
+    {
+      "comment": "Creates domain ai2 with registrant AI2, dns records a and no authInfo; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "ai2-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:AI2}"
+        },
+        "authInfo": {
+          "select": [
+            {
+              "omit": true
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Creates authInfoProcess of domain ai2 with authInfo; expects 200 01000 with an expiry date. The operation this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ai2-{random_name}.{tld}/processes/authInfoProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "authInfoProcess",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc23456"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "authInfoProcess"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        },
+        "fields": {
+          "expiryDate": {
+            "type": "not_null"
+          }
+        }
+      }
+    },
+    {
+      "comment": "Reads authInfoProcess of domain ai2; expects 200 with an expiry date. Reads back to prove the change above.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/ai2-{random_name}.{tld}/processes/authInfoProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "authInfoProcess"
+        },
+        "fields": {
+          "expiryDate": {
+            "type": "not_null"
+          }
+        }
+      }
+    }
+  ],
+  "teardown": [
+    {
+      "comment": "Deletes domain ai2; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "ai2-{random_name}.{tld}"
+      }
+    }
+  ]
+}

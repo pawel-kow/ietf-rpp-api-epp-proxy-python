@@ -4,14 +4,15 @@ extension brings the fragment of its own (`add_registered_paths`), built from th
 uniform interface of a base object. Their schemas in the OpenAPI document are plain objects: the mappers validate with the
 extension's schema."""
 import json
+import re
 
 from registration import ExtensionRegistry
 from rpp.schema.extensions import EXTENSIONS
 
 
 def plural(identifier: str) -> str:
-    """Core §16.1.1, for the identifiers here."""
-    return f"{identifier}s"
+    """Core §16.1.1, for the identifiers here: `es` after an `s` (`authInfoProcess` is `authInfoProcesses`)."""
+    return f"{identifier}es" if identifier.endswith("s") else f"{identifier}s"
 
 
 # The data objects of the drafts that have paths of their own.
@@ -21,6 +22,22 @@ DRAFT_OBJECTS = ("domainName", "contact", "host", "organisation")
 def collections(extensions) -> dict[str, str]:
     """The first path segment of each data object, of the drafts and of the offered extensions, and the object it addresses."""
     return {plural(obj): obj for obj in (*DRAFT_OBJECTS, *(obj for ext in extensions for obj in EXTENSIONS[ext].objects))}
+
+
+# The path segments of the Process Objects of an extension, after `/domainNames/{name}/processes/`.
+PROCESS_SEGMENT = re.compile(r"^/?[^/]+/[^/]+/processes/([^/]+)")
+
+
+def process_owners(extensions) -> dict[str, str]:
+    """The path segment of each Process Object the extensions add to a data object, and the extension that defines it."""
+    return {plural(process): ext for ext in extensions for process in EXTENSIONS[ext].processes}
+
+
+def process_segment(path: str) -> str | None:
+    """The path segment of the process a path addresses (`authInfoProcesses` in `/domainNames/x/processes/authInfoProcesses/latest`),
+    None for a path that is not one of a process of an object."""
+    match = PROCESS_SEGMENT.match(path)
+    return match.group(1) if match else None
 
 
 def add_registered_paths(spec: dict, registry: ExtensionRegistry) -> dict:

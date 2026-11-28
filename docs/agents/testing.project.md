@@ -232,7 +232,7 @@ one), which the random part of the handle keeps apart from other runs. The rando
 names: host objects, client statuses, `ds` records, registration periods, renew, a transfer process (`domain_transfer/`, which RRI's
 immediate CHPROV has not; `domain_transfer_ext/` is its counterpart with the `rri` extension, run on MTEST only), the
 request contact object (`request_contact/`, `profile.objects` contains `requestContact`), the organisation read (`organisation_read/`, `profile.objects` contains `organisation`; `organisation_not_held/` is its counterpart on a backend without it, 501 `02307`) or a domain's request contacts
-(`profile.domainName.abuse.max_count` at least 1: `domain_update/test37`, `limits_domain/test20`), contact transfers, a restore report, a period longer than the run waits,
+(`profile.domainName.abuse.max_count` at least 1: `domain_update/test37`, `limits_domain/test20`), the authorisation information processes of the `rri` extension (`authinfo_process/`, `profile.domainName.processes.authInfoProcess.operations` and `authInfoIssueProcess.operations` contain `create`; its domains have no `authInfo` of their own, the expiry date is `{date:+1d}` because MTEST accepts no other, #134), contact transfers, a restore report, a period longer than the run waits,
 contact delete, a contact's authInfo, a localization, a fax, a region, a changeable contact name, a person's name
 on an organisation, a readable domain authInfo, or the admin, tech and billing roles. Where the
 backends differ in what a case sends or expects, the case selects by the fact: a contact has a phone and a full
@@ -409,6 +409,8 @@ the tests of the runner itself use ([test_case_phases.py](../../tests/unit/test_
   names in upper case, so a `match` on a generated host writes `{upper:ns1.u17-{random_name}.net}`.
   `{pad:N:TEXT}` is TEXT followed by the digits 0 to 9, repeated, to N characters, for a name or id of an exact
   length that keeps the random part of TEXT: `{pad:63:t3-{random_name}}.{tld}` is a label of 63.
+  `{date:+Nd}` is the date (`YYYY-MM-DD`) N days from today in the zone of the registry (Europe/Berlin), for a date the registry limits to a period
+  from now, such as the expiry of authorisation information.
 - Every step asserts the headers of core §6.2: `RPP-Svtrid`, a 5-digit `RPP-Code`, and
   `RPP-Cltrid` echoed.
 - Response body comparison is **subset + case-insensitive**

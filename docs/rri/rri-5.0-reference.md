@@ -1686,7 +1686,7 @@ Source: `EX:XMLSchema/Global|Transaction|Domain|Dnsentry|Contact|Message|RegAcc|
 4. When `authInfoExpire` is sent (at creation or at expiry), and who receives `domainTransit` and
    `chprovAuthInfo` beyond the losing RegAcc.
 5. Whether TRANSIT really needs a Holder (error 63360082531 exists but is not in the field table).
-6. Whether CREATE-AUTHINFO1/2 and CHPROV responses actually return `AuthInfoExpire`.
+6. Whether CREATE-AUTHINFO1/2 and CHPROV responses actually return `AuthInfoExpire`. MTEST answers CREATE-AUTHINFO1 with `domain:createAuthInfo1Data/domain:expire`, the instant it expires (checked on 2026-11-28); CREATE-AUTHINFO2 and CHPROV not checked. The `expire` that CREATE-AUTHINFO1 accepts on MTEST is only the day after today (#134, rri-extension.md mapping appendix). `domain:authInfo1` is the instant of expiry, the midnight that ends the `expire` day. CREATE-AUTHINFO2 is accepted on MTEST for a domain in `pendingCreate`; the code of its refusal for a status that does not allow it is not known (no such domain could be made without touching others'), so the proxy maps it by class (`6` to 422 `02306`).
 7. Whether contact type `ROLE` (in the XSD) is still accepted, and whether `Version: 4.0` is still
    accepted.
 8. ACL-exceeded code: `55000000002` (ACL page) or `56000020021` (code list).

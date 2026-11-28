@@ -24,3 +24,6 @@ class RppExtension:
     # identifier of each message type (`rpp:messages`) -> its definition in `defs`; the effective schema adds a branch for each
     # to the `data` union of `message.read` and `message.create`
     messages: dict = field(default_factory=dict)
+    # the identifiers of the Process Objects the extension adds to an object of its own or of the base; their paths are
+    # `<object>/<id>/processes/<plural>`, so a preset without the extension refuses them as it refuses an object of the extension
+    processes: tuple = ()

@@ -12,6 +12,8 @@ class RegisteredExtension:
     - `data_objects`: the top-level data elements of each object it defines, with their Visibility
       (`{object: {element: visibility}}`), which `includeElements` reads.
     - `objects`: the identifiers of the objects it defines.
+    - `processes`: the identifiers of the Process Objects it adds to a data object (`authInfoProcess`), whose paths are
+      `<object>/<id>/processes/<plural>`: a preset without the extension refuses them as it refuses its objects.
     - `openapi`: a function that builds its OpenAPI fragment (`{"paths": ..., "components": {"schemas": ...}}`) from the
       OpenAPI document of the drafts (and of the extensions before it), which it reads and does not change: an object that
       shares the uniform interface of a base object has the paths of that object. Every operationId of it is a fully
@@ -29,6 +31,7 @@ class RegisteredExtension:
     schema: dict
     data_objects: dict[str, dict[str, str]]
     objects: tuple[str, ...]
+    processes: tuple[str, ...] = ()
     openapi: Callable[[dict], dict] | None = None
     handlers: str | None = None
     backend_parts: dict[str, str] = field(default_factory=dict)

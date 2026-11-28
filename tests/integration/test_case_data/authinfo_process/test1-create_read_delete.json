@@ -1,0 +1,142 @@
+{
+  "markers": [
+    "smoke"
+  ],
+  "test_id": "test1-create_read_delete",
+  "description": "The authorisation information of a domain is set with an expiry date, read, and removed.",
+  "setup": [
+    {
+      "comment": "Creates contact AI1; expects 201 01000. The registrant of the domain below.",
+      "include": "create_contact",
+      "with": {
+        "id": "{handle:a:AI1}"
+      }
+    },
+    {
+      "comment": "Creates domain ai1 with registrant AI1, dns records a and no authInfo; expects 201 01000. The domain the steps below work on.",
+      "include": "create_domain",
+      "with": {
+        "name": "ai1-{random_name}.{tld}",
+        "registrant": {
+          "@type": "contact",
+          "id": "{handle:a:AI1}"
+        },
+        "authInfo": {
+          "select": [
+            {
+              "omit": true
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "comment": "Creates authInfoProcess of domain ai1 with authInfo and expiryDate; expects 200 01000 with the expiry date and no Location. The operation this case checks.",
+      "request": {
+        "method": "POST",
+        "url": "/domainNames/ai1-{random_name}.{tld}/processes/authInfoProcesses",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}",
+          "Content-Type": "{rpp:content-type}"
+        },
+        "body_json": {
+          "@type": "authInfoProcess",
+          "authInfo": {
+            "@type": "authInfo",
+            "method": "authinfo",
+            "authdata": "Abc23456"
+          },
+          "expiryDate": "{date:+1d}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "authInfoProcess",
+          "expiryDate": "{date:+1d}"
+        },
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "comment": "Reads authInfoProcess of domain ai1; expects 200 with the expiry date. Reads back to prove the change above.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/ai1-{random_name}.{tld}/processes/authInfoProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "content_type": "application/rpp+json",
+        "body": {
+          "@type": "authInfoProcess",
+          "expiryDate": "{date:+1d}"
+        }
+      }
+    },
+    {
+      "comment": "Deletes authInfoProcess of domain ai1; expects 200. The operation this case checks.",
+      "request": {
+        "method": "DELETE",
+        "url": "/domainNames/ai1-{random_name}.{tld}/processes/authInfoProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "RPP-Code": "01000"
+        }
+      }
+    },
+    {
+      "comment": "Reads authInfoProcess of domain ai1; expects 404 02303. Reads back to prove the change above.",
+      "request": {
+        "method": "GET",
+        "url": "/domainNames/ai1-{random_name}.{tld}/processes/authInfoProcesses/latest",
+        "headers": {
+          "Authorization": "{auth:a}",
+          "Accept": "{rpp:accept}",
+          "RPP-Preset": "{rpp:preset}",
+          "RPP-Cltrid": "{unique_cltrid}"
+        }
+      },
+      "response": {
+        "status": 404,
+        "content_type": "application/problem+json",
+        "body": {
+          "type": "urn:ietf:params:rpp:error"
+        },
+        "headers": {
+          "RPP-Code": "02303"
+        }
+      }
+    }
+  ],
+  "teardown": [
+    {
+      "comment": "Deletes domain ai1; expects 200. MTEST keeps what a case creates, so the case deletes it.",
+      "include": "delete_domain",
+      "with": {
+        "name": "ai1-{random_name}.{tld}"
+      }
+    }
+  ]
+}
