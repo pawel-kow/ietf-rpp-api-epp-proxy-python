@@ -300,6 +300,14 @@ source_modules = [
 ]
 forbidden_modules = ["extensions.rri", "registry_adapter.rri.extensions.rri"]
 
+# The generic extensions are not bound to a backend: the only reference to the RRI one is the module path in `backend_parts`.
+[[tool.importlinter.contracts]]
+id = "generic-extensions-not-bound-to-a-backend"
+name = "The generic message extensions import no registry adapter and not the rri extension"
+type = "forbidden"
+source_modules = ["extensions.messages", "extensions.domain_lock", "extensions.registry_changes"]
+forbidden_modules = ["registry_adapter", "extensions.rri"]
+
 [[tool.importlinter.contracts]]
 id = "message-extensions-independent"
 name = "The extensions of message types are independent of each other"
