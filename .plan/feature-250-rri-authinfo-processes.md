@@ -122,6 +122,12 @@ The secret (`authdata`) is never returned and never logged.
 - Added `{date:+Nd}` to the integration placeholders (documented in testing.project.md).
 - Hash of CREATE-AUTHINFO1 is no longer printed (CHPROV was already not).
 
+## Review round 1 (three low findings, all fixed)
+
+1. info.py: the full value (offset, fraction, `24:00:00`), an unreadable value (xsdata leaves the text) is an AuthInfo1 without a date, logged by field name; model `exists`.
+2. process owners keyed by (collection, segment); `processes` names the owning object.
+3. test: base document leaves the process paths out, rri keeps them.
+
 ## Check results (commit b41a37c, no edits during the runs)
 
 - `PYTHONPATH=src lint-imports`: 32 kept, 0 broken.

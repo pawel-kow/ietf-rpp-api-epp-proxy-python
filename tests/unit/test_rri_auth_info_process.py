@@ -16,9 +16,10 @@ from tests.unit.test_rri_auth_info_process_wire import WITHOUT
 
 
 @pytest.mark.parametrize("path, segment", [
-    ("/domainNames/foo.de/processes/authInfoProcesses", "authInfoProcesses"),
-    ("/domainNames/foo.de/processes/authInfoProcesses/latest", "authInfoProcesses"),
-    ("/contacts/c1/processes/transferProcesses/latest/transferApprove", "transferProcesses"),
+    ("/domainNames/foo.de/processes/authInfoProcesses", ("domainNames", "authInfoProcesses")),
+    ("/domainNames/foo.de/processes/authInfoProcesses/latest", ("domainNames", "authInfoProcesses")),
+    ("/contacts/c1/processes/authInfoProcesses", ("contacts", "authInfoProcesses")),
+    ("/contacts/c1/processes/transferProcesses/latest/transferApprove", ("contacts", "transferProcesses")),
     ("/domainNames/foo.de", None),
     ("/domainNames/foo.de/processes", None),
     ("/requestContacts/c1", None),
@@ -32,7 +33,8 @@ def test_the_plural_of_an_identifier_ending_in_s_has_es():
 
 
 def test_the_process_owners_are_those_of_the_offered_extensions_only():
-    assert process_owners([EXTENSION_ID]) == {"authInfoProcesses": EXTENSION_ID, "authInfoIssueProcesses": EXTENSION_ID}
+    assert process_owners([EXTENSION_ID]) == {("domainNames", "authInfoProcesses"): EXTENSION_ID,
+                                              ("domainNames", "authInfoIssueProcesses"): EXTENSION_ID}
     assert process_owners([]) == {}
 
 
@@ -89,3 +91,32 @@ def test_the_refusals_of_create_authinfo1(code, result):
 def test_the_range_refusal_is_command_specific():
     """The same code of another command keeps the general table: the mapping is not global."""
     assert result_code("63391068618") == ResultCode.PARAMETER_VALUE_POLICY_ERROR
+
+
+def info_with(stated):
+    """The INFO of the fixture with another `domain:authInfo1`."""
+    rri, _ = backend(DOMAIN_INFO.replace("2026-11-14T00:00:00+01:00", stated))
+    return rri.extension(EXTENSION_ID).auth_info_processes.info(NAME).payload
+
+
+@pytest.mark.parametrize("stated, day", [
+    ("2026-11-30T00:00:00+01:00", date(2026, 11, 29)),
+    ("2026-11-30T00:00:00.5+01:00", date(2026, 11, 30)),
+    ("2026-11-30T00:00:00.000000+01:00", date(2026, 11, 29)),
+    ("2026-11-29T24:00:00+01:00", date(2026, 11, 29)),
+    ("2026-11-30T23:59:59-05:00", date(2026, 11, 30)),
+    ("2026-11-30T00:00:00Z", date(2026, 11, 29)),
+    ("2026-11-30T00:00:00", date(2026, 11, 29)),
+    ("2026-12-31T24:00:00", date(2026, 12, 31)),
+])
+def test_the_last_valid_day_is_the_day_before_the_instant_in_the_offset_of_the_registry(stated, day):
+    process = info_with(stated)
+
+    assert process.exists and process.expiry_date == day
+
+
+def test_an_instant_the_proxy_cannot_read_is_an_authinfo1_without_a_date_and_logged_by_its_field(caplog):
+    for stated in ("2026-11-30T24:30:00+01:00", "2026-11-30T24:00:00.5+01:00", "2026-13-30T00:00:00+01:00", "nonsense"):
+        process = info_with(stated)
+        assert process.exists and process.expiry_date is None
+    assert "authInfo1" in caplog.text and "nonsense" not in caplog.text

@@ -48,7 +48,7 @@ def read_auth_info_process(backend: RegistryBackend, name: str,
                              msg="Only the sponsoring client can read the authorisation information",
                              server_transaction_id=info.server_transaction_id,
                              client_transaction_id=client_transaction_id)
-    if info.payload.expiry_date is None:
+    if not info.payload.exists:
         return ErrorResponse(code=ResultCode.OBJECT_DOES_NOT_EXIST, msg="The domain name has no authorisation information",
                              server_transaction_id=info.server_transaction_id,
                              client_transaction_id=client_transaction_id)

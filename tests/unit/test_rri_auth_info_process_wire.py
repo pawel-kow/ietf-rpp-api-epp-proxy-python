@@ -261,3 +261,11 @@ def test_the_processes_of_the_base_are_not_affected_by_the_preset_check():
                            headers=headers)
 
     assert response.status_code != 400 or response.headers["RPP-Code"] != "02001"
+
+
+def test_read_of_an_authinfo1_the_proxy_cannot_read_answers_the_process_without_a_date():
+    client, _ = setup(DOMAIN_INFO.replace("2026-11-14T00:00:00+01:00", "nonsense"))
+
+    response = client.get(LATEST, headers=HEADERS)
+
+    assert response.status_code == 200 and response.json() == {"@type": "authInfoProcess"}

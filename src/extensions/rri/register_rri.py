@@ -28,7 +28,7 @@ STRICT_PRESET_KEY = "rri-strict"
 PROFILE_KEY = "rri"
 
 # The Process Objects it adds to a domain name (docs/rri/rri-extension.md).
-PROCESSES = ("authInfoProcess", "authInfoIssueProcess")
+PROCESSES = {"domainName": ("authInfoProcess", "authInfoIssueProcess")}
 
 # The operations of each, the leaves the test selectors read.
 AUTH_INFO_PROCESS = "domainName.processes.authInfoProcess.operations"

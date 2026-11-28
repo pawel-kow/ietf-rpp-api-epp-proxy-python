@@ -24,20 +24,22 @@ def collections(extensions) -> dict[str, str]:
     return {plural(obj): obj for obj in (*DRAFT_OBJECTS, *(obj for ext in extensions for obj in EXTENSIONS[ext].objects))}
 
 
-# The path segments of the Process Objects of an extension, after `/domainNames/{name}/processes/`.
-PROCESS_SEGMENT = re.compile(r"^/?[^/]+/[^/]+/processes/([^/]+)")
+# The collection and the path segment of a Process Object, `/<collection>/{id}/processes/<segment>`.
+PROCESS_SEGMENT = re.compile(r"^/?([^/]+)/[^/]+/processes/([^/]+)")
 
 
-def process_owners(extensions) -> dict[str, str]:
-    """The path segment of each Process Object the extensions add to a data object, and the extension that defines it."""
-    return {plural(process): ext for ext in extensions for process in EXTENSIONS[ext].processes}
+def process_owners(extensions) -> dict[tuple[str, str], str]:
+    """The (collection, path segment) of each Process Object the extensions add to a data object, and the extension that defines it:
+    `("domainNames", "authInfoProcesses")`."""
+    return {(plural(owner), plural(process)): ext for ext in extensions
+            for owner, processes in EXTENSIONS[ext].processes.items() for process in processes}
 
 
-def process_segment(path: str) -> str | None:
-    """The path segment of the process a path addresses (`authInfoProcesses` in `/domainNames/x/processes/authInfoProcesses/latest`),
-    None for a path that is not one of a process of an object."""
+def process_segment(path: str) -> tuple[str, str] | None:
+    """The (collection, segment) of the process a path addresses (`("domainNames", "authInfoProcesses")` for
+    `/domainNames/x/processes/authInfoProcesses/latest`), None for a path that is not one of a process of an object."""
     match = PROCESS_SEGMENT.match(path)
-    return match.group(1) if match else None
+    return match.groups() if match else None
 
 
 def add_registered_paths(spec: dict, registry: ExtensionRegistry) -> dict:

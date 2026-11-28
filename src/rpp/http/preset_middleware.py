@@ -63,7 +63,7 @@ class PresetMiddleware:
             process = process_segment(scope["path"])
             owner = self.process_owners.get(process)
             if owner is not None and owner not in selection.request.extension_ids:
-                self._refuse_extension(selection.request, f"the {process} processes")
+                self._refuse_extension(selection.request, f"the {process[1]} processes of {process[0]}")
         await self.app(scope, receive, send)
 
     def _check_object(self, segment, obj, preset) -> None:

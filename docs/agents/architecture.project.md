@@ -447,17 +447,17 @@ extension's `RequestTemplateMembers` renders `generalRequestTemplate` and `abuse
 builds from the `contact` entries of the regacc INFO by role. Discovery's `objects` are those of the backend profile: `message` on every backend that serves
 messages (EPP, RRI and SQLite) and `organisation` on RRI.
 
-**Process Objects of an extension** (#250). An extension adds a Process Object to a base object by naming its identifiers in `processes` of its
+**Process Objects of an extension** (#250). An extension adds a Process Object to a base object by naming its identifiers, by the owning data object (`{"domainName": ("authInfoProcess", ...)}`), in `processes` of its
 `RegisteredExtension` (`register_all` hands them to `RppExtension.processes`). The paths are those of the base object's processes under the plural of the
 identifier (core §16.1.1: `authInfoProcesses`), built by the extension's OpenAPI fragment from the transfer process paths of the domain name (without
 approve and reject), with the operations the extension serves and the others answering 501 `02101` as any operation without a handler.
-`PresetMiddleware` reads the segment after `/processes/` (`extension_paths.process_segment`, `process_owners`) and refuses a request under a preset without the
+`PresetMiddleware` reads the collection and the segment after `/processes/` (`extension_paths.process_segment`, `process_owners`, keyed `("domainNames", "authInfoProcesses")`, so the same segment under `/contacts` is left to routing) and refuses a request under a preset without the
 extension as it refuses an object of the extension (400 `02001`), and `outside_the_preset` leaves those operations out of the preset's document; the
 `processes` of the base are unaffected. The rri extension serves `authInfoProcess` (create, read and delete of an AuthInfo1) and `authInfoIssueProcess` (create
 of an AuthInfo2) with `RriGateways.auth_info_processes` and `auth_info_issues`: `extensions/rri/core/flows/auth_info_process_flows.py` creates and reads
 back the expiry date (a read-back that fails does not fail the create: the answer states the date asked for, if any, and the failure is logged by its code),
 and checks the sponsor of a read, because INFO of a foreign domain succeeds; the RRI part (`registry_adapter/rri/extensions/rri/commands/auth_info_process/`,
-`auth_info_issue/`) sends CREATE-AUTHINFO1 with `expire` (`YYYYMMDD`), reads the calendar date of `domain:authInfo1` as the registry states it, in its offset,
+`auth_info_issue/`) sends CREATE-AUTHINFO1 with `expire` (`YYYYMMDD`), reads the last valid day from `domain:authInfo1` (the instant of expiry less a microsecond, in its offset, `24:00:00` taken as the next midnight; a value it cannot read is an AuthInfo1 without a date, logged by the field name),
 and maps the refusals of `expire` (`63391068618`, `63391068603`) to 400 `02004`. A command that holds a hash or a secret is sent with `loggable=False`: the
 shared CREATE-AUTHINFO1 (domain create, PUT, PATCH and the process) and CHPROV. The extension's profile leaves `domainName.processes.authInfoProcess.operations` and
 `domainName.processes.authInfoIssueProcess.operations` are read by the test selectors only.
