@@ -18,7 +18,7 @@ docs/rri/rri-extension.md 0.4.0, rri-preset.md, rri-strict-preset.md, rri-profil
   extension. A preset that offers an extension without the ones it depends on is refused at startup in
   `OfferedPresets._offer`, naming both. Unit-tested.
 - Wire contract unchanged except extension identifiers in discovery and media-type parameters.
-- Tests: messages added to the extension set of test_rri_extension_doc.py; a doc test for docs/extensions/*-extension.md;
+- Tests: a doc test for docs/extensions/*-extension.md and rri-extension.md (test_extension_docs.py, replaces test_rri_extension_doc.py);
   "Checked examples" in specification.project.md; overview and architecture docs that list extensions.
 - Generic extensions do not import `extensions.rri`; rri may depend on messages. lint-imports contracts stay green, with
   contracts for the new packages.
@@ -67,6 +67,20 @@ docs/rri/rri-extension.md 0.4.0, rri-preset.md, rri-strict-preset.md, rri-profil
 - `pytest -n 4 tests/unit`: 3431 passed.
 - MTEST reachability (`rri-mtest domain_availability test3`): passed, so the smoke run covers rri-mtest.
 - `pytest -n 4 -m smoke tests/integration`: 251 passed, 581 skipped (rri-mtest `message::test1-query_head` passes).
+
+## For the maintainer
+
+- Every inventory outside git (`deploy/ansible/inventory/<name>/`) that lists `rpp_extensions` for RRI, or keeps its own template,
+  must add `extensions.messages`, `extensions.domain_lock` and `extensions.registry_changes` (process.project.md, Configurations).
+  Without them the proxy refuses to start ("The preset de.denic.rpp.preset.rri contains the extension
+  io.github.pawel-kow.rpp.messages, which the proxy does not implement").
+
+## Review round 1
+
+Fixed: the note above; a `$ref` to a definition nobody defines is refused at start (extension and name named); contracts between
+the RRI parts of domain_lock and registry_changes; an RRI part without `gateways` for an extension with objects, processes or
+handlers is refused (`load_extension_parts`), and `RriBackend.extension` names what is missing; the dependency test now fails
+without the own/base checks; test_rri_extension_doc.py is folded into test_extension_docs.py; architecture wording.
 
 ## Findings
 

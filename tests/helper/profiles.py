@@ -31,4 +31,4 @@ RRI_REGISTRY = registry_of(*RRI_EXTENSIONS)
 EPP_PROFILE = generic_profile("epp")
 RRI_PROFILE = generic_profile("rri", registry=RRI_REGISTRY)
 
-RRI_PARTS = load_rri_parts(RRI_REGISTRY.backend_parts("rri"))
+RRI_PARTS = load_rri_parts(RRI_REGISTRY.backend_parts("rri"), RRI_REGISTRY.needing_gateways())

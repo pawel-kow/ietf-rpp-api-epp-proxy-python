@@ -100,3 +100,27 @@ def test_a_leaf_of_an_extension_has_its_type():
 
 def _tree(profile: BackendProfile) -> dict:
     return profile._tree
+
+
+def test_an_extension_with_objects_processes_or_handlers_needs_gateways_in_its_rri_part():
+    from registry_adapter.rri.extension_part import load_extension_parts
+    registry = ExtensionRegistry()
+    registry.add(extension("x.handlers"))
+    registry.add(RegisteredExtension(id="x.messages", schema={}, data_objects={}, objects=()))
+    modules = {"x.messages": "registry_adapter.rri.extensions.messages"}
+
+    assert registry.needing_gateways() == {"x.handlers"}
+    assert load_extension_parts(modules, registry.needing_gateways())[0].gateways is None
+    with pytest.raises(ValueError, match="has no gateways.*objects, processes or handlers"):
+        load_extension_parts({"x.handlers": "registry_adapter.rri.extensions.messages"}, registry.needing_gateways())
+
+
+def test_the_rri_backend_names_the_extension_it_has_no_gateways_for():
+    from registry_adapter.rri.gateways.rri_backend import RriBackend
+    from tests.helper.fake_rri_client import FakeRriClient
+    from tests.helper.profiles import RRI_PARTS, RRI_PROFILE
+
+    backend = RriBackend(FakeRriClient("u", "p", replies=[]), RRI_PROFILE, None, RRI_PARTS)
+
+    with pytest.raises(KeyError, match="no gateways for the extension io.github.pawel-kow.rpp.messages"):
+        backend.extension("io.github.pawel-kow.rpp.messages")

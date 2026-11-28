@@ -1,4 +1,4 @@
-"""docs/extensions/<name>-extension.md against the schema of the extension: every example marked `<!-- example valid|invalid
+"""docs/extensions/<name>-extension.md and docs/rri/rri-extension.md against the schema of the extension: every example marked `<!-- example valid|invalid
 <definition> -->` validates, or fails, against the Effective Schema of a server that supports the extensions, as guidelines §9
 requires of an extension specification, and every definition a document shows (`<!-- definition <name> -->`) is the one of
 .spec/<name>-extension.schema.json."""
@@ -17,7 +17,10 @@ pytestmark = pytest.mark.lazy_schemas
 
 ROOT = Path(__file__).parents[2]
 
-NAMES = ("messages", "domain-lock", "registry-changes")
+NAMES = ("messages", "domain-lock", "registry-changes", "rri")
+
+# the folder of the document under docs/
+FOLDERS = {"messages": "extensions", "domain-lock": "extensions", "registry-changes": "extensions", "rri": "rri"}
 
 EXAMPLE = re.compile(r"<!-- example (valid|invalid) ([\w.]+) -->\n```json\n(.*?)```", re.DOTALL)
 
@@ -25,7 +28,7 @@ DEFINITION = re.compile(r"<!-- definition ([\w.]+) -->\n```json\n(.*?)```", re.D
 
 
 def document(name: str) -> str:
-    return (ROOT / "docs" / "extensions" / f"{name}-extension.md").read_text(encoding="utf-8")
+    return (ROOT / "docs" / FOLDERS[name] / f"{name}-extension.md").read_text(encoding="utf-8")
 
 
 def schema(name: str) -> dict:

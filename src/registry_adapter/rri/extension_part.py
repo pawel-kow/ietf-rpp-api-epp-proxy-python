@@ -19,8 +19,9 @@ class RriExtensionPart:
     contact_members: object | None = None
 
 
-def load_extension_parts(modules: dict[str, str]) -> list[RriExtensionPart]:
-    """Imports the module of each registered extension that the RRI backend holds (by extension id)."""
+def load_extension_parts(modules: dict[str, str], needing_gateways=frozenset()) -> list[RriExtensionPart]:
+    """Imports the module of each registered extension that the RRI backend holds (by extension id). An extension that has
+    objects, processes or handlers (`needing_gateways`) must have `gateways(client)`, and one without them is an error."""
     parts = []
     for extension_id, path in modules.items():
         try:
@@ -29,6 +30,9 @@ def load_extension_parts(modules: dict[str, str]) -> list[RriExtensionPart]:
                                           message_types=tuple(getattr(module, "MESSAGE_TYPES", ())),
                                           organisation_members=getattr(module, "ORGANISATION_MEMBERS", None),
                                           contact_members=getattr(module, "CONTACT_MEMBERS", None)))
+            if extension_id in needing_gateways and parts[-1].gateways is None:
+                raise ValueError(f"The RRI part {path!r} of the extension {extension_id} has no gateways(client), which an extension "
+                                 f"with objects, processes or handlers needs")
         except (ImportError, AttributeError) as e:
             raise ValueError(f"The RRI part {path!r} of the extension {extension_id} cannot be loaded: {e}") from e
     return parts

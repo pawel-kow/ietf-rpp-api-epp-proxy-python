@@ -33,5 +33,9 @@ class ExtensionRegistry:
         return {extension.id: extension.backend_parts[backend] for extension in self
                 if backend in extension.backend_parts}
 
+    def needing_gateways(self) -> frozenset[str]:
+        """The ids of the extensions that have objects, processes or handlers: their part of a backend must have gateways."""
+        return frozenset(extension.id for extension in self if extension.objects or extension.processes or extension.handlers)
+
     def profile_leaves(self) -> dict[str, type]:
         return {path: kind for extension in self for path, kind in extension.profile_leaves.items()}

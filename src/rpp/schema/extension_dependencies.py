@@ -24,12 +24,15 @@ def _refs(node):
 
 def foreign_references(extension: RppExtension, others) -> dict[str, RppExtension]:
     """The definitions of another extension (of `others`) that the definitions of the extension refer to: each name, with the
-    extension that defines it. A name that nothing defines is not among them."""
+    extension that defines it. A name that is the extension's own, the base's or another extension's definition in `others`
+    is the only kind there is: a reference to any other name is an error (the extension is only valid with an extension
+    that is not registered, or refers to a definition that does not exist)."""
     found = {}
     for name in dict.fromkeys(_refs(extension.defs)):
         if name in extension.defs or name in bundle_definitions():
             continue
         owner = next((other for other in others if other.id != extension.id and name in other.defs), None)
-        if owner is not None:
-            found[name] = owner
+        if owner is None:
+            raise ValueError(f"The extension {extension.id} refers to {name}, which neither RPP nor a registered extension defines")
+        found[name] = owner
     return found

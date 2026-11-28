@@ -325,4 +325,19 @@ def test_the_definitions_an_extension_refers_to_in_the_base_or_in_itself_are_no_
     own = RppExtension(id="org.example.own", name="o", version="1.0", url="https://example.org/own.schema.json", extends={}, defs={
         "ext.own.a.read": {"$ref": "#/$defs/ext.own.b.read"}, "ext.own.b.read": {"$ref": "#/$defs/contact.reference"}})
 
-    assert foreign_references(own, [own, using]) == {}
+    others = RppExtension(id="org.example.others", name="o", version="1.0", url="https://example.org/others.schema.json", extends={},
+                          defs={"ext.own.b.read": {"type": "object"}, "contact.reference": {"type": "object"}})
+
+    assert foreign_references(own, [own, using, others]) == {}
+
+
+def test_a_reference_that_nothing_defines_stops_the_server_naming_the_extension_and_the_definition(monkeypatch):
+    from rpp.schema.extension_dependencies import foreign_references
+    _, using = _referring_pair()       # its owner is not registered
+    monkeypatch.setitem(EXTENSIONS, using.id, using)
+    alone = preset("alone", base_presets=[BASE["id"]], extensions=[(using.id, "1.0")])
+
+    with pytest.raises(ValueError, match="org.example.using refers to ext.shared.note.read, which neither RPP nor a registered"):
+        foreign_references(using, [using])
+    with pytest.raises(ValueError, match="org.example.using refers to ext.shared.note.read"):
+        build(definitions_with([alone]), ["alone"], held=(using.id,))

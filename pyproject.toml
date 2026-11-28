@@ -307,6 +307,20 @@ type = "independence"
 modules = ["extensions.domain_lock", "extensions.registry_changes"]
 
 [[tool.importlinter.contracts]]
+id = "domain-lock-part-not-registry-changes"
+name = "The RRI part of the domain lock extension imports nothing of the registry changes extension"
+type = "forbidden"
+source_modules = ["registry_adapter.rri.extensions.domain_lock"]
+forbidden_modules = ["extensions.registry_changes", "registry_adapter.rri.extensions.registry_changes"]
+
+[[tool.importlinter.contracts]]
+id = "registry-changes-part-not-domain-lock"
+name = "The RRI part of the registry changes extension imports nothing of the domain lock extension"
+type = "forbidden"
+source_modules = ["registry_adapter.rri.extensions.registry_changes"]
+forbidden_modules = ["extensions.domain_lock", "registry_adapter.rri.extensions.domain_lock"]
+
+[[tool.importlinter.contracts]]
 id = "messages-imports-no-dependent"
 name = "The messages extension imports none of the extensions that build on it"
 type = "forbidden"

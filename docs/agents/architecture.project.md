@@ -582,7 +582,7 @@ each and calls its `register(registry)` ([registration/](../../src/registration/
 | the OpenAPI fragment of its paths (built from the OpenAPI document of the drafts), and the package of its handlers (every operationId is a fully qualified function name, or names the module of its handler) | `create_app` (`add_registered_paths`, `ExtensionResolver`), per app |
 | the presets and the profiles it brings | `Definitions.load(registry)` in `create_app`, per app: nothing of them is process-global, and an app without the extension does not know them |
 | its objects | `PresetMiddleware` and discovery, through the extension's schema |
-| its part of a backend (`backend_parts`) | the backend: the SQLite backend imports `registry_adapter.sqlite.extensions.<name>`, which has `PART` (its tables, in a metadata of their own, with a schema version) and `gateways(context)`; the RRI backend imports `registry_adapter.rri.extensions.<name>`, which has `gateways(client)` |
+| its part of a backend (`backend_parts`) | the backend: the SQLite backend imports `registry_adapter.sqlite.extensions.<name>`, which has `PART` (its tables, in a metadata of their own, with a schema version) and `gateways(context)`; the RRI backend imports `registry_adapter.rri.extensions.<name>`, which may have `gateways(client)` (none for an extension of message types only) and `MESSAGE_TYPES` |
 | the leaves it adds to the backend profile (`objects`, `extensions` and `presets` are added to the generic profile's, other leaves are new) | `BackendProfile.from_layers(..., extra_leaves=...)`: the list of leaves stays closed, and without the extension a leaf of it is unknown |
 
 An extension may build on the definitions of another: a `$ref` of its schema to a definition that another extension defines
@@ -591,7 +591,7 @@ An extension may build on the definitions of another: a `$ref` of its schema to 
 The extensions of message types are packages of their own (`extensions/messages/`, `domain_lock/`, `registry_changes/`; the rri extension builds
 on `messages`): `messages` holds the Component Objects (`core/model`, and the builders of their JSON in `rpp/mapping/components.py`) and no message
 type; each of the others has the event of its core and a `MessageMapper` for its message types, and its RRI part
-(`registry_adapter/rri/extensions/<name>/`, `MESSAGE_TYPES`, no `gateways`, so `RriExtensionPart.gateways` is optional) reads the
+(`registry_adapter/rri/extensions/<name>/`, `MESSAGE_TYPES`; `gateways(client)` is optional, so `RriExtensionPart.gateways` may be None, and `load_extension_parts` refuses a missing one for an extension with objects, processes or handlers) reads the
 `msgType`s it owns: `lockCreate`/`lockDelete`, and `domainUpdate`/`contactUpdate`/`domainDelete`/`contactDelete`. The RRI part of `messages` holds what
 those parts share (`references.py`). A generic extension imports nothing of `extensions.rri` (a contract), and a preset that holds `rri` without one of
 the two message extensions sends their notifications as service notices. Every extension of a deployment still needs a backend part
