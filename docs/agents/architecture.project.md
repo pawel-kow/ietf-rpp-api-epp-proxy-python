@@ -463,6 +463,8 @@ and maps the refusals of `expire` (`63391068618`, `63391068603`) to 400 `02004`.
 shared CREATE-AUTHINFO1 (domain create, PUT, PATCH and the process) and CHPROV. The extension's profile leaves `domainName.processes.authInfoProcess.operations` and
 `domainName.processes.authInfoIssueProcess.operations` are read by the test selectors only.
 
+The `releaseProcess` (create only, #252) is TRANSIT: `RriGateways.releases`, `extensions/rri/core/flows/release_flows.py` (Keep Name Servers absent is `true`; the result holds the value that applied) and `registry_adapter/rri/extensions/rri/commands/release/create.py`, which always sends `disconnect` and maps the refusal of a `failed` domain (`53000080012`, class 5, otherwise a 500) to 409 `02304`. The response is 200 without a `Location`; every other operation of the path family answers 501 `02101`, as for `authInfoIssueProcess`. Its profile leaf is `domainName.processes.releaseProcess.operations`.
+
 **Members of a contact and the verification of the holders** (#251). An extension adds members to a contact by registering a mapper in `CONTACT_MEMBERS`
 (`rpp/mapping/contact/contact_members.py`, a `MemberMappers` as `DOMAIN_MEMBERS`, with its own `merge`: a dict of the typed objects by extension id). The core model holds them as
 `Contact.extensions` and `ContactReplacement.extensions`, as `Organisation.extensions`; the contact mappers (`contacts`, `contact_replacement`, `contact_patch`) take the `extensions` of the

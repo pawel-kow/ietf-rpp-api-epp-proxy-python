@@ -184,6 +184,11 @@
           "type": "array",
           "items": { "$ref": "#/$defs/ext.rri.verificationProcess.reference" },
           "readOnly": true
+        },
+        "releaseProcess": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ext.rri.releaseProcess.reference" },
+          "readOnly": true
         }
       }
     },
@@ -261,6 +266,31 @@
       "type": "object",
       "properties": {
         "@type": { "type": "string", "const": "verificationProcess" },
+        "processId": { "type": "string", "readOnly": true }
+      },
+      "required": ["@type", "processId"]
+    },
+    "ext.rri.releaseProcess.create": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "releaseProcess" },
+        "keepNameservers": { "type": "boolean", "writeOnly": true }
+      },
+      "required": ["@type"]
+    },
+    "ext.rri.releaseProcess.read": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "releaseProcess", "readOnly": true },
+        "processId": { "type": "string", "readOnly": true },
+        "keepNameservers": { "type": "boolean", "readOnly": true }
+      },
+      "required": ["@type"]
+    },
+    "ext.rri.releaseProcess.reference": {
+      "type": "object",
+      "properties": {
+        "@type": { "type": "string", "const": "releaseProcess" },
         "processId": { "type": "string", "readOnly": true }
       },
       "required": ["@type", "processId"]

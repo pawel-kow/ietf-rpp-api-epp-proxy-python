@@ -1,0 +1,8 @@
+{
+  "when": {
+    "profile.domainName.processes.releaseProcess.operations": {
+      "contains": "create"
+    }
+  },
+  "comment": "Skipped on epp-docker: the release of a domain name is an extension of RRI."
+}
